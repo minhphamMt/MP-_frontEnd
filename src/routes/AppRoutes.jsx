@@ -1,35 +1,61 @@
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
+
 import Login from "../pages/Login";
 import Forbidden from "../pages/Forbidden";
+import MainLayout from "../layouts/MainLayout";
+import Home from "../pages/Home";
 
-// Pages tạm để test Phase 0 (sau này thay bằng Layout thật)
-const UserHome = () => <div style={{ padding: 20 }}>USER HOME (Zing UI sẽ ở đây)</div>;
-const ArtistDashboard = () => <div style={{ padding: 20 }}>ARTIST DASHBOARD</div>;
-const AdminDashboard = () => <div style={{ padding: 20 }}>ADMIN DASHBOARD</div>;
+/* ===== USER PAGES (tạm, sẽ làm thật sau) ===== */
+const ZingChart = () => <div>#ZINGCHART</div>;
+const NewRelease = () => <div>BXH NHẠC MỚI</div>;
+const Top100 = () => <div>TOP 100</div>;
+const Playlists = () => <div>PLAYLIST</div>;
+const Albums = () => <div>ALBUM</div>;
+
+/* ===== ARTIST / ADMIN (tạm) ===== */
+const ArtistDashboard = () => (
+  <div style={{ padding: 20 }}>ARTIST DASHBOARD</div>
+);
+
+const AdminDashboard = () => (
+  <div style={{ padding: 20 }}>ADMIN DASHBOARD</div>
+);
 
 export default function AppRoutes() {
   return (
     <Routes>
+      {/* ================= PUBLIC ================= */}
       <Route path="/login" element={<Login />} />
       <Route path="/403" element={<Forbidden />} />
 
-      {/* USER: cho phép mọi role vào nghe nhạc (tuỳ bạn) */}
-      <Route element={<ProtectedRoute allowedRoles={["USER", "ARTIST", "ADMIN"]} />}>
-        <Route path="/" element={<UserHome />} />
+      {/* ================= USER – ZING UI ================= */}
+      <Route
+        element={
+          <ProtectedRoute allowedRoles={["USER", "ARTIST", "ADMIN"]} />
+        }
+      >
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/zing-chart" element={<ZingChart />} />
+          <Route path="/new-release" element={<NewRelease />} />
+          <Route path="/top-100" element={<Top100 />} />
+          <Route path="/playlists" element={<Playlists />} />
+          <Route path="/albums" element={<Albums />} />
+        </Route>
       </Route>
 
-      {/* ARTIST */}
+      {/* ================= ARTIST ================= */}
       <Route element={<ProtectedRoute allowedRoles={["ARTIST"]} />}>
         <Route path="/artist" element={<ArtistDashboard />} />
       </Route>
 
-      {/* ADMIN */}
+      {/* ================= ADMIN ================= */}
       <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
         <Route path="/admin" element={<AdminDashboard />} />
       </Route>
 
-      {/* fallback đơn giản */}
+      {/* ================= FALLBACK ================= */}
       <Route path="*" element={<Forbidden />} />
     </Routes>
   );

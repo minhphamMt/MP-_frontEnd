@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import AppRoutes from "./routes/AppRoutes";
 import useAuthStore from "./store/auth.store";
+import AudioProvider from "./components/player/AudioProvider";
 
 export default function App() {
   const loadUser = useAuthStore((s) => s.loadUser);
@@ -9,5 +10,10 @@ export default function App() {
     loadUser();
   }, [loadUser]);
 
-  return <AppRoutes />;
+  return (
+    <>
+      <AudioProvider />
+      <AppRoutes />
+    </>
+  );
 }
