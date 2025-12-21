@@ -1,8 +1,11 @@
-export default function Section({ title, children }) {
+export default function Section({ title, children, action }) {
   return (
-    <section className="mb-8">
-      <h2 className="text-lg font-bold mb-4">{title}</h2>
-      <div className="space-y-1">{children}</div>
-    </section>
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </div>
   );
 }

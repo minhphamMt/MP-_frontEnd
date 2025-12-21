@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import api from "../api/axios";
 
 const audio = new Audio();
 
@@ -14,13 +15,16 @@ const usePlayerStore = create((set, get) => ({
   duration: 0,
   currentTime: 0,
 
+  /* ===== LIKE ===== */
+  likedSongIds: [],
+
   /* =====================
      INTERNAL
      ===================== */
   audio,
 
   /* =====================
-     ACTIONS
+     ACTIONS – PLAYER
      ===================== */
 
   playSong: (song, queue = []) => {
@@ -58,16 +62,52 @@ const usePlayerStore = create((set, get) => ({
   playNext: () => {
     const { queue, currentIndex } = get();
     if (currentIndex < queue.length - 1) {
-      const nextIndex = currentIndex + 1;
-      get().playSong(queue[nextIndex], queue);
+      get().playSong(queue[currentIndex + 1], queue);
     }
   },
 
   playPrev: () => {
     const { queue, currentIndex } = get();
     if (currentIndex > 0) {
-      const prevIndex = currentIndex - 1;
-      get().playSong(queue[prevIndex], queue);
+      get().playSong(queue[currentIndex - 1], queue);
+    }
+  },
+
+  /* =====================
+     ACTIONS – LIKE (BACKEND)
+     ===================== */
+
+  loadLikedSongs: async () => {
+    try {
+      const res = await api.get("/users/me/liked-songs");
+      const ids = (res.data?.data || []).map((s) => s.id);
+      set({ likedSongIds: ids });
+    } catch (err) {
+      console.error("Load liked songs error", err);
+    }
+  },
+
+  toggleLike: async (songId) => {
+    const { likedSongIds } = get();
+    const isLiked = likedSongIds.includes(songId);
+
+    // optimistic update
+    set({
+      likedSongIds: isLiked
+        ? likedSongIds.filter((id) => id !== songId)
+        : [...likedSongIds, songId],
+    });
+
+    try {
+      if (isLiked) {
+        await api.delete(`/songs/${songId}/like`);
+      } else {
+        await api.post(`/songs/${songId}/like`);
+      }
+    } catch (err) {
+      console.error("Toggle like error", err);
+      // rollback
+      set({ likedSongIds });
     }
   },
 }));
