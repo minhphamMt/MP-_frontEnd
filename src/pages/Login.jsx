@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import useAuthStore from "../store/auth.store";
 
 export default function Login() {
@@ -75,7 +78,7 @@ export default function Login() {
               />
               <p className="text-xs text-white/50">
                 Mẹo: tài khoản demo đã được điền sẵn.
-              </p>
+               </p>
             </div>
 
             {error && (

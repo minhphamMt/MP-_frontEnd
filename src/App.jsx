@@ -6,23 +6,31 @@ import AudioProvider from "./components/player/AudioProvider";
 
 export default function App() {
   const loadUser = useAuthStore((s) => s.loadUser);
-  const user = useAuthStore((s) => s.user);
+  const isAuthReady = useAuthStore((s) => s.isAuthReady);
+  const isAuthenticated = useAuthStore(
+    (s) => s.isAuthenticated
+  );
 
   const loadLikedSongs = usePlayerStore(
     (s) => s.loadLikedSongs
   );
 
-  // 1️⃣ Load user (auth)
+  /* =====================
+     1️⃣ BOOTSTRAP AUTH
+     ===================== */
   useEffect(() => {
     loadUser();
   }, [loadUser]);
 
-  // 2️⃣ Khi đã có user → load liked songs
+  /* =====================
+     2️⃣ LOAD LIKED SONGS
+     (CHỈ KHI AUTH THỰC SỰ SẴN SÀNG)
+     ===================== */
   useEffect(() => {
-    if (user) {
-      loadLikedSongs();
+    if (isAuthReady && isAuthenticated) {
+      loadLikedSongs(); // 🔥 GỌI ĐÚNG API BACKEND MÀY CODE
     }
-  }, [user, loadLikedSongs]);
+  }, [isAuthReady, isAuthenticated, loadLikedSongs]);
 
   return (
     <>

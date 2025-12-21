@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import api from "../api/axios";
 
-const normalizeSongId = (song) => {
+export const normalizeSongId = (song) => {
   const rawId =
     song?.id ?? song?.song_id ?? song?.songId ?? song?.song?.id ?? song;
 
@@ -13,6 +13,7 @@ const extractSongsFromResponse = (payload) => {
   const sources = [
     payload?.data,
     payload?.data?.data,
+    payload?.data?.data?.likedSongs,
     payload?.data?.items,
     payload?.data?.songs,
     payload?.data?.likedSongs,
@@ -103,9 +104,12 @@ const usePlayerStore = create((set, get) => ({
     try {
       const res = await api.get("/users/me/liked-songs");
       const songs = extractSongsFromResponse(res);
+
       const ids = [
         ...new Set(
-          songs.map((s) => normalizeSongId(s)).filter((id) => id !== null)
+          songs
+            .map((s) => normalizeSongId(s))
+            .filter((id) => id !== null && id !== "")
         ),
       ];
       set({ likedSongIds: ids });
