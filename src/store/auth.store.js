@@ -111,6 +111,7 @@ const useAuthStore = create((set, get) => ({
 
       return user;
     } catch (err) {
+      console.error("Load user error", err);
       get().logout();
       return null;
     }

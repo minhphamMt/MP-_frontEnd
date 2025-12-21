@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/axios";
 import usePlayerStore from "../store/player.store";
@@ -14,11 +14,7 @@ export default function ArtistDetail() {
 
   const { playSong, currentSong, isPlaying } = usePlayerStore();
 
-  useEffect(() => {
-    loadArtist();
-  }, [id]);
-
-  async function loadArtist() {
+  const loadArtist = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -46,7 +42,11 @@ export default function ArtistDetail() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
+
+  useEffect(() => {
+    loadArtist();
+  }, [loadArtist]);
 
   if (loading)
     return <div className="p-6 text-white/60">Đang tải nghệ sĩ...</div>;

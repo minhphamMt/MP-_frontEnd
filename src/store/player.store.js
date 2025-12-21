@@ -1,6 +1,28 @@
 import { create } from "zustand";
 import api from "../api/axios";
 
+const normalizeSongId = (song) => {
+  const rawId =
+    song?.id ?? song?.song_id ?? song?.songId ?? song?.song?.id ?? song;
+
+  if (rawId === undefined || rawId === null) return null;
+  return String(rawId);
+};
+
+const extractSongsFromResponse = (payload) => {
+  const sources = [
+    payload?.data,
+    payload?.data?.data,
+    payload?.data?.items,
+    payload?.data?.songs,
+    payload?.data?.likedSongs,
+    payload?.songs,
+    payload?.likedSongs,
+    payload,
+  ];
+
+  return sources.find(Array.isArray) || [];
+};
 const audio = new Audio();
 
 const usePlayerStore = create((set, get) => ({
@@ -80,7 +102,12 @@ const usePlayerStore = create((set, get) => ({
   loadLikedSongs: async () => {
     try {
       const res = await api.get("/users/me/liked-songs");
-      const ids = (res.data?.data || []).map((s) => s.id);
+      const songs = extractSongsFromResponse(res);
+      const ids = [
+        ...new Set(
+          songs.map((s) => normalizeSongId(s)).filter((id) => id !== null)
+        ),
+      ];
       set({ likedSongIds: ids });
     } catch (err) {
       console.error("Load liked songs error", err);
@@ -88,21 +115,24 @@ const usePlayerStore = create((set, get) => ({
   },
 
   toggleLike: async (songId) => {
+    const targetId = normalizeSongId(songId);
+    if (!targetId) return;
+
     const { likedSongIds } = get();
-    const isLiked = likedSongIds.includes(songId);
+    const isLiked = likedSongIds.includes(targetId);
 
     // optimistic update
     set({
       likedSongIds: isLiked
-        ? likedSongIds.filter((id) => id !== songId)
-        : [...likedSongIds, songId],
+        ? likedSongIds.filter((id) => id !== targetId)
+        : [...likedSongIds, targetId],
     });
 
     try {
       if (isLiked) {
-        await api.delete(`/songs/${songId}/like`);
+        await api.delete(`/songs/${targetId}/like`);
       } else {
-        await api.post(`/songs/${songId}/like`);
+        await api.post(`/songs/${targetId}/like`);
       }
     } catch (err) {
       console.error("Toggle like error", err);

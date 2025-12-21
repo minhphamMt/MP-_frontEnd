@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getAlbumById } from "../api/album.api";
 import usePlayerStore from "../store/player.store";
@@ -14,11 +14,7 @@ export default function AlbumDetail() {
 
   const { playSong, currentSong, isPlaying } = usePlayerStore();
 
-  useEffect(() => {
-    loadAlbum();
-  }, [id]);
-
-  async function loadAlbum() {
+  const loadAlbum = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -46,7 +42,11 @@ export default function AlbumDetail() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
+
+  useEffect(() => {
+    loadAlbum();
+  }, [loadAlbum]);
 
   if (loading)
     return <div className="p-6 text-white/60">Đang tải album...</div>;
