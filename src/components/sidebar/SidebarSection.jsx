@@ -1,8 +1,8 @@
 export default function SidebarSection({ title, children }) {
   return (
-    <div className="mb-6">
+    <div className="mb-6 space-y-2">
       {title && (
-        <div className="px-3 mb-2 text-xs uppercase text-white/50">
+        <div className="px-3 text-[11px] uppercase tracking-[0.2em] text-white/50">
           {title}
         </div>
       )}

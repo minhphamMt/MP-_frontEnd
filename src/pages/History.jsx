@@ -111,7 +111,7 @@ export default function History() {
 
         setHistory((prev) => {
           const combined = append ? [...prev, ...normalized] : normalized;
-          return dedupeHistoryItems(combined);
+         return dedupeHistoryItems(combined);
         });
         setMeta(resMeta || { page, limit: DEFAULT_LIMIT });
       } catch (err) {
@@ -136,7 +136,7 @@ export default function History() {
     [history]
   );
 
-   const handlePlaySong = async (item) => {
+  const handlePlaySong = async (item) => {
     const playable = (await fetchPlayableSong(item, getSongById)) || item;
     if (!playable?.audio_url) return;
 
@@ -173,12 +173,16 @@ export default function History() {
   );
 
   if (loading) {
-    return <div className="text-sm text-white/60">Đang tải lịch sử...</div>;
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+        Đang tải lịch sử...
+      </div>
+    );
   }
 
   if (!history.length) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
         <h1 className="text-2xl font-bold">Nghe gần đây</h1>
         <div className="text-sm text-white/60">Bạn chưa nghe bài hát nào.</div>
       </div>
@@ -188,17 +192,20 @@ export default function History() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Nghe gần đây</h1>
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">Thói quen</p>
+          <h1 className="text-3xl font-bold text-white drop-shadow-sm">Nghe gần đây</h1>
+        </div>
         <button
           onClick={loadHistory}
-          className="text-xs px-3 py-1 rounded bg-white/10 hover:bg-white/15"
+          className="rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-cyan-400/30 transition hover:shadow-cyan-300/50"
         >
           Làm mới
         </button>
       </div>
 
-      <div className="rounded-lg border border-white/5 bg-white/5">
-        <div className="grid grid-cols-[3fr,2fr,2fr,1fr,1fr] gap-3 px-4 py-2 text-xs uppercase tracking-wide text-white/60">
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 via-white/0 to-white/5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+        <div className="grid grid-cols-[3fr,2fr,2fr,1fr,1fr] gap-3 px-5 py-3 text-[11px] uppercase tracking-[0.16em] text-white/60">
           <div>Bài hát</div>
           <div>Album</div>
           <div>Nghệ sĩ</div>
@@ -211,34 +218,33 @@ export default function History() {
             <button
               type="button"
               key={`${item.history_id || item.id}-${item.listened_at}`}
-  onClick={() => handlePlaySong(item)}
-              className="grid w-full grid-cols-[3fr,2fr,2fr,1fr,1fr] items-center gap-3 px-4 py-3 text-left hover:bg-white/10"
+              onClick={() => handlePlaySong(item)}
+              className="grid w-full grid-cols-[3fr,2fr,2fr,1fr,1fr] items-center gap-3 px-5 py-3 text-left transition hover:bg-white/5"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <img
-                  src={item.cover_url}
-                  alt=""
-                  className="w-12 h-12 rounded object-cover"
-                />
+                <div className="relative h-12 w-12 overflow-hidden rounded-xl">
+                  <img
+                    src={item.cover_url}
+                    alt=""
+                    className="h-12 w-12 rounded-xl object-cover"
+                  />
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/50 via-black/10 to-transparent opacity-0 transition hover:opacity-100" />
+                </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold truncate">{item.title}</div>
+                  <div className="truncate text-sm font-semibold">{item.title}</div>
                   {item.album_title ? (
-                    <div className="text-[11px] text-white/60 truncate">
-                      {item.album_title}
-                    </div>
+                    <div className="truncate text-[11px] text-white/60">{item.album_title}</div>
                   ) : null}
                 </div>
               </div>
 
-              <div className="text-sm text-white/80 truncate">{item.album_title}</div>
+              <div className="truncate text-sm text-white/80">{item.album_title}</div>
 
-              <div className="text-sm text-white/80 truncate">{item.artist_name}</div>
+              <div className="truncate text-sm text-white/80">{item.artist_name}</div>
 
-              <div className="text-sm text-white/70">
-                {formatDuration(item.duration)}
-              </div>
+              <div className="text-sm text-white/70">{formatDuration(item.duration)}</div>
 
-              <div className="text-sm text-white/60 text-right">
+              <div className="text-right text-sm text-white/60">
                 {formatRelativeTime(item.listened_at)}
               </div>
             </button>
@@ -251,7 +257,7 @@ export default function History() {
           <button
             onClick={() => loadHistory(currentPage + 1, true)}
             disabled={loadingMore}
-            className="text-xs px-4 py-2 rounded bg-white/10 hover:bg-white/15 disabled:opacity-50"
+            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10 disabled:opacity-50"
           >
             {loadingMore ? "Đang tải thêm..." : "Tải thêm"}
           </button>

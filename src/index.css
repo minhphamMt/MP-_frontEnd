@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-slate-950 text-white;
+  scrollbar-gutter: stable;
+}
+
 .player-slider {
   @apply appearance-none h-1 rounded-full bg-white/20 cursor-pointer;
 }
@@ -16,22 +25,38 @@
 
 .scrollbar-muted {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+  scrollbar-color: rgba(167, 139, 250, 0.8) rgba(255, 255, 255, 0.04);
 }
 
-.scrollbar-muted::-webkit-scrollbar {
-  width: 6px;
+.scrollbar-muted::-webkit-scrollbar,
+::-webkit-scrollbar {
+  width: 10px;
 }
 
-.scrollbar-muted::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollbar-muted::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.28);
+.scrollbar-muted::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.05));
   border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.scrollbar-muted::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.38);
+.scrollbar-muted::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #8b5cf6, #22d3ee);
+  border-radius: 9999px;
+  border: 2px solid rgba(15, 23, 42, 0.8);
+}
+
+.scrollbar-muted::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #a78bfa, #38e0ff);
+}
+
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
 }
