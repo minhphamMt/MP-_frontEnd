@@ -15,7 +15,7 @@ export default function Sidebar() {
     <aside className="w-60 bg-[#231b2e] flex flex-col">
       {/* Logo */}
       <div className="h-16 flex items-center px-4 text-xl font-bold">
-        Zing MP3
+        MINHPHAM
       </div>
 
       {/* Scrollable content */}

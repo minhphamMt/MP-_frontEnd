@@ -1,4 +1,6 @@
-import usePlayerStore from "../../store/player.store";
+import usePlayerStore, {
+  normalizeSongId,
+} from "../../store/player.store";
 
 export default function SongCard({ song, queue }) {
   const {
@@ -12,8 +14,9 @@ export default function SongCard({ song, queue }) {
   } = usePlayerStore();
 
   const isActive = currentSong?.id === song.id;
-  const normalizedId = String(song?.id ?? "");
-  const isLiked = likedSongIds.includes(normalizedId);
+ const normalizedId = normalizeSongId(song);
+  const isLiked =
+    normalizedId !== null && likedSongIds.includes(normalizedId);
 
   const handlePlay = (e) => {
     e.stopPropagation();
