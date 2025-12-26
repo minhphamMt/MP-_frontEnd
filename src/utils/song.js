@@ -13,9 +13,21 @@ export const toPlayableSong = (raw = {}) => {
     source.audio_url ||
     source.audioUrl ||
     source.audio ||
+    source.streaming_url ||
+    source.stream_url ||
+    source.streamUrl ||
+    source.source_url ||
+    source.source ||
+    source.url ||
     raw.audio_url ||
     raw.audioUrl ||
     raw.audio ||
+    raw.streaming_url ||
+    raw.stream_url ||
+    raw.streamUrl ||
+    raw.source_url ||
+    raw.source ||
+    raw.url ||
     (source.audio_path ? `${baseUrl}${source.audio_path}` : undefined) ||
     (raw.audio_path ? `${baseUrl}${raw.audio_path}` : undefined);
 
@@ -42,12 +54,14 @@ export const toPlayableSong = (raw = {}) => {
       source.cover_url ||
       source.thumbnail ||
       source.image_url ||
+      source.thumbnail_m ||
       source.image ||
       source.cover ||
       source.album?.cover_url ||
       raw.cover_url ||
       raw.thumbnail ||
       raw.image_url ||
+      raw.thumbnail_m ||
       raw.image ||
       raw.cover ||
       raw.album?.cover_url ||

@@ -1,37 +1,32 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FaPlay, FaRegClock, FaSearch } from "react-icons/fa";
 import {
   getNewReleaseChart,
   getTop100Chart,
   getZingChart,
+  getZingChartSeries,
 } from "../api/chart.api";
-import { formatDuration, filterPlayableSongs } from "../utils/song";
+import {
+  formatDuration,
+  filterPlayableSongs,
+  toPlayableSong,
+} from "../utils/song";
 import usePlayerStore from "../store/player.store";
 import SongTable from "../components/song/SongTable";
 
-const POINTS_PER_LINE = 12;
+const CHART_WIDTH = 900;
+const CHART_HEIGHT = 240;
+const CHART_PADDING_X = 24;
 
-const createTrendPoints = (playCount = 0, offset = 0) => {
-  const safePlayCount = Number.isFinite(Number(playCount))
-    ? Math.max(Number(playCount), 1000)
-    : 1000;
-
-  return Array.from({ length: POINTS_PER_LINE }, (_, idx) => {
-    const phase = (idx + offset) * 0.8;
-    const wave = Math.sin(phase) * 0.18 + Math.cos(phase * 0.6) * 0.08;
-    const decay = 1 - idx * 0.015;
-    return safePlayCount * (0.68 + wave) * decay;
-  });
-};
-
-const buildPath = (values, width, height) => {
+const buildPath = (values, width, height, scaleMax, paddingX = 0) => {
   if (!values.length) return "";
 
-  const maxValue = Math.max(...values);
-  const xStep = values.length > 1 ? width / (values.length - 1) : width;
+  const maxValue = scaleMax ?? Math.max(...values);
+  const xStep =
+    values.length > 1 ? (width - paddingX * 2) / (values.length - 1) : width;
 
   const points = values.map((value, idx) => {
-    const x = Math.round(idx * xStep);
+    const x = Math.round(paddingX + idx * xStep);
     const y = Math.round(height - (value / (maxValue || 1)) * (height * 0.85));
     return [x, Math.max(12, y)];
   });
@@ -58,6 +53,10 @@ const colors = [
 
 export default function ZingChart() {
   const [songs, setSongs] = useState([]);
+  const [seriesData, setSeriesData] = useState([]);
+  const [seriesDays, setSeriesDays] = useState(7);
+  const [loadingSeries, setLoadingSeries] = useState(true);
+  const [hoveredIndex, setHoveredIndex] = useState(null);
   const [newReleaseSongs, setNewReleaseSongs] = useState([]);
   const [top100Songs, setTop100Songs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -68,20 +67,56 @@ export default function ZingChart() {
   const loadChart = async () => {
     try {
       setLoading(true);
-      const res = await getZingChart();
+      setLoadingSeries(true);
+
+      const [chartRes, seriesRes] = await Promise.all([
+        getZingChart(),
+        getZingChartSeries({ days: 7 }),
+      ]);
+
       const rawSongs =
-        res?.data?.data?.songs ||
-        res?.data?.data?.items ||
-        res?.data?.data ||
-        res?.data ||
+        chartRes?.data?.data?.songs ||
+        chartRes?.data?.data?.items ||
+        chartRes?.data?.data ||
+        chartRes?.data ||
         [];
 
-      setSongs(filterPlayableSongs(rawSongs));
+      const rawSeries = seriesRes?.data?.data?.series || [];
+      const daysValue = Number(seriesRes?.data?.data?.days) || 7;
+
+      const playableSongs = filterPlayableSongs(rawSongs);
+      const songMap = new Map(playableSongs.map((s) => [String(s.id), s]));
+
+      setSongs(playableSongs);
+      setSeriesDays(daysValue);
+      setSeriesData(
+        rawSeries
+          .filter((item) => item?.song && Array.isArray(item?.data))
+          .map((item) => {
+            const normalizedSong = toPlayableSong(item.song);
+            const normalizedId = normalizedSong?.id ? String(normalizedSong.id) : null;
+            const songFromChart = normalizedId ? songMap.get(normalizedId) : null;
+
+            return {
+              song: {
+                ...(songFromChart || {}),
+                ...(normalizedSong || {}),
+              },
+              artist: item.artist,
+              data: item.data.map((point) => ({
+                date: point.date || point.day || "",
+                plays: Number(point.plays) || 0,
+              })),
+            };
+          })
+      );
     } catch (err) {
       console.error("Load Zing Chart failed", err);
       setSongs([]);
+      setSeriesData([]);
     } finally {
       setLoading(false);
+      setLoadingSeries(false);
     }
   };
 
@@ -126,7 +161,7 @@ export default function ZingChart() {
     loadTop100();
   }, []);
 
-  const highlighted = useMemo(() => songs.slice(0, 3), [songs]);
+  const highlightedSeries = useMemo(() => seriesData, [seriesData]);
   const weeklyColumns = useMemo(() => {
     const slices = [
       { title: "Việt Nam", start: 0 },
@@ -141,25 +176,102 @@ export default function ZingChart() {
   }, [songs]);
 
   const chartLines = useMemo(() => {
-    const datasets = highlighted.map((song, index) => {
-      const points = createTrendPoints(song.play_count ?? song.playCount, index);
-      return {
-        song,
-        points,
+    const datasets = highlightedSeries
+      .filter((item) => Array.isArray(item.data) && item.data.length)
+      .map((item, index) => ({
+        song: item.song,
+        dataPoints: item.data,
         color: colors[index % colors.length],
-        path: buildPath(points, 900, 240),
-      };
-    });
+      }));
 
     if (!datasets.length) return [];
 
-    const maxPoint = Math.max(...datasets.flatMap((d) => d.points), 1);
+    const scaleMax = Math.max(
+      ...datasets.flatMap((d) => d.dataPoints.map((p) => Number(p.plays) || 0)),
+      1
+    );
 
-    return datasets.map((dataset) => ({
-      ...dataset,
-      maxPoint,
-    }));
-  }, [highlighted]);
+    return datasets.map((dataset) => {
+      const xStep =
+        dataset.dataPoints.length > 1
+          ? (CHART_WIDTH - CHART_PADDING_X * 2) / (dataset.dataPoints.length - 1)
+          : CHART_WIDTH;
+
+      const points = dataset.dataPoints.map((point, i) => {
+        const value = Number(point.plays) || 0;
+        const x = Math.round(CHART_PADDING_X + i * xStep);
+        const y = Math.round(CHART_HEIGHT - (value / scaleMax) * (CHART_HEIGHT * 0.85));
+
+        return {
+          x,
+          y: Math.max(12, y),
+          value,
+          date: point.date,
+        };
+      });
+
+      return {
+        ...dataset,
+        points,
+        path: buildPath(
+          points.map((p) => p.value),
+          CHART_WIDTH,
+          CHART_HEIGHT,
+          scaleMax,
+          CHART_PADDING_X
+        ),
+        scaleMax,
+      };
+    });
+  }, [highlightedSeries]);
+
+  const activePoints = useMemo(() => {
+    if (hoveredIndex === null) return [];
+
+    return chartLines
+      .map((line, lineIdx) => {
+        const point = line.points?.[hoveredIndex];
+        if (!point) return null;
+
+        return {
+          ...point,
+          lineIdx,
+          line,
+        };
+      })
+      .filter(Boolean);
+  }, [chartLines, hoveredIndex]);
+
+  const crosshairPoint = activePoints[0];
+
+  const handleChartHover = useCallback(
+    (event) => {
+      if (!chartLines.length || !chartLines[0]?.points?.length) return;
+
+      const bounds = event.currentTarget.getBoundingClientRect();
+      const offsetX = event.clientX - bounds.left;
+      const usableX = Math.max(0, Math.min(CHART_WIDTH, offsetX));
+      const innerX = Math.max(0, Math.min(CHART_WIDTH - CHART_PADDING_X * 2, usableX - CHART_PADDING_X));
+      const xStep =
+        chartLines[0].points.length > 1
+          ? (CHART_WIDTH - CHART_PADDING_X * 2) / (chartLines[0].points.length - 1)
+          : CHART_WIDTH;
+
+      const rawIndex = Math.round(innerX / xStep);
+      const clampedIndex = Math.max(0, Math.min(chartLines[0].points.length - 1, rawIndex));
+
+      setHoveredIndex(clampedIndex);
+    },
+    [chartLines]
+  );
+
+  const getSongCover = (song) =>
+    song?.cover_url ||
+    song?.thumbnail_m ||
+    song?.thumbnail ||
+    song?.image_url ||
+    song?.image ||
+    "";
 
   const handlePlay = (song) => {
     if (!song?.audio_url) return;
@@ -180,7 +292,7 @@ export default function ZingChart() {
         </div>
         <div className="relative w-12 h-12 shrink-0">
           <img
-            src={song.cover_url}
+            src={getSongCover(song)}
             alt={song.title}
             className="w-full h-full object-cover rounded-lg"
           />
@@ -210,7 +322,7 @@ export default function ZingChart() {
 
   return (
     <div className="space-y-8">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#241540] via-[#1b0f33] to-[#0f0a22] p-6">
+      <div className="relative rounded-2xl bg-gradient-to-br from-[#241540] via-[#1b0f33] to-[#0f0a22] p-6 overflow-visible">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.08),_transparent_40%)]" />
 
         <div className="relative flex flex-wrap gap-4 items-center justify-between mb-6">
@@ -221,7 +333,9 @@ export default function ZingChart() {
                 Live
               </span>
             </div>
-            <div className="text-sm text-white/60">Thứ Tư, 12/02/2025</div>
+            <div className="text-sm text-white/60">
+              Dữ liệu {seriesDays} ngày gần nhất
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -244,9 +358,14 @@ export default function ZingChart() {
           </div>
         )}
 
-        <div className="relative grid lg:grid-cols-[1.2fr_1fr] gap-6">
+        <div className="relative space-y-4">
           <div className="relative">
-            <svg viewBox="0 0 960 280" className="w-full h-[280px]">
+            <svg
+              viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT + 20}`}
+              className="w-full h-[320px] max-lg:h-[300px]"
+              onMouseMove={handleChartHover}
+              onMouseLeave={() => setHoveredIndex(null)}
+            >
               <defs>
                 {chartLines.map((line, idx) => (
                   <linearGradient
@@ -285,49 +404,132 @@ export default function ZingChart() {
                     strokeLinecap="round"
                   />
                 ))}
-                {chartLines.map((line, idx) => {
-                  const xStep = line.points.length > 1 ? 900 / (line.points.length - 1) : 0;
-                  const maxPoint = Math.max(...line.points);
+                {chartLines.map((line, idx) =>
+                  line.points.map((point, i) => (
+                    <circle
+                      key={`${idx}-${i}`}
+                      cx={point.x}
+                      cy={point.y}
+                      r={4}
+                      fill="#0b071a"
+                      stroke={line.color.main}
+                      strokeWidth={2}
+                      className="cursor-pointer"
+                      onMouseEnter={() => setHoveredIndex(i)}
+                    />
+                  ))
+                )}
 
-                  return line.points.map((value, i) => {
-                    const x = Math.round(i * xStep);
-                    const y = Math.round(240 - (value / (maxPoint || 1)) * (240 * 0.85));
-                    return (
-                      <circle
-                        key={`${idx}-${i}`}
-                        cx={x}
-                        cy={Math.max(12, y)}
-                        r={4}
-                        fill="#0b071a"
-                        stroke={line.color.main}
-                        strokeWidth={2}
-                      />
-                    );
-                  });
-                })}
+                {crosshairPoint && (
+                  <g>
+                    <line
+                      x1={crosshairPoint.x}
+                      y1={crosshairPoint.y}
+                      x2={crosshairPoint.x}
+                      y2={CHART_HEIGHT + 12}
+                      stroke="white"
+                      strokeOpacity={0.25}
+                      strokeWidth={1}
+                      strokeDasharray="4 4"
+                    />
+                    <circle
+                      cx={crosshairPoint.x}
+                      cy={crosshairPoint.y}
+                      r={7}
+                      fill="#0b071a"
+                      stroke={crosshairPoint.line.color.main}
+                      strokeWidth={3}
+                    />
+                  </g>
+                )}
               </g>
             </svg>
 
+            {crosshairPoint && activePoints.length > 0 && (
+              <div
+                className="absolute z-20 rounded-xl bg-[#120926] border border-white/10 px-3 py-2 shadow-xl pointer-events-none"
+                style={{
+                  left: `${Math.min(
+                    CHART_WIDTH - 16,
+                    Math.max(16, crosshairPoint.x)
+                  )}px`,
+                  top: `${Math.min(CHART_HEIGHT - 8, Math.max(24, crosshairPoint.y))}px`,
+                  transform: "translate(-50%, -115%)",
+                }}
+              >
+                <div className="text-[11px] text-white/60 mb-2">{crosshairPoint.date}</div>
+                <div className="space-y-2 min-w-[220px]">
+                  {activePoints
+                    .slice()
+                    .sort((a, b) => b.value - a.value)
+                    .map((point, idx) => (
+                      <div key={`${point.line.song?.id || idx}-${point.x}`} className="flex items-center gap-3">
+                        <div
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: point.line.color.main }}
+                        />
+                        <div className="relative w-10 h-10 overflow-hidden rounded-md border border-white/10 shrink-0">
+                          <img
+                            src={getSongCover(point.line.song)}
+                            alt={point.line.song?.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-semibold truncate max-w-[180px]">
+                            {point.line.song?.title}
+                          </div>
+                          <div className="text-xs text-white/60 truncate max-w-[180px]">
+                            {point.line.song?.artist_name}
+                          </div>
+                        </div>
+                        <div className="text-sm font-semibold text-white/80 ml-auto">
+                          {point.value.toLocaleString("vi-VN")}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {loadingSeries && (
+              <div className="absolute inset-0 flex items-center justify-center text-white/70 text-sm bg-[#0f0a22]/60 backdrop-blur-sm rounded-lg">
+                Đang tải dữ liệu biểu đồ...
+              </div>
+            )}
+            {!loadingSeries && !chartLines.length && (
+              <div className="absolute inset-0 flex items-center justify-center text-white/70 text-sm bg-[#0f0a22]/80 backdrop-blur-sm rounded-lg">
+                Chưa có dữ liệu biểu đồ để hiển thị.
+              </div>
+            )}
+
             <div className="absolute bottom-4 left-4 flex gap-4 flex-wrap">
-              {highlighted.map((song, idx) => (
+              {highlightedSeries.map((item, idx) => (
                 <div
-                  key={song.id || idx}
+                  key={item.song?.id || idx}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10"
                 >
-                  <div
-                    className="w-8 h-8 rounded-md"
-                    style={{ backgroundColor: colors[idx % colors.length].main, opacity: 0.8 }}
-                  />
+                  <div className="relative w-10 h-10 rounded-md overflow-hidden border border-white/10">
+                    <img
+                      src={getSongCover(item.song)}
+                      alt={item.song?.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <span
+                      className="absolute inset-0"
+                      style={{ boxShadow: `inset 0 0 0 2px ${colors[idx % colors.length].main}` }}
+                    />
+                  </div>
                   <div className="text-sm">
-                    <div className="font-semibold">{song.title}</div>
-                    <div className="text-white/60">{song.artist_name}</div>
+                    <div className="font-semibold">{item.song?.title}</div>
+                    <div className="text-white/60">{item.song?.artist_name}</div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="relative bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur">
+          <div className="relative bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur">
             <div className="flex items-center justify-between mb-3 px-1">
               <div className="text-sm font-semibold text-white/80">BXH tuần</div>
               <div className="text-xs text-white/60">Cập nhật mỗi thứ 2</div>
@@ -353,7 +555,6 @@ export default function ZingChart() {
             <div className="relative flex items-center justify-between mb-4">
               <div>
                 <div className="text-lg font-semibold">{column.title}</div>
-                <div className="text-xs text-white/60">Bảng xếp hạng tuần</div>
               </div>
               <button className="text-xs px-3 py-2 rounded-full border border-white/15 hover:bg-white/5 transition">
                 Xem tất cả
@@ -379,7 +580,7 @@ export default function ZingChart() {
                     </div>
                     <div className="w-12 h-12 rounded-lg overflow-hidden">
                       <img
-                        src={song.cover_url}
+                          src={getSongCover(song)}
                         alt={song.title}
                         className="w-full h-full object-cover"
                       />
