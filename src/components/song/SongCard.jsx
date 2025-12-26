@@ -33,7 +33,7 @@ export default function SongCard({ song, queue }) {
   return (
     <div
       onClick={() => playSong(song, queue)}
-      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 via-white/0 to-white/5 p-4 transition shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_22px_60px_rgba(0,0,0,0.5)] ${
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 via-white/0 to-white/5 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)] ${
         isActive ? "ring-1 ring-cyan-300/70" : ""
       }`}
     >
@@ -44,11 +44,11 @@ export default function SongCard({ song, queue }) {
         >
           <img
             src={song.cover_url}
-            className="h-16 w-16 rounded-xl object-cover transition duration-500 group-hover:scale-105"
+            className="h-16 w-16 rounded-xl object-cover group-hover:scale-110"
           />
-          <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
+         <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100" />
           <span
-            className={`absolute inset-0 flex items-center justify-center text-white transition ${
+            className={`absolute inset-0 flex items-center justify-center text-white ${
               isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
             }`}
           >

@@ -19,6 +19,8 @@ export default function Home() {
   const newAlbumRailRef = useRef(null);
   const artistTimerRef = useRef(null);
   const newAlbumTimerRef = useRef(null);
+  const artistResumeRef = useRef(null);
+  const newAlbumResumeRef = useRef(null);
 
   useEffect(() => {
     if (ranRef.current) return;
@@ -50,7 +52,7 @@ export default function Home() {
             const raw = res?.data?.data;
             if (!raw) return null;
 
-            return {
+             return {
               id: raw.id,
               title: raw.title,
               artist_name: raw.artist_name || raw.artist?.name || "",
@@ -74,12 +76,38 @@ export default function Home() {
     }
   }
 
+  const scrollForwardWithLoop = (ref, distance) => {
+    const node = ref.current;
+    if (!node) return;
+
+    const maxScroll = node.scrollWidth - node.clientWidth;
+    if (maxScroll <= 0) return;
+
+    if (node.scrollLeft + distance >= maxScroll - 2) {
+      node.scrollTo({ left: 0, behavior: "auto" });
+      node.scrollBy({ left: distance, behavior: "smooth" });
+    } else {
+      node.scrollBy({ left: distance, behavior: "smooth" });
+    }
+  };
+
   const scrollByAmount = (ref, direction = 1) => {
     const node = ref.current;
     if (!node) return;
 
     const amount = node.clientWidth * 0.7;
-    node.scrollBy({ left: amount * direction, behavior: "smooth" });
+    if (direction > 0) {
+      scrollForwardWithLoop(ref, amount);
+    } else {
+      node.scrollBy({ left: -amount, behavior: "smooth" });
+    }
+  };
+
+  const clearResumeTimeout = (resumeRef) => {
+    if (resumeRef.current) {
+      clearTimeout(resumeRef.current);
+      resumeRef.current = null;
+    }
   };
 
   const startAutoScroll = (ref, timerRef, itemCount) => {
@@ -94,13 +122,11 @@ export default function Home() {
       if (!node) return;
 
       const maxScroll = node.scrollWidth - node.clientWidth;
-      const next = node.scrollLeft + node.clientWidth * 0.6;
+      const step = node.clientWidth * 0.6;
 
-      if (next >= maxScroll - 8) {
-        node.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        node.scrollBy({ left: node.clientWidth * 0.6, behavior: "smooth" });
-      }
+      if (maxScroll <= 0) return;
+
+      scrollForwardWithLoop(ref, step);
     }, 4000);
   };
 
@@ -111,16 +137,31 @@ export default function Home() {
     }
   };
 
+  const pauseAndResumeAutoScroll = (ref, timerRef, resumeRef, itemCount) => {
+    pauseAutoScroll(timerRef);
+    clearResumeTimeout(resumeRef);
+
+    resumeRef.current = setTimeout(() => {
+      startAutoScroll(ref, timerRef, itemCount);
+    }, 1200);
+  };
+
   useEffect(() => {
     startAutoScroll(artistRailRef, artistTimerRef, artistAlbums.length);
 
-    return () => pauseAutoScroll(artistTimerRef);
+    return () => {
+      pauseAutoScroll(artistTimerRef);
+      clearResumeTimeout(artistResumeRef);
+    };
   }, [artistAlbums]);
 
   useEffect(() => {
     startAutoScroll(newAlbumRailRef, newAlbumTimerRef, newAlbums.length);
 
-    return () => pauseAutoScroll(newAlbumTimerRef);
+    return () => {
+      pauseAutoScroll(newAlbumTimerRef);
+      clearResumeTimeout(newAlbumResumeRef);
+    };
   }, [newAlbums]);
 
   if (loading) {
@@ -167,7 +208,15 @@ export default function Home() {
 
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1">
             <button
-              onClick={() => scrollByAmount(artistRailRef, -1)}
+              onClick={() => {
+                scrollByAmount(artistRailRef, -1);
+                pauseAndResumeAutoScroll(
+                  artistRailRef,
+                  artistTimerRef,
+                  artistResumeRef,
+                  artistAlbums.length
+                );
+              }}
               className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg shadow-black/40 ring-1 ring-white/10 transition hover:text-white sm:flex"
             >
               ‹
@@ -176,7 +225,15 @@ export default function Home() {
 
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1">
             <button
-              onClick={() => scrollByAmount(artistRailRef, 1)}
+              onClick={() => {
+                scrollByAmount(artistRailRef, 1);
+                pauseAndResumeAutoScroll(
+                  artistRailRef,
+                  artistTimerRef,
+                  artistResumeRef,
+                  artistAlbums.length
+                );
+              }}
               className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg shadow-black/40 ring-1 ring-white/10 transition hover:text-white sm:flex"
             >
               ›
@@ -200,7 +257,15 @@ export default function Home() {
 
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1">
             <button
-              onClick={() => scrollByAmount(newAlbumRailRef, -1)}
+              onClick={() => {
+                scrollByAmount(newAlbumRailRef, -1);
+                pauseAndResumeAutoScroll(
+                  newAlbumRailRef,
+                  newAlbumTimerRef,
+                  newAlbumResumeRef,
+                  newAlbums.length
+                );
+              }}
               className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg shadow-black/40 ring-1 ring-white/10 transition hover:text-white sm:flex"
             >
               ‹
@@ -209,7 +274,15 @@ export default function Home() {
 
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1">
             <button
-              onClick={() => scrollByAmount(newAlbumRailRef, 1)}
+              onClick={() => {
+                scrollByAmount(newAlbumRailRef, 1);
+                pauseAndResumeAutoScroll(
+                  newAlbumRailRef,
+                  newAlbumTimerRef,
+                  newAlbumResumeRef,
+                  newAlbums.length
+                );
+              }}
               className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg shadow-black/40 ring-1 ring-white/10 transition hover:text-white sm:flex"
             >
               ›
