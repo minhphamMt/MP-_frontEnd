@@ -12,7 +12,11 @@ export default function NewRelease() {
       setLoading(true);
       const res = await getNewReleaseChart();
       const rawSongs =
-        res?.data?.data?.songs || res?.data?.data || res?.data?.items || [];
+        res?.data?.data?.songs ||
+        res?.data?.data ||
+        res?.data?.items ||
+        res?.data ||
+        [];
 
       setSongs(filterPlayableSongs(rawSongs));
     } catch (err) {

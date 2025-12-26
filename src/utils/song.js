@@ -7,18 +7,44 @@ export const formatDuration = (s = 0) => {
 
 export const toPlayableSong = (raw = {}) => {
   const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
+  const source = raw.song ?? raw;
+
   const audioPath =
+    source.audio_url ||
+    source.audioUrl ||
+    source.audio ||
     raw.audio_url ||
     raw.audioUrl ||
     raw.audio ||
+    (source.audio_path ? `${baseUrl}${source.audio_path}` : undefined) ||
     (raw.audio_path ? `${baseUrl}${raw.audio_path}` : undefined);
 
   return {
-    id: raw.id ?? raw.song_id ?? raw.songId ?? raw._id,
-    title: raw.title ?? raw.name ?? "Không rõ",
-    artist_name: raw.artist_name ?? raw.artistName ?? raw.artist?.name ?? "",
-    duration: raw.duration ?? raw.length ?? 0,
+    id:
+      source.id ??
+      source.song_id ??
+      source.songId ??
+      raw.id ??
+      raw.song_id ??
+      raw.songId ??
+      raw._id,
+    title: source.title ?? source.name ?? raw.title ?? raw.name ?? "Không rõ",
+    artist_name:
+      source.artist_name ??
+      source.artistName ??
+      source.artist?.name ??
+      raw.artist_name ??
+      raw.artistName ??
+      raw.artist?.name ??
+      "",
+    duration: source.duration ?? source.length ?? raw.duration ?? raw.length ?? 0,
     cover_url:
+      source.cover_url ||
+      source.thumbnail ||
+      source.image_url ||
+      source.image ||
+      source.cover ||
+      source.album?.cover_url ||
       raw.cover_url ||
       raw.thumbnail ||
       raw.image_url ||
@@ -26,9 +52,12 @@ export const toPlayableSong = (raw = {}) => {
       raw.cover ||
       raw.album?.cover_url ||
       "",
-    album_id: raw.album_id ?? raw.albumId ?? raw.album?.id,
-    album_title: raw.album_title ?? raw.albumTitle ?? raw.album?.title,
+    album_id: source.album_id ?? source.albumId ?? source.album?.id,
+    album_title: source.album_title ?? source.albumTitle ?? source.album?.title,
     audio_url: audioPath || "",
+    rank: raw.rank ?? source.rank,
+    play_count:
+      raw.playCount ?? raw.play_count ?? source.playCount ?? source.play_count,
   };
 };
 

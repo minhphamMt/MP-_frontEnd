@@ -12,7 +12,11 @@ export default function ZingChart() {
       setLoading(true);
       const res = await getZingChart();
       const rawSongs =
-        res?.data?.data?.songs || res?.data?.data || res?.data?.items || [];
+        res?.data?.data?.songs ||
+        res?.data?.data ||
+        res?.data?.items ||
+        res?.data ||
+        [];
 
       setSongs(filterPlayableSongs(rawSongs));
     } catch (err) {

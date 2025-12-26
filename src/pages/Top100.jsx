@@ -12,7 +12,11 @@ export default function Top100() {
       setLoading(true);
       const res = await getTop100Chart();
       const rawSongs =
-        res?.data?.data?.songs || res?.data?.data || res?.data?.items || [];
+        res?.data?.data?.songs ||
+        res?.data?.data ||
+        res?.data?.items ||
+        res?.data ||
+        [];
 
       setSongs(filterPlayableSongs(rawSongs));
     } catch (err) {

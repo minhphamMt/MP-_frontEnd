@@ -102,6 +102,7 @@ export default function SongTable({
           const isActive = currentSong?.id === song.id;
           const songId = normalizeSongId(song);
           const isLiked = songId && likedSongIds.includes(songId);
+          const order = song.rank ?? index + 1;
 
           return (
             <div
@@ -111,7 +112,7 @@ export default function SongTable({
                 isActive ? "bg-white/10" : "hover:bg-white/5"
               }`}
             >
-              <div className="text-center text-white/60">{index + 1}</div>
+              <div className="text-center text-white/60">{order}</div>
 
               <div className="flex items-center gap-3 min-w-0">
                 <div className="relative">
