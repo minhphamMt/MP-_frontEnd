@@ -8,6 +8,7 @@ import MainLayout from "../layouts/MainLayout";
 import Home from "../pages/Home";
 import AlbumDetail from "../pages/AlbumDetail";
 import ArtistDetail from "../pages/ArtistDetail";
+import History from "../pages/History";
 
 /* ===== USER PAGES (TẠM) ===== */
 const ZingChart = () => <div>#ZINGCHART</div>;
@@ -45,7 +46,8 @@ export default function AppRoutes() {
           <Route path="/top-100" element={<Top100 />} />
           <Route path="/playlists" element={<Playlists />} />
           <Route path="/albums" element={<Albums />} />
-
+           <Route path="/history" element={<History />} />
+           
           {/* 🔴 PUBLIC CONTENT */}
           <Route path="/artist/:id" element={<ArtistDetail />} />
           <Route path="/album/:id" element={<AlbumDetail />} />

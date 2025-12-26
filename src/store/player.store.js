@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import api from "../api/axios";
+import { addHistory } from "../api/history.api";
 
 export const normalizeSongId = (song) => {
   const rawId =
@@ -65,7 +66,15 @@ const usePlayerStore = create((set, get) => ({
       isPlaying: true,
       currentTime: 0,
     });
+    
+     if (song?.id) {
+      addHistory(song.id).catch((err) =>
+        console.error("Add listening history failed", err)
+      );
+    }
+
   },
+
 
   pause: () => {
     audio.pause();

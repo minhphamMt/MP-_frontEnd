@@ -3,6 +3,7 @@ import {
   MdLibraryMusic,
   MdPlaylistPlay,
   MdAlbum,
+   MdHistory,
 } from "react-icons/md";
 import { FaChartLine } from "react-icons/fa";
 import { BsMusicNoteList } from "react-icons/bs";
@@ -34,6 +35,11 @@ export default function Sidebar() {
 
         {/* ===== LIBRARY ===== */}
         <SidebarSection title="Thư viện">
+           <SidebarItem
+            to="/history"
+            icon={MdHistory}
+            label="Nghe gần đây"
+          />
           <SidebarItem
             to="/playlists"
             icon={MdPlaylistPlay}
