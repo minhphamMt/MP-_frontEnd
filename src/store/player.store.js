@@ -38,6 +38,7 @@ const usePlayerStore = create((set, get) => ({
   isPlaying: false,
   duration: 0,
   currentTime: 0,
+  volume: 1,
 
   /* ===== LIKE ===== */
   likedSongIds: [],
@@ -66,7 +67,7 @@ const usePlayerStore = create((set, get) => ({
       isPlaying: true,
       currentTime: 0,
     });
-    
+
      if (song?.id) {
       addHistory(song.id).catch((err) =>
         console.error("Add listening history failed", err)
@@ -90,7 +91,11 @@ const usePlayerStore = create((set, get) => ({
     audio.currentTime = time;
     set({ currentTime: time });
   },
-
+ setVolume: (value) => {
+    const volume = Math.min(1, Math.max(0, value));
+    audio.volume = volume;
+    set({ volume });
+  },
   playNext: () => {
     const { queue, currentIndex } = get();
     if (currentIndex < queue.length - 1) {
