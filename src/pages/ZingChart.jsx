@@ -1,16 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FaPlay, FaRegClock, FaSearch } from "react-icons/fa";
-import {
-  getNewReleaseChart,
-  getTop100Chart,
-  getZingChart,
-  getZingChartSeries,
-} from "../api/chart.api";
-import {
-  formatDuration,
-  filterPlayableSongs,
-  toPlayableSong,
-} from "../utils/song";
+import { getZingChart, getZingChartSeries } from "../api/chart.api";
+import { formatDuration, filterPlayableSongs, toPlayableSong } from "../utils/song";
 import usePlayerStore from "../store/player.store";
 import SongTable from "../components/song/SongTable";
 
@@ -58,14 +49,13 @@ export default function ZingChart() {
   const [loadingSeries, setLoadingSeries] = useState(true);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [hoverPosition, setHoverPosition] = useState(null);
-  const [newReleaseSongs, setNewReleaseSongs] = useState([]);
-  const [top100Songs, setTop100Songs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingNewRelease, setLoadingNewRelease] = useState(true);
-  const [loadingTop100, setLoadingTop100] = useState(true);
   const [chartSize, setChartSize] = useState(null);
   const { playSong } = usePlayerStore();
   const chartRef = useRef(null);
+
+  const chartWidth = chartSize?.width || CHART_WIDTH;
+  const chartHeight = CHART_HEIGHT + 20;
 
   const loadChart = async () => {
     try {
@@ -122,46 +112,8 @@ export default function ZingChart() {
       setLoadingSeries(false);
     }
   };
-
-  const loadNewRelease = async () => {
-    try {
-      setLoadingNewRelease(true);
-      const res = await getNewReleaseChart();
-      const rawSongs =
-        res?.data?.data?.songs ||
-        res?.data?.data?.items ||
-        res?.data?.data ||
-        res?.data ||
-        [];
-
-      setNewReleaseSongs(filterPlayableSongs(rawSongs));
-    } catch (err) {
-      console.error("Load new release chart failed", err);
-      setNewReleaseSongs([]);
-    } finally {
-      setLoadingNewRelease(false);
-    }
-  };
-
-  const loadTop100 = async () => {
-    try {
-      setLoadingTop100(true);
-      const res = await getTop100Chart();
-      const rawSongs = res?.data?.data?.items || res?.data?.data || res?.data || [];
-
-      setTop100Songs(filterPlayableSongs(rawSongs));
-    } catch (err) {
-      console.error("Load top 100 chart failed", err);
-      setTop100Songs([]);
-    } finally {
-      setLoadingTop100(false);
-    }
-  };
-
   useEffect(() => {
     loadChart();
-    loadNewRelease();
-    loadTop100();
   }, []);
 
   const highlightedSeries = useMemo(() => seriesData, [seriesData]);
@@ -197,8 +149,8 @@ export default function ZingChart() {
     return datasets.map((dataset) => {
       const xStep =
         dataset.dataPoints.length > 1
-          ? (CHART_WIDTH - CHART_PADDING_X * 2) / (dataset.dataPoints.length - 1)
-          : CHART_WIDTH;
+         ? (chartWidth - CHART_PADDING_X * 2) / (dataset.dataPoints.length - 1)
+          : chartWidth;
 
       const points = dataset.dataPoints.map((point, i) => {
         const value = Number(point.plays) || 0;
@@ -218,7 +170,7 @@ export default function ZingChart() {
         points,
         path: buildPath(
           points.map((p) => p.value),
-          CHART_WIDTH,
+            chartWidth,
           CHART_HEIGHT,
           scaleMax,
           CHART_PADDING_X
@@ -226,7 +178,7 @@ export default function ZingChart() {
         scaleMax,
       };
     });
-  }, [highlightedSeries]);
+  }, [chartWidth, highlightedSeries]);
 
   const activePoints = useMemo(() => {
     if (hoveredIndex === null) return [];
@@ -246,15 +198,15 @@ export default function ZingChart() {
   }, [chartLines, hoveredIndex]);
 
   const crosshairPoint = activePoints[0];
- const chartWidthPx = chartSize?.width || CHART_WIDTH;
-  const chartHeightPx = chartSize?.height || CHART_HEIGHT + 20;
+  const chartWidthPx = chartWidth;
+  const chartHeightPx = chartSize?.height || chartHeight;
   const tooltipStyle = useMemo(() => {
     if (!crosshairPoint) return null;
 
-    const widthRatio = chartWidthPx / CHART_WIDTH;
-    const heightRatio = chartHeightPx / (CHART_HEIGHT + 20);
-    const pointX = (hoverPosition?.x ?? crosshairPoint.x * widthRatio);
-    const pointY = (hoverPosition?.y ?? crosshairPoint.y * heightRatio);
+    const widthRatio = chartWidthPx / chartWidth;
+    const heightRatio = chartHeightPx / chartHeight;
+    const pointX = hoverPosition?.x ?? crosshairPoint.x * widthRatio;
+    const pointY = hoverPosition?.y ?? crosshairPoint.y * heightRatio;
     const preferLeft = pointX > chartWidthPx * 0.55;
     const preferAbove = pointY > chartHeightPx * 0.45;
     const baseLeft = preferLeft ? pointX - 12 : pointX + 12;
@@ -269,7 +221,7 @@ export default function ZingChart() {
         preferAbove ? "-100%" : "0%"
       })`,
     };
-  }, [chartHeightPx, chartWidthPx, crosshairPoint, hoverPosition]);
+   }, [chartHeight, chartHeightPx, chartWidth, chartWidthPx, crosshairPoint, hoverPosition]);
 
   const handleChartHover = useCallback(
     (event) => {
@@ -277,28 +229,28 @@ export default function ZingChart() {
 
       const bounds = event.currentTarget.getBoundingClientRect();
     setChartSize({ width: bounds.width, height: bounds.height });
-      const scaleX = CHART_WIDTH / bounds.width;
+      const scaleX = chartWidth / bounds.width;
       setHoverPosition({
         x: event.clientX - bounds.left,
         y: event.clientY - bounds.top,
       });
       const offsetX = (event.clientX - bounds.left) * scaleX;
-      const usableX = Math.max(0, Math.min(CHART_WIDTH, offsetX));
+      const usableX = Math.max(0, Math.min(chartWidth, offsetX));
       const innerX = Math.max(
         0,
-        Math.min(CHART_WIDTH - CHART_PADDING_X * 2, usableX - CHART_PADDING_X)
+        Math.min(chartWidth - CHART_PADDING_X * 2, usableX - CHART_PADDING_X)
       );
       const xStep =
         chartLines[0].points.length > 1
-          ? (CHART_WIDTH - CHART_PADDING_X * 2) / (chartLines[0].points.length - 1)
-          : CHART_WIDTH;
+           ? (chartWidth - CHART_PADDING_X * 2) / (chartLines[0].points.length - 1)
+          : chartWidth;
 
       const rawIndex = Math.round(innerX / xStep);
       const clampedIndex = Math.max(0, Math.min(chartLines[0].points.length - 1, rawIndex));
 
       setHoveredIndex((prev) => (prev === clampedIndex ? prev : clampedIndex));
     },
-    [chartLines]
+ [chartLines, chartWidth]
   );
 
    useEffect(() => {
@@ -410,7 +362,7 @@ export default function ZingChart() {
           <div className="relative">
             <svg
               ref={chartRef}
-              viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT + 20}`}
+               viewBox={`0 0 ${chartWidth} ${chartHeight}`}
               className="w-full h-[320px] max-lg:h-[300px]"
               onMouseMove={handleChartHover}
              onMouseLeave={() => {
