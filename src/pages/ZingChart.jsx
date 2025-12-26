@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FaPlay, FaRegClock, FaSearch } from "react-icons/fa";
 import { getZingChart, getZingChartSeries } from "../api/chart.api";
-import { formatDuration, filterPlayableSongs, toPlayableSong } from "../utils/song";
+import {
+  formatDuration,
+  filterPlayableSongs,
+  toPlayableSong,
+  fetchPlayableSong,
+} from "../utils/song";
+import { getSongById } from "../api/song.api";
 import usePlayerStore from "../store/player.store";
 import SongTable from "../components/song/SongTable";
 
@@ -281,9 +287,16 @@ export default function ZingChart() {
     song?.image ||
     "";
 
-  const handlePlay = (song) => {
-    if (!song?.audio_url) return;
-    playSong(song, songs);
+  const handlePlay = async (song) => {
+    const playable = (await fetchPlayableSong(song, getSongById)) || song;
+    if (!playable?.audio_url) return;
+
+    const normalizedId = playable?.id;
+    const updatedQueue = songs.map((item) =>
+      item?.id === normalizedId ? { ...item, ...playable } : item
+    );
+
+    playSong(playable, updatedQueue);
   };
 
   const renderRankItem = (song, idx) => (

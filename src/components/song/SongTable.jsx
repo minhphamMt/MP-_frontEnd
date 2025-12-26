@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
-import { formatDuration } from "../../utils/song";
+import { formatDuration, fetchPlayableSong } from "../../utils/song";
+import { getSongById } from "../../api/song.api";
 
 export default function SongTable({
   title,
@@ -20,12 +21,20 @@ export default function SongTable({
     addToQueue,
   } = usePlayerStore();
 
-  const handlePlaySong = (song, queue) => {
-     if (!song.audio_url) return;
-    if (currentSong?.id === song.id) {
+ const handlePlaySong = async (song, queue) => {
+    const playable = (await fetchPlayableSong(song, getSongById)) || song;
+    if (!playable?.audio_url) return;
+
+    const normalizedId = normalizeSongId(playable);
+    const updatedQueue = queue.map((item) => {
+      const itemId = normalizeSongId(item);
+      return itemId && itemId === normalizedId ? { ...item, ...playable } : item;
+    });
+
+    if (currentSong?.id === playable.id) {
       isPlaying ? pause() : resume();
     } else {
-      playSong(song, queue);
+     playSong(playable, updatedQueue);
     }
   };
 

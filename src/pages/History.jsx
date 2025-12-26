@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getMyHistory } from "../api/history.api";
-import usePlayerStore from "../store/player.store";
+import { getSongById } from "../api/song.api";
+import usePlayerStore, { normalizeSongId } from "../store/player.store";
+import { fetchPlayableSong } from "../utils/song";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const DEFAULT_LIMIT = 20;
@@ -134,6 +136,19 @@ export default function History() {
     [history]
   );
 
+   const handlePlaySong = async (item) => {
+    const playable = (await fetchPlayableSong(item, getSongById)) || item;
+    if (!playable?.audio_url) return;
+
+    const normalizedId = normalizeSongId(playable);
+    const updatedQueue = queue.map((entry) => {
+      const entryId = normalizeSongId(entry);
+      return entryId && normalizedId === entryId ? { ...entry, ...playable } : entry;
+    });
+
+    playSong(playable, updatedQueue);
+  };
+
   const hasMore = useMemo(() => {
     if (!meta) return false;
 
@@ -196,7 +211,7 @@ export default function History() {
             <button
               type="button"
               key={`${item.history_id || item.id}-${item.listened_at}`}
-              onClick={() => playSong(item, queue)}
+  onClick={() => handlePlaySong(item)}
               className="grid w-full grid-cols-[3fr,2fr,2fr,1fr,1fr] items-center gap-3 px-4 py-3 text-left hover:bg-white/10"
             >
               <div className="flex items-center gap-3 min-w-0">

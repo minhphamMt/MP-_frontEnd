@@ -79,3 +79,26 @@ export const filterPlayableSongs = (list = []) =>
   list
     .map((item) => toPlayableSong(item))
      .filter((song) => song.id);
+
+export const fetchPlayableSong = async (song, fetchById) => {
+  if (!song) return null;
+  if (song.audio_url) return song;
+
+  const songId =
+    song.id ?? song.song_id ?? song.songId ?? song?.song?.id ?? song?._id;
+  if (!songId || typeof fetchById !== "function") return null;
+
+  try {
+    const res = await fetchById(songId);
+    const payload = res?.data?.data || res?.data || {};
+    const normalized = toPlayableSong({ ...song, ...payload });
+
+    if (normalized?.audio_url) {
+      return normalized;
+    }
+  } catch (err) {
+    console.error("Fetch playable song failed", err);
+  }
+
+  return null;
+};
