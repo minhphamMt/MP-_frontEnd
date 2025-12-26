@@ -85,9 +85,11 @@ export default function Home() {
 
     if (node.scrollLeft + distance >= maxScroll - 2) {
       node.scrollTo({ left: 0, behavior: "auto" });
-      node.scrollBy({ left: distance, behavior: "smooth" });
+      requestAnimationFrame(() => {
+        node.scrollTo({ left: distance, behavior: "smooth" });
+      });
     } else {
-      node.scrollBy({ left: distance, behavior: "smooth" });
+      node.scrollTo({ left: node.scrollLeft + distance, behavior: "smooth" });
     }
   };
 

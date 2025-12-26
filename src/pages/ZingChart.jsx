@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FaPlay, FaRegClock, FaSearch } from "react-icons/fa";
+import { FaPlay, FaRegClock } from "react-icons/fa";
 import { getZingChart, getZingChartSeries } from "../api/chart.api";
 import {
   formatDuration,
@@ -9,7 +9,7 @@ import {
 } from "../utils/song";
 import { getSongById } from "../api/song.api";
 import usePlayerStore from "../store/player.store";
-import SongTable from "../components/song/SongTable";
+import Section from "../components/section/Section";
 
 const CHART_WIDTH = 820;
 const CHART_HEIGHT = 240;
@@ -342,196 +342,222 @@ export default function ZingChart() {
   );
 
   return (
-    <div className="space-y-8">
-      <div className="relative rounded-2xl bg-gradient-to-br from-[#241540] via-[#1b0f33] to-[#0f0a22] p-6 overflow-visible">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.08),_transparent_40%)]" />
-
-        <div className="relative flex flex-wrap gap-4 items-center justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-3 text-lg font-semibold uppercase tracking-tight">
-              <span className="text-[#6fff8c]">#zingchart</span>
-              <span className="px-2 py-1 text-xs rounded-full border border-white/15 text-white/70">
-                Live
-              </span>
-            </div>
-            <div className="text-sm text-white/60">
-              Dữ liệu {seriesDays} ngày gần nhất
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
+    <div className="space-y-10">
+      <Section
+        title="#zingchart"
+        subtitle={`Dữ liệu ${seriesDays} ngày gần nhất`}
+        action={
+          <div className="flex items-center gap-2 text-xs text-white/70">
+            <span className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+              Live
+            </span>
+            <span className="hidden items-center gap-2 text-white/50 sm:flex">
+              <FaRegClock size={12} />
+              Cập nhật mỗi giờ
+            </span>
             <button
               onClick={loadChart}
-              className="px-3 py-2 text-xs rounded-full border border-white/15 hover:border-white/30 hover:bg-white/5 transition"
+              className="rounded-full border border-white/20 px-3 py-1.5 text-[11px] font-semibold text-white/80 transition hover:border-white/40 hover:bg-white/5"
             >
               Làm mới dữ liệu
             </button>
-            <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white/5 rounded-full border border-white/10 text-sm text-white/70">
-              <FaSearch size={12} />
-              <span>Tìm kiếm bài hát, nghệ sĩ...</span>
-            </div>
           </div>
-        </div>
+        }
+      >
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+          <div className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-[#241540] via-[#1b0f33] to-[#0f0a22] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.08),_transparent_40%)]" />
+            <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#6fff8c]/10 blur-3xl" />
 
-        {!loading && !songs.length && (
-          <div className="relative mb-4 px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-sm text-white/70">
-            Không có dữ liệu bảng xếp hạng để hiển thị. Hãy thử làm mới.
-          </div>
-        )}
-
-        <div className="relative space-y-4">
-          <div className="relative">
-            <svg
-              ref={chartRef}
-               viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-              className="w-full h-[320px] max-lg:h-[300px]"
-              onMouseMove={handleChartHover}
-             onMouseLeave={() => {
-                setHoveredIndex(null);
-                setHoverPosition(null);
-              }}
-            >
-              <defs>
-                {chartLines.map((line, idx) => (
-                  <linearGradient
-                    key={line.song.id || idx}
-                    id={`chart-fill-${idx}`}
-                    x1="0%"
-                    y1="0%"
-                    x2="0%"
-                    y2="100%"
-                  >
-                    <stop offset="0%" stopColor={line.color.main} stopOpacity="0.2" />
-                    <stop offset="100%" stopColor={line.color.main} stopOpacity="0" />
-                  </linearGradient>
-                ))}
-              </defs>
-
-              <g>
-                {chartLines.map((line, idx) => (
-                  <path
-                    key={`shadow-${idx}`}
-                    d={line.path}
-                    fill="none"
-                    stroke={line.color.glow}
-                    strokeWidth={8}
-                    strokeLinecap="round"
-                    className="blur-sm"
-                  />
-                ))}
-                {chartLines.map((line, idx) => (
-                  <path
-                    key={idx}
-                    d={line.path}
-                    fill="none"
-                    stroke={line.color.main}
-                    strokeWidth={3}
-                    strokeLinecap="round"
-                  />
-                ))}
-                {chartLines.map((line, idx) =>
-                  line.points.map((point, i) => (
-                    <circle
-                      key={`${idx}-${i}`}
-                      cx={point.x}
-                      cy={point.y}
-                      r={4}
-                      fill="#0b071a"
-                      stroke={line.color.main}
-                      strokeWidth={2}
-                      className="cursor-pointer"
-                      onMouseEnter={() => setHoveredIndex(i)}
-                    />
-                  ))
-                )}
-
-                {crosshairPoint && (
-                  <g>
-                    <line
-                      x1={crosshairPoint.x}
-                      y1={crosshairPoint.y}
-                      x2={crosshairPoint.x}
-                      y2={CHART_HEIGHT + 12}
-                      stroke="white"
-                      strokeOpacity={0.25}
-                      strokeWidth={1}
-                      strokeDasharray="4 4"
-                    />
-                    <circle
-                      cx={crosshairPoint.x}
-                      cy={crosshairPoint.y}
-                      r={7}
-                      fill="#0b071a"
-                      stroke={crosshairPoint.line.color.main}
-                      strokeWidth={3}
-                    />
-                  </g>
-                )}
-              </g>
-            </svg>
-
-            {crosshairPoint && activePoints.length > 0 && (
-              <div
-                className="absolute z-20 rounded-xl bg-[#120926] border border-white/10 px-3 py-2 shadow-xl pointer-events-none"
-                 style={tooltipStyle || undefined}
-              >
-                <div className="text-[11px] text-white/60 mb-2">{crosshairPoint.date}</div>
-                <div className="space-y-2 min-w-[220px]">
-                  {activePoints
-                    .slice()
-                    .sort((a, b) => b.value - a.value)
-                    .map((point, idx) => (
-                      <div key={`${point.line.song?.id || idx}-${point.x}`} className="flex items-center gap-3">
-                        <div
-                          className="w-2 h-2 rounded-full shrink-0"
-                          style={{ backgroundColor: point.line.color.main }}
-                        />
-                        <div className="relative w-10 h-10 overflow-hidden rounded-md border border-white/10 shrink-0">
-                          <img
-                            src={getSongCover(point.line.song)}
-                            alt={point.line.song?.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="font-semibold truncate max-w-[180px]">
-                            {point.line.song?.title}
-                          </div>
-                          <div className="text-xs text-white/60 truncate max-w-[180px]">
-                            {point.line.song?.artist_name}
-                          </div>
-                        </div>
-                        <div className="text-sm font-semibold text-white/80 ml-auto">
-                          {point.value.toLocaleString("vi-VN")}
-                        </div>
-                      </div>
-                    ))}
+            <div className="relative mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Bảng xếp hạng</p>
+                <div className="flex items-center gap-2 text-lg font-semibold">
+                  <span className="text-white">Top 5 realtime</span>
+                  <span className="text-[#6fff8c]">#zingchart</span>
                 </div>
               </div>
-            )}
-
-            {loadingSeries && (
-              <div className="absolute inset-0 flex items-center justify-center text-white/70 text-sm bg-[#0f0a22]/60 backdrop-blur-sm rounded-lg">
-                Đang tải dữ liệu biểu đồ...
+              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/70">
+                Cập nhật từ dữ liệu {seriesDays} ngày
               </div>
-            )}
-            {!loadingSeries && !chartLines.length && (
-              <div className="absolute inset-0 flex items-center justify-center text-white/70 text-sm bg-[#0f0a22]/80 backdrop-blur-sm rounded-lg">
-                Chưa có dữ liệu biểu đồ để hiển thị.
+            </div>
+
+            {!loading && !songs.length && (
+              <div className="relative mb-4 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
+                Không có dữ liệu bảng xếp hạng để hiển thị. Hãy thử làm mới.
               </div>
             )}
 
-             <div className="mt-5 flex gap-4 flex-wrap">
+            <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
+              <div className="relative rounded-xl border border-white/10 bg-[#0b071a]/40 p-2">
+                <svg
+                  ref={chartRef}
+                  viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+                  className="h-[320px] w-full max-lg:h-[300px]"
+                  onMouseMove={handleChartHover}
+                  onMouseLeave={() => {
+                    setHoveredIndex(null);
+                    setHoverPosition(null);
+                  }}
+                >
+                  <defs>
+                    {chartLines.map((line, idx) => (
+                      <linearGradient
+                        key={line.song.id || idx}
+                        id={`chart-fill-${idx}`}
+                        x1="0%"
+                        y1="0%"
+                        x2="0%"
+                        y2="100%"
+                      >
+                        <stop offset="0%" stopColor={line.color.main} stopOpacity="0.2" />
+                        <stop offset="100%" stopColor={line.color.main} stopOpacity="0" />
+                      </linearGradient>
+                    ))}
+                  </defs>
+
+                  <g>
+                    {chartLines.map((line, idx) => (
+                      <path
+                        key={`shadow-${idx}`}
+                        d={line.path}
+                        fill="none"
+                        stroke={line.color.glow}
+                        strokeWidth={8}
+                        strokeLinecap="round"
+                        className="blur-sm"
+                      />
+                    ))}
+                    {chartLines.map((line, idx) => (
+                      <path
+                        key={idx}
+                        d={line.path}
+                        fill="none"
+                        stroke={line.color.main}
+                        strokeWidth={3}
+                        strokeLinecap="round"
+                      />
+                    ))}
+                    {chartLines.map((line, idx) =>
+                      line.points.map((point, i) => (
+                        <circle
+                          key={`${idx}-${i}`}
+                          cx={point.x}
+                          cy={point.y}
+                          r={4}
+                          fill="#0b071a"
+                          stroke={line.color.main}
+                          strokeWidth={2}
+                          className="cursor-pointer"
+                          onMouseEnter={() => setHoveredIndex(i)}
+                        />
+                      ))
+                    )}
+
+                    {crosshairPoint && (
+                      <g>
+                        <line
+                          x1={crosshairPoint.x}
+                          y1={crosshairPoint.y}
+                          x2={crosshairPoint.x}
+                          y2={CHART_HEIGHT + 12}
+                          stroke="white"
+                          strokeOpacity={0.25}
+                          strokeWidth={1}
+                          strokeDasharray="4 4"
+                        />
+                        <circle
+                          cx={crosshairPoint.x}
+                          cy={crosshairPoint.y}
+                          r={7}
+                          fill="#0b071a"
+                          stroke={crosshairPoint.line.color.main}
+                          strokeWidth={3}
+                        />
+                      </g>
+                    )}
+                  </g>
+                </svg>
+
+                {crosshairPoint && activePoints.length > 0 && (
+                  <div
+                    className="pointer-events-none absolute left-0 top-0 z-20 rounded-xl border border-white/10 bg-[#120926] px-3 py-2 shadow-xl"
+                    style={tooltipStyle || undefined}
+                  >
+                    <div className="mb-2 text-[11px] text-white/60">{crosshairPoint.date}</div>
+                    <div className="min-w-[220px] space-y-2">
+                      {activePoints
+                        .slice()
+                        .sort((a, b) => b.value - a.value)
+                        .map((point, idx) => (
+                          <div key={`${point.line.song?.id || idx}-${point.x}`} className="flex items-center gap-3">
+                            <div
+                              className="h-2 w-2 shrink-0 rounded-full"
+                              style={{ backgroundColor: point.line.color.main }}
+                            />
+                            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-white/10">
+                              <img
+                                src={getSongCover(point.line.song)}
+                                alt={point.line.song?.title}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="max-w-[180px] truncate font-semibold">
+                                {point.line.song?.title}
+                              </div>
+                              <div className="max-w-[180px] truncate text-xs text-white/60">
+                                {point.line.song?.artist_name}
+                              </div>
+                            </div>
+                            <div className="ml-auto text-sm font-semibold text-white/80">
+                              {point.value.toLocaleString("vi-VN")}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {loadingSeries && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-[#0f0a22]/60 text-sm text-white/70 backdrop-blur-sm">
+                    Đang tải dữ liệu biểu đồ...
+                  </div>
+                )}
+                {!loadingSeries && !chartLines.length && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-[#0f0a22]/80 text-sm text-white/70 backdrop-blur-sm">
+                    Chưa có dữ liệu biểu đồ để hiển thị.
+                  </div>
+                )}
+              </div>
+
+              <div className="relative rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+                <div className="mb-3 flex items-center justify-between px-1">
+                  <div className="text-sm font-semibold text-white/80">BXH tuần</div>
+                  <div className="text-xs text-white/60">Cập nhật mỗi thứ 2</div>
+                </div>
+                <div className="max-h-[260px] space-y-1 overflow-y-auto pr-1 scrollbar-muted">
+                  {loading && <div className="px-2 text-sm text-white/60">Đang tải...</div>}
+                  {!loading && !songs.length && (
+                    <div className="px-2 text-sm text-white/60">Chưa có dữ liệu BXH.</div>
+                  )}
+                  {!loading && songs.slice(0, 10).map((song, idx) => renderRankItem(song, idx))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
               {highlightedSeries.map((item, idx) => (
                 <div
                   key={item.song?.id || idx}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10"
+                  className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2"
                 >
-                  <div className="relative w-10 h-10 rounded-md overflow-hidden border border-white/10">
+                  <div className="relative h-10 w-10 overflow-hidden rounded-md border border-white/10">
                     <img
                       src={getSongCover(item.song)}
                       alt={item.song?.title}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                     />
                     <span
                       className="absolute inset-0"
@@ -546,78 +572,68 @@ export default function ZingChart() {
               ))}
             </div>
           </div>
-
-          <div className="relative bg-white/5 border border-white/10 rounded-xl p-4 backdrop-blur">
-            <div className="flex items-center justify-between mb-3 px-1">
-              <div className="text-sm font-semibold text-white/80">BXH tuần</div>
-              <div className="text-xs text-white/60">Cập nhật mỗi thứ 2</div>
-            </div>
-            <div className="space-y-1 overflow-y-auto max-h-[260px] pr-1 scrollbar-muted">
-              {loading && <div className="text-sm text-white/60 px-2">Đang tải...</div>}
-              {!loading && !songs.length && (
-                <div className="text-sm text-white/60 px-2">Chưa có dữ liệu BXH.</div>
-              )}
-              {!loading && songs.slice(0, 10).map((song, idx) => renderRankItem(song, idx))}
-            </div>
-          </div>
         </div>
-      </div>
+      </Section>
 
-      <div className="grid lg:grid-cols-3 gap-4">
-        {weeklyColumns.map((column) => (
-          <div
-            key={column.title}
-            className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-[#2c1648] via-[#23103b] to-[#150a27] border border-white/5"
-          >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_35%)]" />
-            <div className="relative flex items-center justify-between mb-4">
-              <div>
+      <Section
+        title="BXH theo khu vực"
+        subtitle="Top 5 ca khúc nổi bật ở từng thị trường"
+        action={<span className="text-xs text-white/50">Cập nhật mỗi thứ 2</span>}
+      >
+        <div className="grid gap-4 lg:grid-cols-3">
+          {weeklyColumns.map((column) => (
+            <div
+              key={column.title}
+              className="relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#2c1648] via-[#23103b] to-[#150a27] p-5"
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_35%)]" />
+              <div className="relative mb-4 flex items-center justify-between">
                 <div className="text-lg font-semibold">{column.title}</div>
+                <button className="text-xs rounded-full border border-white/15 px-3 py-2 transition hover:bg-white/5">
+                  Xem tất cả
+                </button>
               </div>
-              <button className="text-xs px-3 py-2 rounded-full border border-white/15 hover:bg-white/5 transition">
-                Xem tất cả
-              </button>
-            </div>
 
-            <div className="relative space-y-3">
-              {!column.items.length && (
-                <div className="text-sm text-white/60">Chưa có dữ liệu.</div>
-              )}
-              {column.items.map((song, idx) => {
-                const playable = Boolean(song.audio_url);
-                return (
-                  <div
-                    key={song.id || idx}
-                    onClick={() => handlePlay(song)}
-                    className={`flex items-center gap-3 rounded-lg px-2 py-1 ${
-                      playable ? "cursor-pointer hover:bg-white/5" : "opacity-60 cursor-not-allowed"
-                    }`}
-                  >
-                    <div className="text-2xl font-black text-white/80 w-8 text-center">
-                      {song.rank ?? idx + 1}
-                    </div>
-                    <div className="w-12 h-12 rounded-lg overflow-hidden">
-                      <img
+              <div className="relative space-y-3">
+                {!column.items.length && (
+                  <div className="text-sm text-white/60">Chưa có dữ liệu.</div>
+                )}
+                {column.items.map((song, idx) => {
+                  const playable = Boolean(song.audio_url);
+                  return (
+                    <div
+                      key={song.id || idx}
+                      onClick={() => handlePlay(song)}
+                      className={`flex items-center gap-3 rounded-lg px-2 py-1 ${
+                        playable ? "cursor-pointer hover:bg-white/5" : "cursor-not-allowed opacity-60"
+                      }`}
+                    >
+                      <div className="w-8 text-center text-2xl font-black text-white/80">
+                        {song.rank ?? idx + 1}
+                      </div>
+                      <div className="h-12 w-12 overflow-hidden rounded-lg">
+                        <img
                           src={getSongCover(song)}
-                        alt={song.title}
-                        className="w-full h-full object-cover"
-                      />
+                          alt={song.title}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate font-semibold">{song.title}</div>
+                        <div className="truncate text-xs text-white/60">{song.artist_name}</div>
+                      </div>
+                      <div className="ml-auto flex items-center gap-1 text-xs text-white/50">
+                        <FaRegClock size={12} />
+                        <span>{formatDuration(song.duration)}</span>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <div className="font-semibold truncate">{song.title}</div>
-                      <div className="text-xs text-white/60 truncate">{song.artist_name}</div>
-                    </div>
-                    <div className="ml-auto text-xs text-white/50 flex items-center gap-1">
-                      <FaRegClock size={12} />
-                      <span>{formatDuration(song.duration)}</span>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </Section>
     </div>
   );
 }
