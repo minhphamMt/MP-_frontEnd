@@ -40,6 +40,14 @@ const colors = [
     main: "#6fff8c",
     glow: "rgba(111, 255, 140, 0.12)",
   },
+  {
+    main: "#ffd166",
+    glow: "rgba(255, 209, 102, 0.12)",
+  },
+  {
+    main: "#9b8cff",
+    glow: "rgba(155, 140, 255, 0.12)",
+  },
 ];
 
 export default function ZingChart() {
@@ -116,7 +124,7 @@ export default function ZingChart() {
     loadChart();
   }, []);
 
-  const highlightedSeries = useMemo(() => seriesData, [seriesData]);
+  const highlightedSeries = useMemo(() => seriesData.slice(0, 5), [seriesData]);
   const weeklyColumns = useMemo(() => {
     const slices = [
       { title: "Việt Nam", start: 0 },
