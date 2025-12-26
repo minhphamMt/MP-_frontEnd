@@ -13,3 +13,25 @@
 .player-slider::-moz-range-thumb {
   @apply appearance-none w-3 h-3 rounded-full bg-white shadow-md border-0;
 }
+
+.scrollbar-muted {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+}
+
+.scrollbar-muted::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-muted::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-muted::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.28);
+  border-radius: 9999px;
+}
+
+.scrollbar-muted::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.38);
+}

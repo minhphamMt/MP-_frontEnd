@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FaPlay, FaRegClock, FaSearch } from "react-icons/fa";
 import {
   getNewReleaseChart,
@@ -14,7 +14,7 @@ import {
 import usePlayerStore from "../store/player.store";
 import SongTable from "../components/song/SongTable";
 
-const CHART_WIDTH = 900;
+const CHART_WIDTH = 820;
 const CHART_HEIGHT = 240;
 const CHART_PADDING_X = 24;
 
@@ -57,12 +57,15 @@ export default function ZingChart() {
   const [seriesDays, setSeriesDays] = useState(7);
   const [loadingSeries, setLoadingSeries] = useState(true);
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [hoverPosition, setHoverPosition] = useState(null);
   const [newReleaseSongs, setNewReleaseSongs] = useState([]);
   const [top100Songs, setTop100Songs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingNewRelease, setLoadingNewRelease] = useState(true);
   const [loadingTop100, setLoadingTop100] = useState(true);
+  const [chartSize, setChartSize] = useState(null);
   const { playSong } = usePlayerStore();
+  const chartRef = useRef(null);
 
   const loadChart = async () => {
     try {
@@ -243,15 +246,48 @@ export default function ZingChart() {
   }, [chartLines, hoveredIndex]);
 
   const crosshairPoint = activePoints[0];
+ const chartWidthPx = chartSize?.width || CHART_WIDTH;
+  const chartHeightPx = chartSize?.height || CHART_HEIGHT + 20;
+  const tooltipStyle = useMemo(() => {
+    if (!crosshairPoint) return null;
+
+    const widthRatio = chartWidthPx / CHART_WIDTH;
+    const heightRatio = chartHeightPx / (CHART_HEIGHT + 20);
+    const pointX = (hoverPosition?.x ?? crosshairPoint.x * widthRatio);
+    const pointY = (hoverPosition?.y ?? crosshairPoint.y * heightRatio);
+    const preferLeft = pointX > chartWidthPx * 0.55;
+    const preferAbove = pointY > chartHeightPx * 0.45;
+    const baseLeft = preferLeft ? pointX - 12 : pointX + 12;
+    const baseTop = preferAbove ? pointY - 12 : pointY + 12;
+    const clampedLeft = Math.min(chartWidthPx - 16, Math.max(16, baseLeft));
+    const clampedTop = Math.min(chartHeightPx - 16, Math.max(16, baseTop));
+
+    return {
+      left: `${clampedLeft}px`,
+      top: `${clampedTop}px`,
+      transform: `translate(${preferLeft ? "-100%" : "0%"}, ${
+        preferAbove ? "-100%" : "0%"
+      })`,
+    };
+  }, [chartHeightPx, chartWidthPx, crosshairPoint, hoverPosition]);
 
   const handleChartHover = useCallback(
     (event) => {
       if (!chartLines.length || !chartLines[0]?.points?.length) return;
 
       const bounds = event.currentTarget.getBoundingClientRect();
-      const offsetX = event.clientX - bounds.left;
+    setChartSize({ width: bounds.width, height: bounds.height });
+      const scaleX = CHART_WIDTH / bounds.width;
+      setHoverPosition({
+        x: event.clientX - bounds.left,
+        y: event.clientY - bounds.top,
+      });
+      const offsetX = (event.clientX - bounds.left) * scaleX;
       const usableX = Math.max(0, Math.min(CHART_WIDTH, offsetX));
-      const innerX = Math.max(0, Math.min(CHART_WIDTH - CHART_PADDING_X * 2, usableX - CHART_PADDING_X));
+      const innerX = Math.max(
+        0,
+        Math.min(CHART_WIDTH - CHART_PADDING_X * 2, usableX - CHART_PADDING_X)
+      );
       const xStep =
         chartLines[0].points.length > 1
           ? (CHART_WIDTH - CHART_PADDING_X * 2) / (chartLines[0].points.length - 1)
@@ -260,10 +296,22 @@ export default function ZingChart() {
       const rawIndex = Math.round(innerX / xStep);
       const clampedIndex = Math.max(0, Math.min(chartLines[0].points.length - 1, rawIndex));
 
-      setHoveredIndex(clampedIndex);
+      setHoveredIndex((prev) => (prev === clampedIndex ? prev : clampedIndex));
     },
     [chartLines]
   );
+
+   useEffect(() => {
+    const updateChartSize = () => {
+      if (!chartRef.current) return;
+      const rect = chartRef.current.getBoundingClientRect();
+      setChartSize({ width: rect.width, height: rect.height });
+    };
+
+    updateChartSize();
+    window.addEventListener("resize", updateChartSize);
+    return () => window.removeEventListener("resize", updateChartSize);
+  }, []);
 
   const getSongCover = (song) =>
     song?.cover_url ||
@@ -361,10 +409,14 @@ export default function ZingChart() {
         <div className="relative space-y-4">
           <div className="relative">
             <svg
+              ref={chartRef}
               viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT + 20}`}
               className="w-full h-[320px] max-lg:h-[300px]"
               onMouseMove={handleChartHover}
-              onMouseLeave={() => setHoveredIndex(null)}
+             onMouseLeave={() => {
+                setHoveredIndex(null);
+                setHoverPosition(null);
+              }}
             >
               <defs>
                 {chartLines.map((line, idx) => (
@@ -448,14 +500,7 @@ export default function ZingChart() {
             {crosshairPoint && activePoints.length > 0 && (
               <div
                 className="absolute z-20 rounded-xl bg-[#120926] border border-white/10 px-3 py-2 shadow-xl pointer-events-none"
-                style={{
-                  left: `${Math.min(
-                    CHART_WIDTH - 16,
-                    Math.max(16, crosshairPoint.x)
-                  )}px`,
-                  top: `${Math.min(CHART_HEIGHT - 8, Math.max(24, crosshairPoint.y))}px`,
-                  transform: "translate(-50%, -115%)",
-                }}
+                 style={tooltipStyle || undefined}
               >
                 <div className="text-[11px] text-white/60 mb-2">{crosshairPoint.date}</div>
                 <div className="space-y-2 min-w-[220px]">
@@ -503,7 +548,7 @@ export default function ZingChart() {
               </div>
             )}
 
-            <div className="absolute bottom-4 left-4 flex gap-4 flex-wrap">
+             <div className="mt-5 flex gap-4 flex-wrap">
               {highlightedSeries.map((item, idx) => (
                 <div
                   key={item.song?.id || idx}
@@ -534,7 +579,7 @@ export default function ZingChart() {
               <div className="text-sm font-semibold text-white/80">BXH tuần</div>
               <div className="text-xs text-white/60">Cập nhật mỗi thứ 2</div>
             </div>
-            <div className="space-y-1 overflow-y-auto max-h-[260px] pr-1">
+            <div className="space-y-1 overflow-y-auto max-h-[260px] pr-1 scrollbar-muted">
               {loading && <div className="text-sm text-white/60 px-2">Đang tải...</div>}
               {!loading && !songs.length && (
                 <div className="text-sm text-white/60 px-2">Chưa có dữ liệu BXH.</div>
@@ -599,23 +644,6 @@ export default function ZingChart() {
             </div>
           </div>
         ))}
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-4">
-        <SongTable
-          title="Bài hát mới"
-          subtitle="Những ca khúc vừa ra mắt trên bảng xếp hạng"
-          songs={newReleaseSongs}
-          loading={loadingNewRelease}
-          onRefresh={loadNewRelease}
-        />
-        <SongTable
-          title="Top 100"
-          subtitle="Những ca khúc được nghe nhiều nhất"
-          songs={top100Songs}
-          loading={loadingTop100}
-          onRefresh={loadTop100}
-        />
       </div>
     </div>
   );
