@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getMyHistory } from "../api/history.api";
 import usePlayerStore from "../store/player.store";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const DEFAULT_LIMIT = 20;
 
 const formatRelativeTime = (timestamp) => {
   if (!timestamp) return "";
@@ -17,51 +20,141 @@ const formatRelativeTime = (timestamp) => {
   return `${days} ngày trước`;
 };
 
+const extractHistoryPayload = (res) => {
+  const topLevel = res?.data ?? {};
+  const payload = topLevel?.data ?? topLevel;
+
+  const items = Array.isArray(payload)
+    ? payload
+    : payload?.items ?? topLevel?.items ?? [];
+
+  const meta = payload?.meta ?? topLevel?.meta ?? null;
+
+  return { items, meta };
+};
+
 const normalizeHistoryItem = (item) => {
-  const baseSong = item?.song || item;
-  const audioPath = baseSong?.audio_path;
-  const artistName =
-    baseSong?.artist_name || baseSong?.artist?.name || baseSong?.artist;
+  const song = item?.song || item;
+  const artist = song?.artist || {};
+  const album = song?.album || {};
+
+  const audioPath = song?.audio_path || song?.audioPath;
+  const artistName = song?.artist_name || artist?.name || song?.artist;
 
   return {
-    ...baseSong,
-    listened_at: item?.listened_at || baseSong?.listened_at,
+    ...song,
+    history_id: item?.id || item?.history_id || song?.history_id,
+    listened_at: item?.listened_at || song?.listen_time || song?.listened_at,
     artist_name: artistName,
-    album_id: baseSong?.album_id || baseSong?.album?.id,
-    album_title: baseSong?.album_title || baseSong?.album?.title,
+    album_id: song?.album_id || album?.id,
+    album_title: song?.album_title || album?.title,
     audio_url:
-      baseSong?.audio_url ||
-      (audioPath ? `${import.meta.env.VITE_API_BASE_URL}${audioPath}` : null),
+      song?.audio_url || (audioPath ? `${API_BASE_URL}${audioPath}` : null),
   };
+};
+
+const dedupeHistoryItems = (items) => {
+  const seen = new Set();
+  const result = [];
+
+  items.forEach((item) => {
+    const key =
+      item?.song_id ||
+      item?.id ||
+      item?.history_id ||
+      `${item?.title}-${item?.artist_name || item?.artist}`;
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(item);
+    }
+  });
+
+  return result;
+};
+
+const formatDuration = (durationInSeconds) => {
+  if (!durationInSeconds && durationInSeconds !== 0) return "";
+
+  const minutes = Math.floor(durationInSeconds / 60)
+    .toString()
+    .padStart(1, "0");
+  const seconds = Math.floor(durationInSeconds % 60)
+    .toString()
+    .padStart(2, "0");
+
+  return `${minutes}:${seconds}`;
 };
 
 export default function History() {
   const [history, setHistory] = useState([]);
+  const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const playSong = usePlayerStore((s) => s.playSong);
 
+  const loadHistory = useCallback(
+    async (page = 1, append = false) => {
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+
+      try {
+        const res = await getMyHistory({ page, limit: DEFAULT_LIMIT });
+        const { items, meta: resMeta } = extractHistoryPayload(res);
+        const normalized = items.map(normalizeHistoryItem);
+
+        setHistory((prev) => {
+          const combined = append ? [...prev, ...normalized] : normalized;
+          return dedupeHistoryItems(combined);
+        });
+        setMeta(resMeta || { page, limit: DEFAULT_LIMIT });
+      } catch (err) {
+        console.error("Load listening history error", err);
+      } finally {
+        if (append) {
+          setLoadingMore(false);
+        } else {
+          setLoading(false);
+        }
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     loadHistory();
-  }, []);
-
-  const loadHistory = async () => {
-    try {
-      setLoading(true);
-      const res = await getMyHistory();
-      const rawList = res?.data?.data || res?.data || [];
-      const normalized = rawList.map(normalizeHistoryItem);
-      setHistory(normalized);
-    } catch (err) {
-      console.error("Load listening history error", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [loadHistory]);
 
   const queue = useMemo(
     () => history.map((item) => ({ ...item })),
     [history]
+  );
+
+  const hasMore = useMemo(() => {
+    if (!meta) return false;
+
+    const page = meta.page || meta.currentPage || meta.pageNumber || 1;
+    const totalPages = meta.totalPages || meta.total_pages;
+    if (totalPages) return page < totalPages;
+
+    if (typeof meta.hasNext === "boolean") return meta.hasNext;
+    if (typeof meta.has_next === "boolean") return meta.has_next;
+    if (typeof meta.has_more === "boolean") return meta.has_more;
+
+    const total = meta.total;
+    const limit = meta.limit || meta.perPage || meta.per_page;
+    if (total && limit) return history.length < total;
+
+    return false;
+  }, [history.length, meta]);
+
+  const currentPage = useMemo(
+    () => meta?.page || meta?.currentPage || meta?.pageNumber || 1,
+    [meta]
   );
 
   if (loading) {
@@ -89,30 +182,66 @@ export default function History() {
         </button>
       </div>
 
-      <div className="space-y-2">
-        {history.map((item) => (
-          <div
-            key={`${item.id}-${item.listened_at}`}
-            onClick={() => playSong(item, queue)}
-            className="flex items-center gap-3 p-2 rounded hover:bg-white/10 cursor-pointer"
-          >
-            <img
-              src={item.cover_url}
-              alt=""
-              className="w-12 h-12 rounded object-cover"
-            />
+      <div className="rounded-lg border border-white/5 bg-white/5">
+        <div className="grid grid-cols-[3fr,2fr,2fr,1fr,1fr] gap-3 px-4 py-2 text-xs uppercase tracking-wide text-white/60">
+          <div>Bài hát</div>
+          <div>Album</div>
+          <div>Nghệ sĩ</div>
+          <div>Thời gian</div>
+          <div className="text-right">Nghe</div>
+        </div>
 
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium truncate">{item.title}</div>
-              <div className="text-xs text-white/60 truncate">{item.artist_name}</div>
-            </div>
+        <div className="divide-y divide-white/5">
+          {history.map((item) => (
+            <button
+              type="button"
+              key={`${item.history_id || item.id}-${item.listened_at}`}
+              onClick={() => playSong(item, queue)}
+              className="grid w-full grid-cols-[3fr,2fr,2fr,1fr,1fr] items-center gap-3 px-4 py-3 text-left hover:bg-white/10"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <img
+                  src={item.cover_url}
+                  alt=""
+                  className="w-12 h-12 rounded object-cover"
+                />
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold truncate">{item.title}</div>
+                  {item.album_title ? (
+                    <div className="text-[11px] text-white/60 truncate">
+                      {item.album_title}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
 
-            <div className="text-xs text-white/50 whitespace-nowrap">
-              {formatRelativeTime(item.listened_at)}
-            </div>
-          </div>
-        ))}
+              <div className="text-sm text-white/80 truncate">{item.album_title}</div>
+
+              <div className="text-sm text-white/80 truncate">{item.artist_name}</div>
+
+              <div className="text-sm text-white/70">
+                {formatDuration(item.duration)}
+              </div>
+
+              <div className="text-sm text-white/60 text-right">
+                {formatRelativeTime(item.listened_at)}
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
+
+      {hasMore ? (
+        <div className="flex justify-center pt-2">
+          <button
+            onClick={() => loadHistory(currentPage + 1, true)}
+            disabled={loadingMore}
+            className="text-xs px-4 py-2 rounded bg-white/10 hover:bg-white/15 disabled:opacity-50"
+          >
+            {loadingMore ? "Đang tải thêm..." : "Tải thêm"}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
