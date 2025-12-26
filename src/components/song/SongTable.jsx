@@ -21,6 +21,7 @@ export default function SongTable({
   } = usePlayerStore();
 
   const handlePlaySong = (song, queue) => {
+     if (!song.audio_url) return;
     if (currentSong?.id === song.id) {
       isPlaying ? pause() : resume();
     } else {
@@ -103,7 +104,7 @@ export default function SongTable({
           const songId = normalizeSongId(song);
           const isLiked = songId && likedSongIds.includes(songId);
           const order = song.rank ?? index + 1;
-
+          const isPlayable = Boolean(song.audio_url);
           return (
             <div
               key={song.id || index}
@@ -161,7 +162,10 @@ export default function SongTable({
                     e.stopPropagation();
                     handlePlaySong(song, songs);
                   }}
-                  className="px-2 py-1 rounded bg-white/10 hover:bg-white/20"
+                  disabled={!isPlayable}
+                  className={`px-2 py-1 rounded bg-white/10 hover:bg-white/20 ${
+                    !isPlayable ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
                   {isActive && isPlaying ? "⏸" : "▶"}
                 </button>

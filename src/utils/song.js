@@ -64,4 +64,4 @@ export const toPlayableSong = (raw = {}) => {
 export const filterPlayableSongs = (list = []) =>
   list
     .map((item) => toPlayableSong(item))
-    .filter((song) => song.id && song.audio_url);
+     .filter((song) => song.id);
