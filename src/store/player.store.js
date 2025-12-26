@@ -158,6 +158,29 @@ const usePlayerStore = create((set, get) => ({
       set({ likedSongIds });
     }
   },
+  
+  /* =====================
+     ACTIONS – QUEUE
+     ===================== */
+
+  addToQueue: (songs) => {
+    const list = Array.isArray(songs) ? songs : [songs];
+
+    set((state) => {
+      const existingIds = new Set(
+        state.queue
+          .map((s) => normalizeSongId(s))
+          .filter((id) => id !== null)
+      );
+
+      const newItems = list.filter((item) => {
+        const id = normalizeSongId(item);
+        return id && !existingIds.has(id);
+      });
+
+      return { queue: [...state.queue, ...newItems] };
+    });
+  },
 }));
 
 /* =====================

@@ -9,13 +9,11 @@ import Home from "../pages/Home";
 import AlbumDetail from "../pages/AlbumDetail";
 import ArtistDetail from "../pages/ArtistDetail";
 import History from "../pages/History";
-
-/* ===== USER PAGES (TẠM) ===== */
-const ZingChart = () => <div>#ZINGCHART</div>;
-const NewRelease = () => <div>BXH NHẠC MỚI</div>;
-const Top100 = () => <div>TOP 100</div>;
-const Playlists = () => <div>PLAYLIST</div>;
-const Albums = () => <div>ALBUM</div>;
+import ZingChart from "../pages/ZingChart";
+import NewRelease from "../pages/NewRelease";
+import Top100 from "../pages/Top100";
+import Playlists from "../pages/Playlists";
+import Albums from "../pages/Albums";
 
 /* ===== DASHBOARD ===== */
 const ArtistDashboard = () => (
@@ -47,7 +45,7 @@ export default function AppRoutes() {
           <Route path="/playlists" element={<Playlists />} />
           <Route path="/albums" element={<Albums />} />
            <Route path="/history" element={<History />} />
-           
+
           {/* 🔴 PUBLIC CONTENT */}
           <Route path="/artist/:id" element={<ArtistDetail />} />
           <Route path="/album/:id" element={<AlbumDetail />} />
