@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getAlbums } from "../api/album.api";
 import { getArtistCollections } from "../api/artist.api";
 import { getRecommendations } from "../api/recommendation.api";
@@ -76,22 +76,20 @@ export default function Home() {
     }
   }
 
-  const scrollForwardWithLoop = (ref, distance) => {
+const scrollForwardWithLoop = useCallback((ref, distance) => {
     const node = ref.current;
     if (!node) return;
 
     const maxScroll = node.scrollWidth - node.clientWidth;
     if (maxScroll <= 0) return;
 
-    if (node.scrollLeft + distance >= maxScroll - 2) {
-      node.scrollTo({ left: 0, behavior: "auto" });
-      requestAnimationFrame(() => {
-        node.scrollTo({ left: distance, behavior: "smooth" });
-      });
+  const target = node.scrollLeft + distance;
+    if (target >= maxScroll - 2) {
+      node.scrollTo({ left: 0, behavior: "smooth" });
     } else {
-      node.scrollTo({ left: node.scrollLeft + distance, behavior: "smooth" });
+      node.scrollTo({ left: target, behavior: "smooth" });
     }
-  };
+    }, []);
 
   const scrollByAmount = (ref, direction = 1) => {
     const node = ref.current;
@@ -112,25 +110,26 @@ export default function Home() {
     }
   };
 
-  const startAutoScroll = (ref, timerRef, itemCount) => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
+ const startAutoScroll = useCallback(
+    (ref, timerRef, itemCount) => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
 
-    if (!ref.current || itemCount < 2) return;
+   if (!ref.current || itemCount < 2) return;
 
-    timerRef.current = setInterval(() => {
-      const node = ref.current;
-      if (!node) return;
+       const step = () => {
+        const node = ref.current;
+        if (!node) return;
 
-      const maxScroll = node.scrollWidth - node.clientWidth;
-      const step = node.clientWidth * 0.6;
+        const distance = node.clientWidth * 0.65;
+        scrollForwardWithLoop(ref, distance);
+      };
 
-      if (maxScroll <= 0) return;
-
-      scrollForwardWithLoop(ref, step);
-    }, 4000);
-  };
+      timerRef.current = setInterval(step, 3500);
+    },
+    [scrollForwardWithLoop]
+  );
 
   const pauseAutoScroll = (timerRef) => {
     if (timerRef.current) {
@@ -155,7 +154,7 @@ export default function Home() {
       pauseAutoScroll(artistTimerRef);
       clearResumeTimeout(artistResumeRef);
     };
-  }, [artistAlbums]);
+ }, [artistAlbums, startAutoScroll]);
 
   useEffect(() => {
     startAutoScroll(newAlbumRailRef, newAlbumTimerRef, newAlbums.length);
@@ -164,7 +163,7 @@ export default function Home() {
       pauseAutoScroll(newAlbumTimerRef);
       clearResumeTimeout(newAlbumResumeRef);
     };
-  }, [newAlbums]);
+   }, [newAlbums, startAutoScroll]);
 
   if (loading) {
     return (

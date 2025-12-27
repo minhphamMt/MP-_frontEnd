@@ -19,9 +19,9 @@ export default function SongTable({
     likedSongIds,
     toggleLike,
     addToQueue,
- } = usePlayerStore();
+  } = usePlayerStore();
 
- const handlePlaySong = async (song, queue) => {
+  const handlePlaySong = async (song, queue) => {
     const playable = (await fetchPlayableSong(song, getSongById)) || song;
     if (!playable?.audio_url) return;
 
@@ -31,16 +31,16 @@ export default function SongTable({
       return itemId && itemId === normalizedId ? { ...item, ...playable } : item;
     });
 
-    if (currentSong?.id === playable.id) {
+    if (normalizeSongId(currentSong) === normalizedId) {
       isPlaying ? pause() : resume();
     } else {
-     playSong(playable, updatedQueue);
+       playSong(playable, updatedQueue);
     }
   };
 
   const playAll = () => {
     if (songs.length) {
-      playSong(songs[0], songs);
+       handlePlaySong(songs[0], songs);
     }
   };
 
@@ -107,11 +107,11 @@ export default function SongTable({
 
         <div className="divide-y divide-white/5">
           {songs.map((song, index) => {
-            const isActive = currentSong?.id === song.id;
             const songId = normalizeSongId(song);
+             const isActive = normalizeSongId(currentSong) === songId;
             const isLiked = songId && likedSongIds.includes(songId);
             const order = song.rank ?? index + 1;
-            const isPlayable = Boolean(song.audio_url);
+            const isPlayable = Boolean(song.audio_url || songId);
 
             return (
               <div
@@ -175,7 +175,7 @@ export default function SongTable({
                       handlePlaySong(song, songs);
                     }}
                     disabled={!isPlayable}
-                    className={`h-9 w-9 rounded-full border border-white/15 bg-white/10 text-sm shadow hover:border-white/30 hover:bg-white/20 ${
+                   className={`h-9 w-9 rounded-full border border-white/15 bg-white/10 text-sm shadow hover:border-white/30 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${
                       !isPlayable ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >

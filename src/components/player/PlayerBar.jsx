@@ -18,12 +18,14 @@ export default function PlayerBar() {
     currentTime,
     duration,
     volume,
+     repeatMode,
     pause,
     resume,
     playNext,
     playPrev,
     seek,
     setVolume,
+     toggleRepeatMode,
   } = usePlayerStore();
 
   const progress = duration ? Math.min(100, (currentTime / duration) * 100) : 0;
@@ -114,8 +116,24 @@ export default function PlayerBar() {
         <button className="p-2 hover:text-white/80 transition" aria-label="Danh sách phát">
           <HiOutlineQueueList />
         </button>
-        <button className="p-2 hover:text-white/80 transition" aria-label="Lặp lại">
-          <RiRepeat2Fill />
+        
+        <button
+          onClick={toggleRepeatMode}
+          className={`p-2 transition ${
+            repeatMode !== "off"
+              ? "text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]"
+              : "hover:text-white/80"
+          }`}
+          aria-label="Lặp lại"
+          title={
+            repeatMode === "all"
+              ? "Lặp lại danh sách"
+              : repeatMode === "one"
+                ? "Lặp lại một bài"
+                : "Tắt lặp lại"
+          }
+        >
+          <RiRepeat2Fill className={repeatMode === "one" ? "rotate-45" : ""} />
         </button>
         <div className="flex items-center gap-2 min-w-[160px]">
           <HiOutlineSpeakerWave className="text-xl" aria-hidden />

@@ -34,6 +34,7 @@ const usePlayerStore = create((set, get) => ({
   currentSong: null,
   queue: [],
   currentIndex: -1,
+  repeatMode: "off", // off | all | one
 
   isPlaying: false,
   duration: 0,
@@ -54,7 +55,10 @@ const usePlayerStore = create((set, get) => ({
 
   playSong: (song, queue = []) => {
     const list = queue.length ? queue : [song];
-    const index = list.findIndex((s) => s.id === song.id);
+     const targetId = normalizeSongId(song);
+    const index = list.findIndex(
+      (s) => normalizeSongId(s) === targetId
+    );
 
     audio.src = song.audio_url;
     audio.load();
@@ -97,9 +101,13 @@ const usePlayerStore = create((set, get) => ({
     set({ volume });
   },
   playNext: () => {
-    const { queue, currentIndex } = get();
+      const { queue, currentIndex, repeatMode } = get();
+    if (!queue.length) return;
+
     if (currentIndex < queue.length - 1) {
       get().playSong(queue[currentIndex + 1], queue);
+        } else if (repeatMode === "all") {
+      get().playSong(queue[0], queue);
     }
   },
 
@@ -108,6 +116,14 @@ const usePlayerStore = create((set, get) => ({
     if (currentIndex > 0) {
       get().playSong(queue[currentIndex - 1], queue);
     }
+  },
+
+   toggleRepeatMode: () => {
+    const order = ["off", "all", "one"];
+    const current = get().repeatMode;
+    const next = order[(order.indexOf(current) + 1) % order.length];
+    audio.loop = next === "one";
+    set({ repeatMode: next });
   },
 
   /* =====================
@@ -199,7 +215,20 @@ audio.addEventListener("timeupdate", () => {
 });
 
 audio.addEventListener("ended", () => {
-  usePlayerStore.getState().playNext();
-});
+ const state = usePlayerStore.getState();
+  if (state.repeatMode === "one") {
+    audio.currentTime = 0;
+    audio.play();
+    return;
+  }
 
+  const { queue, currentIndex } = state;
+  if (currentIndex < queue.length - 1 || state.repeatMode === "all") {
+    state.playNext();
+  } else {
+    state.pause();
+    audio.currentTime = 0;
+  }
+});
+audio.volume = usePlayerStore.getState().volume ?? 1;
 export default usePlayerStore;
