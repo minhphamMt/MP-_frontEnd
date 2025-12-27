@@ -304,7 +304,8 @@ export default function ZingChart() {
       key={song.id || idx}
       onClick={() => handlePlay(song)}
       className={`flex items-center justify-between gap-4 rounded-lg px-3 py-2 hover:bg-white/5 transition ${
-        song.audio_url ? "cursor-pointer" : "opacity-60 cursor-not-allowed"
+        song.audio_url ? "cursor-pointer" : "opacity-50 cursor-default"
+
       }`}
     >
       <div className="flex items-center gap-3 min-w-0">
@@ -317,13 +318,11 @@ export default function ZingChart() {
             alt={song.title}
             className="w-full h-full object-cover rounded-lg"
           />
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handlePlay(song);
-            }}
-            className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition"
-          >
+         <button
+  onClick={(e) => e.stopPropagation()}
+  className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition"
+>
+
             <span className="bg-white/20 backdrop-blur-md rounded-full p-2">
               <FaPlay size={12} />
             </span>
@@ -365,10 +364,11 @@ export default function ZingChart() {
           </div>
         }
       >
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+       <div className="flex flex-col gap-6 w-full">
+
           <div className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-[#241540] via-[#1b0f33] to-[#0f0a22] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.08),_transparent_40%)]" />
-            <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#6fff8c]/10 blur-3xl" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.08),_transparent_40%)]" />
+            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#6fff8c]/10 blur-3xl" />
 
             <div className="relative mb-4 flex flex-wrap items-center justify-between gap-3">
               <div className="space-y-1">
@@ -389,12 +389,14 @@ export default function ZingChart() {
               </div>
             )}
 
-            <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
+          <div className="flex flex-col gap-6">
+
               <div className="relative rounded-xl border border-white/10 bg-[#0b071a]/40 p-2">
                 <svg
                   ref={chartRef}
-                  viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                  className="h-[320px] w-full max-lg:h-[300px]"
+  viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+  preserveAspectRatio="none"
+  className="h-[340px] w-full"
                   onMouseMove={handleChartHover}
                   onMouseLeave={() => {
                     setHoveredIndex(null);
@@ -586,7 +588,7 @@ export default function ZingChart() {
               key={column.title}
               className="relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#2c1648] via-[#23103b] to-[#150a27] p-5"
             >
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_35%)]" />
+                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_35%)]" />
               <div className="relative mb-4 flex items-center justify-between">
                 <div className="text-lg font-semibold">{column.title}</div>
                 <button className="text-xs rounded-full border border-white/15 px-3 py-2 transition hover:bg-white/5">
@@ -605,7 +607,8 @@ export default function ZingChart() {
                       key={song.id || idx}
                       onClick={() => handlePlay(song)}
                       className={`flex items-center gap-3 rounded-lg px-2 py-1 ${
-                        playable ? "cursor-pointer hover:bg-white/5" : "cursor-not-allowed opacity-60"
+                        playable ? "cursor-pointer hover:bg-white/5" : "cursor-default opacity-60"
+
                       }`}
                     >
                       <div className="w-8 text-center text-2xl font-black text-white/80">

@@ -33,7 +33,7 @@ export default function Albums() {
   const loadAlbums = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getAlbums({ limit: 3 });
+      const res = await getAlbums({ limit: 20 });
       const raw = res?.data?.data || [];
 
       const hydrated = await Promise.all(raw.map((album) => hydrateAlbum(album)));
