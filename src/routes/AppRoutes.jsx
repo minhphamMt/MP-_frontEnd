@@ -10,6 +10,7 @@ import AlbumDetail from "../pages/AlbumDetail";
 import ArtistDetail from "../pages/ArtistDetail";
 import History from "../pages/History";
 import ZingChart from "../pages/ZingChart";
+import RegionChart from "../pages/RegionChart";
 import NewRelease from "../pages/NewRelease";
 import Top100 from "../pages/Top100";
 import Playlists from "../pages/Playlists";
@@ -40,6 +41,7 @@ export default function AppRoutes() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/zing-chart" element={<ZingChart />} />
+           <Route path="/zing-chart/region/:region" element={<RegionChart />} />
           <Route path="/new-release" element={<NewRelease />} />
           <Route path="/top-100" element={<Top100 />} />
           <Route path="/playlists" element={<Playlists />} />

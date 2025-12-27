@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { FaPlay, FaRegClock } from "react-icons/fa";
-import { getZingChart, getZingChartSeries } from "../api/chart.api";
+import {
+  getRegionCharts,
+  getZingChart,
+  getZingChartSeries,
+} from "../api/chart.api";
 import {
   formatDuration,
   filterPlayableSongs,
@@ -64,6 +69,12 @@ export default function ZingChart() {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [hoverPosition, setHoverPosition] = useState(null);
   const [loading, setLoading] = useState(true);
+   const [loadingRegions, setLoadingRegions] = useState(true);
+  const [regionCharts, setRegionCharts] = useState({
+    vietnam: [],
+    usuk: [],
+    kpop: [],
+  });
   const [chartSize, setChartSize] = useState(null);
   const { playSong } = usePlayerStore();
   const chartRef = useRef(null);
@@ -75,10 +86,12 @@ export default function ZingChart() {
     try {
       setLoading(true);
       setLoadingSeries(true);
+      setLoadingRegions(true);
 
-      const [chartRes, seriesRes] = await Promise.all([
+     const [chartRes, seriesRes, regionRes] = await Promise.all([
         getZingChart(),
         getZingChartSeries({ days: 7 }),
+        getRegionCharts({ limit: 5}),
       ]);
 
       const rawSongs =
@@ -117,13 +130,24 @@ export default function ZingChart() {
             };
           })
       );
+
+      const regionPayload =
+        regionRes?.data?.data || regionRes?.data || { vietnam: [], usuk: [], kpop: [] };
+
+      setRegionCharts({
+        vietnam: filterPlayableSongs(regionPayload.vietnam),
+        usuk: filterPlayableSongs(regionPayload.usuk),
+        kpop: filterPlayableSongs(regionPayload.kpop),
+      });
     } catch (err) {
       console.error("Load Zing Chart failed", err);
       setSongs([]);
       setSeriesData([]);
+        setRegionCharts({ vietnam: [], usuk: [], kpop: [] });
     } finally {
       setLoading(false);
       setLoadingSeries(false);
+       setLoadingRegions(false);
     }
   };
   useEffect(() => {
@@ -131,18 +155,14 @@ export default function ZingChart() {
   }, []);
 
   const highlightedSeries = useMemo(() => seriesData.slice(0, 5), [seriesData]);
-  const weeklyColumns = useMemo(() => {
-    const slices = [
-      { title: "Việt Nam", start: 0 },
-      { title: "US-UK", start: 3 },
-      { title: "K-Pop", start: 6 },
-    ];
-
-    return slices.map((slice) => ({
-      title: slice.title,
-      items: songs.slice(slice.start, slice.start + 5),
-    }));
-  }, [songs]);
+  const weeklyColumns = useMemo(
+    () => [
+      { title: "Việt Nam", items: regionCharts.vietnam, link: "/zing-chart/region/vietnam" },
+      { title: "US-UK", items: regionCharts.usuk, link: "/zing-chart/region/usuk" },
+      { title: "K-Pop", items: regionCharts.kpop, link: "/zing-chart/region/kpop" },
+    ],
+    [regionCharts]
+  );
 
   const chartLines = useMemo(() => {
     const datasets = highlightedSeries
@@ -591,47 +611,57 @@ export default function ZingChart() {
                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_35%)]" />
               <div className="relative mb-4 flex items-center justify-between">
                 <div className="text-lg font-semibold">{column.title}</div>
-                <button className="text-xs rounded-full border border-white/15 px-3 py-2 transition hover:bg-white/5">
-                  Xem tất cả
-                </button>
+                 {column.link && (
+                  <Link
+                    to={column.link}
+                    className="text-xs rounded-full border border-white/15 px-3 py-2 transition hover:bg-white/5"
+                  >
+                    Xem tất cả
+                  </Link>
+                )}
               </div>
 
               <div className="relative space-y-3">
-                {!column.items.length && (
+                 {loadingRegions && (
+                  <div className="text-sm text-white/60">Đang tải dữ liệu khu vực...</div>
+                )}
+
+                {!loadingRegions && !column.items.length && (
                   <div className="text-sm text-white/60">Chưa có dữ liệu.</div>
                 )}
-                {column.items.map((song, idx) => {
-                  const playable = Boolean(song.audio_url);
-                  return (
-                    <div
-                      key={song.id || idx}
-                      onClick={() => handlePlay(song)}
-                      className={`flex items-center gap-3 rounded-lg px-2 py-1 ${
-                        playable ? "cursor-pointer hover:bg-white/5" : "cursor-default opacity-60"
+               {!loadingRegions &&
+                  column.items.map((song, idx) => {
+                    const playable = Boolean(song.audio_url);
+                    return (
+                      <div
+                        key={song.id || idx}
+                        onClick={() => handlePlay(song)}
+                        className={`flex items-center gap-3 rounded-lg px-2 py-1 ${
+                          playable ? "cursor-pointer hover:bg-white/5" : "cursor-default opacity-60"
 
-                      }`}
-                    >
-                      <div className="w-8 text-center text-2xl font-black text-white/80">
-                        {song.rank ?? idx + 1}
+                        }`}
+                      >
+                        <div className="w-8 text-center text-2xl font-black text-white/80">
+                          {song.rank ?? idx + 1}
+                        </div>
+                        <div className="h-12 w-12 overflow-hidden rounded-lg">
+                          <img
+                            src={getSongCover(song)}
+                            alt={song.title}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="truncate font-semibold">{song.title}</div>
+                          <div className="truncate text-xs text-white/60">{song.artist_name}</div>
+                        </div>
+                        <div className="ml-auto flex items-center gap-1 text-xs text-white/50">
+                          <FaRegClock size={12} />
+                          <span>{formatDuration(song.duration)}</span>
+                        </div>
                       </div>
-                      <div className="h-12 w-12 overflow-hidden rounded-lg">
-                        <img
-                          src={getSongCover(song)}
-                          alt={song.title}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="truncate font-semibold">{song.title}</div>
-                        <div className="truncate text-xs text-white/60">{song.artist_name}</div>
-                      </div>
-                      <div className="ml-auto flex items-center gap-1 text-xs text-white/50">
-                        <FaRegClock size={12} />
-                        <span>{formatDuration(song.duration)}</span>
-                      </div>
-                    </div>
-                  );
-                })}
+                     );
+                  })}
               </div>
             </div>
           ))}
