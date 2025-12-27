@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getRegionCharts } from "../api/chart.api";
 import SongTable from "../components/song/SongTable";
@@ -19,7 +19,7 @@ export default function RegionChart() {
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const loadChart = async () => {
+  const loadChart = useCallback(async () => {
     if (!config) return;
     try {
       setLoading(true);
@@ -34,7 +34,7 @@ export default function RegionChart() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [config, normalizedRegion]);
 
   useEffect(() => {
     if (!config) {
@@ -43,7 +43,7 @@ export default function RegionChart() {
     }
 
     loadChart();
-  }, [config]);
+  }, [config, loadChart, navigate]);
 
   if (!config) return null;
 
