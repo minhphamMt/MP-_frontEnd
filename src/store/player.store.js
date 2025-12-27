@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import api from "../api/axios";
-import { addHistory, getMyHistory } from "../api/history.api";
-import { getSongById } from "../api/song.api";
+import { getMyHistory } from "../api/history.api";
+import { getSongById, recordSongPlay } from "../api/song.api";
 import { fetchPlayableSong, toPlayableSong } from "../utils/song";
 
 export const normalizeSongId = (song) => {
@@ -74,9 +74,11 @@ const usePlayerStore = create((set, get) => ({
       currentTime: 0,
     });
 
-     if (song?.id) {
-      addHistory(song.id).catch((err) =>
-        console.error("Add listening history failed", err)
+  if (song?.id) {
+      const duration = song?.duration ?? null;
+
+      recordSongPlay(song.id, duration).catch((err) =>
+        console.error("Record listening history failed", err)
       );
     }
 
