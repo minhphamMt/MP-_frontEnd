@@ -363,7 +363,7 @@ export default function ZingChart() {
   return (
     <div className="space-y-10">
       <Section
-        title="#zingchart"
+        title="MinhChart"
         subtitle={`Dữ liệu ${seriesDays} ngày gần nhất`}
         action={
           <div className="flex items-center gap-2 text-xs text-white/70">

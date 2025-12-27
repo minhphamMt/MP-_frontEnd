@@ -22,7 +22,7 @@ export default function Sidebar() {
       <div className="relative flex-1 overflow-y-auto px-3 pb-6 pt-2 scrollbar-muted">
         <SidebarSection>
           <SidebarItem to="/" icon={MdExplore} label="Khám phá" />
-          <SidebarItem to="/zing-chart" icon={FaChartLine} label="#zingchart" />
+          <SidebarItem to="/zing-chart" icon={FaChartLine} label="Minhchart" />
           <SidebarItem
             to="/new-release"
             icon={BsMusicNoteList}
