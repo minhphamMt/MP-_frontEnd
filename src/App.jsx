@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import AppRoutes from "./routes/AppRoutes";
 import useAuthStore from "./store/auth.store";
 import usePlayerStore from "./store/player.store";
-import AudioProvider from "./components/player/AudioProvider";
 
 export default function App() {
   const loadUser = useAuthStore((s) => s.loadUser);
@@ -13,6 +12,9 @@ export default function App() {
 
   const loadLikedSongs = usePlayerStore(
     (s) => s.loadLikedSongs
+  );
+  const loadLastPlayed = usePlayerStore(
+    (s) => s.loadLastPlayed
   );
 
   /* =====================
@@ -29,12 +31,12 @@ export default function App() {
   useEffect(() => {
     if (isAuthReady && isAuthenticated) {
       loadLikedSongs(); // 🔥 GỌI ĐÚNG API BACKEND MÀY CODE
+      loadLastPlayed();
     }
-  }, [isAuthReady, isAuthenticated, loadLikedSongs]);
+  }, [isAuthReady, isAuthenticated, loadLikedSongs, loadLastPlayed]);
 
   return (
     <>
-      <AudioProvider />
       <AppRoutes />
     </>
   );

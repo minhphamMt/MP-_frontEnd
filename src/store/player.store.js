@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import api from "../api/axios";
-import { addHistory } from "../api/history.api";
+import { addHistory, getMyHistory } from "../api/history.api";
+import { getSongById } from "../api/song.api";
+import { fetchPlayableSong, toPlayableSong } from "../utils/song";
 
 export const normalizeSongId = (song) => {
   const rawId =
@@ -126,6 +128,43 @@ const usePlayerStore = create((set, get) => ({
     set({ repeatMode: next });
   },
 
+  loadLastPlayed: async () => {
+    if (get().currentSong) return;
+
+    try {
+      const res = await getMyHistory({ limit: 1 });
+      const payload = res?.data?.data ?? res?.data ?? {};
+      const items = Array.isArray(payload)
+        ? payload
+        : payload?.items ?? payload?.data ?? [];
+
+      const lastSong = toPlayableSong(items[0]);
+
+      if (!lastSong?.id) return;
+
+      let playable = lastSong;
+      if (!playable.audio_url) {
+        const fetched = await fetchPlayableSong(playable, getSongById);
+        if (fetched) playable = fetched;
+      }
+
+      if (!playable?.audio_url) return;
+
+      audio.src = playable.audio_url;
+      audio.load();
+
+      set({
+        currentSong: playable,
+        queue: [playable],
+        currentIndex: 0,
+        isPlaying: false,
+        currentTime: 0,
+      });
+    } catch (err) {
+      console.error("Load last played song failed", err);
+    }
+  },
+  
   /* =====================
      ACTIONS – LIKE (BACKEND)
      ===================== */
