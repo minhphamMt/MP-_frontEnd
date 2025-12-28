@@ -38,7 +38,6 @@ export default function SearchBox() {
     const loadHistory = async () => {
       try {
         const res = await getSearchHistory({ limit: 6 });
-        console.log("Raw search history", res);
         const payload = res?.data?.data ?? res?.data ?? {};
         const items = Array.isArray(payload)
           ? payload

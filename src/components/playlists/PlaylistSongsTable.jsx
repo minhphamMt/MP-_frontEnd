@@ -9,6 +9,7 @@ export default function PlaylistSongsTable({
   onRemove,
   onToggleLike,
 }) {
+  console.log("bài hát trong danh sách phát:", songs);
   return (
     <div className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900/80 via-slate-900/70 to-purple-900/60 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.55)]">
       <div className="mb-4">
