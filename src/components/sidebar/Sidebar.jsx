@@ -33,7 +33,7 @@ export default function Sidebar() {
 
         <SidebarSection title="Thư viện">
           <SidebarItem to="/history" icon={MdHistory} label="Nghe gần đây" />
-          <SidebarItem to="/playlists" icon={MdPlaylistPlay} label="Playlist" />
+          <SidebarItem to="/playlists" icon={MdPlaylistPlay} label="Thư viện" />
           <SidebarItem to="/albums" icon={MdAlbum} label="Album" />
         </SidebarSection>
       </div>

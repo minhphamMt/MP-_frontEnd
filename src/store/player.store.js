@@ -7,7 +7,13 @@ import { fetchPlayableSong, toPlayableSong } from "../utils/song";
 
 export const normalizeSongId = (song) => {
   const rawId =
-    song?.id ?? song?.song_id ?? song?.songId ?? song?.song?.id ?? song;
+    song?.id ??
+    song?._id ??
+    song?.song_id ??
+    song?.songId ??
+    song?.song?._id ??
+    song?.song?.id ??
+    song;
 
   if (rawId === undefined || rawId === null) return null;
   return String(rawId);
@@ -56,33 +62,50 @@ const usePlayerStore = create((set, get) => ({
      ACTIONS – PLAYER
      ===================== */
 
-  playSong: (song, queue = []) => {
-    const list = queue.length ? queue : [song];
-     const targetId = normalizeSongId(song);
-    const index = list.findIndex(
-      (s) => normalizeSongId(s) === targetId
+  playSong: async (song, queue = []) => {
+    const hydratedList = (queue.length ? queue : [song]).map((item) =>
+      toPlayableSong(item)
     );
 
-    audio.src = song.audio_url;
+    const targetIndex = hydratedList.findIndex(
+      (s) => normalizeSongId(s) === normalizeSongId(song)
+    );
+
+    let playable = toPlayableSong(song);
+    if (!playable.audio_url) {
+      const fetched = await fetchPlayableSong(playable, getSongById);
+      if (fetched) playable = fetched;
+    }
+
+    if (!playable?.audio_url) return;
+
+    const targetId = normalizeSongId(playable);
+    const updatedQueue = hydratedList.map((item) => {
+      const id = normalizeSongId(item);
+      if (id && id === targetId) return { ...item, ...playable };
+      if (!item.audio_url) return toPlayableSong(item);
+      return item;
+    });
+
+    audio.src = playable.audio_url;
     audio.load();
     audio.play();
 
     set({
-      currentSong: song,
-      queue: list,
-      currentIndex: index !== -1 ? index : 0,
+      currentSong: playable,
+      queue: updatedQueue,
+      currentIndex: targetIndex !== -1 ? targetIndex : 0,
       isPlaying: true,
       currentTime: 0,
     });
 
-  if (song?.id) {
-      const duration = song?.duration ?? null;
+    if (playable?.id) {
+      const duration = playable?.duration ?? null;
 
-      recordSongPlay(song.id, duration).catch((err) =>
+      recordSongPlay(playable.id, duration).catch((err) =>
         console.error("Record listening history failed", err)
       );
     }
-
   },
 
 
