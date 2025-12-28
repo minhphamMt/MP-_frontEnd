@@ -6,12 +6,13 @@ import {
   getPlaylistById,
   getPlaylists,
   removeSongFromPlaylist,
-  reorderSongInPlaylist,
   updatePlaylist,
 } from "../api/playlist.api";
-import SongTable from "../components/song/SongTable";
+import { getArtistCollections } from "../api/artist.api";
+import { getRecommendations } from "../api/recommendation.api";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
-import { fetchPlayableSong, filterPlayableSongs } from "../utils/song";
+import useAuthStore from "../store/auth.store";
+import { fetchPlayableSong, filterPlayableSongs, toPlayableSong } from "../utils/song";
 import { getSongById } from "../api/song.api";
 
 const getData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
@@ -23,8 +24,11 @@ export default function Playlists() {
   const [saving, setSaving] = useState(false);
   const [creatingName, setCreatingName] = useState("");
   const [rename, setRename] = useState("");
-  const [songId, setSongId] = useState("");
-  const [songPosition, setSongPosition] = useState("");
+  const [artists, setArtists] = useState([]);
+  const [recommendedSongs, setRecommendedSongs] = useState([]);
+  const [recommendationLoading, setRecommendationLoading] = useState(false);
+
+  const user = useAuthStore((s) => s.user);
 
   const {
     playSong,
@@ -32,6 +36,8 @@ export default function Playlists() {
     resume,
     currentSong,
     isPlaying,
+    likedSongIds,
+    toggleLike,
   } = usePlayerStore();
 
   const selectedPlaylist = useMemo(
@@ -78,22 +84,56 @@ export default function Playlists() {
       );
 
       setPlaylists(hydrated);
-
-      if (!selectedId && hydrated.length) {
-        setSelectedId(hydrated[0].id);
-        setRename(hydrated[0].title || "");
-      }
     } catch (err) {
       console.error("Load playlists failed", err);
       setPlaylists([]);
     } finally {
       setLoading(false);
     }
-  }, [hydratePlaylist, selectedId]);
+  }, [hydratePlaylist]);
+
+  const loadArtists = useCallback(async () => {
+    try {
+      const res = await getArtistCollections({ limit: 12 });
+      setArtists(res?.data?.data || []);
+    } catch (err) {
+      console.error("Load followed artists failed", err);
+      setArtists([]);
+    }
+  }, []);
+
+  const loadRecommendations = useCallback(async () => {
+    try {
+      setRecommendationLoading(true);
+      const res = await getRecommendations();
+      const ids = res?.data?.data || [];
+
+      const songs = await Promise.all(
+        ids.slice(0, 12).map(async (id) => {
+          try {
+            const detail = await getSongById(id);
+            return toPlayableSong(detail?.data?.data || detail?.data);
+          } catch (error) {
+            console.error("Load recommendation detail failed", error);
+            return null;
+          }
+        })
+      );
+
+      setRecommendedSongs(songs.filter((s) => s?.id));
+    } catch (err) {
+      console.error("Load recommendations failed", err);
+      setRecommendedSongs([]);
+    } finally {
+      setRecommendationLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     loadPlaylists();
-  }, [loadPlaylists]);
+    loadArtists();
+    loadRecommendations();
+  }, [loadPlaylists, loadArtists, loadRecommendations]);
 
   useEffect(() => {
     if (selectedPlaylist) {
@@ -133,35 +173,44 @@ export default function Playlists() {
     }
   };
 
+  const renamePlaylist = useCallback(
+    async (id, name) => {
+      if (!id || !name?.trim()) return;
+
+      try {
+        setSaving(true);
+        await updatePlaylist(id, { name });
+        setPlaylists((prev) =>
+          prev.map((pl) => (pl.id === id ? { ...pl, title: name } : pl))
+        );
+        if (selectedId === id) setRename(name);
+      } catch (err) {
+        console.error("Update playlist failed", err);
+      } finally {
+        setSaving(false);
+      }
+    },
+    [selectedId]
+  );
+
   const handleRename = async (e) => {
     e.preventDefault();
     if (!selectedPlaylist?.id) return;
 
-    try {
-      setSaving(true);
-      await updatePlaylist(selectedPlaylist.id, { name: rename.trim() });
-      setPlaylists((prev) =>
-        prev.map((pl) =>
-          pl.id === selectedPlaylist.id ? { ...pl, title: rename.trim() } : pl
-        )
-      );
-    } catch (err) {
-      console.error("Update playlist failed", err);
-    } finally {
-      setSaving(false);
-    }
+    await renamePlaylist(selectedPlaylist.id, rename.trim());
   };
 
-  const handleDelete = async () => {
-    if (!selectedPlaylist?.id) return;
+  const handleDelete = async (id) => {
+    const targetId = id ?? selectedPlaylist?.id;
+    if (!targetId) return;
     try {
       setSaving(true);
-      await deletePlaylist(selectedPlaylist.id);
+      await deletePlaylist(targetId);
       setPlaylists((prev) => {
-        const remaining = prev.filter((pl) => pl.id !== selectedPlaylist.id);
+        const remaining = prev.filter((pl) => pl.id !== targetId);
         setSelectedId((current) => {
-          if (current !== selectedPlaylist.id) return current;
-          return remaining[0]?.id ?? null;
+          if (current !== targetId) return current;
+          return null;
         });
         return remaining;
       });
@@ -189,24 +238,24 @@ export default function Playlists() {
     }
   };
 
-  const handleAddSong = async (e) => {
-    e.preventDefault();
-    if (!selectedPlaylist?.id || !songId.trim()) return;
+  const updatePlaylistAfterChange = async (res) => {
+    const updated = await hydratePlaylist(getData(res));
+    setPlaylists((prev) =>
+      prev.map((pl) => (pl.id === selectedPlaylist.id ? updated : pl))
+    );
+  };
+
+  const handleAddSuggestedSong = async (song) => {
+    if (!selectedPlaylist?.id || !song) return;
 
     try {
       setSaving(true);
       const res = await addSongToPlaylist(selectedPlaylist.id, {
-        songId: songId.trim(),
-        position: songPosition ? Number(songPosition) : undefined,
+        songId: normalizeSongId(song) || song.id,
       });
-      const updated = await hydratePlaylist(getData(res));
-      setPlaylists((prev) =>
-        prev.map((pl) => (pl.id === selectedPlaylist.id ? updated : pl))
-      );
-      setSongId("");
-      setSongPosition("");
+      await updatePlaylistAfterChange(res);
     } catch (err) {
-      console.error("Add song failed", err);
+      console.error("Add suggested song failed", err);
     } finally {
       setSaving(false);
     }
@@ -221,10 +270,7 @@ export default function Playlists() {
         selectedPlaylist.id,
         song.id ?? song.song_id
       );
-      const updated = await hydratePlaylist(getData(res));
-      setPlaylists((prev) =>
-        prev.map((pl) => (pl.id === selectedPlaylist.id ? updated : pl))
-      );
+      await updatePlaylistAfterChange(res);
     } catch (err) {
       console.error("Remove song failed", err);
     } finally {
@@ -232,232 +278,346 @@ export default function Playlists() {
     }
   };
 
-  const handleReorder = async (song, direction) => {
-    if (!selectedPlaylist?.id || !song?.id) return;
-    const currentIndex = selectedPlaylist.songs.findIndex(
-      (s) => s.id === song.id
-    );
-    if (currentIndex === -1) return;
+  const renderArtistSection = () => (
+    <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">Nghệ sĩ theo dõi</p>
+          <h3 className="text-xl font-bold text-white">Bạn đang quan tâm</h3>
+        </div>
+        <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
+          {artists.length} nghệ sĩ
+        </span>
+      </div>
 
-    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-    if (targetIndex < 0 || targetIndex >= selectedPlaylist.songs.length) return;
-
-    try {
-      setSaving(true);
-      const res = await reorderSongInPlaylist(selectedPlaylist.id, song.id, {
-        position: targetIndex + 1,
-      });
-      const updated = await hydratePlaylist(getData(res));
-      setPlaylists((prev) =>
-        prev.map((pl) => (pl.id === selectedPlaylist.id ? updated : pl))
-      );
-    } catch (err) {
-      console.error("Reorder song failed", err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const renderPlaylistList = () => (
-    <div className="space-y-4">
-      <form
-        onSubmit={handleCreatePlaylist}
-        className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-lg shadow-black/20"
-      >
-        <h3 className="text-lg font-semibold text-white">Tạo playlist mới</h3>
-        <div className="mt-3 flex flex-col gap-2">
-          <input
-            value={creatingName}
-            onChange={(e) => setCreatingName(e.target.value)}
-            className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-green-400"
-            placeholder="Tên playlist"
-          />
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-green-400 px-3 py-2 text-sm font-semibold text-slate-900 shadow-md shadow-green-400/40 hover:bg-green-300 disabled:opacity-50"
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        {artists.slice(0, 6).map((artist) => (
+          <div
+            key={artist.artist_id}
+            className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3"
           >
-            Tạo
-          </button>
-        </div>
-      </form>
-
-      <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/80 to-slate-900/60 p-4 shadow-xl shadow-black/30">
-        <h3 className="text-lg font-semibold text-white">Playlist của bạn</h3>
-        <div className="mt-3 space-y-2 max-h-[420px] overflow-auto pr-2">
-          {loading && <p className="text-sm text-white/60">Đang tải...</p>}
-
-          {!loading && !playlists.length && (
-            <p className="text-sm text-white/60">Chưa có playlist nào.</p>
-          )}
-
-          {playlists.map((pl) => (
-            <button
-              key={pl.id}
-              onClick={() => {
-                setSelectedId(pl.id);
-                setRename(pl.title || "");
-              }}
-              className={`w-full rounded-xl border px-3 py-2 text-left transition ${
-                selectedId === pl.id
-                  ? "border-green-300 bg-green-300/20 text-green-100"
-                  : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
-              }`}
-            >
-              <p className="font-semibold">{pl.title || "Playlist"}</p>
-              <p className="text-xs text-white/60">
-                {pl.songs?.length || 0} bài hát
+            <img
+              src={artist.cover_url}
+              alt={artist.artist_name}
+              className="h-14 w-14 rounded-full object-cover"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-white">
+                {artist.artist_name}
               </p>
-            </button>
-          ))}
-        </div>
+              <p className="text-xs text-white/60">{artist.song_count} bài hát</p>
+            </div>
+          </div>
+        ))}
+
+        {!artists.length && (
+          <p className="col-span-2 text-sm text-white/60">
+            Chưa có nghệ sĩ nào được theo dõi. Hãy khám phá trang chủ để tìm nghệ sĩ yêu thích.
+          </p>
+        )}
       </div>
     </div>
   );
 
+  const renderPlaylistShelf = () => (
+    <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900/80 to-slate-900/60 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">Playlist</p>
+          <h3 className="text-xl font-bold text-white">Playlist của bạn</h3>
+        </div>
+        <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
+          {playlists.length} playlist
+        </span>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
+        {loading && <p className="text-sm text-white/60">Đang tải...</p>}
+
+        {!loading && !playlists.length && (
+          <p className="text-sm text-white/60">Chưa có playlist nào.</p>
+        )}
+
+        {playlists.map((pl) => {
+          const cover = pl.songs?.[0]?.cover_url;
+          return (
+            <div
+              key={pl.id}
+              className={`group relative overflow-hidden rounded-2xl border shadow-lg transition ${
+                selectedId === pl.id
+                  ? "border-green-400/60 shadow-green-900/50"
+                  : "border-white/10 hover:border-white/20"
+              }`}
+            >
+              <button
+                onClick={() => {
+                  setSelectedId(pl.id);
+                  setRename(pl.title || "");
+                }}
+                className="relative block w-full"
+              >
+                <div className="aspect-square w-full bg-white/5">
+                  {cover ? (
+                    <img
+                      src={cover}
+                      alt={pl.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-3xl text-white/40">🎵</div>
+                  )}
+                </div>
+
+                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition group-hover:opacity-100">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const firstSong = pl.songs?.[0];
+                      if (firstSong) handlePlaySong(firstSong);
+                    }}
+                    className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow"
+                  >
+                    ▶
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const newName = prompt("Đổi tên playlist", pl.title || "Playlist");
+                      if (newName?.trim()) {
+                        renamePlaylist(pl.id, newName.trim());
+                      }
+                    }}
+                    className="flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-slate-900 shadow"
+                  >
+                    ✎
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(pl.id);
+                    }}
+                    className="flex h-11 w-11 items-center justify-center rounded-full bg-rose-500 text-white shadow"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </button>
+
+              <div className="p-3">
+                <p className="truncate text-sm font-semibold text-white">{pl.title || "Playlist"}</p>
+                <p className="text-xs text-white/60">{pl.songs?.length || 0} bài hát</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderSuggestedSongs = () => {
+    if (!selectedPlaylist) return null;
+
+    return (
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">Gợi ý</p>
+            <h3 className="text-xl font-bold text-white">Bài hát gợi ý</h3>
+            <p className="text-sm text-white/60">Thêm nhanh sau khi tạo playlist</p>
+          </div>
+          <button
+            onClick={loadRecommendations}
+            className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/20"
+          >
+            Làm mới
+          </button>
+        </div>
+
+        <div className="mt-4 divide-y divide-white/5">
+          {recommendationLoading && (
+            <p className="py-3 text-sm text-white/60">Đang tải gợi ý...</p>
+          )}
+
+          {!recommendationLoading && !recommendedSongs.length && (
+            <p className="py-3 text-sm text-white/60">Chưa có gợi ý khả dụng.</p>
+          )}
+
+          {recommendedSongs.map((song) => (
+            <div
+              key={song.id}
+              className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <img
+                  src={song.cover_url}
+                  alt={song.title}
+                  className="h-12 w-12 rounded-lg object-cover"
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-white">{song.title}</p>
+                  <p className="truncate text-xs text-white/60">{song.artist_name}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePlaySong(song)}
+                  className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/20"
+                >
+                  ▶ Nghe thử
+                </button>
+                <button
+                  onClick={() => handleAddSuggestedSong(song)}
+                  disabled={saving}
+                  className="rounded-full bg-green-400 px-4 py-2 text-xs font-semibold text-slate-900 shadow-md shadow-green-400/40 hover:bg-green-300 disabled:opacity-60"
+                >
+                  Thêm vào playlist
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const renderSongList = () => {
     if (!selectedPlaylist) {
       return (
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white/70">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white/70 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           Chọn một playlist để xem chi tiết.
         </div>
       );
     }
 
     return (
-      <div className="space-y-4">
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-purple-900/60 via-slate-900/80 to-slate-900/70 p-5 shadow-2xl shadow-purple-900/30">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-white/60">
-                Quản lý playlist
-              </p>
-              <h2 className="text-2xl font-bold text-white">{selectedPlaylist.title}</h2>
-              <p className="text-sm text-white/60">
-                {selectedPlaylist.songs?.length || 0} bài hát
-              </p>
+      <div className="space-y-5">
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900/80 via-slate-900/70 to-purple-900/60 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.55)]">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
+            <div className="relative h-40 w-40 overflow-hidden rounded-2xl shadow-lg shadow-black/40">
+              {selectedPlaylist.songs?.[0]?.cover_url ? (
+                <img
+                  src={selectedPlaylist.songs[0].cover_url}
+                  alt={selectedPlaylist.title}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-white/5 text-4xl text-white/30">🎵</div>
+              )}
+              <button
+                onClick={() => {
+                  const firstSong = selectedPlaylist.songs?.[0];
+                  if (firstSong) handlePlaySong(firstSong);
+                }}
+                className="absolute bottom-3 right-3 flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg"
+              >
+                ▶
+              </button>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => refreshSelectedPlaylist(selectedPlaylist.id)}
-                className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20"
-              >
-                Làm mới
-              </button>
+            <div className="flex-1 space-y-2">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/50">Playlist</p>
+              <h2 className="text-3xl font-bold text-white">{selectedPlaylist.title}</h2>
+              <p className="text-sm text-white/70">{selectedPlaylist.songs?.length || 0} bài hát</p>
 
-              <button
-                onClick={handleDelete}
-                disabled={selectedPlaylist.is_system || saving}
-                className="rounded-full border border-rose-300/50 bg-rose-400/20 px-4 py-2 text-xs font-semibold text-rose-100 hover:bg-rose-400/30 disabled:opacity-50"
-              >
-                Xóa playlist
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => refreshSelectedPlaylist(selectedPlaylist.id)}
+                  className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20"
+                >
+                  Làm mới
+                </button>
+                <form onSubmit={handleRename} className="flex flex-wrap items-center gap-2">
+                  <input
+                    value={rename}
+                    onChange={(e) => setRename(e.target.value)}
+                    className="w-52 rounded-full bg-white/10 px-4 py-2 text-xs text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-green-300"
+                    placeholder="Tên playlist"
+                  />
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-slate-900 shadow hover:bg-white"
+                  >
+                    Lưu tên
+                  </button>
+                </form>
+                <button
+                  onClick={() => handleDelete(selectedPlaylist.id)}
+                  disabled={saving}
+                  className="rounded-full border border-rose-300/40 bg-rose-400/20 px-4 py-2 text-xs font-semibold text-rose-100 hover:bg-rose-400/30 disabled:opacity-50"
+                >
+                  Xóa playlist
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">Danh sách</p>
+              <h3 className="text-lg font-semibold text-white">Bài hát trong playlist</h3>
             </div>
           </div>
 
-          <form
-            onSubmit={handleRename}
-            className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center"
-          >
-            <input
-              value={rename}
-              onChange={(e) => setRename(e.target.value)}
-              className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-green-300"
-              placeholder="Tên playlist"
-            />
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-lg bg-white/15 px-4 py-2 text-xs font-semibold text-white hover:bg-white/25 border border-white/20 disabled:opacity-50"
-            >
-              Cập nhật tên
-            </button>
-          </form>
+          <div className="divide-y divide-white/5">
+            {(selectedPlaylist.songs || []).map((song, index) => {
+              const songId = normalizeSongId(song);
+              const isPlayingCurrent = normalizeSongId(currentSong) === songId;
+              const isLiked = songId && likedSongIds.includes(songId);
+              return (
+                <div
+                  key={song.id || index}
+                  className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img
+                      src={song.cover_url}
+                      alt={song.title}
+                      className="h-12 w-12 rounded-lg object-cover"
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-white">{song.title}</p>
+                      <p className="truncate text-xs text-white/60">{song.artist_name || song.artist}</p>
+                    </div>
+                  </div>
 
-          <form
-            onSubmit={handleAddSong}
-            className="mt-4 grid gap-3 sm:grid-cols-[1fr_160px_auto]"
-          >
-            <input
-              value={songId}
-              onChange={(e) => setSongId(e.target.value)}
-              className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-green-300"
-              placeholder="ID bài hát"
-            />
-            <input
-              value={songPosition}
-              onChange={(e) => setSongPosition(e.target.value)}
-              className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-green-300"
-              placeholder="Vị trí (tuỳ chọn)"
-            />
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-lg bg-green-400 px-4 py-2 text-xs font-semibold text-slate-900 shadow-md shadow-green-400/40 hover:bg-green-300 disabled:opacity-50"
-            >
-              Thêm bài hát
-            </button>
-          </form>
-        </div>
-
-        <SongTable
-          title="Bài hát trong playlist"
-          subtitle="Chạm vào một bài để phát hoặc dùng các nút hành động để sắp xếp"
-          songs={selectedPlaylist.songs || []}
-          loading={loading || saving}
-          onRefresh={() => refreshSelectedPlaylist(selectedPlaylist.id)}
-        />
-
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-xl shadow-black/30">
-          <h3 className="text-lg font-semibold text-white">Quản lý bài hát</h3>
-          <div className="mt-3 divide-y divide-white/5">
-            {(selectedPlaylist.songs || []).map((song, index) => (
-              <div
-                key={song.id || index}
-                className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p className="font-semibold text-white">{song.title}</p>
-                  <p className="text-xs text-white/60">{song.artist_name || song.artist}</p>
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <span className="text-white/60">{song.album_title || song.album || ""}</span>
+                    <span className="text-white/60">•</span>
+                    <span className="text-white/60">{song.duration}</span>
+                    <button
+                      onClick={() => handlePlaySong(song)}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white hover:bg-white/15"
+                    >
+                      {isPlayingCurrent && isPlaying ? "⏸" : "▶"}
+                    </button>
+                    <button
+                      onClick={() => handleRemoveSong(song)}
+                      disabled={saving}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white hover:bg-white/15 disabled:opacity-50"
+                    >
+                      ✕
+                    </button>
+                    <button
+                      onClick={() => songId && toggleLike(songId)}
+                      className={`flex h-9 w-9 items-center justify-center rounded-full border ${
+                        isLiked
+                          ? "border-rose-300/60 bg-rose-500/20 text-rose-200"
+                          : "border-white/15 bg-white/10 text-white"
+                      } hover:bg-white/15`}
+                    >
+                      ♥
+                    </button>
+                  </div>
                 </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => handlePlaySong(song)}
-                    className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/20"
-                  >
-                    {normalizeSongId(currentSong) === normalizeSongId(song) && isPlaying
-                      ? "Tạm dừng"
-                      : "Phát"}
-                  </button>
-
-                  <button
-                    onClick={() => handleReorder(song, "up")}
-                    disabled={saving || index === 0}
-                    className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/20 disabled:opacity-50"
-                  >
-                    ↑ Lên
-                  </button>
-
-                  <button
-                    onClick={() => handleReorder(song, "down")}
-                    disabled={saving || index === (selectedPlaylist.songs || []).length - 1}
-                    className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/20 disabled:opacity-50"
-                  >
-                    ↓ Xuống
-                  </button>
-
-                  <button
-                    onClick={() => handleRemoveSong(song)}
-                    disabled={saving}
-                    className="rounded-full border border-rose-300/40 bg-rose-400/20 px-3 py-2 text-xs font-semibold text-rose-100 hover:bg-rose-400/30 disabled:opacity-50"
-                  >
-                    Xóa
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
             {!selectedPlaylist.songs?.length && (
               <p className="py-3 text-sm text-white/60">
@@ -466,14 +626,56 @@ export default function Playlists() {
             )}
           </div>
         </div>
+
+        {renderSuggestedSongs()}
       </div>
     );
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-      {renderPlaylistList()}
-      {renderSongList()}
+    <div className="space-y-8 bg-[#0c2144] p-4 sm:p-6">
+      <div className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900 via-slate-800 to-purple-900 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-white/10 text-2xl text-white">
+              {user?.avatar_url ? (
+                <img src={user.avatar_url} alt={user.display_name} className="h-full w-full object-cover" />
+              ) : (
+                <span>{user?.display_name?.[0]?.toUpperCase() || "♪"}</span>
+              )}
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/60">Thư viện</p>
+              <h1 className="text-3xl font-bold text-white">Playlist của bạn</h1>
+              <p className="text-sm text-white/70">Nơi tổng hợp nghệ sĩ theo dõi và playlist tự tạo</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleCreatePlaylist} className="flex flex-wrap items-center gap-2">
+            <input
+              value={creatingName}
+              onChange={(e) => setCreatingName(e.target.value)}
+              className="w-60 rounded-full bg-white/10 px-4 py-2 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-green-300"
+              placeholder="Tên playlist mới"
+            />
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-full bg-green-400 px-4 py-2 text-sm font-semibold text-slate-900 shadow-md shadow-green-400/40 hover:bg-green-300 disabled:opacity-50"
+            >
+              Tạo playlist
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
+        <div className="space-y-6">
+          {renderArtistSection()}
+          {renderPlaylistShelf()}
+        </div>
+        {renderSongList()}
+      </div>
     </div>
   );
 }
