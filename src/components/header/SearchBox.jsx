@@ -139,16 +139,6 @@ const handleSubmit = (e) => {
 };
 
 
-
-
-  const handleKeywordSelect = (value) => {
-    if (!value) return;
-    setKeyword(value);
-    setOpen(true);
-    fetchSuggestions(value);
-    inputRef.current?.focus();
-  };
-
 const handleResultNavigate = async (item) => {
   if (!item) return;
 
@@ -170,7 +160,9 @@ const handleResultNavigate = async (item) => {
           ...filtered,
         ].slice(0, 6); // giới hạn 6 item
       });
-    } catch (e) {}
+    } catch (err) {
+      console.error("Lưu lịch sử tìm kiếm thất bại", err);
+    }
   }
 
   if (item.type === "artist") {
