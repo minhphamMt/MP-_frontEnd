@@ -1,17 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  FiClock,
-  FiDisc,
-  FiHeadphones,
-  FiMusic,
-  FiSearch,
-  FiUser,
-} from "react-icons/fi";
+import { FiClock, FiDisc, FiHeadphones, FiMusic, FiSearch, FiUser } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getSearchHistory, searchEntities } from "../../api/search.api";
 import { getSongById } from "../../api/song.api";
 import { fetchPlayableSong, toPlayableSong } from "../../utils/song";
 import usePlayerStore from "../../store/player.store";
+import { saveSearchHistory } from "../../api/search.api";
 
 export default function SearchBox() {
   const location = useLocation();
@@ -19,11 +13,11 @@ export default function SearchBox() {
   const inputRef = useRef(null);
   const containerRef = useRef(null);
   const [keyword, setKeyword] = useState("");
-  const [relatedKeywords, setRelatedKeywords] = useState([]);
   const [results, setResults] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [hasFocus, setHasFocus] = useState(false);
 
   const { playSong } = usePlayerStore();
 
@@ -44,6 +38,7 @@ export default function SearchBox() {
     const loadHistory = async () => {
       try {
         const res = await getSearchHistory({ limit: 6 });
+        console.log("Raw search history", res);
         const payload = res?.data?.data ?? res?.data ?? {};
         const items = Array.isArray(payload)
           ? payload
@@ -61,19 +56,17 @@ export default function SearchBox() {
   const fetchSuggestions = useCallback(async (term) => {
     const trimmed = term.trim();
     if (!trimmed) {
-      setRelatedKeywords([]);
       setResults([]);
       return;
     }
 
     setLoading(true);
     try {
-      const res = await searchEntities({ keyword: trimmed, limit: 10 });
+      const res = await searchEntities({ keyword: trimmed, limit: 8 });
       const payload = res?.data?.data ?? res?.data ?? {};
       const items = Array.isArray(payload)
         ? payload
         : payload?.items ?? res?.data?.items ?? [];
-
       const normalized = (items || []).map((item) => ({
         ...item,
         displayLabel:
@@ -97,36 +90,30 @@ export default function SearchBox() {
           item.image,
       }));
 
-      const keywords = normalized
-        .filter((item) => item.type === "keyword" || !item.type)
-        .slice(0, 5);
       const entities = normalized.filter((item) => item.type && item.type !== "keyword");
 
-      setRelatedKeywords(keywords);
       setResults(entities);
     } catch (err) {
       console.error("Search suggestions error", err);
-      setRelatedKeywords([]);
       setResults([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (keyword.trim()) {
-        fetchSuggestions(keyword);
-        setOpen(true);
-      } else {
-        setOpen(false);
-        setRelatedKeywords([]);
-        setResults([]);
-      }
-    }, 320);
+useEffect(() => {
+  if (!hasFocus) return; // 🔥 CHẶN TỰ MỞ KHI CHƯA CLICK
 
-    return () => clearTimeout(timer);
-  }, [fetchSuggestions, keyword]);
+  const timer = setTimeout(() => {
+    if (keyword.trim()) {
+      fetchSuggestions(keyword);
+    } else {
+      setResults([]);
+    }
+  }, 320);
+
+  return () => clearTimeout(timer);
+}, [fetchSuggestions, keyword, hasFocus]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -139,39 +126,67 @@ export default function SearchBox() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!keyword.trim()) return;
-    handleKeywordSelect(keyword.trim());
-  };
+const handleSubmit = (e) => {
+  e.preventDefault();
+  const value = keyword.trim();
+  if (!value) return;
+
+  fetchSuggestions(value);
+  setOpen(true);
+
+  // ✅ CLEAR INPUT
+  setKeyword("");
+};
+
+
+
 
   const handleKeywordSelect = (value) => {
     if (!value) return;
     setKeyword(value);
-    navigate(`/search?keyword=${encodeURIComponent(value)}`);
-    setOpen(false);
+    setOpen(true);
+    fetchSuggestions(value);
+    inputRef.current?.focus();
   };
 
-  const handleResultNavigate = (item) => {
-    if (!item) return;
+const handleResultNavigate = async (item) => {
+  if (!item) return;
 
-    if (item.type === "artist") {
-      navigate(`/artist/${item.artist_id || item.id}`);
-    } else if (item.type === "album") {
-      navigate(`/album/${item.album_id || item.id}`);
-    } else if (item.type === "song") {
-      if (item.album_id || item.albumId) {
-        navigate(`/album/${item.album_id || item.albumId}`);
-      } else if (item.artist_id || item.artistId) {
-        navigate(`/artist/${item.artist_id || item.artistId}`);
-      } else {
-        handleKeywordSelect(item.displayLabel || keyword);
-      }
-    } else {
-      handleKeywordSelect(item.keyword || item.display_name || keyword);
-    }
-    setOpen(false);
-  };
+  const nameToSave =
+    item.display_name ||
+    item.displayLabel ||
+    item.name ||
+    item.title;
+
+  if (nameToSave) {
+    try {
+      await saveSearchHistory(nameToSave);
+
+      // ✅ UPDATE HISTORY NGAY (optimistic)
+      setHistory((prev) => {
+        const filtered = prev.filter(h => h.keyword !== nameToSave);
+        return [
+          { keyword: nameToSave, created_at: new Date().toISOString() },
+          ...filtered,
+        ].slice(0, 6); // giới hạn 6 item
+      });
+    } catch (e) {}
+  }
+
+  if (item.type === "artist") {
+    navigate(`/artist/${item.id}`);
+  } else if (item.type === "album") {
+    navigate(`/album/${item.id}`);
+  } else if (item.type === "song") {
+    navigate(`/song/${item.id}`);
+  }
+
+  setOpen(false);
+  setKeyword("");
+};
+
+
+
 
   const handlePlaySong = async (item) => {
     const playable = toPlayableSong(item);
@@ -179,6 +194,7 @@ export default function SearchBox() {
 
     if (!playable.audio_url && playable.id) {
       const fetched = await fetchPlayableSong(playable, getSongById);
+      console.log(fetched);
       if (fetched) target = fetched;
     }
 
@@ -208,10 +224,10 @@ export default function SearchBox() {
   };
 
   return (
-    <div className="relative w-full max-w-md" ref={containerRef}>
+    <div className="relative z-50 w-full max-w-lg" ref={containerRef}>
       <form onSubmit={handleSubmit} className="relative" key={defaultKeyword}>
         <FiSearch
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-cyan-200/80"
+          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-cyan-200"
           size={18}
         />
         <input
@@ -219,142 +235,122 @@ export default function SearchBox() {
           type="text"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-          onFocus={() => setOpen(true)}
+         onFocus={() => {
+  setHasFocus(true);
+  setOpen(true);
+}}
+
           placeholder="Tìm kiếm bài hát, nghệ sĩ, lời bài hát..."
-          className="w-full rounded-full border border-white/10 bg-white/5 py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/50 shadow-[0_12px_30px_rgba(0,0,0,0.35)] outline-none ring-0 transition focus:border-cyan-300/70 focus:bg-white/10"
+          className="w-full rounded-2xl border border-cyan-500/30 bg-[#0f2145] py-2.5 pl-12 pr-4 text-sm text-white placeholder:text-white/60 shadow-[0_18px_48px_rgba(0,0,0,0.45)] outline-none transition focus:border-cyan-300 focus:shadow-[0_20px_60px_rgba(6,182,212,0.25)]"
         />
       </form>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-20 mt-2 rounded-2xl border border-white/10 bg-[#0c182f]/95 p-3 shadow-[0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur"> 
-          {keyword.trim() ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-white/50">
-                <span>Gợi ý cho "{keyword}"</span>
-                {loading && <span className="text-xs text-cyan-200">Đang tìm...</span>}
-              </div>
+        <div className="absolute left-0 right-0 top-full z-50 mt-3 rounded-2xl border border-cyan-500/15 bg-[#0b1530] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
+          <div className="rounded-xl border border-white/5 bg-[#0f1f3f] p-4 shadow-inner shadow-black/20">
+            <div className="flex items-center justify-between text-sm text-white/70">
+              <div className="font-semibold text-white">Tìm kiếm nhanh</div>
+              {keyword.trim() && (
+                <div className="text-xs uppercase tracking-[0.2em] text-cyan-200">"{keyword}"</div>
+              )}
+              {!keyword.trim() && <div className="text-xs text-white/50">Nhấn từ khóa để xem gợi ý</div>}
+            </div>
 
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/50">
-                    <FiSearch className="text-cyan-200" />
-                    <span>Từ khóa liên quan</span>
+            {keyword.trim() ? (
+              <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-[#122449] p-3">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/60">
+                  <FiHeadphones className="text-pink-200" />
+                  <span>Gợi ý kết quả</span>
+                  {loading && <span className="text-[11px] text-cyan-200/80">Đang tìm...</span>}
+                </div>
+
+                {!loading && !results.length && (
+                  <div className="rounded-lg border border-white/10 bg-[#0b1b38] px-3 py-2 text-sm text-white/70">
+                    Không tìm thấy gợi ý phù hợp.
                   </div>
-                  {!loading && !relatedKeywords.length && (
-                    <div className="rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-sm text-white/70">
-                      Không có gợi ý từ khóa.
-                    </div>
-                  )}
-                  <div className="space-y-1">
-                    {relatedKeywords.map((item) => (
+                )}
+
+                <div className="space-y-1">
+                  {results.map((item) => (
+                    <div
+                      key={`${item.type}-${item.id}`}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white transition hover:bg-[#0c1c38]"
+                    >
                       <button
                         type="button"
-                        key={item.id || item.keyword || item.displayLabel}
-                        onClick={() => handleKeywordSelect(item.keyword || item.displayLabel || keyword)}
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-white transition hover:bg-white/5"
+                        onClick={() => handleResultNavigate(item)}
+                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
                       >
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 text-cyan-200">
-                          <FiSearch />
-                        </div>
-                        <div className="flex-1 overflow-hidden">
-                          <div className="truncate font-semibold">
-                            {renderHighlighted(item.displayLabel || item.keyword)}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/50">
-                    <FiHeadphones className="text-pink-200" />
-                    <span>Gợi ý kết quả</span>
-                  </div>
-
-                  {!loading && !results.length && (
-                    <div className="rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-sm text-white/70">
-                      Không tìm thấy gợi ý phù hợp.
-                    </div>
-                  )}
-
-                  <div className="space-y-1">
-                    {results.map((item) => (
-                      <div
-                        key={`${item.type}-${item.id}`}
-                        className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white transition hover:bg-white/5"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => handleResultNavigate(item)}
-                          className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                        >
-                          <div className="relative h-11 w-11 overflow-hidden rounded-lg border border-white/5 bg-white/5">
-                            {item.cover ? (
-                              <img
-                                src={item.cover}
-                                alt={item.displayLabel || item.name}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center text-lg text-white/70">
-                                {resultIcon(item.type)}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate font-semibold">
-                              {renderHighlighted(item.displayLabel || item.name || item.title)}
+                        <div className="relative h-12 w-12 overflow-hidden rounded-lg border border-white/10 bg-gradient-to-br from-[#1b2c54] via-[#13264a] to-[#0f1f3f]">
+                          {item.cover ? (
+                            <img
+                              src={item.cover}
+                              alt={item.displayLabel || item.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-lg text-white/70">
+                              {resultIcon(item.type)}
                             </div>
-                            {renderSecondary(item)}
-                          </div>
-                        </button>
-
-                        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.15em] text-white/60">
-                          <span className="rounded-full bg-white/5 px-2 py-1">{item.type}</span>
-                          {item.type === "song" && (
-                            <button
-                              type="button"
-                              onClick={() => handlePlaySong(item)}
-                              className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-400/50 bg-cyan-400/10 text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-400/20"
-                            >
-                              <FiMusic />
-                            </button>
                           )}
                         </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-semibold">
+                            {renderHighlighted(item.displayLabel || item.name || item.title)}
+                          </div>
+                          {renderSecondary(item)}
+                        </div>
+                      </button>
+
+                      <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.15em] text-white/60">
+                        <span className="rounded-full bg-[#0b1b38] px-2 py-1 text-white/70">{item.type}</span>
+                        {item.type === "song" && (
+                          <button
+                            type="button"
+                            onClick={() => handlePlaySong(item)}
+                            className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-400/50 bg-cyan-400/15 text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-400/25"
+                          >
+                            <FiMusic />
+                          </button>
+                        )}
                       </div>
-                    ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="mt-3 space-y-3 rounded-xl border border-white/10 bg-[#122449] p-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/60">
+                  <FiClock />
+                  <span>Lịch sử tìm kiếm</span>
+                  {loading && <span className="text-[11px] text-cyan-200/80">Đang tải...</span>}
+                </div>
+                {!history.length && (
+                  <div className="rounded-lg border border-white/10 bg-[#0b1b38] px-3 py-2 text-sm text-white/70">
+                    Bạn chưa có lịch sử tìm kiếm.
                   </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/50">
-                <FiClock />
-                <span>Lịch sử tìm kiếm</span>
-              </div>
-              {!history.length && (
-                <div className="rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-sm text-white/70">
-                  Bạn chưa có lịch sử tìm kiếm.
-                </div>
-              )}
-              <div className="space-y-1">
+                )}
+                <div className="space-y-1">
                   {history.map((item) => {
                     const createdAt = item.createdAt || item.created_at;
 
                     return (
-                    <button
-                      type="button"
-                      key={item.id || item.keyword}
-                      onClick={() => handleKeywordSelect(item.keyword || "")}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-white transition hover:bg-white/5"
-                    >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 text-cyan-200">
-                        <FiClock />
-                      </div>
-                      <div className="flex-1 truncate">{item.keyword}</div>
+                      <button
+                        type="button"
+                        key={item.id || item.keyword}
+                       onClick={() => {
+  setKeyword(item.keyword);
+  fetchSuggestions(item.keyword);
+  setOpen(true);
+}}
+
+                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white transition hover:bg-[#0c1c38]"
+                      >
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0b1b38] text-cyan-200">
+                          <FiClock />
+                        </div>
+                        <div className="flex-1 truncate">{item.keyword}</div>
                         {createdAt && (
                           <span className="text-[11px] text-white/40">
                             {new Date(createdAt).toLocaleDateString("vi-VN")}
@@ -363,9 +359,10 @@ export default function SearchBox() {
                       </button>
                     );
                   })}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>

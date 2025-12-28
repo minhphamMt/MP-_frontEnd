@@ -15,7 +15,7 @@ import NewRelease from "../pages/NewRelease";
 import Top100 from "../pages/Top100";
 import Playlists from "../pages/Playlists";
 import Albums from "../pages/Albums";
-import Search from "../pages/Search";
+import SongDetail from "../pages/SongDetail";
 
 /* ===== DASHBOARD ===== */
 const ArtistDashboard = () => (
@@ -47,8 +47,8 @@ export default function AppRoutes() {
           <Route path="/top-100" element={<Top100 />} />
           <Route path="/playlists" element={<Playlists />} />
           <Route path="/albums" element={<Albums />} />
-          <Route path="/search" element={<Search />} />
           <Route path="/history" element={<History />} />
+          <Route path="/song/:id" element={<SongDetail />} />
 
           {/* 🔴 PUBLIC CONTENT */}
           <Route path="/artist/:id" element={<ArtistDetail />} />

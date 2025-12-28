@@ -4,7 +4,7 @@ import UserMenu from "./UserMenu";
 
 export default function Header() {
   return (
-    <header className="relative z-10 h-16 items-center border-b border-white/5 bg-gradient-to-r from-[#1f1530]/90 via-[#1a1230]/80 to-[#0c182f]/80 px-6 backdrop-blur md:flex">
+   <header className="relative z-40 h-16 items-center border-b border-white/5 bg-gradient-to-r from-[#1f1530]/90 via-[#1a1230]/80 to-[#0c182f]/80 px-6 backdrop-blur md:flex">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.12),transparent_45%)]" aria-hidden />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(167,139,250,0.12),transparent_40%)]" aria-hidden />
       <div className="relative flex items-center gap-2">
