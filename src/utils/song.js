@@ -5,8 +5,19 @@ export const formatDuration = (s = 0) => {
   return `${minutes}:${seconds}`;
 };
 
+const resolveAudioUrl = (path, baseUrl) => {
+  if (!path) return undefined;
+  if (/^https?:\/\//i.test(path)) return path;
+
+  const cleanedBase = (baseUrl || "").replace(/\/$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
+  return cleanedBase ? `${cleanedBase}${normalizedPath}` : normalizedPath;
+};
+
 export const toPlayableSong = (raw = {}) => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
+  const baseUrl =
+    import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
   const source = raw.song ?? raw;
 
   const audioPath =
@@ -28,8 +39,8 @@ export const toPlayableSong = (raw = {}) => {
     raw.source_url ||
     raw.source ||
     raw.url ||
-    (source.audio_path ? `${baseUrl}${source.audio_path}` : undefined) ||
-    (raw.audio_path ? `${baseUrl}${raw.audio_path}` : undefined);
+    resolveAudioUrl(source.audio_path, baseUrl) ||
+    resolveAudioUrl(raw.audio_path, baseUrl);
 
   return {
     id:

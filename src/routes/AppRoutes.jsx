@@ -14,6 +14,7 @@ import RegionChart from "../pages/RegionChart";
 import NewRelease from "../pages/NewRelease";
 import Top100 from "../pages/Top100";
 import Playlists from "../pages/Playlists";
+import PlaylistDetail from "../pages/PlaylistDetail";
 import Albums from "../pages/Albums";
 import SongDetail from "../pages/SongDetail";
 
@@ -46,6 +47,7 @@ export default function AppRoutes() {
           <Route path="/new-release" element={<NewRelease />} />
           <Route path="/top-100" element={<Top100 />} />
           <Route path="/playlists" element={<Playlists />} />
+             <Route path="/playlists/:id" element={<PlaylistDetail />} />
           <Route path="/albums" element={<Albums />} />
           <Route path="/history" element={<History />} />
           <Route path="/song/:id" element={<SongDetail />} />

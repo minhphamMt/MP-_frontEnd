@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import api from "../api/axios";
 import { getMyHistory } from "../api/history.api";
+import { getLikedSongs as fetchLikedSongs } from "../api/like.api";
 import { getSongById, recordSongPlay } from "../api/song.api";
 import { fetchPlayableSong, toPlayableSong } from "../utils/song";
 
@@ -173,7 +174,7 @@ const usePlayerStore = create((set, get) => ({
 
   loadLikedSongs: async () => {
     try {
-      const res = await api.get("/users/me/liked-songs");
+       const res = await fetchLikedSongs();
       const songs = extractSongsFromResponse(res);
 
       const ids = [
