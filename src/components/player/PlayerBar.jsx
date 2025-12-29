@@ -188,9 +188,9 @@ export default function PlayerBar() {
         </div>
       </div>
 
-      {showDetail && (
-        <PlayerDetail isOpen={showDetail} onClose={() => setShowDetail(false)} />
-      )}
+  <PlayerDetail isOpen={showDetail} onClose={() => setShowDetail(false)} />
+
+
     </>
   );
 }
