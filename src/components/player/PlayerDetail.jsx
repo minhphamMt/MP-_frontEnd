@@ -16,6 +16,7 @@ const formatTime = (sec = 0) => {
 };
 
 const ANIM_MS = 450;
+const ANIM_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 /* ================= component ================= */
 export default function PlayerDetail({ isOpen, onClose }) {
@@ -33,22 +34,46 @@ export default function PlayerDetail({ isOpen, onClose }) {
     seek,
   } = usePlayerStore();
 
-  /* ================= animation mount ================= */
+  /* ================= animation ================= */
   const [mounted, setMounted] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const [phase, setPhase] = useState("closed");
+  const [backdropReady, setBackdropReady] = useState(false);
 
-  // Mở/đóng với 2-phase để transition chắc chạy
-  useEffect(() => {
-    if (isOpen) {
-      setMounted(true);
-      // đợi 1 frame để browser paint trạng thái translate-y-full trước
-      requestAnimationFrame(() => setVisible(true));
-    } else {
-      setVisible(false);
-      const t = setTimeout(() => setMounted(false), ANIM_MS);
-      return () => clearTimeout(t);
-    }
-  }, [isOpen]);
+useEffect(() => {
+  if (isOpen) {
+    // ===== OPEN =====
+    setMounted(true);
+    setPhase("enter");
+    setBackdropReady(false);
+
+    const backdropTimer = setTimeout(() => {
+      setBackdropReady(true);
+    }, 80);
+
+    const openTimer = setTimeout(() => {
+      setPhase("open");
+    }, ANIM_MS);
+
+    return () => {
+      clearTimeout(backdropTimer);
+      clearTimeout(openTimer);
+    };
+  }
+
+  // ===== CLOSE =====
+  if (!isOpen && mounted) {
+    setPhase("exit");
+    setBackdropReady(false);
+
+    const closeTimer = setTimeout(() => {
+      setMounted(false);
+      setPhase("closed");
+    }, ANIM_MS);
+
+    return () => clearTimeout(closeTimer);
+  }
+}, [isOpen]); // ❗ KHÔNG thêm mounted vào dependency
+
 
   /* ================= seek logic (GIỮ NGUYÊN) ================= */
   const [isSeeking, setIsSeeking] = useState(false);
@@ -94,7 +119,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const onSeekStart = () => setIsSeeking(true);
   const onSeekChange = (e) => setSeekValue(Number(e.target.value));
-  const onSeekCommit = () => {
+ const onSeekCommit = () => {
     setIsSeeking(false);
     doSeek(seekValue);
   };
@@ -119,19 +144,27 @@ export default function PlayerDetail({ isOpen, onClose }) {
     currentSong.cover_url ||
     currentSong.image;
 
+  const animateClass =
+    phase === "enter"
+      ? "player-detail-anim-in"
+      : phase === "exit"
+      ? "player-detail-anim-out"
+      : "";
+
+  const stableClass =
+    phase === "open" ? "translate-y-0 opacity-100" : "translate-y-full opacity-0";
+
   /* ================= render ================= */
   return (
     <div
-      className={`
-        fixed inset-0 z-[999] text-white
-        transition-transform transition-opacity
-        duration-[${ANIM_MS}ms]
-        ease-[cubic-bezier(0.22,1,0.36,1)]
-        ${visible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}
-      `}
+      className={`player-detail-shell fixed inset-0 z-[999] text-white ${stableClass} ${animateClass}`}
+      style={{ animationDuration: `${ANIM_MS}ms`, animationTimingFunction: ANIM_EASE }}
     >
       {/* ================= BACKGROUND GLASS ================= */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-2xl" />
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-2xl"
+        onClick={() => backdropReady && onClose?.()}
+      />
       <div
         className="absolute inset-0 opacity-40 blur-3xl"
         style={{
@@ -143,6 +176,9 @@ export default function PlayerDetail({ isOpen, onClose }) {
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-black" />
 
       {/* ================= CLOSE ================= */}
+      <div className="absolute inset-x-0 top-3 z-50 flex justify-center">
+        <div className="h-1.5 w-16 rounded-full bg-white/30" />
+      </div>
       <button
         onClick={onClose}
         className="absolute top-6 right-8 z-50 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xl transition"
@@ -151,7 +187,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       </button>
 
       {/* ================= TABS ================= */}
-      <div className="relative z-10 flex justify-center pt-6">
+      <div className="relative z-10 flex justify-center pt-10">
         <div className="flex items-center gap-1 rounded-full bg-white/10 p-1">
           <button className="px-5 py-2 rounded-full bg-white/20 text-sm font-semibold">
             Danh sách phát
@@ -166,7 +202,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       </div>
 
       {/* ================= CONTENT ================= */}
-      <div className="relative z-10 mx-auto mt-14 w-[min(1200px,92vw)]">
+      <div className="relative z-10 mx-auto mt-12 w-[min(1200px,92vw)] pb-10">
         <div className="grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-14 items-center">
           {/* ===== MAIN SONG ===== */}
           <div className="flex flex-col items-center">
@@ -231,7 +267,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
         </div>
 
         {/* ================= CONTROLS ================= */}
-        <div className="mt-20">
+        <div className="mt-16">
           {/* ===== SEEK ===== */}
           <div className="flex items-center gap-4">
             <span className="w-10 text-right text-xs opacity-70">

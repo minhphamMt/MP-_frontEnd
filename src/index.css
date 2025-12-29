@@ -60,3 +60,42 @@ body {
 .scrollbar-hidden::-webkit-scrollbar {
   display: none;
 }
+
+.player-detail-shell {
+  transform: translateY(100%);
+  opacity: 0;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+@keyframes player-detail-slide-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes player-detail-slide-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.player-detail-anim-in {
+  animation-name: player-detail-slide-in;
+  animation-fill-mode: forwards;
+}
+
+.player-detail-anim-out {
+  animation-name: player-detail-slide-out;
+  animation-fill-mode: forwards;
+}
