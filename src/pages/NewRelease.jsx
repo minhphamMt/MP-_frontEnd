@@ -32,12 +32,28 @@ export default function NewRelease() {
   }, []);
 
   return (
-    <SongTable
-      title="BXH Nhạc Mới"
-      subtitle="Những ca khúc phát hành gần đây"
-      songs={songs}
-      loading={loading}
-      onRefresh={loadChart}
-    />
+    <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+      {/* PAGE HEADER */}
+      <div className="mb-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
+        <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+          Bảng xếp hạng
+        </p>
+        <h1 className="mt-1 text-3xl font-extrabold text-white">
+          BXH Nhạc Mới
+        </h1>
+        <p className="mt-2 text-sm text-white/60">
+          Những ca khúc phát hành gần đây
+        </p>
+      </div>
+
+      {/* SONG TABLE */}
+      <SongTable
+        title="BXH Nhạc Mới"
+        subtitle="Những ca khúc phát hành gần đây"
+        songs={songs}
+        loading={loading}
+        onRefresh={loadChart}
+      />
+    </div>
   );
 }

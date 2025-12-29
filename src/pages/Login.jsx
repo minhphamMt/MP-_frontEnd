@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import useAuthStore from "../store/auth.store";
 
 export default function Login() {
   const navigate = useNavigate();
   const { login, loading } = useAuthStore();
 
-  const [email, setEmail] = useState("jane@example.com");
-  const [password, setPassword] = useState("123456"); // đổi theo user của bạn
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState(""); // đổi theo user của bạn
   const [error, setError] = useState("");
 
   const onSubmit = async (e) => {
@@ -18,7 +17,7 @@ export default function Login() {
     try {
       const user = await login({ email, password });
 
-      // Điều hướng theo role (đúng Phase 0)
+      // Điều hướng theo role (giữ nguyên logic)
       if (user.role === "ADMIN") return navigate("/admin", { replace: true });
       if (user.role === "ARTIST") return navigate("/artist", { replace: true });
       return navigate("/", { replace: true });
@@ -32,28 +31,37 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1f1232] via-[#22103a] to-[#0c0914] flex items-center justify-center px-4">
-      <div className="w-full max-w-lg">
-        <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-lg font-bold text-[#170f23]">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0b1d3a] via-[#1a0f2f] to-[#080612] px-4">
+      <div className="w-full max-w-md">
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
+          {/* GLOW */}
+          <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-green-400/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-emerald-400/20 blur-3xl" />
+
+          {/* HEADER */}
+          <div className="relative mb-8 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-500 text-lg font-bold text-[#0c0914] shadow-lg shadow-green-400/30">
               ♪
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-white/60">
+              <p className="text-xs uppercase tracking-[0.25em] text-white/60">
                 Music Platform
               </p>
-              <h1 className="text-2xl font-semibold">Chào mừng trở lại</h1>
+              <h1 className="text-2xl font-semibold text-white">
+                Chào mừng trở lại
+              </h1>
             </div>
           </div>
 
-          <form className="space-y-4" onSubmit={onSubmit}>
+          {/* FORM */}
+          <form className="relative space-y-4" onSubmit={onSubmit}>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-white/80">
                 Email
               </label>
               <input
-                className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-500/40 placeholder:text-white/40"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40
+                           focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-500/40"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@example.com"
@@ -68,7 +76,8 @@ export default function Login() {
                 Mật khẩu
               </label>
               <input
-                className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-500/40 placeholder:text-white/40"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40
+                           focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-500/40"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••"
@@ -76,13 +85,11 @@ export default function Login() {
                 autoComplete="current-password"
                 required
               />
-              <p className="text-xs text-white/50">
-                Mẹo: tài khoản demo đã được điền sẵn.
-               </p>
+             
             </div>
 
             {error && (
-              <div className="rounded-lg border border-red-500/50 bg-red-500/10 text-sm text-red-100 px-4 py-3">
+              <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
                 {error}
               </div>
             )}
@@ -90,13 +97,17 @@ export default function Login() {
             <button
               disabled={loading}
               type="submit"
-              className="w-full mt-2 bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 text-[#0c0914] font-semibold py-3 rounded-lg shadow-lg shadow-green-500/20 transition transform hover:-translate-y-[1px] hover:shadow-green-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="mt-2 w-full rounded-xl bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 py-3 text-sm font-semibold text-[#0c0914]
+                         shadow-lg shadow-green-500/25 transition
+                         hover:-translate-y-[1px] hover:shadow-green-500/40
+                         disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-xs text-white/50">
+          {/* FOOTER */}
+          <div className="relative mt-8 text-center text-xs text-white/50">
             Bảo mật OAuth · Lưu trữ an toàn · Trải nghiệm nghe nhạc mượt mà
           </div>
         </div>

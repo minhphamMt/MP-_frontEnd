@@ -14,42 +14,62 @@ export default function AudioProvider() {
     playNext,
   } = usePlayerStore();
 
-  // Khi đổi bài hát
+  /* =========================
+   * LOAD & PLAY NEW SONG
+   ========================= */
   useEffect(() => {
-    if (!audioRef.current || !currentSong) return;
+    const audio = audioRef.current;
+    if (!audio || !currentSong?.audio_url) return;
 
-    audioRef.current.src = currentSong.audio_url;
-    audioRef.current.play();
+    audio.src = currentSong.audio_url;
+    audio.play().catch(() => {});
 
-    api.post(`/songs/${currentSong.id}/play`).catch(() => {});
+    // analytics / play count
+    if (currentSong?.id) {
+      api.post(`/songs/${currentSong.id}/play`).catch(() => {});
+    }
   }, [currentSong]);
 
-  // Play / Pause
+  /* =========================
+   * PLAY / PAUSE CONTROL
+   ========================= */
   useEffect(() => {
-    if (!audioRef.current) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
-    if (isPlaying) audioRef.current.play();
-    else audioRef.current.pause();
+    if (isPlaying) {
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
   }, [isPlaying]);
 
-  // Seek từ PlayerBar
+  /* =========================
+   * SEEK FROM PLAYER BAR
+   ========================= */
   useEffect(() => {
-    if (!audioRef.current) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
-    if (Math.abs(audioRef.current.currentTime - currentTime) > 0.5) {
-      audioRef.current.currentTime = currentTime;
+    // tránh loop seek liên tục
+    if (Math.abs(audio.currentTime - currentTime) > 0.5) {
+      audio.currentTime = currentTime;
     }
   }, [currentTime]);
 
   return (
     <audio
       ref={audioRef}
-      onLoadedMetadata={(e) =>
-        setDuration(e.target.duration || 0)
-      }
-      onTimeUpdate={(e) =>
-        setCurrentTime(e.target.currentTime)
-      }
+      preload="metadata"
+      playsInline
+      crossOrigin="anonymous"
+      className="hidden"
+      onLoadedMetadata={(e) => {
+        setDuration(e.target.duration || 0);
+      }}
+      onTimeUpdate={(e) => {
+        setCurrentTime(e.target.currentTime);
+      }}
       onEnded={playNext}
     />
   );

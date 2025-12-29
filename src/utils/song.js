@@ -20,7 +20,8 @@ export const toPlayableSong = (raw = {}) => {
     import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
   const source = raw.song ?? raw;
 
-  const audioPath =
+const audioPath =
+  resolveAudioUrl(
     source.audio_url ||
     source.audioUrl ||
     source.audio ||
@@ -38,9 +39,12 @@ export const toPlayableSong = (raw = {}) => {
     raw.streamUrl ||
     raw.source_url ||
     raw.source ||
-    raw.url ||
-    resolveAudioUrl(source.audio_path, baseUrl) ||
-    resolveAudioUrl(raw.audio_path, baseUrl);
+    raw.url,
+    baseUrl
+  ) ||
+  resolveAudioUrl(source.audio_path, baseUrl) ||
+  resolveAudioUrl(raw.audio_path, baseUrl);
+
 
   return {
     id:

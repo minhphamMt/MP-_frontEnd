@@ -16,6 +16,7 @@ import {
   filterPlayableSongs,
   toPlayableSong,
 } from "../utils/song";
+
 import PlaylistDetailHeader from "../components/playlists/PlaylistDetailHeader";
 import PlaylistSongsTable from "../components/playlists/PlaylistSongsTable";
 import PlaylistSuggestions from "../components/playlists/PlaylistSuggestions";
@@ -189,33 +190,49 @@ export default function PlaylistDetail() {
     }
   };
 
+  /* =======================
+     LOADING / EMPTY STATES
+     ======================= */
   if (loading) {
     return (
-      <div className="space-y-8 bg-[#0c2144] p-4 sm:p-6 text-white/70">
-        <p>Đang tải playlist...</p>
+      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] p-6 text-white/70">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          Đang tải playlist...
+        </div>
       </div>
     );
   }
 
   if (!playlist) {
     return (
-      <div className="space-y-8 bg-[#0c2144] p-4 sm:p-6 text-white/70">
-        <p>Không tìm thấy playlist. Vui lòng thử lại.</p>
+      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] p-6 text-white/70">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          Không tìm thấy playlist. Vui lòng thử lại.
+        </div>
       </div>
     );
   }
 
+  /* =======================
+     MAIN RENDER
+     ======================= */
   return (
-    <div className="space-y-8 bg-[#0c2144] p-4 sm:p-6">
+    <div className="min-h-screen space-y-8 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+      {/* HEADER */}
       <PlaylistDetailHeader
         playlist={playlist}
         onPlay={handlePlaySong}
         onShuffle={() => {
-          const shuffled = [...playlistSongs].sort(() => Math.random() - 0.5);
+          const shuffled = [...playlistSongs].sort(
+            () => Math.random() - 0.5
+          );
           if (shuffled.length) handlePlaySong(shuffled[0], shuffled);
         }}
         onRename={() => {
-          const newName = prompt("Đổi tên playlist", rename || playlist.title);
+          const newName = prompt(
+            "Đổi tên playlist",
+            rename || playlist.title
+          );
           if (newName?.trim()) {
             handleRename(newName.trim());
           }
@@ -224,6 +241,7 @@ export default function PlaylistDetail() {
         renaming={saving}
       />
 
+      {/* SONG LIST */}
       <PlaylistSongsTable
         songs={playlistSongs}
         currentSong={currentSong}
@@ -234,6 +252,7 @@ export default function PlaylistDetail() {
         onToggleLike={toggleLike}
       />
 
+      {/* SUGGESTIONS */}
       <PlaylistSuggestions
         songs={recommendedSongs}
         loading={recommendationLoading}

@@ -7,6 +7,9 @@ export default function Albums() {
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  /* =======================
+     HYDRATE ALBUM (GIỮ NGUYÊN)
+     ======================= */
   const hydrateAlbum = useCallback(async (album) => {
     if (album.songs?.length) {
       return { ...album, songs: filterPlayableSongs(album.songs) };
@@ -30,13 +33,18 @@ export default function Albums() {
     }
   }, []);
 
+  /* =======================
+     LOAD ALBUMS (GIỮ NGUYÊN)
+     ======================= */
   const loadAlbums = useCallback(async () => {
     try {
       setLoading(true);
       const res = await getAlbums({ limit: 20 });
       const raw = res?.data?.data || [];
 
-      const hydrated = await Promise.all(raw.map((album) => hydrateAlbum(album)));
+      const hydrated = await Promise.all(
+        raw.map((album) => hydrateAlbum(album))
+      );
       setAlbums(hydrated);
     } catch (err) {
       console.error("Load albums failed", err);
@@ -50,32 +58,57 @@ export default function Albums() {
     loadAlbums();
   }, [loadAlbums]);
 
+  /* =======================
+     UI
+     ======================= */
   return (
-    <div className="space-y-6">
-      {albums.map((album) => (
-        <SongTable
-          key={album.id || album.title}
-          title={album.title || "Album"}
-          subtitle={
-            album.artist_name
-              ? `${album.artist_name} · ${album.songs.length} bài hát`
-              : `${album.songs.length} bài hát`
-          }
-          songs={album.songs || []}
-          loading={loading}
-          onRefresh={loadAlbums}
-        />
-      ))}
+    <div className="min-h-screen space-y-8 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+      {/* PAGE HEADER */}
+      <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+        <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+          Thư viện
+        </p>
+        <h1 className="mt-1 text-3xl font-extrabold text-white">
+          Album
+        </h1>
+        <p className="mt-2 text-sm text-white/60">
+          Tuyển tập album nổi bật từ nghệ sĩ yêu thích
+        </p>
+      </div>
 
-      {!albums.length && (
-        <SongTable
-          title="Album nổi bật"
-          subtitle="Không có album nào để hiển thị"
-          songs={[]}
-          loading={loading}
-          onRefresh={loadAlbums}
-        />
-      )}
+      {/* ALBUM LIST */}
+      <div className="space-y-10">
+        {albums.map((album) => (
+          <div
+            key={album.id || album.title}
+            className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
+          >
+            <SongTable
+              title={album.title || "Album"}
+              subtitle={
+                album.artist_name
+                  ? `${album.artist_name} · ${album.songs.length} bài hát`
+                  : `${album.songs.length} bài hát`
+              }
+              songs={album.songs || []}
+              loading={loading}
+              onRefresh={loadAlbums}
+            />
+          </div>
+        ))}
+
+        {!albums.length && (
+          <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+            <SongTable
+              title="Album nổi bật"
+              subtitle="Không có album nào để hiển thị"
+              songs={[]}
+              loading={loading}
+              onRefresh={loadAlbums}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

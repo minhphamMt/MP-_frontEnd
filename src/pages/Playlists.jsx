@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { createPlaylist, getPlaylistById, getPlaylists } from "../api/playlist.api";
+import {
+  createPlaylist,
+  getPlaylistById,
+  getPlaylists,
+} from "../api/playlist.api";
 import { getArtistCollections } from "../api/artist.api";
 import { getLikedSongs } from "../api/like.api";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
@@ -12,11 +16,13 @@ import {
   toPlayableSong,
 } from "../utils/song";
 import { getSongById } from "../api/song.api";
+
 import ArtistFollowSection from "../components/playlists/ArtistFollowSection";
 import PlaylistGrid from "../components/playlists/PlaylistGrid";
 import LikedSongsSection from "../components/playlists/LikedSongsSection";
 
 const getData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
+
 const extractSongsFromResponse = (payload) => {
   const sources = [
     payload?.data,
@@ -27,7 +33,6 @@ const extractSongsFromResponse = (payload) => {
     payload?.likedSongs,
     payload,
   ];
-
   return sources.find(Array.isArray) || [];
 };
 
@@ -43,8 +48,15 @@ export default function Playlists() {
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
 
-  const { playSong, pause, resume, currentSong, isPlaying, likedSongIds, toggleLike } =
-    usePlayerStore();
+  const {
+    playSong,
+    pause,
+    resume,
+    currentSong,
+    isPlaying,
+    likedSongIds,
+    toggleLike,
+  } = usePlayerStore();
 
   const likedQueue = useMemo(() => likedSongs || [], [likedSongs]);
 
@@ -78,8 +90,9 @@ export default function Playlists() {
       setLoadingPlaylists(true);
       const res = await getPlaylists();
       const raw = getData(res) || [];
-
-      const hydrated = await Promise.all(raw.map((playlist) => hydratePlaylist(playlist)));
+      const hydrated = await Promise.all(
+        raw.map((playlist) => hydratePlaylist(playlist))
+      );
       setPlaylists(hydrated);
     } catch (err) {
       console.error("Load playlists failed", err);
@@ -105,7 +118,9 @@ export default function Playlists() {
       const res = await getLikedSongs();
       const payload = getData(res);
       const songs = extractSongsFromResponse(payload);
-      const playable = filterPlayableSongs(songs.map((song) => toPlayableSong(song)));
+      const playable = filterPlayableSongs(
+        songs.map((song) => toPlayableSong(song))
+      );
       setLikedSongs(playable);
     } catch (err) {
       console.error("Load liked songs failed", err);
@@ -142,13 +157,16 @@ export default function Playlists() {
 
   const handlePlaySong = async (song, queue = likedQueue) => {
     const prepared = toPlayableSong(song);
-    const playable = (await fetchPlayableSong(prepared, getSongById)) || prepared;
+    const playable =
+      (await fetchPlayableSong(prepared, getSongById)) || prepared;
     if (!playable?.audio_url) return;
 
     const normalizedId = normalizeSongId(playable);
     const updatedQueue = (queue || []).map((item) => {
       const itemId = normalizeSongId(item);
-      return itemId && itemId === normalizedId ? { ...item, ...playable } : item;
+      return itemId && itemId === normalizedId
+        ? { ...item, ...playable }
+        : item;
     });
 
     if (normalizeSongId(currentSong) === normalizedId) {
@@ -159,35 +177,50 @@ export default function Playlists() {
   };
 
   return (
-    <div className="space-y-8 bg-[#0c2144] p-4 sm:p-6">
-      <div className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900 via-slate-800 to-purple-900 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
+    <div className="min-h-screen space-y-10 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+      {/* HEADER */}
+      <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-white/10 text-2xl text-white">
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-emerald-500 text-2xl font-bold text-slate-900 shadow-lg">
               {user?.avatar_url ? (
-                <img src={user.avatar_url} alt={user.display_name} className="h-full w-full object-cover" />
+                <img
+                  src={user.avatar_url}
+                  alt={user.display_name}
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <span>{user?.display_name?.[0]?.toUpperCase() || "♪"}</span>
               )}
             </div>
+
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-white/60">Thư viện</p>
-              <h1 className="text-3xl font-bold text-white">Playlist của bạn</h1>
-              <p className="text-sm text-white/70">Danh sách nghệ sĩ theo dõi và playlist tự tạo</p>
+              <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+                Thư viện
+              </p>
+              <h1 className="text-3xl font-extrabold text-white">
+                Playlist của bạn
+              </h1>
+              <p className="text-sm text-white/60">
+                Nghệ sĩ theo dõi & playlist tự tạo
+              </p>
             </div>
           </div>
 
-          <form onSubmit={handleCreatePlaylist} className="flex flex-wrap items-center gap-2">
+          <form
+            onSubmit={handleCreatePlaylist}
+            className="flex flex-wrap items-center gap-2"
+          >
             <input
               value={creatingName}
               onChange={(e) => setCreatingName(e.target.value)}
-              className="w-60 rounded-full bg-white/10 px-4 py-2 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-green-300"
+              className="w-64 rounded-full bg-white/10 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-green-400/60"
               placeholder="Tên playlist mới"
             />
             <button
               type="submit"
               disabled={saving}
-              className="rounded-full bg-green-400 px-4 py-2 text-sm font-semibold text-slate-900 shadow-md shadow-green-400/40 hover:bg-green-300 disabled:opacity-50"
+              className="rounded-full bg-gradient-to-r from-green-400 to-emerald-400 px-5 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-green-400/30 transition hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
             >
               Tạo playlist
             </button>
@@ -195,28 +228,41 @@ export default function Playlists() {
         </div>
       </div>
 
-      <ArtistFollowSection artists={artists} />
+      {/* ARTISTS */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-white">Nghệ sĩ theo dõi</h2>
+        <ArtistFollowSection artists={artists} />
+      </section>
 
-      <PlaylistGrid
-        playlists={playlists}
-        loading={loadingPlaylists}
-        onOpen={(pl) => pl?.id && navigate(`/playlists/${pl.id}`)}
-      />
-
-      {loadingLikedSongs ? (
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-5 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-          Đang tải bài hát yêu thích...
-        </div>
-      ) : (
-        <LikedSongsSection
-          songs={likedSongs}
-          currentSong={currentSong}
-          isPlaying={isPlaying}
-          likedSongIds={likedSongIds}
-          onPlay={(song) => handlePlaySong(song, likedQueue)}
-          onToggleLike={toggleLike}
+      {/* PLAYLIST GRID */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-white">Playlist</h2>
+        <PlaylistGrid
+          playlists={playlists}
+          loading={loadingPlaylists}
+          onOpen={(pl) => pl?.id && navigate(`/playlists/${pl.id}`)}
         />
-      )}
+      </section>
+
+      {/* LIKED SONGS */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-white">Bài hát đã thích</h2>
+
+        {loadingLikedSongs ? (
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+            Đang tải bài hát yêu thích...
+          </div>
+        ) : (
+          <LikedSongsSection
+            songs={likedSongs}
+            currentSong={currentSong}
+            isPlaying={isPlaying}
+            likedSongIds={likedSongIds}
+            onPlay={(song) => handlePlaySong(song, likedQueue)}
+            onToggleLike={toggleLike}
+          />
+        )}
+      </section>
     </div>
   );
 }

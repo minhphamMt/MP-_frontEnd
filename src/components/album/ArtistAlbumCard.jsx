@@ -35,34 +35,70 @@ export default function ArtistAlbumCard({ artist }) {
 
   return (
     <div
-      className="group relative w-48 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 via-white/0 to-white/5 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)] transition-transform duration-200 hover:scale-[1.01] hover:border-white/15"
       onClick={() => navigate(`/artist/${artist.artist_id}`)}
+      className="group relative w-52 shrink-0 cursor-pointer overflow-hidden rounded-2xl
+      border border-white/10
+      bg-gradient-to-br from-white/5 via-white/0 to-white/5
+      p-4
+      backdrop-blur
+      shadow-[0_20px_60px_rgba(0,0,0,0.45)]
+      transition-all duration-300
+     
+      hover:shadow-[0_30px_80px_rgba(56,189,248,0.25)]"
     >
-      <div className="relative w-full overflow-hidden rounded-full">
+      {/* glow nền */}
+      <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
+
+      {/* AVATAR */}
+      <div className="relative mx-auto w-44 overflow-hidden rounded-full">
         <img
           src={artist.cover_url}
           alt={artist.artist_name}
-          className="h-44 w-44 rounded-full object-cover transition duration-300 group-hover:scale-[1.02]"
+          className="h-44 w-44 rounded-full object-cover
+          transition-transform duration-500
+          group-hover:scale-[1.06]"
         />
-        <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
+
+        {/* overlay */}
+        <div
+          className="pointer-events-none absolute inset-0 rounded-full
+          bg-gradient-to-t from-black/70 via-black/30 to-transparent
+          opacity-0 transition duration-300
+          group-hover:opacity-100"
+        />
+
+        {/* PLAY BUTTON */}
         <button
           onClick={handlePlayArtist}
-          className="absolute inset-0 flex items-center justify-center text-white opacity-0 transition duration-300 group-hover:opacity-100"
+          className="absolute inset-0 flex items-center justify-center
+          opacity-0 transition duration-300
+          group-hover:opacity-100"
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-violet-500 text-xl shadow-lg shadow-violet-400/40">
+          <span
+            className="flex h-12 w-12 items-center justify-center rounded-full
+            bg-gradient-to-br from-cyan-400 to-violet-500
+            text-xl text-[#0c0914]
+            shadow-lg shadow-violet-400/40
+            transition-transform duration-300
+            group-hover:scale-110"
+          >
             <FiPlay />
           </span>
         </button>
       </div>
 
-      <div className="mt-3 space-y-1 text-center">
-        <div className="flex items-center justify-center gap-2 text-[11px] uppercase tracking-[0.18em] text-white/50">
+      {/* INFO */}
+      <div className="relative mt-4 space-y-1 text-center">
+        <div className="flex items-center justify-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/50">
           <FiUsers className="text-cyan-300" />
           Nghệ sĩ
         </div>
+
         <h3 className="truncate text-base font-semibold text-white drop-shadow-sm">
           {artist.artist_name}
         </h3>
+
         <div className="flex items-center justify-center gap-2 text-sm text-white/70">
           <FiMusic className="text-violet-300" />
           <span>{artist.song_count} bài hát</span>

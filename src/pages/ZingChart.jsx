@@ -69,7 +69,7 @@ export default function ZingChart() {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [hoverPosition, setHoverPosition] = useState(null);
   const [loading, setLoading] = useState(true);
-   const [loadingRegions, setLoadingRegions] = useState(true);
+  const [loadingRegions, setLoadingRegions] = useState(true);
   const [regionCharts, setRegionCharts] = useState({
     vietnam: [],
     usuk: [],
@@ -88,10 +88,10 @@ export default function ZingChart() {
       setLoadingSeries(true);
       setLoadingRegions(true);
 
-     const [chartRes, seriesRes, regionRes] = await Promise.all([
+      const [chartRes, seriesRes, regionRes] = await Promise.all([
         getZingChart(),
         getZingChartSeries({ days: 7 }),
-        getRegionCharts({ limit: 5}),
+        getRegionCharts({ limit: 5 }),
       ]);
 
       const rawSongs =
@@ -114,7 +114,9 @@ export default function ZingChart() {
           .filter((item) => item?.song && Array.isArray(item?.data))
           .map((item) => {
             const normalizedSong = toPlayableSong(item.song);
-            const normalizedId = normalizedSong?.id ? String(normalizedSong.id) : null;
+            const normalizedId = normalizedSong?.id
+              ? String(normalizedSong.id)
+              : null;
             const songFromChart = normalizedId ? songMap.get(normalizedId) : null;
 
             return {
@@ -132,7 +134,8 @@ export default function ZingChart() {
       );
 
       const regionPayload =
-        regionRes?.data?.data || regionRes?.data || { vietnam: [], usuk: [], kpop: [] };
+        regionRes?.data?.data ||
+        regionRes?.data || { vietnam: [], usuk: [], kpop: [] };
 
       setRegionCharts({
         vietnam: filterPlayableSongs(regionPayload.vietnam),
@@ -143,13 +146,14 @@ export default function ZingChart() {
       console.error("Load Zing Chart failed", err);
       setSongs([]);
       setSeriesData([]);
-        setRegionCharts({ vietnam: [], usuk: [], kpop: [] });
+      setRegionCharts({ vietnam: [], usuk: [], kpop: [] });
     } finally {
       setLoading(false);
       setLoadingSeries(false);
-       setLoadingRegions(false);
+      setLoadingRegions(false);
     }
   };
+
   useEffect(() => {
     loadChart();
   }, []);
@@ -157,7 +161,11 @@ export default function ZingChart() {
   const highlightedSeries = useMemo(() => seriesData.slice(0, 5), [seriesData]);
   const weeklyColumns = useMemo(
     () => [
-      { title: "Việt Nam", items: regionCharts.vietnam, link: "/zing-chart/region/vietnam" },
+      {
+        title: "Việt Nam",
+        items: regionCharts.vietnam,
+        link: "/zing-chart/region/vietnam",
+      },
       { title: "US-UK", items: regionCharts.usuk, link: "/zing-chart/region/usuk" },
       { title: "K-Pop", items: regionCharts.kpop, link: "/zing-chart/region/kpop" },
     ],
@@ -183,13 +191,15 @@ export default function ZingChart() {
     return datasets.map((dataset) => {
       const xStep =
         dataset.dataPoints.length > 1
-         ? (chartWidth - CHART_PADDING_X * 2) / (dataset.dataPoints.length - 1)
+          ? (chartWidth - CHART_PADDING_X * 2) / (dataset.dataPoints.length - 1)
           : chartWidth;
 
       const points = dataset.dataPoints.map((point, i) => {
         const value = Number(point.plays) || 0;
         const x = Math.round(CHART_PADDING_X + i * xStep);
-        const y = Math.round(CHART_HEIGHT - (value / scaleMax) * (CHART_HEIGHT * 0.85));
+        const y = Math.round(
+          CHART_HEIGHT - (value / scaleMax) * (CHART_HEIGHT * 0.85)
+        );
 
         return {
           x,
@@ -204,7 +214,7 @@ export default function ZingChart() {
         points,
         path: buildPath(
           points.map((p) => p.value),
-            chartWidth,
+          chartWidth,
           CHART_HEIGHT,
           scaleMax,
           CHART_PADDING_X
@@ -234,6 +244,7 @@ export default function ZingChart() {
   const crosshairPoint = activePoints[0];
   const chartWidthPx = chartWidth;
   const chartHeightPx = chartSize?.height || chartHeight;
+
   const tooltipStyle = useMemo(() => {
     if (!crosshairPoint) return null;
 
@@ -255,39 +266,52 @@ export default function ZingChart() {
         preferAbove ? "-100%" : "0%"
       })`,
     };
-   }, [chartHeight, chartHeightPx, chartWidth, chartWidthPx, crosshairPoint, hoverPosition]);
+  }, [
+    chartHeight,
+    chartHeightPx,
+    chartWidth,
+    chartWidthPx,
+    crosshairPoint,
+    hoverPosition,
+  ]);
 
   const handleChartHover = useCallback(
     (event) => {
       if (!chartLines.length || !chartLines[0]?.points?.length) return;
 
       const bounds = event.currentTarget.getBoundingClientRect();
-    setChartSize({ width: bounds.width, height: bounds.height });
+      setChartSize({ width: bounds.width, height: bounds.height });
+
       const scaleX = chartWidth / bounds.width;
       setHoverPosition({
         x: event.clientX - bounds.left,
         y: event.clientY - bounds.top,
       });
+
       const offsetX = (event.clientX - bounds.left) * scaleX;
       const usableX = Math.max(0, Math.min(chartWidth, offsetX));
       const innerX = Math.max(
         0,
         Math.min(chartWidth - CHART_PADDING_X * 2, usableX - CHART_PADDING_X)
       );
+
       const xStep =
         chartLines[0].points.length > 1
-           ? (chartWidth - CHART_PADDING_X * 2) / (chartLines[0].points.length - 1)
+          ? (chartWidth - CHART_PADDING_X * 2) / (chartLines[0].points.length - 1)
           : chartWidth;
 
       const rawIndex = Math.round(innerX / xStep);
-      const clampedIndex = Math.max(0, Math.min(chartLines[0].points.length - 1, rawIndex));
+      const clampedIndex = Math.max(
+        0,
+        Math.min(chartLines[0].points.length - 1, rawIndex)
+      );
 
       setHoveredIndex((prev) => (prev === clampedIndex ? prev : clampedIndex));
     },
- [chartLines, chartWidth]
+    [chartLines, chartWidth]
   );
 
-   useEffect(() => {
+  useEffect(() => {
     const updateChartSize = () => {
       if (!chartRef.current) return;
       const rect = chartRef.current.getBoundingClientRect();
@@ -323,38 +347,36 @@ export default function ZingChart() {
     <div
       key={song.id || idx}
       onClick={() => handlePlay(song)}
-      className={`flex items-center justify-between gap-4 rounded-lg px-3 py-2 hover:bg-white/5 transition ${
+      className={`group flex items-center justify-between gap-4 rounded-xl px-3 py-2 transition-all duration-300 hover:bg-white/10 hover:shadow-lg hover:shadow-black/30 hover:scale-[1.01] ${
         song.audio_url ? "cursor-pointer" : "opacity-50 cursor-default"
-
       }`}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div className="text-2xl font-black text-white/80 w-10 text-center">
+        <div className="w-10 text-center text-2xl font-black text-white/80 drop-shadow">
           {song.rank ?? idx + 1}
         </div>
-        <div className="relative w-12 h-12 shrink-0">
+
+        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-md shadow-black/30">
           <img
             src={getSongCover(song)}
             alt={song.title}
-            className="w-full h-full object-cover rounded-lg"
+            className="h-full w-full object-cover"
           />
-         <button
-  onClick={(e) => e.stopPropagation()}
-  className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition"
->
-
-            <span className="bg-white/20 backdrop-blur-md rounded-full p-2">
+          {/* overlay (giống vibe Home) */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition duration-300 group-hover:opacity-100">
+            <span className="rounded-full bg-cyan-400/90 p-2 text-[#0c0914] shadow-lg shadow-cyan-400/30">
               <FaPlay size={12} />
             </span>
-          </button>
+          </div>
         </div>
+
         <div className="min-w-0">
-          <div className="font-semibold truncate">{song.title}</div>
-          <div className="text-xs text-white/60 truncate">{song.artist_name}</div>
+          <div className="truncate font-semibold text-white">{song.title}</div>
+          <div className="truncate text-xs text-white/60">{song.artist_name}</div>
         </div>
       </div>
 
-      <div className="text-sm text-white/60 min-w-[46px] text-right">
+      <div className="min-w-[46px] text-right text-sm text-white/60">
         {formatDuration(song.duration)}
       </div>
     </div>
@@ -367,7 +389,7 @@ export default function ZingChart() {
         subtitle={`Dữ liệu ${seriesDays} ngày gần nhất`}
         action={
           <div className="flex items-center gap-2 text-xs text-white/70">
-            <span className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
+            <span className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 backdrop-blur">
               <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
               Live
             </span>
@@ -377,46 +399,53 @@ export default function ZingChart() {
             </span>
             <button
               onClick={loadChart}
-              className="rounded-full border border-white/20 px-3 py-1.5 text-[11px] font-semibold text-white/80 transition hover:border-white/40 hover:bg-white/5"
+              className="rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/80 backdrop-blur transition hover:border-white/40 hover:bg-white/10"
             >
               Làm mới dữ liệu
             </button>
           </div>
         }
       >
-       <div className="flex flex-col gap-6 w-full">
-
-          <div className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-[#241540] via-[#1b0f33] to-[#0f0a22] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.08),_transparent_40%)]" />
-            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#6fff8c]/10 blur-3xl" />
+        <div className="flex w-full flex-col gap-6">
+          <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#241540] via-[#1b0f33] to-[#0f0a22] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)] transition-all duration-300 hover:shadow-[0_30px_100px_rgba(56,189,248,0.20)]">
+            {/* glow layers (đồng bộ vibe Home) */}
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.08),_transparent_40%)]" />
+            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-cyan-400/10 blur-3xl" />
+            <div className="pointer-events-none absolute -left-20 -bottom-20 h-56 w-56 rounded-full bg-violet-500/10 blur-3xl" />
 
             <div className="relative mb-4 flex flex-wrap items-center justify-between gap-3">
               <div className="space-y-1">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Bảng xếp hạng</p>
+                <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">
+                  Bảng xếp hạng
+                </p>
                 <div className="flex items-center gap-2 text-lg font-semibold">
                   <span className="text-white">Top 5 realtime</span>
-                  <span className="text-[#6fff8c]">#zingchart</span>
+                  <span className="text-emerald-300">#zingchart</span>
                 </div>
               </div>
-              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/70">
+
+              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/70 backdrop-blur">
                 Cập nhật từ dữ liệu {seriesDays} ngày
               </div>
             </div>
 
             {!loading && !songs.length && (
-              <div className="relative mb-4 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
+              <div className="relative mb-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 backdrop-blur">
                 Không có dữ liệu bảng xếp hạng để hiển thị. Hãy thử làm mới.
               </div>
             )}
 
-          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 lg:flex-row">
+              {/* CHART */}
+              <div className="relative flex-1 rounded-2xl border border-white/10 bg-black/20 p-2 shadow-lg shadow-black/30">
+                <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_20%_10%,rgba(56,189,248,0.14),transparent_35%)]" />
+                <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_85%_60%,rgba(167,139,250,0.12),transparent_40%)]" />
 
-              <div className="relative rounded-xl border border-white/10 bg-[#0b071a]/40 p-2">
                 <svg
                   ref={chartRef}
-  viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-  preserveAspectRatio="none"
-  className="h-[340px] w-full"
+                  viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+                  preserveAspectRatio="none"
+                  className="h-[340px] w-full"
                   onMouseMove={handleChartHover}
                   onMouseLeave={() => {
                     setHoveredIndex(null);
@@ -433,8 +462,16 @@ export default function ZingChart() {
                         x2="0%"
                         y2="100%"
                       >
-                        <stop offset="0%" stopColor={line.color.main} stopOpacity="0.2" />
-                        <stop offset="100%" stopColor={line.color.main} stopOpacity="0" />
+                        <stop
+                          offset="0%"
+                          stopColor={line.color.main}
+                          stopOpacity="0.2"
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={line.color.main}
+                          stopOpacity="0"
+                        />
                       </linearGradient>
                     ))}
                   </defs>
@@ -504,21 +541,26 @@ export default function ZingChart() {
 
                 {crosshairPoint && activePoints.length > 0 && (
                   <div
-                    className="pointer-events-none absolute left-0 top-0 z-20 rounded-xl border border-white/10 bg-[#120926] px-3 py-2 shadow-xl"
+                    className="pointer-events-none absolute left-0 top-0 z-20 rounded-2xl border border-white/10 bg-black/60 px-3 py-2 shadow-[0_20px_60px_rgba(0,0,0,0.6)] backdrop-blur-xl"
                     style={tooltipStyle || undefined}
                   >
-                    <div className="mb-2 text-[11px] text-white/60">{crosshairPoint.date}</div>
+                    <div className="mb-2 text-[11px] text-white/60">
+                      {crosshairPoint.date}
+                    </div>
                     <div className="min-w-[220px] space-y-2">
                       {activePoints
                         .slice()
                         .sort((a, b) => b.value - a.value)
                         .map((point, idx) => (
-                          <div key={`${point.line.song?.id || idx}-${point.x}`} className="flex items-center gap-3">
+                          <div
+                            key={`${point.line.song?.id || idx}-${point.x}`}
+                            className="flex items-center gap-3"
+                          >
                             <div
                               className="h-2 w-2 shrink-0 rounded-full"
                               style={{ backgroundColor: point.line.color.main }}
                             />
-                            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-white/10">
+                            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/5">
                               <img
                                 src={getSongCover(point.line.song)}
                                 alt={point.line.song?.title}
@@ -526,7 +568,7 @@ export default function ZingChart() {
                               />
                             </div>
                             <div className="min-w-0">
-                              <div className="max-w-[180px] truncate font-semibold">
+                              <div className="max-w-[180px] truncate font-semibold text-white">
                                 {point.line.song?.title}
                               </div>
                               <div className="max-w-[180px] truncate text-xs text-white/60">
@@ -543,20 +585,22 @@ export default function ZingChart() {
                 )}
 
                 {loadingSeries && (
-                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-[#0f0a22]/60 text-sm text-white/70 backdrop-blur-sm">
+                  <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40 text-sm text-white/70 backdrop-blur-sm">
                     Đang tải dữ liệu biểu đồ...
                   </div>
                 )}
                 {!loadingSeries && !chartLines.length && (
-                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-[#0f0a22]/80 text-sm text-white/70 backdrop-blur-sm">
+                  <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/55 text-sm text-white/70 backdrop-blur-sm">
                     Chưa có dữ liệu biểu đồ để hiển thị.
                   </div>
                 )}
               </div>
 
-              <div className="relative rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+              {/* WEEKLY LIST */}
+              <div className="relative w-full rounded-2xl border border-white/10 bg-white/5 p-4 shadow-lg shadow-black/30 backdrop-blur lg:w-[360px]">
+                <div className="pointer-events-none absolute -top-12 -right-10 h-40 w-40 rounded-full bg-emerald-400/10 blur-3xl" />
                 <div className="mb-3 flex items-center justify-between px-1">
-                  <div className="text-sm font-semibold text-white/80">BXH tuần</div>
+                  <div className="text-sm font-semibold text-white/85">BXH tuần</div>
                   <div className="text-xs text-white/60">Cập nhật mỗi thứ 2</div>
                 </div>
                 <div className="max-h-[260px] space-y-1 overflow-y-auto pr-1 scrollbar-muted">
@@ -573,9 +617,9 @@ export default function ZingChart() {
               {highlightedSeries.map((item, idx) => (
                 <div
                   key={item.song?.id || idx}
-                  className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+                  className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/10 hover:shadow-lg hover:shadow-black/30"
                 >
-                  <div className="relative h-10 w-10 overflow-hidden rounded-md border border-white/10">
+                  <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/10 bg-white/5">
                     <img
                       src={getSongCover(item.song)}
                       alt={item.song?.title}
@@ -583,12 +627,20 @@ export default function ZingChart() {
                     />
                     <span
                       className="absolute inset-0"
-                      style={{ boxShadow: `inset 0 0 0 2px ${colors[idx % colors.length].main}` }}
+                      style={{
+                        boxShadow: `inset 0 0 0 2px ${
+                          colors[idx % colors.length].main
+                        }`,
+                      }}
                     />
                   </div>
                   <div className="text-sm">
-                    <div className="font-semibold">{item.song?.title}</div>
-                    <div className="text-white/60">{item.song?.artist_name}</div>
+                    <div className="max-w-[220px] truncate font-semibold text-white">
+                      {item.song?.title}
+                    </div>
+                    <div className="max-w-[220px] truncate text-white/60">
+                      {item.song?.artist_name}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -603,18 +655,24 @@ export default function ZingChart() {
         action={<span className="text-xs text-white/50">Cập nhật mỗi thứ 2</span>}
       >
         <div className="grid gap-4 lg:grid-cols-3">
-          {weeklyColumns.map((column) => (
+          {weeklyColumns.map((column, colIdx) => (
             <div
               key={column.title}
-              className="relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#2c1648] via-[#23103b] to-[#150a27] p-5"
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:bg-white/10 hover:shadow-[0_22px_70px_rgba(56,189,248,0.18)]"
             >
-                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_35%)]" />
+              {/* glow */}
+              <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_35%)]" />
+
               <div className="relative mb-4 flex items-center justify-between">
-                <div className="text-lg font-semibold">{column.title}</div>
-                 {column.link && (
+                <div className="text-lg font-semibold text-white">
+                  {column.title}
+                </div>
+                {column.link && (
                   <Link
                     to={column.link}
-                    className="text-xs rounded-full border border-white/15 px-3 py-2 transition hover:bg-white/5"
+                    className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/80 backdrop-blur transition hover:border-white/30 hover:bg-white/10"
                   >
                     Xem tất cả
                   </Link>
@@ -622,45 +680,59 @@ export default function ZingChart() {
               </div>
 
               <div className="relative space-y-3">
-                 {loadingRegions && (
+                {loadingRegions && (
                   <div className="text-sm text-white/60">Đang tải dữ liệu khu vực...</div>
                 )}
 
                 {!loadingRegions && !column.items.length && (
                   <div className="text-sm text-white/60">Chưa có dữ liệu.</div>
                 )}
-               {!loadingRegions &&
+
+                {!loadingRegions &&
                   column.items.map((song, idx) => {
                     const playable = Boolean(song.audio_url);
                     return (
                       <div
                         key={song.id || idx}
                         onClick={() => handlePlay(song)}
-                        className={`flex items-center gap-3 rounded-lg px-2 py-1 ${
-                          playable ? "cursor-pointer hover:bg-white/5" : "cursor-default opacity-60"
-
+                        className={`group/item flex items-center gap-3 rounded-xl px-2 py-2 transition-all duration-300 ${
+                          playable
+                            ? "cursor-pointer hover:bg-white/10 hover:shadow-lg hover:shadow-black/20"
+                            : "cursor-default opacity-60"
                         }`}
                       >
                         <div className="w-8 text-center text-2xl font-black text-white/80">
                           {song.rank ?? idx + 1}
                         </div>
-                        <div className="h-12 w-12 overflow-hidden rounded-lg">
+
+                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-md shadow-black/25">
                           <img
                             src={getSongCover(song)}
                             alt={song.title}
                             className="h-full w-full object-cover"
                           />
+                          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition duration-300 group-hover/item:opacity-100">
+                            <span className="rounded-full bg-cyan-400/90 p-2 text-[#0c0914] shadow-lg shadow-cyan-400/30">
+                              <FaPlay size={12} />
+                            </span>
+                          </div>
                         </div>
+
                         <div className="min-w-0">
-                          <div className="truncate font-semibold">{song.title}</div>
-                          <div className="truncate text-xs text-white/60">{song.artist_name}</div>
+                          <div className="truncate font-semibold text-white">
+                            {song.title}
+                          </div>
+                          <div className="truncate text-xs text-white/60">
+                            {song.artist_name}
+                          </div>
                         </div>
+
                         <div className="ml-auto flex items-center gap-1 text-xs text-white/50">
                           <FaRegClock size={12} />
                           <span>{formatDuration(song.duration)}</span>
                         </div>
                       </div>
-                     );
+                    );
                   })}
               </div>
             </div>

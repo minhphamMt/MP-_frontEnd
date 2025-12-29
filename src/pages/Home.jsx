@@ -22,6 +22,9 @@ export default function Home() {
   const artistResumeRef = useRef(null);
   const newAlbumResumeRef = useRef(null);
 
+  /* =======================
+     LOAD HOME (GIỮ NGUYÊN)
+     ======================= */
   useEffect(() => {
     if (ranRef.current) return;
     ranRef.current = true;
@@ -52,7 +55,7 @@ export default function Home() {
             const raw = res?.data?.data;
             if (!raw) return null;
 
-             return {
+            return {
               id: raw.id,
               title: raw.title,
               artist_name: raw.artist_name || raw.artist?.name || "",
@@ -76,31 +79,31 @@ export default function Home() {
     }
   }
 
-const scrollForwardWithLoop = useCallback((ref, distance) => {
+  /* =======================
+     AUTO SCROLL (GIỮ NGUYÊN)
+     ======================= */
+  const scrollForwardWithLoop = useCallback((ref, distance) => {
     const node = ref.current;
     if (!node) return;
 
     const maxScroll = node.scrollWidth - node.clientWidth;
     if (maxScroll <= 0) return;
 
-  const target = node.scrollLeft + distance;
+    const target = node.scrollLeft + distance;
     if (target >= maxScroll - 2) {
       node.scrollTo({ left: 0, behavior: "smooth" });
     } else {
       node.scrollTo({ left: target, behavior: "smooth" });
     }
-    }, []);
+  }, []);
 
   const scrollByAmount = (ref, direction = 1) => {
     const node = ref.current;
     if (!node) return;
 
     const amount = node.clientWidth * 0.7;
-    if (direction > 0) {
-      scrollForwardWithLoop(ref, amount);
-    } else {
-      node.scrollBy({ left: -amount, behavior: "smooth" });
-    }
+    if (direction > 0) scrollForwardWithLoop(ref, amount);
+    else node.scrollBy({ left: -amount, behavior: "smooth" });
   };
 
   const clearResumeTimeout = (resumeRef) => {
@@ -110,20 +113,15 @@ const scrollForwardWithLoop = useCallback((ref, distance) => {
     }
   };
 
- const startAutoScroll = useCallback(
+  const startAutoScroll = useCallback(
     (ref, timerRef, itemCount) => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (!ref.current || itemCount < 2) return;
 
-   if (!ref.current || itemCount < 2) return;
-
-       const step = () => {
+      const step = () => {
         const node = ref.current;
         if (!node) return;
-
-        const distance = node.clientWidth * 0.65;
-        scrollForwardWithLoop(ref, distance);
+        scrollForwardWithLoop(ref, node.clientWidth * 0.65);
       };
 
       timerRef.current = setInterval(step, 3500);
@@ -149,32 +147,39 @@ const scrollForwardWithLoop = useCallback((ref, distance) => {
 
   useEffect(() => {
     startAutoScroll(artistRailRef, artistTimerRef, artistAlbums.length);
-
     return () => {
       pauseAutoScroll(artistTimerRef);
       clearResumeTimeout(artistResumeRef);
     };
- }, [artistAlbums, startAutoScroll]);
+  }, [artistAlbums, startAutoScroll]);
 
   useEffect(() => {
     startAutoScroll(newAlbumRailRef, newAlbumTimerRef, newAlbums.length);
-
     return () => {
       pauseAutoScroll(newAlbumTimerRef);
       clearResumeTimeout(newAlbumResumeRef);
     };
-   }, [newAlbums, startAutoScroll]);
+  }, [newAlbums, startAutoScroll]);
 
+  /* =======================
+     LOADING
+     ======================= */
   if (loading) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-        Đang tải trang chủ...
+      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] p-6">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+          Đang tải trang chủ...
+        </div>
       </div>
     );
   }
 
+  /* =======================
+     UI
+     ======================= */
   return (
-    <div className="space-y-10">
+    <div className="min-h-screen space-y-14 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+      {/* ===== SONG RECOMMEND ===== */}
       <Section
         title="Gợi Ý Bài Hát"
         subtitle="Cá nhân hóa cho bạn"
@@ -194,12 +199,19 @@ const scrollForwardWithLoop = useCallback((ref, distance) => {
         </div>
       </Section>
 
+      {/* ===== ARTIST ALBUM ===== */}
       <Section title="Album Nghệ Sĩ" subtitle="Tuyển tập nổi bật">
         <div className="relative">
           <div
             ref={artistRailRef}
             onMouseEnter={() => pauseAutoScroll(artistTimerRef)}
-            onMouseLeave={() => startAutoScroll(artistRailRef, artistTimerRef, artistAlbums.length)}
+            onMouseLeave={() =>
+              startAutoScroll(
+                artistRailRef,
+                artistTimerRef,
+                artistAlbums.length
+              )
+            }
             className="flex gap-4 overflow-x-auto pb-2 pr-10 scroll-smooth scrollbar-hidden"
           >
             {artistAlbums.map((artist) => (
@@ -207,6 +219,7 @@ const scrollForwardWithLoop = useCallback((ref, distance) => {
             ))}
           </div>
 
+          {/* CONTROLS */}
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1">
             <button
               onClick={() => {
@@ -218,7 +231,7 @@ const scrollForwardWithLoop = useCallback((ref, distance) => {
                   artistAlbums.length
                 );
               }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg shadow-black/40 ring-1 ring-white/10 transition hover:text-white sm:flex"
+              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition hover:text-white sm:flex"
             >
               ‹
             </button>
@@ -235,7 +248,7 @@ const scrollForwardWithLoop = useCallback((ref, distance) => {
                   artistAlbums.length
                 );
               }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg shadow-black/40 ring-1 ring-white/10 transition hover:text-white sm:flex"
+              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition hover:text-white sm:flex"
             >
               ›
             </button>
@@ -243,12 +256,19 @@ const scrollForwardWithLoop = useCallback((ref, distance) => {
         </div>
       </Section>
 
+      {/* ===== NEW ALBUM ===== */}
       <Section title="Album mới phát hành" subtitle="Ra mắt gần đây">
         <div className="relative">
           <div
             ref={newAlbumRailRef}
             onMouseEnter={() => pauseAutoScroll(newAlbumTimerRef)}
-            onMouseLeave={() => startAutoScroll(newAlbumRailRef, newAlbumTimerRef, newAlbums.length)}
+            onMouseLeave={() =>
+              startAutoScroll(
+                newAlbumRailRef,
+                newAlbumTimerRef,
+                newAlbums.length
+              )
+            }
             className="flex gap-4 overflow-x-auto pb-2 pr-10 scroll-smooth scrollbar-hidden"
           >
             {newAlbums.map((album) => (
@@ -267,7 +287,7 @@ const scrollForwardWithLoop = useCallback((ref, distance) => {
                   newAlbums.length
                 );
               }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg shadow-black/40 ring-1 ring-white/10 transition hover:text-white sm:flex"
+              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition hover:text-white sm:flex"
             >
               ‹
             </button>
@@ -284,7 +304,7 @@ const scrollForwardWithLoop = useCallback((ref, distance) => {
                   newAlbums.length
                 );
               }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg shadow-black/40 ring-1 ring-white/10 transition hover:text-white sm:flex"
+              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition hover:text-white sm:flex"
             >
               ›
             </button>

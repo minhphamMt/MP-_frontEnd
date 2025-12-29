@@ -63,15 +63,17 @@ const usePlayerStore = create((set, get) => ({
      ===================== */
 
   playSong: async (song, queue = []) => {
+    // console.log("playSong called with song:", song);
     const hydratedList = (queue.length ? queue : [song]).map((item) =>
       toPlayableSong(item)
+    
     );
-
     const targetIndex = hydratedList.findIndex(
       (s) => normalizeSongId(s) === normalizeSongId(song)
     );
 
     let playable = toPlayableSong(song);
+    console.log("Playable song after toPlayableSong:", playable);
     if (!playable.audio_url) {
       const fetched = await fetchPlayableSong(playable, getSongById);
       if (fetched) playable = fetched;
@@ -137,6 +139,7 @@ const usePlayerStore = create((set, get) => ({
         } else if (repeatMode === "all") {
       get().playSong(queue[0], queue);
     }
+    
   },
 
   playPrev: () => {

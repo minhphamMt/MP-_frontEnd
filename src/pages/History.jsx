@@ -96,13 +96,13 @@ export default function History() {
 
   const playSong = usePlayerStore((s) => s.playSong);
 
+  /* =======================
+     LOAD HISTORY (GIỮ NGUYÊN)
+     ======================= */
   const loadHistory = useCallback(
     async (page = 1, append = false) => {
-      if (append) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-      }
+      if (append) setLoadingMore(true);
+      else setLoading(true);
 
       try {
         const res = await getMyHistory({ page, limit: DEFAULT_LIMIT });
@@ -111,17 +111,14 @@ export default function History() {
 
         setHistory((prev) => {
           const combined = append ? [...prev, ...normalized] : normalized;
-         return dedupeHistoryItems(combined);
+          return dedupeHistoryItems(combined);
         });
         setMeta(resMeta || { page, limit: DEFAULT_LIMIT });
       } catch (err) {
         console.error("Load listening history error", err);
       } finally {
-        if (append) {
-          setLoadingMore(false);
-        } else {
-          setLoading(false);
-        }
+        if (append) setLoadingMore(false);
+        else setLoading(false);
       }
     },
     []
@@ -143,7 +140,9 @@ export default function History() {
     const normalizedId = normalizeSongId(playable);
     const updatedQueue = queue.map((entry) => {
       const entryId = normalizeSongId(entry);
-      return entryId && normalizedId === entryId ? { ...entry, ...playable } : entry;
+      return entryId && normalizedId === entryId
+        ? { ...entry, ...playable }
+        : entry;
     });
 
     playSong(playable, updatedQueue);
@@ -172,29 +171,44 @@ export default function History() {
     [meta]
   );
 
+  /* =======================
+     LOADING / EMPTY
+     ======================= */
   if (loading) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-        Đang tải lịch sử...
+      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] p-6">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+          Đang tải lịch sử...
+        </div>
       </div>
     );
   }
 
   if (!history.length) {
     return (
-      <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-        <h1 className="text-2xl font-bold">Nghe gần đây</h1>
-        <div className="text-sm text-white/60">Bạn chưa nghe bài hát nào.</div>
+      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] p-6">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+          <h1 className="text-2xl font-bold text-white">Nghe gần đây</h1>
+          <div className="mt-2 text-sm text-white/60">
+            Bạn chưa nghe bài hát nào.
+          </div>
+        </div>
       </div>
     );
   }
 
+  /* =======================
+     UI
+     ======================= */
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="min-h-screen space-y-6 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+      {/* HEADER */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">Thói quen</p>
-          <h1 className="text-3xl font-bold text-white drop-shadow-sm">Nghe gần đây</h1>
+          <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
+            Thói quen
+          </p>
+          <h1 className="text-3xl font-bold text-white">Nghe gần đây</h1>
         </div>
         <button
           onClick={loadHistory}
@@ -204,8 +218,9 @@ export default function History() {
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 via-white/0 to-white/5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[3fr,2fr,2fr,1fr,1fr] gap-3 px-5 py-3 text-[11px] uppercase tracking-[0.16em] text-white/60">
+      {/* TABLE */}
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+        <div className="grid grid-cols-[3fr_2fr_2fr_1fr_1fr] gap-3 bg-white/5 px-5 py-3 text-[11px] uppercase tracking-[0.16em] text-white/60">
           <div>Bài hát</div>
           <div>Album</div>
           <div>Nghệ sĩ</div>
@@ -219,30 +234,39 @@ export default function History() {
               type="button"
               key={`${item.history_id || item.id}-${item.listened_at}`}
               onClick={() => handlePlaySong(item)}
-              className="grid w-full grid-cols-[3fr,2fr,2fr,1fr,1fr] items-center gap-3 px-5 py-3 text-left transition hover:bg-white/5"
+              className="grid w-full grid-cols-[3fr_2fr_2fr_1fr_1fr] items-center gap-3 px-5 py-3 text-left transition hover:bg-white/5"
             >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="relative h-12 w-12 overflow-hidden rounded-xl">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl shadow-md shadow-black/30">
                   <img
                     src={item.cover_url}
                     alt=""
-                    className="h-12 w-12 rounded-xl object-cover"
+                    className="h-full w-full object-cover"
                   />
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/50 via-black/10 to-transparent opacity-0 transition hover:opacity-100" />
                 </div>
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold">{item.title}</div>
-                  {item.album_title ? (
-                    <div className="truncate text-[11px] text-white/60">{item.album_title}</div>
-                  ) : null}
+                  <div className="truncate text-sm font-semibold text-white">
+                    {item.title}
+                  </div>
+                  {item.album_title && (
+                    <div className="truncate text-[11px] text-white/60">
+                      {item.album_title}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="truncate text-sm text-white/80">{item.album_title}</div>
+              <div className="truncate text-sm text-white/80">
+                {item.album_title}
+              </div>
 
-              <div className="truncate text-sm text-white/80">{item.artist_name}</div>
+              <div className="truncate text-sm text-white/80">
+                {item.artist_name}
+              </div>
 
-              <div className="text-sm text-white/70">{formatDuration(item.duration)}</div>
+              <div className="text-sm text-white/70">
+                {formatDuration(item.duration)}
+              </div>
 
               <div className="text-right text-sm text-white/60">
                 {formatRelativeTime(item.listened_at)}
@@ -252,17 +276,18 @@ export default function History() {
         </div>
       </div>
 
-      {hasMore ? (
+      {/* LOAD MORE */}
+      {hasMore && (
         <div className="flex justify-center pt-2">
           <button
             onClick={() => loadHistory(currentPage + 1, true)}
             disabled={loadingMore}
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10 disabled:opacity-50"
+            className="rounded-full border border-white/10 bg-white/5 px-5 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10 disabled:opacity-50"
           >
             {loadingMore ? "Đang tải thêm..." : "Tải thêm"}
           </button>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

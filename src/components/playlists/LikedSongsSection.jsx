@@ -34,7 +34,7 @@ export default function LikedSongsSection({
           const songId = normalizeSongId(song);
           const isPlayingCurrent = normalizeSongId(currentSong) === songId;
           const isLiked = songId && likedSongIds.includes(songId);
-            console.log(">>>check playing", isPlayingCurrent)
+           
           return (
             <div
               key={song.id || index}
