@@ -11,7 +11,7 @@ import usePlayerStore from "../../store/player.store";
 const formatTime = (sec = 0) => {
   const s = Math.max(0, Math.floor(sec || 0));
   const m = Math.floor(s / 60);
-  const r = String(s % 60).padStart(2, "0");
+ const r = String(s % 60).padStart(2, "0");
   return `${m}:${r}`;
 };
 
@@ -36,44 +36,46 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   /* ================= animation ================= */
   const [mounted, setMounted] = useState(false);
-  const [phase, setPhase] = useState("closed");
+  const [phase, setPhase] = useState("closed"); // closed | enter | open | exit
   const [backdropReady, setBackdropReady] = useState(false);
 
-useEffect(() => {
-  if (isOpen) {
-    // ===== OPEN =====
-    setMounted(true);
-    setPhase("enter");
-    setBackdropReady(false);
+  const phaseRef = useRef("closed");
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
 
-    const backdropTimer = setTimeout(() => {
-      setBackdropReady(true);
-    }, 80);
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true);
+      setPhase("enter");
+      setBackdropReady(false);
 
-    const openTimer = setTimeout(() => {
+      const t = setTimeout(() => setBackdropReady(true), 80);
+      return () => clearTimeout(t);
+    }
+
+    // chỉ trigger exit nếu đang mounted (đang mở/đang enter)
+    if (!isOpen) {
+      setBackdropReady(false);
+
+      // nếu chưa mount thì thôi
+      setPhase((prev) => (prev === "closed" ? "closed" : "exit"));
+    }
+  }, [isOpen]);
+
+  const handleAnimEnd = () => {
+    const p = phaseRef.current;
+
+    if (p === "enter") {
       setPhase("open");
-    }, ANIM_MS);
+      return;
+    }
 
-    return () => {
-      clearTimeout(backdropTimer);
-      clearTimeout(openTimer);
-    };
-  }
-
-  // ===== CLOSE =====
-  if (!isOpen && mounted) {
-    setPhase("exit");
-    setBackdropReady(false);
-
-    const closeTimer = setTimeout(() => {
+    if (p === "exit") {
       setMounted(false);
       setPhase("closed");
-    }, ANIM_MS);
-
-    return () => clearTimeout(closeTimer);
-  }
-}, [isOpen]); // ❗ KHÔNG thêm mounted vào dependency
-
+    }
+  };
 
   /* ================= seek logic (GIỮ NGUYÊN) ================= */
   const [isSeeking, setIsSeeking] = useState(false);
@@ -152,19 +154,31 @@ useEffect(() => {
       : "";
 
   const stableClass =
-    phase === "open" ? "translate-y-0 opacity-100" : "translate-y-full opacity-0";
+       phase === "open" || phase === "enter"
+      ? "translate-y-0 opacity-100"
+      : "translate-y-full opacity-0";
 
   /* ================= render ================= */
   return (
     <div
       className={`player-detail-shell fixed inset-0 z-[999] text-white ${stableClass} ${animateClass}`}
       style={{ animationDuration: `${ANIM_MS}ms`, animationTimingFunction: ANIM_EASE }}
+         onAnimationEnd={handleAnimEnd}
     >
       {/* ================= BACKGROUND GLASS ================= */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-2xl"
-        onClick={() => backdropReady && onClose?.()}
-      />
+   <div
+  className="absolute inset-0 bg-black/60 backdrop-blur-2xl"
+  onMouseDown={(e) => {
+    // ✅ chỉ khi bấm đúng nền (backdrop)
+    if (e.target !== e.currentTarget) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (backdropReady) onClose?.();
+  }}
+/>
+
       <div
         className="absolute inset-0 opacity-40 blur-3xl"
         style={{

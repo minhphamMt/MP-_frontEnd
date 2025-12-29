@@ -139,14 +139,20 @@ export default function PlayerBar() {
               <HiOutlineQueueList />
             </button>
 
-            <button
-              onClick={() => setShowDetail(true)}
-              className="p-2 text-white/70 transition hover:text-white"
-              aria-label="Mở trang chi tiết"
-              title="Trang chi tiết"
-            >
-              <HiOutlineArrowsPointingOut />
-            </button>
+        <button
+  onMouseDown={(e) => {
+    e.preventDefault();
+    e.stopPropagation();     // ✅ chặn event lọt sang backdrop
+    setShowDetail(true);
+  }}
+  onClick={(e) => e.stopPropagation()} // ✅ dự phòng
+  className="p-2 text-white/70 transition hover:text-white"
+  aria-label="Mở trang chi tiết"
+  title="Trang chi tiết"
+>
+  <HiOutlineArrowsPointingOut />
+</button>
+
 
             <button
               onClick={toggleRepeatMode}
