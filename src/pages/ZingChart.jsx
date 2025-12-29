@@ -655,7 +655,7 @@ export default function ZingChart() {
         action={<span className="text-xs text-white/50">Cập nhật mỗi thứ 2</span>}
       >
         <div className="grid gap-4 lg:grid-cols-3">
-          {weeklyColumns.map((column, colIdx) => (
+           {weeklyColumns.map((column) => (
             <div
               key={column.title}
               className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:bg-white/10 hover:shadow-[0_22px_70px_rgba(56,189,248,0.18)]"
