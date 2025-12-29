@@ -48,6 +48,7 @@ const usePlayerStore = create((set, get) => ({
   isPlaying: false,
   duration: 0,
   currentTime: 0,
+   hasRecordedPlay: false,
   volume: 1,
 
   /* ===== LIKE ===== */
@@ -99,15 +100,9 @@ const usePlayerStore = create((set, get) => ({
       currentIndex: targetIndex !== -1 ? targetIndex : 0,
       isPlaying: true,
       currentTime: 0,
+       hasRecordedPlay: false,
     });
 
-    if (playable?.id) {
-      const duration = playable?.duration ?? null;
-
-      recordSongPlay(playable.id, duration).catch((err) =>
-        console.error("Record listening history failed", err)
-      );
-    }
   },
 
 
@@ -124,6 +119,23 @@ const usePlayerStore = create((set, get) => ({
   seek: (time) => {
     audio.currentTime = time;
     set({ currentTime: time });
+  },
+   recordListeningProgress: (durationSeconds) => {
+    const { currentSong, hasRecordedPlay } = get();
+
+    if (hasRecordedPlay) return;
+
+    const duration = Math.floor(durationSeconds ?? audio.currentTime ?? 0);
+    const songId = normalizeSongId(currentSong);
+
+    if (!songId || !Number.isFinite(duration) || duration < 30) return;
+
+    set({ hasRecordedPlay: true });
+
+    recordSongPlay(songId, duration).catch((err) => {
+      console.error("Record listening history failed", err);
+      set({ hasRecordedPlay: false });
+    });
   },
  setVolume: (value) => {
     const volume = Math.min(1, Math.max(0, value));
@@ -188,6 +200,7 @@ const usePlayerStore = create((set, get) => ({
         currentIndex: 0,
         isPlaying: false,
         currentTime: 0,
+         hasRecordedPlay: false,
       });
     } catch (err) {
       console.error("Load last played song failed", err);
@@ -277,8 +290,14 @@ audio.addEventListener("loadedmetadata", () => {
 });
 
 audio.addEventListener("timeupdate", () => {
+   const currentTime = audio.currentTime || 0;
+  const state = usePlayerStore.getState();
+
+  if (!state.hasRecordedPlay && currentTime >= 30) {
+    state.recordListeningProgress(currentTime);
+  }
   usePlayerStore.setState({
-    currentTime: audio.currentTime || 0,
+    currentTime,
   });
 });
 

@@ -62,8 +62,6 @@ body {
 }
 
 .player-detail-shell {
-  transform: translateY(100%);
-  opacity: 0;
   will-change: transform, opacity;
   backface-visibility: hidden;
 }
@@ -92,10 +90,14 @@ body {
 
 .player-detail-anim-in {
   animation-name: player-detail-slide-in;
+  animation-duration: 5s;        /* 👈 thêm */
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   animation-fill-mode: forwards;
 }
 
 .player-detail-anim-out {
   animation-name: player-detail-slide-out;
+  animation-duration: 5s;        /* 👈 thêm */
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   animation-fill-mode: forwards;
 }

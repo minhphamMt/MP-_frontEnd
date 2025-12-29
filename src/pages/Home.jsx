@@ -89,12 +89,13 @@ export default function Home() {
     const maxScroll = node.scrollWidth - node.clientWidth;
     if (maxScroll <= 0) return;
 
-    const target = node.scrollLeft + distance;
-    if (target >= maxScroll - 2) {
+   const atEnd = Math.abs(node.scrollLeft - maxScroll) < 2;
+    if (atEnd) {
       node.scrollTo({ left: 0, behavior: "smooth" });
-    } else {
-      node.scrollTo({ left: target, behavior: "smooth" });
+       return;
     }
+      const target = Math.min(node.scrollLeft + distance, maxScroll);
+    node.scrollTo({ left: target, behavior: "smooth" });
   }, []);
 
   const scrollByAmount = (ref, direction = 1) => {
@@ -102,8 +103,15 @@ export default function Home() {
     if (!node) return;
 
     const amount = node.clientWidth * 0.7;
-    if (direction > 0) scrollForwardWithLoop(ref, amount);
-    else node.scrollBy({ left: -amount, behavior: "smooth" });
+  const maxScroll = node.scrollWidth - node.clientWidth;
+
+    if (direction > 0) {
+      const target = Math.min(node.scrollLeft + amount, maxScroll);
+      node.scrollTo({ left: target, behavior: "smooth" });
+    } else {
+      const target = Math.max(node.scrollLeft - amount, 0);
+      node.scrollTo({ left: target, behavior: "smooth" });
+    }
   };
 
   const clearResumeTimeout = (resumeRef) => {
