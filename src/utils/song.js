@@ -86,7 +86,13 @@ const audioPath =
     audio_url: audioPath || "",
     rank: raw.rank ?? source.rank,
     play_count:
-      raw.playCount ?? raw.play_count ?? source.playCount ?? source.play_count,
+      raw.weekly_play_count ??
+      source.weekly_play_count ??
+      raw.playCount ??
+      raw.play_count ??
+      source.playCount ??
+      source.play_count,
+    weekly_play_count: raw.weekly_play_count ?? source.weekly_play_count,
   };
 };
 

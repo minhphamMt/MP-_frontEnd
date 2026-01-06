@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaPlay, FaRegClock } from "react-icons/fa";
-import {
-  getRegionCharts,
-  getZingChart,
-  getZingChartSeries,
-} from "../api/chart.api";
+import { getRegionCharts, getWeeklyTopSongs } from "../api/chart.api";
 import {
   formatDuration,
   filterPlayableSongs,
-  toPlayableSong,
   fetchPlayableSong,
 } from "../utils/song";
 import { getSongById } from "../api/song.api";
@@ -63,12 +58,13 @@ const colors = [
 
 export default function ZingChart() {
   const [songs, setSongs] = useState([]);
+  const [weeklySongs, setWeeklySongs] = useState([]);
   const [seriesData, setSeriesData] = useState([]);
-  const [seriesDays, setSeriesDays] = useState(7);
   const [loadingSeries, setLoadingSeries] = useState(true);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [hoverPosition, setHoverPosition] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingWeekly, setLoadingWeekly] = useState(true);
   const [loadingRegions, setLoadingRegions] = useState(true);
   const [regionCharts, setRegionCharts] = useState({
     vietnam: [],
@@ -86,52 +82,14 @@ export default function ZingChart() {
     try {
       setLoading(true);
       setLoadingSeries(true);
+      setLoadingWeekly(true);
       setLoadingRegions(true);
 
-      const [chartRes, seriesRes, regionRes] = await Promise.all([
-        getZingChart(),
-        getZingChartSeries({ days: 7 }),
+      const [weeklyRes, regionRes] = await Promise.all([
+        getWeeklyTopSongs(),
         getRegionCharts({ limit: 5 }),
+        getWeeklyTopSongs(),
       ]);
-
-      const rawSongs =
-        chartRes?.data?.data?.songs ||
-        chartRes?.data?.data?.items ||
-        chartRes?.data?.data ||
-        chartRes?.data ||
-        [];
-
-      const rawSeries = seriesRes?.data?.data?.series || [];
-      const daysValue = Number(seriesRes?.data?.data?.days) || 7;
-
-      const playableSongs = filterPlayableSongs(rawSongs);
-      const songMap = new Map(playableSongs.map((s) => [String(s.id), s]));
-
-      setSongs(playableSongs);
-      setSeriesDays(daysValue);
-      setSeriesData(
-        rawSeries
-          .filter((item) => item?.song && Array.isArray(item?.data))
-          .map((item) => {
-            const normalizedSong = toPlayableSong(item.song);
-            const normalizedId = normalizedSong?.id
-              ? String(normalizedSong.id)
-              : null;
-            const songFromChart = normalizedId ? songMap.get(normalizedId) : null;
-
-            return {
-              song: {
-                ...(songFromChart || {}),
-                ...(normalizedSong || {}),
-              },
-              artist: item.artist,
-              data: item.data.map((point) => ({
-                date: point.date || point.day || "",
-                plays: Number(point.plays) || 0,
-              })),
-            };
-          })
-      );
 
       const regionPayload =
         regionRes?.data?.data ||
@@ -142,14 +100,34 @@ export default function ZingChart() {
         usuk: filterPlayableSongs(regionPayload.usuk),
         kpop: filterPlayableSongs(regionPayload.kpop),
       });
+          const weeklyPayload =
+        weeklyRes?.data?.data || weeklyRes?.data || [];
+      const normalizedWeekly = filterPlayableSongs(weeklyPayload);
+
+      setWeeklySongs(normalizedWeekly);
+      setSongs(normalizedWeekly);
+      setSeriesData(
+        normalizedWeekly.map((song) => ({
+          song,
+          artist: song.artist_name || song.artist,
+          data: [
+            {
+              date: "Tuần này",
+              plays: Number(song.weekly_play_count ?? song.play_count ?? 0),
+            },
+          ],
+        }))
+      );
     } catch (err) {
       console.error("Load Zing Chart failed", err);
       setSongs([]);
       setSeriesData([]);
       setRegionCharts({ vietnam: [], usuk: [], kpop: [] });
+      setWeeklySongs([]);
     } finally {
       setLoading(false);
       setLoadingSeries(false);
+      setLoadingWeekly(false);
       setLoadingRegions(false);
     }
   };
@@ -331,12 +309,12 @@ export default function ZingChart() {
     song?.image ||
     "";
 
-  const handlePlay = async (song) => {
+   const handlePlay = async (song, queue = songs) => {
     const playable = (await fetchPlayableSong(song, getSongById)) || song;
     if (!playable?.audio_url) return;
 
     const normalizedId = playable?.id;
-    const updatedQueue = songs.map((item) =>
+     const updatedQueue = queue.map((item) =>
       item?.id === normalizedId ? { ...item, ...playable } : item
     );
 
@@ -346,7 +324,7 @@ export default function ZingChart() {
   const renderRankItem = (song, idx) => (
     <div
       key={song.id || idx}
-      onClick={() => handlePlay(song)}
+       onClick={() => handlePlay(song, weeklySongs)}
       className={`group flex items-center justify-between gap-4 rounded-xl px-3 py-2 transition-all duration-300 hover:bg-white/10 hover:shadow-lg hover:shadow-black/30 hover:scale-[1.01] ${
         song.audio_url ? "cursor-pointer" : "opacity-50 cursor-default"
       }`}
@@ -386,7 +364,7 @@ export default function ZingChart() {
     <div className="space-y-10">
       <Section
         title="MinhChart"
-        subtitle={`Dữ liệu ${seriesDays} ngày gần nhất`}
+        subtitle="Dữ liệu tuần này"
         action={
           <div className="flex items-center gap-2 text-xs text-white/70">
             <span className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 backdrop-blur">
@@ -419,13 +397,13 @@ export default function ZingChart() {
                   Bảng xếp hạng
                 </p>
                 <div className="flex items-center gap-2 text-lg font-semibold">
-                  <span className="text-white">Top 5 realtime</span>
+                  <span className="text-white">Top 5 tuần</span>
                   <span className="text-emerald-300">#zingchart</span>
                 </div>
               </div>
 
               <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/70 backdrop-blur">
-                Cập nhật từ dữ liệu {seriesDays} ngày
+               Cập nhật bảng xếp hạng tuần
               </div>
             </div>
 
@@ -604,11 +582,14 @@ export default function ZingChart() {
                   <div className="text-xs text-white/60">Cập nhật mỗi thứ 2</div>
                 </div>
                 <div className="max-h-[260px] space-y-1 overflow-y-auto pr-1 scrollbar-muted">
-                  {loading && <div className="px-2 text-sm text-white/60">Đang tải...</div>}
-                  {!loading && !songs.length && (
+                                 {loadingWeekly && (
+                    <div className="px-2 text-sm text-white/60">Đang tải...</div>
+                  )}
+                  {!loadingWeekly && !weeklySongs.length && (
                     <div className="px-2 text-sm text-white/60">Chưa có dữ liệu BXH.</div>
                   )}
-                  {!loading && songs.slice(0, 10).map((song, idx) => renderRankItem(song, idx))}
+                 {!loadingWeekly &&
+                    weeklySongs.map((song, idx) => renderRankItem(song, idx))}
                 </div>
               </div>
             </div>

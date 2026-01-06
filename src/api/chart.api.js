@@ -10,4 +10,6 @@ export const getNewReleaseChart = () => api.get("/charts/new-release");
 export const getTop100Chart = () => api.get("/charts/top-100");
 
 export const getRegionCharts = (params) =>
-  api.get("/charts/regions", { params });
+    api.get("/charts/regions", { params });
+
+export const getWeeklyTopSongs = () => api.get("/charts/weekly/top5");
