@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { FiPlay, FiPause, FiHeart, FiPlus } from "react-icons/fi";
+import { FiPlay, FiPause, FiHeart, FiPlus, FiList } from "react-icons/fi";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { formatDuration, fetchPlayableSong } from "../../utils/song";
 import { getSongById } from "../../api/song.api";
+import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 
 export default function SongTable({
   title,
@@ -195,6 +196,11 @@ export default function SongTable({
                     {isActive && isPlaying ? <FiPause /> : <FiPlay />}
                   </button>
 
+   <AddToPlaylistButton
+                    song={song}
+                    triggerClassName="h-9 w-9 !border-white/10 !bg-white/5 hover:!bg-white/15"
+                  />
+
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -202,7 +208,7 @@ export default function SongTable({
                     }}
                     className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/15"
                   >
-                    <FiPlus />
+                   <FiList />
                   </button>
 
                   <button

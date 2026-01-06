@@ -50,7 +50,7 @@ export default function PlaylistGrid({
                 type="button"
                 onClick={() => onOpen?.(pl)}
                 className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 text-left shadow-lg transition
-                           hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_25px_70px_rgba(0,0,0,0.6)]
+                            hover:border-white/20 hover:shadow-[0_25px_70px_rgba(0,0,0,0.6)]
                            focus:outline-none"
               >
                 {/* COVER */}

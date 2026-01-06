@@ -1,0 +1,248 @@
+import { createPortal } from "react-dom";
+import { useEffect, useMemo, useState } from "react";
+import {
+  FiChevronRight,
+  FiLoader,
+  FiMusic,
+  FiPlus,
+  FiX,
+} from "react-icons/fi";
+import clsx from "clsx";
+import {
+  addSongToPlaylist,
+  createPlaylist,
+  getPlaylists,
+} from "../../api/playlist.api";
+import { normalizeSongId } from "../../store/player.store";
+
+const extractData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
+
+function Toast({ message, onClose }) {
+  useEffect(() => {
+    if (!message) return undefined;
+
+    const timer = setTimeout(onClose, 3500);
+    return () => clearTimeout(timer);
+  }, [message, onClose]);
+
+  if (!message) return null;
+
+  return createPortal(
+    <div className="fixed bottom-6 left-6 z-[70] max-w-sm rounded-xl border border-white/10 bg-[#0e1a2f] px-4 py-3 text-sm text-white shadow-2xl shadow-cyan-500/20">
+      <div className="flex items-start gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.2em] text-cyan-200/80">
+            Thành công
+          </p>
+          <p className="font-semibold leading-relaxed">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/80 transition hover:bg-white/20"
+          aria-label="Đóng thông báo"
+        >
+          <FiX />
+        </button>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+export default function AddToPlaylistButton({
+  song,
+  triggerClassName = "",
+  triggerLabel,
+  variant = "icon",
+}) {
+  const [open, setOpen] = useState(false);
+  const [playlists, setPlaylists] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+
+  const songId = useMemo(() => normalizeSongId(song) || song?.id, [song]);
+
+  const fetchPlaylists = async () => {
+    try {
+      setLoading(true);
+      const res = await getPlaylists({ limit: 100 });
+      setPlaylists(extractData(res) || []);
+    } catch (err) {
+      console.error("Load playlists failed", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      fetchPlaylists();
+    }
+  }, [open]);
+
+  const handleAdd = async (playlist) => {
+    if (!playlist?.id || !songId) return;
+
+    try {
+      setSaving(true);
+      await addSongToPlaylist(playlist.id, { songId });
+      setOpen(false);
+      setToastMessage(
+        `Đã thêm bài hát "${song?.title || "Bài hát"}" vào playlist "${
+          playlist?.name || playlist?.title || "Playlist"
+        }"`
+      );
+    } catch (err) {
+      console.error("Add to playlist failed", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCreatePlaylist = async () => {
+    if (!newPlaylistName.trim()) return;
+    try {
+      setSaving(true);
+      const res = await createPlaylist({ name: newPlaylistName.trim() });
+      const created = extractData(res);
+      if (created) {
+        setPlaylists((prev) => [created, ...prev]);
+        setNewPlaylistName("");
+      }
+    } catch (err) {
+      console.error("Create playlist failed", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const closeToast = () => setToastMessage("");
+
+  const renderTriggerContent = () => {
+    if (variant === "text") {
+      return (
+        <span className="flex items-center gap-2 font-semibold">
+          <FiPlus />
+          <span>Thêm vào playlist</span>
+        </span>
+      );
+    }
+
+    return <FiPlus />;
+  };
+
+  return (
+    <>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(true);
+        }}
+        className={clsx(
+          "flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-3 py-2 text-white/80 transition hover:border-white/30 hover:bg-white/15",
+          variant === "icon" ? "h-9 w-9" : "gap-2 text-xs",
+          triggerClassName
+        )}
+        title="Thêm vào playlist"
+      >
+        {triggerLabel || renderTriggerContent()}
+      </button>
+
+      {open &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-10"
+            onClick={() => setOpen(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-xl rounded-3xl border border-white/10 bg-gradient-to-b from-[#0f1b33] to-[#0b1224] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.7)] backdrop-blur sm:max-w-2xl sm:p-8"
+            >
+              <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
+                <div className="space-y-1">
+                  <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
+                    Playlist của bạn
+                  </p>
+                  <h3 className="text-xl font-bold text-white sm:text-2xl">Chọn playlist để thêm</h3>
+                  <p className="text-sm text-white/60">
+                    {song?.title ? `Thêm "${song.title}"` : "Chọn playlist"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/70 transition hover:bg-white/10"
+                  aria-label="Đóng"
+                >
+                  <FiX />
+                </button>
+              </div>
+
+              <div className="max-h-[55vh] overflow-y-auto rounded-2xl border border-white/10 bg-white/5">
+                {loading ? (
+                  <div className="flex items-center justify-center gap-3 px-4 py-8 text-sm text-white/70">
+                    <FiLoader className="animate-spin" />
+                    Đang tải playlist...
+                  </div>
+                ) : playlists.length ? (
+                  playlists.map((pl) => (
+                    <button
+                      key={pl.id}
+                      onClick={() => handleAdd(pl)}
+                      disabled={saving}
+                      className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition hover:bg-white/10 disabled:opacity-60"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-cyan-300">
+                          <FiMusic />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold sm:text-base">
+                            {pl.name || pl.title || "Playlist"}
+                          </p>
+                          <p className="truncate text-xs text-white/50">
+                            {pl.songs?.length ? `${pl.songs.length} bài hát` : "Playlist cá nhân"}
+                          </p>
+                        </div>
+                      </div>
+                      <FiChevronRight className="text-white/50" />
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-5 py-8 text-sm text-white/60">
+                    Bạn chưa có playlist nào. Hãy tạo mới để lưu bài hát yêu thích.
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 flex flex-col items-start gap-4 rounded-2xl border border-white/10 bg-white/5 p-5 sm:mt-6 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-white">Playlist mới</p>
+                  <p className="text-xs text-white/60">Thêm nhanh tên playlist rồi bấm tạo</p>
+                </div>
+                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+                  <input
+                    value={newPlaylistName}
+                    onChange={(e) => setNewPlaylistName(e.target.value)}
+                    placeholder="Tên playlist"
+                    className="w-full min-w-[220px] rounded-lg border border-white/10 bg-[#0c1426] px-3 py-2 text-sm text-white outline-none ring-0 focus:border-cyan-400/60 focus:bg-[#0f1d36]"
+                  />
+                  <button
+                    onClick={handleCreatePlaylist}
+                    disabled={!newPlaylistName.trim() || saving}
+                    className="rounded-lg bg-gradient-to-r from-cyan-400 to-emerald-400 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-400/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Tạo playlist
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      <Toast message={toastMessage} onClose={closeToast} />
+    </>
+  );
+}

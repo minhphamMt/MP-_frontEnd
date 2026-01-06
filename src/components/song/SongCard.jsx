@@ -1,4 +1,5 @@
 import { FiHeart, FiPause, FiPlay, FiRadio } from "react-icons/fi";
+import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 
 export default function SongCard({ song, queue }) {
@@ -93,6 +94,10 @@ export default function SongCard({ song, queue }) {
         </div>
 
         {/* Like */}
+         <AddToPlaylistButton
+          song={song}
+          triggerClassName="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm text-white/70 transition hover:bg-white/10"
+        />
         <button
           onClick={handleLike}
           className={`
