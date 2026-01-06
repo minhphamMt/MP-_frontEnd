@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaPlay, FaRegClock } from "react-icons/fa";
-import { getRegionCharts, getWeeklyTopSongs } from "../api/chart.api";
+import {
+  getRegionCharts,
+  getWeeklyTopSeries,
+  getWeeklyTopSongs,
+} from "../api/chart.api";
 import {
   formatDuration,
   filterPlayableSongs,
@@ -14,6 +18,17 @@ import Section from "../components/section/Section";
 const CHART_WIDTH = 820;
 const CHART_HEIGHT = 240;
 const CHART_PADDING_X = 24;
+
+const formatWeeklyDate = (dateStr) => {
+  const parsed = dateStr ? new Date(dateStr) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) return dateStr || "";
+
+  return parsed.toLocaleDateString("vi-VN", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+  });
+};
 
 const buildPath = (values, width, height, scaleMax, paddingX = 0) => {
   if (!values.length) return "";
@@ -85,10 +100,10 @@ export default function ZingChart() {
       setLoadingWeekly(true);
       setLoadingRegions(true);
 
-      const [weeklyRes, regionRes] = await Promise.all([
+     const [weeklyRes, weeklySeriesRes, regionRes] = await Promise.all([
         getWeeklyTopSongs(),
         getRegionCharts({ limit: 5 }),
-        getWeeklyTopSongs(),
+        getWeeklyTopSeries(),
       ]);
 
       const regionPayload =
@@ -100,23 +115,52 @@ export default function ZingChart() {
         usuk: filterPlayableSongs(regionPayload.usuk),
         kpop: filterPlayableSongs(regionPayload.kpop),
       });
-          const weeklyPayload =
-        weeklyRes?.data?.data || weeklyRes?.data || [];
+          const weeklyPayload = weeklyRes?.data?.data || weeklyRes?.data || [];
+      const weeklySeriesPayload =
+        weeklySeriesRes?.data?.data || weeklySeriesRes?.data || [];
       const normalizedWeekly = filterPlayableSongs(weeklyPayload);
+
+        const seriesMap = weeklySeriesPayload.reduce((acc, item) => {
+        const songId = item.song_id || item.id;
+        if (!songId) return acc;
+
+        const rawDate = item.date || item.period_start;
+        const plays = Number(item.play_count ?? item.plays ?? 0) || 0;
+
+        const formattedDate = formatWeeklyDate(rawDate);
+        const existing = acc[songId] || [];
+
+        acc[songId] = [
+          ...existing,
+          {
+            date: formattedDate,
+            rawDate,
+            plays,
+          },
+        ];
+
+        return acc;
+      }, {});
 
       setWeeklySongs(normalizedWeekly);
       setSongs(normalizedWeekly);
       setSeriesData(
-        normalizedWeekly.map((song) => ({
-          song,
-          artist: song.artist_name || song.artist,
-          data: [
-            {
-              date: "Tuần này",
-              plays: Number(song.weekly_play_count ?? song.play_count ?? 0),
-            },
-          ],
-        }))
+          normalizedWeekly.map((song) => {
+          const dataPoints = (seriesMap[song.id] || []).sort((a, b) => {
+            const aTime = a.rawDate ? new Date(a.rawDate).getTime() : 0;
+            const bTime = b.rawDate ? new Date(b.rawDate).getTime() : 0;
+            return aTime - bTime;
+          });
+
+          return {
+            song,
+            artist: song.artist_name || song.artist,
+            data: dataPoints.map((point) => ({
+              date: point.date,
+              plays: point.plays,
+            })),
+          };
+        })
       );
     } catch (err) {
       console.error("Load Zing Chart failed", err);
