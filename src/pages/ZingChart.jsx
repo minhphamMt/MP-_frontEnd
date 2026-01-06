@@ -92,7 +92,11 @@ export default function ZingChart() {
 
   const chartWidth = chartSize?.width || CHART_WIDTH;
   const chartHeight = CHART_HEIGHT + 20;
-
+  const toArray = (payload) => {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.items)) return payload.items;
+    return [];
+  };
   const loadChart = async () => {
     try {
       setLoading(true);
@@ -100,32 +104,36 @@ export default function ZingChart() {
       setLoadingWeekly(true);
       setLoadingRegions(true);
 
-     const [weeklyRes, weeklySeriesRes, regionRes] = await Promise.all([
-        getWeeklyTopSongs(),
-        getRegionCharts({ limit: 5 }),
-        getWeeklyTopSeries(),
-      ]);
+    const [weeklyRes, regionRes, weeklySeriesRes] = await Promise.all([
+  getWeeklyTopSongs(),
+  getRegionCharts({ limit: 5 }),
+  getWeeklyTopSeries(),
+]);
 
-      const regionPayload =
-        regionRes?.data?.data ||
-        regionRes?.data || { vietnam: [], usuk: [], kpop: [] };
+
+        const regionPayloadRaw = regionRes?.data?.data || regionRes?.data || {};
+      const normalizedRegions = {
+        vietnam: toArray(regionPayloadRaw.vietnam || regionPayloadRaw.vn),
+        usuk: toArray(regionPayloadRaw.usuk || regionPayloadRaw.us_uk),
+        kpop: toArray(regionPayloadRaw.kpop || regionPayloadRaw.k_pop),
+      };
 
       setRegionCharts({
-        vietnam: filterPlayableSongs(regionPayload.vietnam),
-        usuk: filterPlayableSongs(regionPayload.usuk),
-        kpop: filterPlayableSongs(regionPayload.kpop),
+       vietnam: filterPlayableSongs(normalizedRegions.vietnam),
+        usuk: filterPlayableSongs(normalizedRegions.usuk),
+        kpop: filterPlayableSongs(normalizedRegions.kpop),
       });
-          const weeklyPayload = weeklyRes?.data?.data || weeklyRes?.data || [];
+      const weeklyPayload =   toArray(weeklySeriesRes?.data?.data || weeklySeriesRes?.data);
       const weeklySeriesPayload =
         weeklySeriesRes?.data?.data || weeklySeriesRes?.data || [];
       const normalizedWeekly = filterPlayableSongs(weeklyPayload);
 
         const seriesMap = weeklySeriesPayload.reduce((acc, item) => {
-        const songId = item.song_id || item.id;
+        const songId = item.song_id || item.songId || item.id;
         if (!songId) return acc;
 
-        const rawDate = item.date || item.period_start;
-        const plays = Number(item.play_count ?? item.plays ?? 0) || 0;
+         const rawDate = item.date || item.period_start || item.periodStart;
+        const plays = Number(item.play_count ?? item.plays ?? item.playCount ?? 0) || 0;
 
         const formattedDate = formatWeeklyDate(rawDate);
         const existing = acc[songId] || [];
@@ -145,7 +153,7 @@ export default function ZingChart() {
       setWeeklySongs(normalizedWeekly);
       setSongs(normalizedWeekly);
       setSeriesData(
-          normalizedWeekly.map((song) => {
+             normalizedWeekly.map((song) => {
           const dataPoints = (seriesMap[song.id] || []).sort((a, b) => {
             const aTime = a.rawDate ? new Date(a.rawDate).getTime() : 0;
             const bTime = b.rawDate ? new Date(b.rawDate).getTime() : 0;
