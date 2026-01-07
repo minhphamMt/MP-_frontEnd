@@ -4,7 +4,11 @@ export default function PlaylistGrid({
   playlists = [],
   loading = false,
   onOpen,
+  totalCount,
 }) {
+  const displayCount =
+  typeof totalCount === "number" ? totalCount : playlists.length;
+
   return (
     <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
       {/* HEADER */}
@@ -17,12 +21,12 @@ export default function PlaylistGrid({
         </div>
 
         <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
-          {playlists.length} playlist
+            {displayCount} playlist
         </span>
       </div>
 
       {/* GRID */}
-      <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {/* LOADING */}
         {loading && (
           <div className="col-span-full rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-white/60">
@@ -49,7 +53,7 @@ export default function PlaylistGrid({
                 key={pl.id || firstSongId}
                 type="button"
                 onClick={() => onOpen?.(pl)}
-                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 text-left shadow-lg transition
+                 className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 text-left shadow-lg transition
                             hover:border-white/20 hover:shadow-[0_25px_70px_rgba(0,0,0,0.6)]
                            focus:outline-none"
               >
@@ -76,11 +80,11 @@ export default function PlaylistGrid({
                 </div>
 
                 {/* INFO */}
-                <div className="p-3">
-                  <p className="truncate text-sm font-semibold text-white">
+                 <div className="p-2">
+                  <p className="truncate text-xs font-semibold text-white">
                     {pl.title || "Playlist"}
                   </p>
-                  <p className="mt-0.5 text-xs text-white/60">
+                  <p className="mt-0.5 text-[11px] text-white/60">
                     {songCount} bài hát
                   </p>
                 </div>

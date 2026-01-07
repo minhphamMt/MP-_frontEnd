@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useAlbumLikeStore, { normalizeAlbumId } from "../store/album-like.store";
 
 import {
   createPlaylist,
@@ -39,7 +40,6 @@ const extractSongsFromResponse = (payload) => {
 
 export default function Playlists() {
   const [playlists, setPlaylists] = useState([]);
-  const [artists, setArtists] = useState([]);
   const [likedSongs, setLikedSongs] = useState([]);
   const [likedAlbums, setLikedAlbums] = useState([]);
   const [creatingName, setCreatingName] = useState("");
@@ -47,10 +47,23 @@ export default function Playlists() {
   const [loadingLikedSongs, setLoadingLikedSongs] = useState(true);
   const [loadingLikedAlbums, setLoadingLikedAlbums] = useState(true);
   const [saving, setSaving] = useState(false);
+   const [showAllArtists, setShowAllArtists] = useState(false);
+  const [showAllAlbums, setShowAllAlbums] = useState(false);
+  const [showAllPlaylists, setShowAllPlaylists] = useState(false);
+  const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
 
   const user = useAuthStore((s) => s.user);
+  useEffect(() => {
+  setLikedAlbums((prev) =>
+    (prev || []).filter((a) => {
+      const id = normalizeAlbumId(a);
+      return id && likedAlbumIds.includes(id);
+    })
+  );
+}, [likedAlbumIds]);
+
   const navigate = useNavigate();
-   const followedArtists = useArtistFollowStore((s) => s.followedArtists);
+  const followedArtists = useArtistFollowStore((s) => s.followedArtists);
   const loadFollowedArtists = useArtistFollowStore(
     (s) => s.loadFollowedArtists
   );
@@ -68,7 +81,18 @@ export default function Playlists() {
   } = usePlayerStore();
 
   const likedQueue = useMemo(() => likedSongs || [], [likedSongs]);
-
+  const artistPreviewCount = 6;
+  const albumPreviewCount = 6;
+  const playlistPreviewCount = 8;
+  const visibleArtists = showAllArtists
+    ? followedArtists
+    : followedArtists.slice(0, artistPreviewCount);
+  const visibleAlbums = showAllAlbums
+    ? likedAlbums
+    : likedAlbums.slice(0, albumPreviewCount);
+  const visiblePlaylists = showAllPlaylists
+    ? playlists
+    : playlists.slice(0, playlistPreviewCount);
   const hydratePlaylist = useCallback(async (playlist) => {
     const normalized = {
       ...playlist,
@@ -261,12 +285,34 @@ export default function Playlists() {
 
       {/* ARTISTS */}
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-white">Nghệ sĩ theo dõi</h2>
-        <ArtistFollowSection artists={followedArtists} />
+         <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-white">Nghệ sĩ theo dõi</h2>
+          {followedArtists.length > artistPreviewCount && (
+            <button
+              type="button"
+              onClick={() => setShowAllArtists((prev) => !prev)}
+              className="text-sm font-semibold text-white/70 transition hover:text-white"
+            >
+              {showAllArtists ? "Thu gọn" : "Xem tất cả"}
+            </button>
+          )}
+        </div>
+        <ArtistFollowSection artists={visibleArtists} />
       </section>
  {/* LIKED ALBUMS */}
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-white">Album đã thích</h2>
+         <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-white">Album đã thích</h2>
+          {likedAlbums.length > albumPreviewCount && (
+            <button
+              type="button"
+              onClick={() => setShowAllAlbums((prev) => !prev)}
+              className="text-sm font-semibold text-white/70 transition hover:text-white"
+            >
+              {showAllAlbums ? "Thu gọn" : "Xem tất cả"}
+            </button>
+          )}
+        </div>
 
         {loadingLikedAlbums ? (
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
@@ -274,8 +320,8 @@ export default function Playlists() {
           </div>
         ) : likedAlbums.length ? (
           <div className="flex flex-wrap gap-5">
-            {likedAlbums.map((album) => (
-              <AlbumCard key={album.id || album.title} album={album} />
+            {visibleAlbums.map((album) => (
+              <AlbumCard key={album.id || album.title} album={album}  />
             ))}
           </div>
         ) : (
@@ -286,10 +332,22 @@ export default function Playlists() {
       </section>
       {/* PLAYLIST GRID */}
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-white">Playlist</h2>
+         <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-white">Playlist</h2>
+          {playlists.length > playlistPreviewCount && (
+            <button
+              type="button"
+              onClick={() => setShowAllPlaylists((prev) => !prev)}
+              className="text-sm font-semibold text-white/70 transition hover:text-white"
+            >
+              {showAllPlaylists ? "Thu gọn" : "Xem tất cả"}
+            </button>
+          )}
+        </div>
         <PlaylistGrid
-          playlists={playlists}
+          playlists={visiblePlaylists}
           loading={loadingPlaylists}
+          totalCount={playlists.length}
           onOpen={(pl) => pl?.id && navigate(`/playlists/${pl.id}`)}
         />
       </section>
