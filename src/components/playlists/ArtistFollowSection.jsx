@@ -1,7 +1,11 @@
 import ArtistAlbumCard from "../album/ArtistAlbumCard";
 
-export default function ArtistFollowSection({ artists = [] }) {
-   const normalizedArtists = artists.map((artist) => ({
+export default function ArtistFollowSection({
+  artists = [],
+  singleRow = false,
+  containerRef,
+}) {
+  const normalizedArtists = artists.map((artist) => ({
     ...artist,
     artist_id: artist?.artist_id ?? artist?.id ?? artist?.artistId,
     artist_name:
@@ -9,10 +13,14 @@ export default function ArtistFollowSection({ artists = [] }) {
     cover_url: artist?.cover_url ?? artist?.avatar_url ?? artist?.cover,
   }));
 
+  const layoutClassName = singleRow
+    ? "flex flex-nowrap gap-5 overflow-hidden pr-4"
+    : "flex flex-wrap gap-5";
+
   return (
     <>
       {normalizedArtists.length ? (
-        <div className="flex flex-wrap gap-5">
+        <div ref={containerRef} className={layoutClassName}>
           {normalizedArtists.map((artist) => (
             <ArtistAlbumCard
               key={artist.artist_id || artist.id}

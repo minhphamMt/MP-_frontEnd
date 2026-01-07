@@ -9,51 +9,66 @@ export default function LikedSongsSection({
   likedSongIds = [],
   onPlay,
   onToggleLike,
+  limit,
+  showViewAll = false,
+  onViewAll,
 }) {
+    const visibleSongs = typeof limit === "number" ? songs.slice(0, limit) : songs;
+
   return (
       <>
- {/* HEADER */}
-    <div className="flex items-center justify-between gap-2">
-      <div>
-        <h3 className="text-xl font-bold text-white">
-          Bài hát đã thích
-        </h3>
-        <p className="text-sm text-white/60">
-          Nghe lại những bài hát bạn đã thả tim
-        </p>
+  {/* HEADER */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="text-xl font-bold text-white">Bài hát đã thích</h3>
+          <p className="text-sm text-white/60">
+            Nghe lại những bài hát bạn đã thả tim
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {showViewAll && (
+            <button
+              type="button"
+              onClick={onViewAll}
+              className="text-sm font-semibold text-white/70 transition hover:text-white"
+            >
+              Xem tất cả
+            </button>
+          )}
+          <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
+            {songs.length} bài hát
+          </span>
+        </div>
       </div>
 
-      <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
-        {songs.length} bài hát
-      </span>
-    </div>
-
-    {/* TABLE */}
-    <div className="mt-4 overflow-hidden">
-      {/* TABLE HEADER */}
-      <div className="grid grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)]
+      {/* TABLE */}
+      <div className="mt-4 overflow-hidden">
+        {/* TABLE HEADER */}
+        <div
+          className="grid grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)]
       border-b border-white/10 px-4 py-3 text-[11px]
-      uppercase tracking-[0.35em] text-white/50">
-        <span />
-        <span>Bài hát</span>
-        <span>Album</span>
-        <span className="text-right">Thời gian</span>
-      </div>
+      uppercase tracking-[0.35em] text-white/50"
+        >
+          <span />
+          <span>Bài hát</span>
+          <span>Album</span>
+          <span className="text-right">Thời gian</span>
+        </div>
 
-      {!songs.length && (
-        <p className="px-4 py-4 text-sm text-white/60">
-          Bạn chưa thích bài hát nào. Hãy khám phá và thả tim để lưu tại đây.
-        </p>
-      )}
+        {!songs.length && (
+          <p className="px-4 py-4 text-sm text-white/60">
+            Bạn chưa thích bài hát nào. Hãy khám phá và thả tim để lưu tại đây.
+          </p>
+        )}
 
         {/* SONG LIST */}
         <div className="divide-y divide-white/5">
-          {songs.map((song, index) => {
+          {visibleSongs.map((song, index) => {
             const songId = normalizeSongId(song);
-            const isPlayingCurrent =
-              normalizeSongId(currentSong) === songId;
-            const isLiked =
-              songId && likedSongIds.includes(songId);
+            const isPlayingCurrent = normalizeSongId(currentSong) === songId;
+            const isLiked = songId && likedSongIds.includes(songId);
+
 
             return (
               <div
@@ -92,9 +107,7 @@ export default function LikedSongsSection({
                       group-hover:opacity-100"
                     >
                       <span className="text-white text-sm">
-                        {isPlayingCurrent && isPlaying
-                          ? "⏸"
-                          : "▶"}
+                         {isPlayingCurrent && isPlaying ? "⏸" : "▶"}
                       </span>
                     </button>
                   </div>
@@ -102,9 +115,7 @@ export default function LikedSongsSection({
                   <div className="min-w-0">
                     <p
                       className={`truncate font-medium ${
-                        isPlayingCurrent
-                          ? "text-cyan-300"
-                          : "text-white"
+                        isPlayingCurrent ? "text-cyan-300" : "text-white"
                       }`}
                     >
                       {song.title}
@@ -122,7 +133,7 @@ export default function LikedSongsSection({
 
                 {/* ACTIONS */}
                 <div className="flex items-center justify-end gap-4 text-xs text-white/70">
-  <AddToPlaylistButton
+                 <AddToPlaylistButton
                     song={song}
                     triggerClassName="h-9 w-9 !border-white/20 !bg-white/5 hover:!bg-white/15"
                   />

@@ -22,9 +22,22 @@ export default function ArtistDetail() {
     likedSongIds,
     toggleLike,
   } = usePlayerStore();
- const renderBioHtml = (bio = "") => ({
-    __html: bio.replace(/<br\s*\/?>/gi, "<br />"),
-  });
+const renderBioHtml = (bio = "") => {
+  if (!bio) return { __html: "" };
+
+  let normalized = bio;
+  normalized = normalized.replace(/\r\n/g, "\n");
+  normalized = normalized.replace(/\n{2,}/g, "\n");
+  normalized = normalized.replace(/<br\s*\/?>/gi, "<br />");
+  normalized = normalized.replace(/(<br \/>){2,}/gi, "<br />");
+  normalized = normalized.replace(/(\n\s*)*(<br \/>)(\s*\n)*/gi, "<br />");
+  normalized = normalized.trim();
+
+  return {
+    __html: normalized,
+  };
+};
+
   /* =======================
      LOAD ARTIST (GIỮ NGUYÊN)
      ======================= */

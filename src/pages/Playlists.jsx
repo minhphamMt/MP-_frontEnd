@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAlbumLikeStore, { normalizeAlbumId } from "../store/album-like.store";
 import {
@@ -18,7 +18,6 @@ import {
 import { getSongById } from "../api/song.api";
 
 import ArtistFollowSection from "../components/playlists/ArtistFollowSection";
-import PlaylistGrid from "../components/playlists/PlaylistGrid";
 import LikedSongsSection from "../components/playlists/LikedSongsSection";
 import AlbumCard from "../components/album/AlbumCard";
 import PlaylistCard from "../components/playlists/PlaylistCard";
@@ -80,12 +79,63 @@ export default function Playlists() {
   } = usePlayerStore();
 
   const likedQueue = useMemo(() => likedSongs || [], [likedSongs]);
-  const artistPreviewCount = 6;
-  const albumPreviewCount = 6;
-  const playlistPreviewCount = 6;
-  const visibleArtists = followedArtists.slice(0, artistPreviewCount);
-  const visibleAlbums = likedAlbums.slice(0, albumPreviewCount);
-  const visiblePlaylists = playlists.slice(0, playlistPreviewCount);
+   const likedSongsPreviewLimit = 10;
+  const artistListRef = useRef(null);
+  const albumListRef = useRef(null);
+  const playlistListRef = useRef(null);
+  const [showAllArtists, setShowAllArtists] = useState(false);
+  const [showAllAlbums, setShowAllAlbums] = useState(false);
+  const [showAllPlaylists, setShowAllPlaylists] = useState(false);
+  const [showAllLikedSongs, setShowAllLikedSongs] = useState(false);
+
+  const checkOverflow = useCallback((ref, setter) => {
+    const node = ref.current;
+    if (!node) return;
+    setter(node.scrollWidth > node.clientWidth);
+  }, []);
+
+  useEffect(() => {
+    checkOverflow(artistListRef, setShowAllArtists);
+  }, [checkOverflow, followedArtists.length]);
+
+  useEffect(() => {
+    checkOverflow(albumListRef, setShowAllAlbums);
+  }, [checkOverflow, likedAlbums.length]);
+
+  useEffect(() => {
+    checkOverflow(playlistListRef, setShowAllPlaylists);
+  }, [checkOverflow, playlists.length]);
+
+  useEffect(() => {
+    setShowAllLikedSongs(likedSongs.length > likedSongsPreviewLimit);
+  }, [likedSongs.length]);
+
+  useEffect(() => {
+    if (!artistListRef.current) return undefined;
+    const observer = new ResizeObserver(() =>
+      checkOverflow(artistListRef, setShowAllArtists)
+    );
+    observer.observe(artistListRef.current);
+    return () => observer.disconnect();
+  }, [checkOverflow]);
+
+  useEffect(() => {
+    if (!albumListRef.current) return undefined;
+    const observer = new ResizeObserver(() =>
+      checkOverflow(albumListRef, setShowAllAlbums)
+    );
+    observer.observe(albumListRef.current);
+    return () => observer.disconnect();
+  }, [checkOverflow]);
+
+  useEffect(() => {
+    if (!playlistListRef.current) return undefined;
+    const observer = new ResizeObserver(() =>
+      checkOverflow(playlistListRef, setShowAllPlaylists)
+    );
+    observer.observe(playlistListRef.current);
+    return () => observer.disconnect();
+  }, [checkOverflow]);
   const hydratePlaylist = useCallback(async (playlist) => {
     const normalized = {
       ...playlist,
@@ -303,33 +353,37 @@ setToastTitle("Thành công");
         </div>
       </div>
 
-      {/* ARTISTS */}
+  {/* ARTISTS */}
       <section className="space-y-4">
-         <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-white">Nghệ sĩ theo dõi</h2>
-          {followedArtists.length > artistPreviewCount && (
+          {showAllArtists && (
             <button
               type="button"
               onClick={() => navigate("/library/followed-artists")}
               className="text-sm font-semibold text-white/70 transition hover:text-white"
             >
-                Xem tất cả
+              Xem tất cả
             </button>
           )}
         </div>
-        <ArtistFollowSection artists={visibleArtists} />
+        <ArtistFollowSection
+          artists={followedArtists}
+          singleRow
+          containerRef={artistListRef}
+        />
       </section>
- {/* LIKED ALBUMS */}
+      {/* LIKED ALBUMS */}
       <section className="space-y-4">
-         <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-white">Album đã thích</h2>
-          {likedAlbums.length > albumPreviewCount && (
+          {showAllAlbums && (
             <button
               type="button"
               onClick={() => navigate("/library/liked-albums")}
               className="text-sm font-semibold text-white/70 transition hover:text-white"
             >
-               Xem tất cả
+              Xem tất cả
             </button>
           )}
         </div>
@@ -339,9 +393,12 @@ setToastTitle("Thành công");
             Đang tải album yêu thích...
           </div>
         ) : likedAlbums.length ? (
-          <div className="flex flex-wrap gap-5">
-            {visibleAlbums.map((album) => (
-              <AlbumCard key={album.id || album.title} album={album}  />
+          <div
+            ref={albumListRef}
+            className="flex flex-nowrap gap-5 overflow-hidden pr-4"
+          >
+            {likedAlbums.map((album) => (
+              <AlbumCard key={album.id || album.title} album={album} />
             ))}
           </div>
         ) : (
@@ -350,11 +407,11 @@ setToastTitle("Thành công");
           </div>
         )}
       </section>
-        {/* PLAYLIST GRID */}
+      {/* PLAYLIST GRID */}
       <section className="space-y-4">
-         <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-white">Playlist</h2>
-          {playlists.length > playlistPreviewCount && (
+          {showAllPlaylists && (
             <button
               type="button"
               onClick={() => navigate("/library/playlists")}
@@ -368,9 +425,12 @@ setToastTitle("Thành công");
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
             Đang tải playlist...
           </div>
-        ) : visiblePlaylists.length ? (
-          <div className="flex gap-5 overflow-x-auto pb-2">
-            {visiblePlaylists.map((playlist) => (
+        ) : playlists.length ? (
+          <div
+            ref={playlistListRef}
+            className="flex flex-nowrap gap-5 overflow-hidden pb-2 pr-4"
+          >
+            {playlists.map((playlist) => (
               <PlaylistCard
                 key={playlist.id || playlist.title}
                 playlist={playlist}
@@ -386,16 +446,19 @@ setToastTitle("Thành công");
       </section>
  
       {/* LIKED SONGS */}
-     <section>
-  <LikedSongsSection
-    songs={likedSongs}
-    currentSong={currentSong}
-    isPlaying={isPlaying}
-    likedSongIds={likedSongIds}
-    onPlay={(song) => handlePlaySong(song, likedQueue)}
-    onToggleLike={toggleLike}
-  />
-</section>
+      <section>
+        <LikedSongsSection
+          songs={likedSongs}
+          currentSong={currentSong}
+          isPlaying={isPlaying}
+          likedSongIds={likedSongIds}
+          onPlay={(song) => handlePlaySong(song, likedQueue)}
+          onToggleLike={toggleLike}
+          limit={likedSongsPreviewLimit}
+          showViewAll={showAllLikedSongs}
+          onViewAll={() => navigate("/library/liked-songs")}
+        />
+      </section>
 
     </div>
   );
