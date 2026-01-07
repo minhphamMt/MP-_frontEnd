@@ -3,7 +3,8 @@ import { getMyHistory } from "../api/history.api";
 import { getSongById } from "../api/song.api";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { fetchPlayableSong } from "../utils/song";
-import { FiHeart,FiPlus  } from "react-icons/fi";
+import { FiHeart } from "react-icons/fi";
+import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const DEFAULT_LIMIT = 20;
@@ -226,15 +227,15 @@ export default function History() {
 
       {/* TABLE */}
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-<div className="grid grid-cols-[3fr_2fr_2fr_1fr_40px_1fr] gap-3 bg-white/5 px-5 py-3 text-[11px] uppercase tracking-[0.16em] text-white/60">
-  <div>Bài hát</div>
-  <div>Album</div>
-  <div>Nghệ sĩ</div>
-  <div>Thời gian</div>
-  <div>Thích</div>
-  <div className="text-right">Nghe</div>
-</div>
-
+ <div className="grid grid-cols-[3fr_2fr_2fr_1fr_48px_48px_1fr] gap-3 bg-white/5 px-5 py-3 text-[11px] uppercase tracking-[0.16em] text-white/60">
+          <div>Bài hát</div>
+          <div>Album</div>
+          <div>Nghệ sĩ</div>
+          <div>Thời gian</div>
+          <div></div>
+          <div></div>
+          <div className="text-right">Nghe</div>
+        </div>
 
         <div className="divide-y divide-white/5">
           {history.map((item) => (
@@ -242,7 +243,7 @@ export default function History() {
               type="button"
               key={`${item.history_id || item.id}-${item.listened_at}`}
               onClick={() => handlePlaySong(item)}
-              className="grid w-full grid-cols-[3fr_2fr_2fr_1fr_40px_1fr] items-center gap-3 px-5 py-3 text-left transition hover:bg-white/5"
+                className="grid w-full grid-cols-[3fr_2fr_2fr_1fr_48px_48px_1fr] items-center gap-3 px-5 py-3 text-left transition hover:bg-white/5"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl shadow-md shadow-black/30">
@@ -275,26 +276,32 @@ export default function History() {
               <div className="text-sm text-white/70">
                 {formatDuration(item.duration)}
               </div>
-                  {/* LIKE BUTTON */}
-<div className="flex justify-center">
-  <button
-    type="button"
-    onClick={(e) => {
-      e.stopPropagation();
-      const songId = normalizeSongId(item);
-      songId && toggleLike(songId);
-    }}
-    className={`flex h-9 w-9 items-center justify-center rounded-full
-    border transition-all duration-200
-    ${
-      likedSongIds.includes(normalizeSongId(item))
-        ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
-        : "border-white/20 text-white/60 hover:text-white hover:border-white/40"
-    }`}
-  >
-    <FiHeart className="text-[16px]" />
-  </button>
-</div>
+                 <div className="flex justify-center">
+                <AddToPlaylistButton
+                  song={item}
+                  triggerClassName="h-9 w-9 !border-white/20 !bg-white/10 hover:!bg-white/20"
+                />
+              </div>
+              {/* LIKE BUTTON */}
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const songId = normalizeSongId(item);
+                    songId && toggleLike(songId);
+                  }}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full
+                  border transition-all duration-200
+                  ${
+                    likedSongIds.includes(normalizeSongId(item))
+                      ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
+                      : "border-white/20 text-white/60 hover:text-white hover:border-white/40"
+                  }`}
+                >
+                  <FiHeart className="text-[16px]" />
+                </button>
+              </div>
 
               <div className="text-right text-sm text-white/60">
                 {formatRelativeTime(item.listened_at)}

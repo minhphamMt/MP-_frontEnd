@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { FiHeart } from "react-icons/fi";
 import api from "../api/axios";
-import usePlayerStore from "../store/player.store";
+import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import FollowArtistButton from "../components/artist/FollowArtistButton";
+import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 
 const formatTime = (s = 0) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -13,7 +15,13 @@ export default function ArtistDetail() {
   const [artist, setArtist] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const { playSong, currentSong, isPlaying } = usePlayerStore();
+ const {
+    playSong,
+    currentSong,
+    isPlaying,
+    likedSongIds,
+    toggleLike,
+  } = usePlayerStore();
  const renderBioHtml = (bio = "") => ({
     __html: bio.replace(/<br\s*\/?>/gi, "<br />"),
   });
@@ -228,23 +236,26 @@ export default function ArtistDetail() {
       {/* ===== SONG LIST ===== */}
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
         {/* TABLE HEADER */}
-        <div className="grid grid-cols-[60px_1fr_160px_100px] items-center bg-white/5 px-5 py-3 text-[11px] uppercase tracking-widest text-white/60">
+         <div className="grid grid-cols-[60px_1fr_160px_140px_100px] items-center bg-white/5 px-5 py-3 text-[11px] uppercase tracking-widest text-white/60">
           <span className="text-center">#</span>
           <span>Bài hát</span>
           <span className="text-center">Album</span>
+           <span className="text-center">Hành động</span>
           <span className="text-right">Thời gian</span>
         </div>
 
         {/* ROWS */}
         <div className="divide-y divide-white/5">
           {songs.map((song, index) => {
+            const songId = normalizeSongId(song);
             const isActive = currentSong?.id === song.id;
+            const isLiked = songId && likedSongIds.includes(songId);
 
             return (
               <div
                 key={song.id}
                 onClick={() => playSong(song, songs)}
-                className={`grid grid-cols-[60px_1fr_160px_100px] items-center gap-3 px-5 py-3 cursor-pointer transition
+                className={`grid grid-cols-[60px_1fr_160px_140px_100px] items-center gap-3 px-5 py-3 cursor-pointer transition
                   ${
                     isActive
                       ? "bg-gradient-to-r from-white/10 via-white/5 to-transparent"
@@ -292,7 +303,27 @@ export default function ArtistDetail() {
                 <div className="truncate text-center text-sm text-white/60">
                   {song.album_title || "Single"}
                 </div>
-
+  {/* ACTIONS */}
+                <div className="flex items-center justify-center gap-2">
+                  <AddToPlaylistButton
+                    song={song}
+                    triggerClassName="h-9 w-9 !border-white/20 !bg-white/10 hover:!bg-white/20"
+                  />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (songId) toggleLike(songId);
+                    }}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm transition ${
+                      isLiked
+                        ? "border-rose-400/40 text-rose-300"
+                        : "border-white/10 text-white/70 hover:bg-white/15"
+                    }`}
+                    aria-label={isLiked ? "Bỏ thích bài hát" : "Thích bài hát"}
+                  >
+                    <FiHeart />
+                  </button>
+                </div>
                 {/* DURATION */}
                 <div className="text-right text-sm text-white/60">
                   {formatTime(song.duration)}
