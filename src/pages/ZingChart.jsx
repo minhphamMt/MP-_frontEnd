@@ -104,14 +104,14 @@ export default function ZingChart() {
       setLoadingWeekly(true);
       setLoadingRegions(true);
 
-    const [weeklyRes, regionRes, weeklySeriesRes] = await Promise.all([
-  getWeeklyTopSongs(),
-  getRegionCharts({ limit: 5 }),
-  getWeeklyTopSeries(),
-]);
+      const [weeklyRes, regionRes, weeklySeriesRes] = await Promise.all([
+        getWeeklyTopSongs(),
+        getRegionCharts({ limit: 5 }),
+        getWeeklyTopSeries(),
+      ]);
 
 
-        const regionPayloadRaw = regionRes?.data?.data || regionRes?.data || {};
+      const regionPayloadRaw = regionRes?.data?.data || regionRes?.data || {};
       const normalizedRegions = {
         vietnam: toArray(regionPayloadRaw.vietnam || regionPayloadRaw.vn),
         usuk: toArray(regionPayloadRaw.usuk || regionPayloadRaw.us_uk),
@@ -119,16 +119,18 @@ export default function ZingChart() {
       };
 
       setRegionCharts({
-       vietnam: filterPlayableSongs(normalizedRegions.vietnam),
+        vietnam: filterPlayableSongs(normalizedRegions.vietnam),
         usuk: filterPlayableSongs(normalizedRegions.usuk),
         kpop: filterPlayableSongs(normalizedRegions.kpop),
       });
-      const weeklyPayload =   toArray(weeklySeriesRes?.data?.data || weeklySeriesRes?.data);
-      const weeklySeriesPayload =
-        weeklySeriesRes?.data?.data || weeklySeriesRes?.data || [];
-      const normalizedWeekly = filterPlayableSongs(weeklyPayload);
+          const weeklyPayload = toArray(weeklyRes?.data?.data || weeklyRes?.data);
+      const weeklySeriesPayload = toArray(
+        weeklySeriesRes?.data?.data || weeklySeriesRes?.data
+      );
 
-        const seriesMap = weeklySeriesPayload.reduce((acc, item) => {
+      const normalizedWeekly = filterPlayableSongs(weeklyPayload).slice(0, 5);
+
+      const seriesMap = weeklySeriesPayload.reduce((acc, item) => {
         const songId = item.song_id || item.songId || item.id;
         if (!songId) return acc;
 
@@ -153,12 +155,14 @@ export default function ZingChart() {
       setWeeklySongs(normalizedWeekly);
       setSongs(normalizedWeekly);
       setSeriesData(
-             normalizedWeekly.map((song) => {
-          const dataPoints = (seriesMap[song.id] || []).sort((a, b) => {
-            const aTime = a.rawDate ? new Date(a.rawDate).getTime() : 0;
-            const bTime = b.rawDate ? new Date(b.rawDate).getTime() : 0;
-            return aTime - bTime;
-          });
+            normalizedWeekly.map((song) => {
+          const dataPoints = (seriesMap[song.id] || [])
+            .sort((a, b) => {
+              const aTime = a.rawDate ? new Date(a.rawDate).getTime() : 0;
+              const bTime = b.rawDate ? new Date(b.rawDate).getTime() : 0;
+              return aTime - bTime;
+            })
+            .slice(-7);
 
           return {
             song,
@@ -219,10 +223,13 @@ export default function ZingChart() {
     );
 
     return datasets.map((dataset) => {
-      const xStep =
-        dataset.dataPoints.length > 1
-          ? (chartWidth - CHART_PADDING_X * 2) / (dataset.dataPoints.length - 1)
-          : chartWidth;
+   const TOTAL_POINTS = 7;
+
+const xStep =
+  TOTAL_POINTS > 1
+    ? (chartWidth - CHART_PADDING_X * 2) / (TOTAL_POINTS - 1)
+    : chartWidth;
+
 
       const points = dataset.dataPoints.map((point, i) => {
         const value = Number(point.plays) || 0;
