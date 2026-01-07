@@ -15,13 +15,16 @@ export default function ArtistAlbumCard({ artist }) {
         params: { artist_id: artist.artist_id },
       });
 
-      const data = res?.data?.data || [];
-      if (!data.length) return;
+       const payload = res?.data?.data || {};
+      const artistData = payload.artist || null;
+      const songList = payload.songs || [];
 
-      const songs = data.map((s) => ({
+      if (!songList.length) return;
+
+      const songs = songList.map((s) => ({
         id: s.id,
         title: s.title,
-        artist_name: s.artist_name || s.artist?.name || "",
+        artist_name: artistData?.name || "",
         duration: s.duration,
         cover_url: s.cover_url,
         audio_url: `${import.meta.env.VITE_API_BASE_URL}${s.audio_path}`,

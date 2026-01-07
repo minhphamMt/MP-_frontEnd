@@ -13,7 +13,9 @@ export default function ArtistDetail() {
   const [loading, setLoading] = useState(true);
 
   const { playSong, currentSong, isPlaying } = usePlayerStore();
-
+ const renderBioHtml = (bio = "") => ({
+    __html: bio.replace(/<br\s*\/?>/gi, "<br />"),
+  });
   /* =======================
      LOAD ARTIST (GIỮ NGUYÊN)
      ======================= */
@@ -25,25 +27,26 @@ export default function ArtistDetail() {
         params: { artist_id: id },
       });
 
-      const data = res.data?.data || [];
-
-      if (data.length) {
-        const primary = data[0];
-
+     const payload = res.data?.data || {};
+      const artistData = payload.artist || null;
+      const songList = payload.songs || [];
+       if (artistData) {
         setArtist({
-          name: primary.artist_name,
-          cover: primary.cover_url,
+         name: artistData.name || artistData.alias || "Nghệ sĩ",
+          cover: artistData.cover_url || artistData.avatar_url,
           bio:
-            primary.artist_description ||
-            primary.artist_bio ||
-            primary.bio ||
+            artistData.bio ||
+            artistData.short_bio ||
             "Nghệ sĩ chưa có phần giới thiệu.",
         });
+         } else {
+        setArtist(null);
       }
 
       setSongs(
-        data.map((s) => ({
+          songList.map((s) => ({
           ...s,
+           artist_name: artistData?.name || "",
           audio_url: `${import.meta.env.VITE_API_BASE_URL}${s.audio_path}`,
         }))
       );
@@ -153,9 +156,10 @@ export default function ArtistDetail() {
               <span className="h-[1px] w-6 bg-white/30" />
               <span>Giới thiệu</span>
             </div>
-            <p className="whitespace-pre-line text-sm leading-relaxed text-white/80">
-              {artist.bio}
-            </p>
+             <p
+              className="whitespace-pre-line text-sm leading-relaxed text-white/80"
+              dangerouslySetInnerHTML={renderBioHtml(artist.bio)}
+            />
           </div>
         </div>
       )}
