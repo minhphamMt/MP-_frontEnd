@@ -11,6 +11,7 @@ export default function SongTable({
   songs,
   loading,
   onRefresh,
+  headerActions,
 }) {
   const {
     playSong,
@@ -63,6 +64,7 @@ export default function SongTable({
       </div>
 
       <div className="flex items-center gap-2">
+        {headerActions}
         {onRefresh && (
           <button
             onClick={onRefresh}

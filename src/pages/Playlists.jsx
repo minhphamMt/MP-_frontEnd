@@ -6,7 +6,7 @@ import {
   getPlaylistById,
   getPlaylists,
 } from "../api/playlist.api";
-import { getLikedSongs } from "../api/like.api";
+import { getLikedAlbums, getLikedSongs } from "../api/like.api";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import useAuthStore from "../store/auth.store";
 import useArtistFollowStore from "../store/artist-follow.store";
@@ -20,6 +20,7 @@ import { getSongById } from "../api/song.api";
 import ArtistFollowSection from "../components/playlists/ArtistFollowSection";
 import PlaylistGrid from "../components/playlists/PlaylistGrid";
 import LikedSongsSection from "../components/playlists/LikedSongsSection";
+import AlbumCard from "../components/album/AlbumCard";
 
 const getData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
 
@@ -40,9 +41,11 @@ export default function Playlists() {
   const [playlists, setPlaylists] = useState([]);
   const [artists, setArtists] = useState([]);
   const [likedSongs, setLikedSongs] = useState([]);
+  const [likedAlbums, setLikedAlbums] = useState([]);
   const [creatingName, setCreatingName] = useState("");
   const [loadingPlaylists, setLoadingPlaylists] = useState(true);
   const [loadingLikedSongs, setLoadingLikedSongs] = useState(true);
+  const [loadingLikedAlbums, setLoadingLikedAlbums] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const user = useAuthStore((s) => s.user);
@@ -133,12 +136,36 @@ export default function Playlists() {
       setLoadingLikedSongs(false);
     }
   }, []);
+ const loadLikedAlbumsList = useCallback(async () => {
+    if (!user?.id) {
+      setLikedAlbums([]);
+      return;
+    }
+
+    try {
+      setLoadingLikedAlbums(true);
+      const res = await getLikedAlbums();
+      const payload = getData(res);
+      const albums = Array.isArray(payload) ? payload : payload?.albums || [];
+      const hydrated = albums.map((album) => ({
+        ...album,
+        artist_name: album?.artist?.name || album?.artist_name || "",
+      }));
+      setLikedAlbums(hydrated);
+    } catch (err) {
+      console.error("Load liked albums failed", err);
+      setLikedAlbums([]);
+    } finally {
+      setLoadingLikedAlbums(false);
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     loadPlaylists();
     loadArtists();
     loadLikedSongsList();
-  }, [loadPlaylists, loadArtists, loadLikedSongsList]);
+    loadLikedAlbumsList();
+  }, [loadPlaylists, loadArtists, loadLikedSongsList, loadLikedAlbumsList]);
 
   const handleCreatePlaylist = async (e) => {
     e.preventDefault();
@@ -237,7 +264,26 @@ export default function Playlists() {
         <h2 className="text-lg font-semibold text-white">Nghệ sĩ theo dõi</h2>
         <ArtistFollowSection artists={followedArtists} />
       </section>
+ {/* LIKED ALBUMS */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-white">Album đã thích</h2>
 
+        {loadingLikedAlbums ? (
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+            Đang tải album yêu thích...
+          </div>
+        ) : likedAlbums.length ? (
+          <div className="flex flex-wrap gap-5">
+            {likedAlbums.map((album) => (
+              <AlbumCard key={album.id || album.title} album={album} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+            Chưa có album nào được thích.
+          </div>
+        )}
+      </section>
       {/* PLAYLIST GRID */}
       <section className="space-y-4">
         <h2 className="text-lg font-semibold text-white">Playlist</h2>
@@ -247,7 +293,7 @@ export default function Playlists() {
           onOpen={(pl) => pl?.id && navigate(`/playlists/${pl.id}`)}
         />
       </section>
-
+ 
       {/* LIKED SONGS */}
       <section className="space-y-4">
         <h2 className="text-lg font-semibold text-white">Bài hát đã thích</h2>

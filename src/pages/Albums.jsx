@@ -2,11 +2,16 @@ import { useCallback, useEffect, useState } from "react";
 import { getAlbumById, getAlbums } from "../api/album.api";
 import SongTable from "../components/song/SongTable";
 import { filterPlayableSongs } from "../utils/song";
+import useAlbumLikeStore, {
+  normalizeAlbumId,
+} from "../store/album-like.store";
+import { FiHeart } from "react-icons/fi";
 
 export default function Albums() {
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
+  const toggleAlbumLike = useAlbumLikeStore((s) => s.toggleAlbumLike);
   /* =======================
      HYDRATE ALBUM (GIỮ NGUYÊN)
      ======================= */
@@ -78,24 +83,42 @@ export default function Albums() {
 
       {/* ALBUM LIST */}
       <div className="space-y-10">
-        {albums.map((album) => (
-          <div
-            key={album.id || album.title}
-            className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
-          >
-            <SongTable
-              title={album.title || "Album"}
-              subtitle={
-                album.artist_name
-                  ? `${album.artist_name} · ${album.songs.length} bài hát`
-                  : `${album.songs.length} bài hát`
-              }
-              songs={album.songs || []}
-              loading={loading}
-              onRefresh={loadAlbums}
-            />
-          </div>
-        ))}
+         {albums.map((album) => {
+          const albumId = normalizeAlbumId(album);
+          const isLiked = albumId && likedAlbumIds.includes(albumId);
+
+          return (
+            <div
+              key={album.id || album.title}
+              className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
+            >
+              <SongTable
+                title={album.title || "Album"}
+                subtitle={
+                  album.artist_name
+                    ? `${album.artist_name} · ${album.songs.length} bài hát`
+                    : `${album.songs.length} bài hát`
+                }
+                songs={album.songs || []}
+                loading={loading}
+                onRefresh={loadAlbums}
+                headerActions={
+                  <button
+                    onClick={() => toggleAlbumLike(albumId)}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm transition ${
+                      isLiked
+                        ? "border-rose-400/40 text-rose-300"
+                        : "border-white/10 text-white/70 hover:bg-white/15"
+                    }`}
+                    aria-label={isLiked ? "Bỏ thích album" : "Thích album"}
+                  >
+                    <FiHeart />
+                  </button>
+                }
+              />
+            </div>
+          );
+        })}
 
         {!albums.length && (
           <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">

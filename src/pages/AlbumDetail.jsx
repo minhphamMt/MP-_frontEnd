@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getAlbumById } from "../api/album.api";
+import useAlbumLikeStore, {
+  normalizeAlbumId,
+} from "../store/album-like.store";
 import usePlayerStore from "../store/player.store";
 
 const formatTime = (s = 0) =>
@@ -11,8 +14,9 @@ export default function AlbumDetail() {
   const [album, setAlbum] = useState(null);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const { playSong, currentSong, isPlaying } = usePlayerStore();
+  const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
+  const toggleAlbumLike = useAlbumLikeStore((s) => s.toggleAlbumLike);
 
   /* =======================
      LOAD ALBUM (GIỮ NGUYÊN)
@@ -55,6 +59,8 @@ export default function AlbumDetail() {
     () => songs.reduce((acc, curr) => acc + (curr.duration || 0), 0),
     [songs]
   );
+  const albumId = normalizeAlbumId(album);
+  const isLiked = albumId && likedAlbumIds.includes(albumId);
 
   /* =======================
      LOADING / EMPTY
@@ -148,8 +154,15 @@ export default function AlbumDetail() {
                   ▶ Phát tất cả
                 </button>
 
-                <button className="rounded-full border border-white/15 bg-white/5 px-6 py-2 text-sm text-white/80 transition hover:bg-white/10">
-                  + Thêm vào thư viện
+                  <button
+                  onClick={() => toggleAlbumLike(albumId)}
+                  className={`rounded-full border px-6 py-2 text-sm transition ${
+                    isLiked
+                      ? "border-rose-400/40 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20"
+                      : "border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+                  }`}
+                >
+                  {isLiked ? "✓ Đã thích" : "+ Thích album"}
                 </button>
               </div>
             )}

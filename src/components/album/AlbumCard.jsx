@@ -1,11 +1,18 @@
-import { FiDisc, FiMusic, FiPlay } from "react-icons/fi";
+import { FiDisc, FiHeart, FiMusic, FiPlay } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { getAlbumById } from "../../api/album.api";
+import useAlbumLikeStore, {
+  normalizeAlbumId,
+} from "../../store/album-like.store";
 import usePlayerStore from "../../store/player.store";
 
 export default function AlbumCard({ album }) {
   const navigate = useNavigate();
   const playSong = usePlayerStore((s) => s.playSong);
+  const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
+  const toggleAlbumLike = useAlbumLikeStore((s) => s.toggleAlbumLike);
+  const albumId = normalizeAlbumId(album);
+  const isLiked = albumId && likedAlbumIds.includes(albumId);
 
   const handlePlayAlbum = async (e) => {
     e.stopPropagation();
@@ -47,7 +54,21 @@ export default function AlbumCard({ album }) {
       <div className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
 
       {/* COVER */}
-      <div className="relative w-full overflow-hidden rounded-xl">
+        <div className="relative w-full overflow-hidden rounded-xl">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleAlbumLike(albumId);
+          }}
+          className={`absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border text-sm transition ${
+            isLiked
+              ? "border-rose-400/60 bg-rose-500/20 text-rose-200"
+              : "border-white/20 bg-black/30 text-white/70 hover:bg-white/20"
+          }`}
+          aria-label={isLiked ? "Bỏ thích album" : "Thích album"}
+        >
+          <FiHeart />
+        </button>
         <img
           src={album.cover_url}
           alt={album.title}

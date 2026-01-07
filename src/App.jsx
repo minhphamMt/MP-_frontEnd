@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import AppRoutes from "./routes/AppRoutes";
 import useAuthStore from "./store/auth.store";
 import usePlayerStore from "./store/player.store";
-
+import useAlbumLikeStore from "./store/album-like.store";
 export default function App() {
   const loadUser = useAuthStore((s) => s.loadUser);
   const isAuthReady = useAuthStore((s) => s.isAuthReady);
@@ -16,7 +16,9 @@ export default function App() {
   const loadLastPlayed = usePlayerStore(
     (s) => s.loadLastPlayed
   );
-
+  const loadLikedAlbums = useAlbumLikeStore(
+    (s) => s.loadLikedAlbums
+  );
   /* =====================
      1️⃣ BOOTSTRAP AUTH
      ===================== */
@@ -31,9 +33,16 @@ export default function App() {
   useEffect(() => {
     if (isAuthReady && isAuthenticated) {
       loadLikedSongs(); // 🔥 GỌI ĐÚNG API BACKEND MÀY CODE
+      loadLikedAlbums();
       loadLastPlayed();
     }
-  }, [isAuthReady, isAuthenticated, loadLikedSongs, loadLastPlayed]);
+  }, [
+    isAuthReady,
+    isAuthenticated,
+    loadLikedSongs,
+    loadLikedAlbums,
+    loadLastPlayed,
+  ]);
 
   return (
     <>
