@@ -80,7 +80,7 @@ export default function Playlists() {
   const likedQueue = useMemo(() => likedSongs || [], [likedSongs]);
   const artistPreviewCount = 6;
   const albumPreviewCount = 6;
-  const playlistPreviewCount = 8;
+  const playlistPreviewCount = 6;
   const visibleArtists = followedArtists.slice(0, artistPreviewCount);
   const visibleAlbums = likedAlbums.slice(0, albumPreviewCount);
   const visiblePlaylists = playlists.slice(0, playlistPreviewCount);
