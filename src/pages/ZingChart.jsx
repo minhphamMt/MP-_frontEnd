@@ -87,6 +87,7 @@ export default function ZingChart() {
     kpop: [],
   });
   const [chartSize, setChartSize] = useState(null);
+   const [hoveredLineIndex, setHoveredLineIndex] = useState(null);
   const { playSong } = usePlayerStore();
   const chartRef = useRef(null);
 
@@ -278,7 +279,9 @@ const xStep =
       .filter(Boolean);
   }, [chartLines, hoveredIndex]);
 
-  const crosshairPoint = activePoints[0];
+  const crosshairPoint =
+  activePoints.find((point) => point.lineIdx === hoveredLineIndex) ||
+  activePoints[0];
   const chartWidthPx = chartWidth;
   const chartHeightPx = chartSize?.height || chartHeight;
 
@@ -412,9 +415,10 @@ const xStep =
         </div>
       </div>
 
-      <div className="min-w-[46px] text-right text-sm text-white/60">
-        {formatDuration(song.duration)}
-      </div>
+      <div className="ml-auto flex items-center gap-1 text-xs text-white/50">
+          <FaRegClock size={12} />
+          <span>{formatDuration(song.duration)}</span>
+       </div>
     </div>
   );
 
@@ -486,6 +490,7 @@ const xStep =
                   onMouseLeave={() => {
                     setHoveredIndex(null);
                     setHoverPosition(null);
+                    setHoveredLineIndex(null);
                   }}
                 >
                   <defs>
@@ -513,27 +518,42 @@ const xStep =
                   </defs>
 
                   <g>
-                    {chartLines.map((line, idx) => (
+                    {chartLines.map((line, idx) => {
+                      const isActive = hoveredLineIndex === idx;
+                      const dimmed = hoveredLineIndex !== null && !isActive;
+
+                      return (
                       <path
                         key={`shadow-${idx}`}
                         d={line.path}
                         fill="none"
                         stroke={line.color.glow}
-                        strokeWidth={8}
+                        strokeWidth={isActive ? 14 : 8}
                         strokeLinecap="round"
-                        className="blur-sm"
+                        strokeOpacity={dimmed ? 0.2 : 1}
+                        className="cursor-pointer blur-sm transition-all duration-200"
+                        onMouseEnter={() => setHoveredLineIndex(idx)}
                       />
-                    ))}
-                    {chartLines.map((line, idx) => (
+                   );
+                    })}
+                    {chartLines.map((line, idx) => {
+                      const isActive = hoveredLineIndex === idx;
+                      const dimmed = hoveredLineIndex !== null && !isActive;
+
+                      return (
                       <path
                         key={idx}
                         d={line.path}
                         fill="none"
                         stroke={line.color.main}
-                        strokeWidth={3}
+                        strokeWidth={isActive ? 5 : 3}
                         strokeLinecap="round"
+                        strokeOpacity={dimmed ? 0.35 : 1}
+                        className="cursor-pointer transition-all duration-200"
+                        onMouseEnter={() => setHoveredLineIndex(idx)}
                       />
-                    ))}
+                     );
+                    })}
                     {chartLines.map((line, idx) =>
                       line.points.map((point, i) => (
                         <circle
@@ -545,7 +565,10 @@ const xStep =
                           stroke={line.color.main}
                           strokeWidth={2}
                           className="cursor-pointer"
-                          onMouseEnter={() => setHoveredIndex(i)}
+                          onMouseEnter={() => {
+                            setHoveredIndex(i);
+                            setHoveredLineIndex(idx);
+                          }}
                         />
                       ))
                     )}
@@ -729,6 +752,7 @@ const xStep =
 
                 {!loadingRegions &&
                   column.items.map((song, idx) => {
+                    
                     const playable = Boolean(song.audio_url);
                     return (
                       <div
