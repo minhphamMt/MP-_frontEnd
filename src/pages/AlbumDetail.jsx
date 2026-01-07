@@ -82,6 +82,16 @@ export default function AlbumDetail() {
   /* =======================
      UI
      ======================= */
+      const artistMeta = album?.artist || {};
+  const artistDisplayName =
+    album?.artist_name || artistMeta?.name || artistMeta?.alias;
+  const artistInfoItems = [
+    { label: "Nghệ danh", value: artistMeta?.alias },
+    { label: "Tên thật", value: artistMeta?.realname },
+    { label: "Ngày sinh", value: artistMeta?.birthday },
+    { label: "Quốc gia", value: artistMeta?.national },
+  ].filter((item) => item.value);
+
   return (
     <div className="min-h-screen space-y-8 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
       {/* ===== HERO ===== */}
@@ -111,9 +121,11 @@ export default function AlbumDetail() {
               <h1 className="text-3xl font-extrabold leading-tight text-white">
                 {album.title}
               </h1>
-              <p className="mt-1 text-sm text-white/70">
-                {album.artist_name}
-              </p>
+               {artistDisplayName && (
+                <p className="mt-1 text-sm text-white/70">
+                  {artistDisplayName}
+                </p>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-3 text-sm text-white/70">
@@ -144,7 +156,37 @@ export default function AlbumDetail() {
           </div>
         </div>
       </div>
-
+ {(artistDisplayName || artistInfoItems.length > 0) && (
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(59,130,246,0.18),transparent_45%)]" />
+          <div className="relative space-y-4">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60">
+              <span className="h-[1px] w-6 bg-white/30" />
+              <span>Nghệ sĩ</span>
+            </div>
+            {artistDisplayName && (
+              <p className="text-lg font-semibold text-white">
+                {artistDisplayName}
+              </p>
+            )}
+            {artistInfoItems.length > 0 && (
+              <div className="grid gap-3 text-sm text-white/80 sm:grid-cols-2">
+                {artistInfoItems.map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3"
+                  >
+                    <span className="text-white/60">{item.label}</span>
+                    <span className="font-medium text-white">
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {/* ===== SONG LIST ===== */}
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
         {/* TABLE HEADER */}

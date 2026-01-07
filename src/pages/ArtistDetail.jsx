@@ -27,26 +27,29 @@ export default function ArtistDetail() {
         params: { artist_id: id },
       });
 
-     const payload = res.data?.data || {};
+      const payload = res.data?.data || {};
       const artistData = payload.artist || null;
       const songList = payload.songs || [];
-       if (artistData) {
+        if (artistData) {
         setArtist({
          name: artistData.name || artistData.alias || "Nghệ sĩ",
+          alias: artistData.alias,
+          realname: artistData.realname,
+          birthday: artistData.birthday,
+          national: artistData.national,
           cover: artistData.cover_url || artistData.avatar_url,
-          bio:
-            artistData.bio ||
-            artistData.short_bio ||
-            "Nghệ sĩ chưa có phần giới thiệu.",
+           avatar: artistData.avatar_url,
+          bio: artistData.bio,
+          shortBio: artistData.short_bio,
         });
-         } else {
+        } else {
         setArtist(null);
       }
 
       setSongs(
-          songList.map((s) => ({
+        songList.map((s) => ({
           ...s,
-           artist_name: artistData?.name || "",
+          artist_name: artistData?.name || artistData?.alias || "",
           audio_url: `${import.meta.env.VITE_API_BASE_URL}${s.audio_path}`,
         }))
       );
@@ -78,6 +81,13 @@ export default function ArtistDetail() {
       </div>
     );
   }
+ const coverUrl = artist?.cover || artist?.avatar;
+  const artistInfoItems = [
+    { label: "Nghệ danh", value: artist?.alias },
+    { label: "Tên thật", value: artist?.realname },
+    { label: "Ngày sinh", value: artist?.birthday },
+    { label: "Quốc gia", value: artist?.national },
+  ].filter((item) => item.value);
 
   /* =======================
      UI
@@ -94,11 +104,17 @@ export default function ArtistDetail() {
           {/* AVATAR */}
           <div className="w-full max-w-[260px]">
             <div className="relative overflow-hidden rounded-2xl shadow-xl shadow-black/40">
-              <img
-                src={artist?.cover}
-                alt={artist?.name}
-                className="aspect-square w-full object-cover transition duration-500 hover:scale-105"
-              />
+               {coverUrl ? (
+                <img
+                  src={coverUrl}
+                  alt={artist?.name}
+                  className="aspect-square w-full object-cover transition duration-500 hover:scale-105"
+                />
+              ) : (
+                <div className="flex aspect-square w-full items-center justify-center bg-white/10 text-sm text-white/70">
+                  Chưa có ảnh
+                </div>
+              )}
               <div className="absolute inset-0 rounded-2xl border border-white/10" />
             </div>
           </div>
@@ -112,6 +128,9 @@ export default function ArtistDetail() {
               <h1 className="text-3xl font-extrabold leading-tight text-white">
                 {artist?.name}
               </h1>
+                {artist?.alias && artist.alias !== artist.name && (
+                <p className="mt-1 text-sm text-white/70">{artist.alias}</p>
+              )}
               <p className="mt-1 text-sm text-white/70">
                 {songs.length} bài hát nổi bật
               </p>
@@ -145,6 +164,49 @@ export default function ArtistDetail() {
           </div>
         </div>
       </div>
+   {(artistInfoItems.length > 0 || artist?.shortBio) && (
+        <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
+          {artist?.shortBio && (
+            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.18),transparent_45%)]" />
+              <div className="relative space-y-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60">
+                  <span className="h-[1px] w-6 bg-white/30" />
+                  <span>Tóm tắt</span>
+                </div>
+                <p className="text-sm leading-relaxed text-white/80">
+                  {artist.shortBio}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {artistInfoItems.length > 0 && (
+            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_30%,rgba(59,130,246,0.16),transparent_45%)]" />
+              <div className="relative space-y-4">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60">
+                  <span className="h-[1px] w-6 bg-white/30" />
+                  <span>Thông tin</span>
+                </div>
+                <div className="space-y-3 text-sm text-white/80">
+                  {artistInfoItems.map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2 last:border-none last:pb-0"
+                    >
+                      <span className="text-white/60">{item.label}</span>
+                      <span className="font-medium text-white">
+                        {item.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ===== BIO ===== */}
       {artist?.bio && (
