@@ -22,7 +22,7 @@ import ArtistFollowSection from "../components/playlists/ArtistFollowSection";
 import PlaylistGrid from "../components/playlists/PlaylistGrid";
 import LikedSongsSection from "../components/playlists/LikedSongsSection";
 import AlbumCard from "../components/album/AlbumCard";
-
+import PlaylistCard from "../components/playlists/PlaylistCard";
 const getData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
 
 const extractSongsFromResponse = (payload) => {
@@ -321,48 +321,53 @@ export default function Playlists() {
           </div>
         )}
       </section>
-      {/* PLAYLIST GRID */}
+        {/* PLAYLIST GRID */}
       <section className="space-y-4">
          <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-white">Playlist</h2>
           {playlists.length > playlistPreviewCount && (
             <button
               type="button"
-               onClick={() => navigate("/library/playlists")}
+              onClick={() => navigate("/library/playlists")}
               className="text-sm font-semibold text-white/70 transition hover:text-white"
             >
-               Xem tất cả
+              Xem tất cả
             </button>
           )}
         </div>
-        <PlaylistGrid
-          playlists={visiblePlaylists}
-          loading={loadingPlaylists}
-          totalCount={playlists.length}
-          layout="row"
-          onOpen={(pl) => pl?.id && navigate(`/playlists/${pl.id}`)}
-        />
+        {loadingPlaylists ? (
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+            Đang tải playlist...
+          </div>
+        ) : visiblePlaylists.length ? (
+          <div className="flex gap-5 overflow-x-auto pb-2">
+            {visiblePlaylists.map((playlist) => (
+              <PlaylistCard
+                key={playlist.id || playlist.title}
+                playlist={playlist}
+                onOpen={(pl) => pl?.id && navigate(`/playlists/${pl.id}`)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+            Bạn chưa tạo playlist nào.
+          </div>
+        )}
       </section>
  
       {/* LIKED SONGS */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-white">Bài hát đã thích</h2>
+     <section>
+  <LikedSongsSection
+    songs={likedSongs}
+    currentSong={currentSong}
+    isPlaying={isPlaying}
+    likedSongIds={likedSongIds}
+    onPlay={(song) => handlePlaySong(song, likedQueue)}
+    onToggleLike={toggleLike}
+  />
+</section>
 
-        {loadingLikedSongs ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
-            Đang tải bài hát yêu thích...
-          </div>
-        ) : (
-          <LikedSongsSection
-            songs={likedSongs}
-            currentSong={currentSong}
-            isPlaying={isPlaying}
-            likedSongIds={likedSongIds}
-            onPlay={(song) => handlePlaySong(song, likedQueue)}
-            onToggleLike={toggleLike}
-          />
-        )}
-      </section>
     </div>
   );
 }
