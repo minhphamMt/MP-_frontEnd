@@ -88,54 +88,128 @@ export default function Playlists() {
   const [showAllPlaylists, setShowAllPlaylists] = useState(false);
   const [showAllLikedSongs, setShowAllLikedSongs] = useState(false);
 
-  const checkOverflow = useCallback((ref, setter) => {
-    const node = ref.current;
-    if (!node) return;
-    setter(node.scrollWidth > node.clientWidth);
-  }, []);
+  const [artistVisibleCount, setArtistVisibleCount] = useState(0);
+  const [albumVisibleCount, setAlbumVisibleCount] = useState(0);
+  const [playlistVisibleCount, setPlaylistVisibleCount] = useState(0);
+  const ARTIST_CARD_WIDTH = 230;
+  const ALBUM_CARD_WIDTH = 230;
+  const PLAYLIST_CARD_WIDTH = 230;
+  const calculateVisibleCount = useCallback((node, cardWidth) => {
+  if (!node) return 0;
+  const styles = getComputedStyle(node);
+  const gap = parseFloat(styles.columnGap || styles.gap || "0") || 0;
+  const paddingLeft = parseFloat(styles.paddingLeft || "0") || 0;
+  const paddingRight = parseFloat(styles.paddingRight || "0") || 0;
+
+  const availableWidth = node.clientWidth - paddingLeft - paddingRight;
+  if (availableWidth <= 0) return 0;
+
+  return Math.max(
+    1,
+    Math.floor((availableWidth + gap) / (cardWidth + gap))
+  );
+}, []);
+
+
+useEffect(() => {
+  if (!artistListRef.current) return;
+
+  const update = () => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (!artistListRef.current) return;
+        setArtistVisibleCount(
+          calculateVisibleCount(artistListRef.current, ARTIST_CARD_WIDTH)
+        );
+      }, 0);
+    });
+  };
+
+  update();
+  const observer = new ResizeObserver(update);
+  observer.observe(artistListRef.current);
+
+  return () => observer.disconnect();
+}, [calculateVisibleCount, followedArtists.length]);
+
+
+
+useEffect(() => {
+  if (!albumListRef.current) return;
+
+  const update = () => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (!albumListRef.current) return;
+        setAlbumVisibleCount(
+          calculateVisibleCount(albumListRef.current, ALBUM_CARD_WIDTH)
+        );
+      }, 0);
+    });
+  };
+
+  update();
+  const observer = new ResizeObserver(update);
+  observer.observe(albumListRef.current);
+
+  return () => observer.disconnect();
+}, [calculateVisibleCount, likedAlbums.length]);
+
+
+useEffect(() => {
+  if (!playlistListRef.current) return;
+
+  const update = () => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (!playlistListRef.current) return;
+        setPlaylistVisibleCount(
+          calculateVisibleCount(playlistListRef.current, PLAYLIST_CARD_WIDTH)
+        );
+      }, 0);
+    });
+  };
+
+  update();
+  const observer = new ResizeObserver(update);
+  observer.observe(playlistListRef.current);
+
+  return () => observer.disconnect();
+}, [calculateVisibleCount, playlists.length]);
+
 
   useEffect(() => {
-    checkOverflow(artistListRef, setShowAllArtists);
-  }, [checkOverflow, followedArtists.length]);
-
-  useEffect(() => {
-    checkOverflow(albumListRef, setShowAllAlbums);
-  }, [checkOverflow, likedAlbums.length]);
-
-  useEffect(() => {
-    checkOverflow(playlistListRef, setShowAllPlaylists);
-  }, [checkOverflow, playlists.length]);
-
-  useEffect(() => {
-    setShowAllLikedSongs(likedSongs.length > likedSongsPreviewLimit);
-  }, [likedSongs.length]);
-
-  useEffect(() => {
-    if (!artistListRef.current) return undefined;
-    const observer = new ResizeObserver(() =>
-      checkOverflow(artistListRef, setShowAllArtists)
+    setShowAllArtists(
+      artistVisibleCount > 0 && followedArtists.length > artistVisibleCount
     );
-    observer.observe(artistListRef.current);
-    return () => observer.disconnect();
-  }, [checkOverflow]);
+     }, [artistVisibleCount, followedArtists.length]);
 
   useEffect(() => {
-    if (!albumListRef.current) return undefined;
-    const observer = new ResizeObserver(() =>
-      checkOverflow(albumListRef, setShowAllAlbums)
+      setShowAllAlbums(
+      albumVisibleCount > 0 && likedAlbums.length > albumVisibleCount
     );
-    observer.observe(albumListRef.current);
-    return () => observer.disconnect();
-  }, [checkOverflow]);
+    }, [albumVisibleCount, likedAlbums.length]);
 
   useEffect(() => {
-    if (!playlistListRef.current) return undefined;
-    const observer = new ResizeObserver(() =>
-      checkOverflow(playlistListRef, setShowAllPlaylists)
+    setShowAllPlaylists(
+      playlistVisibleCount > 0 && playlists.length > playlistVisibleCount
     );
-    observer.observe(playlistListRef.current);
-    return () => observer.disconnect();
-  }, [checkOverflow]);
+     }, [playlistVisibleCount, playlists.length]);
+
+  const visibleArtists = useMemo(() => {
+    if (!artistVisibleCount) return followedArtists;
+    return followedArtists.slice(0, artistVisibleCount);
+  }, [artistVisibleCount, followedArtists]);
+
+  const visibleAlbums = useMemo(() => {
+    if (!albumVisibleCount) return likedAlbums;
+    return likedAlbums.slice(0, albumVisibleCount);
+  }, [albumVisibleCount, likedAlbums]);
+
+  const visiblePlaylists = useMemo(() => {
+    if (!playlistVisibleCount) return playlists;
+    return playlists.slice(0, playlistVisibleCount);
+  }, [playlistVisibleCount, playlists]);
   const hydratePlaylist = useCallback(async (playlist) => {
     const normalized = {
       ...playlist,
@@ -368,7 +442,7 @@ setToastTitle("Thành công");
           )}
         </div>
         <ArtistFollowSection
-          artists={followedArtists}
+          artists={visibleArtists}
           singleRow
           containerRef={artistListRef}
         />
@@ -395,9 +469,9 @@ setToastTitle("Thành công");
         ) : likedAlbums.length ? (
           <div
             ref={albumListRef}
-            className="flex flex-nowrap gap-5 overflow-hidden pr-4"
+            className="flex flex-nowrap gap-5 overflow-hidden"
           >
-            {likedAlbums.map((album) => (
+           {visibleAlbums.map((album) => (
               <AlbumCard key={album.id || album.title} album={album} />
             ))}
           </div>
@@ -428,9 +502,9 @@ setToastTitle("Thành công");
         ) : playlists.length ? (
           <div
             ref={playlistListRef}
-            className="flex flex-nowrap gap-5 overflow-hidden pb-2 pr-4"
+            className="flex flex-nowrap gap-5 overflow-hidden pb-2"
           >
-            {playlists.map((playlist) => (
+           {visiblePlaylists.map((playlist) => (
               <PlaylistCard
                 key={playlist.id || playlist.title}
                 playlist={playlist}
