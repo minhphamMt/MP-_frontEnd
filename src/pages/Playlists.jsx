@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAlbumLikeStore, { normalizeAlbumId } from "../store/album-like.store";
-
 import {
   createPlaylist,
   getPlaylistById,
@@ -23,6 +22,7 @@ import PlaylistGrid from "../components/playlists/PlaylistGrid";
 import LikedSongsSection from "../components/playlists/LikedSongsSection";
 import AlbumCard from "../components/album/AlbumCard";
 import PlaylistCard from "../components/playlists/PlaylistCard";
+import Toast from "../components/common/Toast";
 const getData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
 
 const extractSongsFromResponse = (payload) => {
@@ -47,6 +47,8 @@ export default function Playlists() {
   const [loadingLikedSongs, setLoadingLikedSongs] = useState(true);
   const [loadingLikedAlbums, setLoadingLikedAlbums] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastTitle, setToastTitle] = useState("");
   const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
 
   const user = useAuthStore((s) => s.user);
@@ -184,16 +186,35 @@ export default function Playlists() {
 
   const handleCreatePlaylist = async (e) => {
     e.preventDefault();
-    if (!creatingName.trim()) return;
+     const trimmedName = creatingName.trim();
+    if (!trimmedName) return;
+    const normalizedName = trimmedName.toLowerCase();
+    const duplicate = playlists.some(
+      (playlist) =>
+        (playlist?.name || playlist?.title || "")
+          .trim()
+          .toLowerCase() === normalizedName
+    );
+    if (duplicate) {
+      setToastTitle("Thông báo");
+      setToastMessage(`Playlist "${trimmedName}" đã tồn tại.`);
+      return;
+    }
 
     try {
       setSaving(true);
-      const res = await createPlaylist({ name: creatingName.trim() });
+      const res = await createPlaylist({ name: trimmedName });
       const playlist = await hydratePlaylist(getData(res));
 
       setPlaylists((prev) => [playlist, ...prev]);
       setCreatingName("");
-      if (playlist?.id) navigate(`/playlists/${playlist.id}`);
+setToastTitle("Thành công");
+      setToastMessage(
+        `Đã tạo playlist "${playlist?.title || playlist?.name || trimmedName}"`
+      );
+      if (playlist?.id) {
+        setTimeout(() => navigate(`/playlists/${playlist.id}`), 800);
+      }
     } catch (err) {
       console.error("Create playlist failed", err);
     } finally {
@@ -224,6 +245,14 @@ export default function Playlists() {
 
   return (
     <div className="min-h-screen space-y-10 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+            <Toast
+        title={toastTitle}
+        message={toastMessage}
+        onClose={() => {
+          setToastTitle("");
+          setToastMessage("");
+        }}
+      />
       {/* HEADER */}
       <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">

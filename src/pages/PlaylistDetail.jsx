@@ -20,8 +20,15 @@ import {
 import PlaylistDetailHeader from "../components/playlists/PlaylistDetailHeader";
 import PlaylistSongsTable from "../components/playlists/PlaylistSongsTable";
 import PlaylistSuggestions from "../components/playlists/PlaylistSuggestions";
+import Toast from "../components/common/Toast";
 
 const getData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
+
+// Chuẩn hoá key id để so sánh / filter (tránh khác shape: id, song_id, _id, ...)
+const getSongKey = (song) => {
+  const id = normalizeSongId(song) ?? song?.id ?? song?.song_id ?? song?._id;
+  return id === undefined || id === null ? "" : String(id);
+};
 
 export default function PlaylistDetail() {
   const { id } = useParams();
@@ -29,10 +36,15 @@ export default function PlaylistDetail() {
 
   const [playlist, setPlaylist] = useState(null);
   const [loading, setLoading] = useState(true);
+
   const [saving, setSaving] = useState(false);
   const [rename, setRename] = useState("");
+
   const [recommendedSongs, setRecommendedSongs] = useState([]);
   const [recommendationLoading, setRecommendationLoading] = useState(false);
+
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastTitle, setToastTitle] = useState("");
 
   const {
     playSong,
@@ -44,11 +56,16 @@ export default function PlaylistDetail() {
     toggleLike,
   } = usePlayerStore();
 
-  const playlistSongs = useMemo(
-    () => playlist?.songs || [],
-    [playlist?.songs]
-  );
+  const playlistSongs = useMemo(() => playlist?.songs || [], [playlist?.songs]);
 
+  // Set ids ổn định để loại trùng recommendations
+  const playlistSongIds = useMemo(() => {
+    return (playlist?.songs || [])
+      .map((s) => getSongKey(s))
+      .filter(Boolean);
+  }, [playlist?.songs?.length]);
+
+  // ========== Load playlist detail (return normalized để dùng ngay) ==========
   const hydratePlaylist = useCallback(async () => {
     if (!id) return null;
 
@@ -60,66 +77,125 @@ export default function PlaylistDetail() {
         title: data.name || data.title || "Playlist",
         songs: filterPlayableSongs(data.songs || []),
       };
+
       setPlaylist(normalized);
       setRename(normalized.title || "");
+      return normalized;
     } catch (err) {
       console.error("Load playlist detail failed", err);
       setPlaylist(null);
+      return null;
     } finally {
       setLoading(false);
     }
   }, [id]);
 
-  const loadRecommendations = useCallback(async () => {
-    try {
-      setRecommendationLoading(true);
-      const res = await getRecommendations();
-      const ids = res?.data?.data || [];
+  // ========== Load recommendations (nhận excludeIds để luôn lọc đúng) ==========
+  const loadRecommendations = useCallback(
+    async (excludeSongIds = []) => {
+      try {
+        setRecommendationLoading(true);
 
-      const songs = await Promise.all(
-        ids.slice(0, 12).map(async (songId) => {
-          try {
-            const detail = await getSongById(songId);
-            return toPlayableSong(detail?.data?.data || detail?.data);
-          } catch (error) {
-            console.error("Load recommendation detail failed", error);
-            return null;
-          }
-        })
-      );
+        const res = await getRecommendations();
+        const ids = res?.data?.data || [];
 
-      setRecommendedSongs(songs.filter((s) => s?.id));
-    } catch (err) {
-      console.error("Load recommendations failed", err);
-      setRecommendedSongs([]);
-    } finally {
-      setRecommendationLoading(false);
-    }
-  }, []);
+        const excludeSet = new Set(
+          (excludeSongIds || []).map(String).filter(Boolean)
+        );
 
+        const desiredCount = 12;
+        const maxCandidates = Math.max(desiredCount * 2, desiredCount);
+
+        const songs = await Promise.all(
+          ids.slice(0, maxCandidates).map(async (songId) => {
+            try {
+              const detail = await getSongById(songId);
+              return toPlayableSong(detail?.data?.data || detail?.data);
+            } catch (error) {
+              console.error("Load recommendation detail failed", error);
+              return null;
+            }
+          })
+        );
+
+        // Loại null + loại trùng playlist + unique
+        const unique = [];
+        const seen = new Set();
+
+        for (const song of songs) {
+          if (!song) continue;
+
+          const key = getSongKey(song);
+          if (!key) continue;
+
+          // loại bài đã có trong playlist
+          if (excludeSet.has(key)) continue;
+
+          // unique trong chính gợi ý
+          if (seen.has(key)) continue;
+
+          seen.add(key);
+          unique.push(song);
+
+          if (unique.length >= desiredCount) break;
+        }
+
+        setRecommendedSongs(unique);
+      } catch (err) {
+        console.error("Load recommendations failed", err);
+        setRecommendedSongs([]);
+      } finally {
+        setRecommendationLoading(false);
+      }
+    },
+    [getRecommendations, getSongById]
+  );
+
+  // ========== Effect load tuần tự: playlist xong -> recommendations ==========
   useEffect(() => {
-    setLoading(true);
-    hydratePlaylist();
-    loadRecommendations();
-  }, [hydratePlaylist, loadRecommendations]);
+    if (!id) return;
 
+    let mounted = true;
+
+    (async () => {
+      setLoading(true);
+
+      const pl = await hydratePlaylist(); // ✅ chờ playlist về
+      if (!mounted) return;
+
+      // lấy exclude ids từ playlist vừa load (chắc chắn đúng timing)
+      const excludeIds = (pl?.songs || [])
+        .map((s) => getSongKey(s))
+        .filter(Boolean);
+
+      await loadRecommendations(excludeIds);
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [id, hydratePlaylist, loadRecommendations]);
+
+  // ========== Play song ==========
   const handlePlaySong = async (song, queue = playlistSongs) => {
     const playable = (await fetchPlayableSong(song, getSongById)) || song;
     if (!playable?.audio_url) return;
 
-    const normalizedId = normalizeSongId(playable);
+    const normalizedId = getSongKey(playable);
+
     const updatedQueue = (queue || []).map((item) => {
-      const itemId = normalizeSongId(item);
+      const itemId = getSongKey(item);
       return itemId && itemId === normalizedId ? { ...item, ...playable } : item;
     });
 
-    if (normalizeSongId(currentSong) === normalizedId) {
+    if (getSongKey(currentSong) === normalizedId) {
       isPlaying ? pause() : resume();
     } else {
       playSong(playable, updatedQueue);
     }
   };
 
+  // ========== Update playlist after add/remove ==========
   const updatePlaylistAfterChange = async (res) => {
     const updated = getData(res);
     const normalized = {
@@ -130,6 +206,7 @@ export default function PlaylistDetail() {
     setPlaylist(normalized);
   };
 
+  // ========== Rename ==========
   const handleRename = async (newName) => {
     const targetName = newName ?? rename;
     if (!playlist?.id || !targetName?.trim()) return;
@@ -146,26 +223,44 @@ export default function PlaylistDetail() {
     }
   };
 
+  // ========== Delete ==========
   const handleDelete = async () => {
     if (!playlist?.id) return;
 
     try {
       await deletePlaylist(playlist.id);
-      navigate("/playlists");
+
+      setToastTitle("Thành công");
+      setToastMessage(
+        `Đã xóa playlist "${playlist?.title || playlist?.name || "Playlist"}"`
+      );
+
+      setTimeout(() => navigate("/playlists"), 800);
     } catch (err) {
       console.error("Delete playlist failed", err);
     }
   };
 
+  // ========== Add suggested song ==========
   const handleAddSuggestedSong = async (song) => {
     if (!playlist?.id || !song) return;
 
     try {
       setSaving(true);
-      const res = await addSongToPlaylist(playlist.id, {
-        songId: normalizeSongId(song) || song.id,
-      });
+
+      const songId = getSongKey(song);
+      if (!songId) return;
+
+      const res = await addSongToPlaylist(playlist.id, { songId });
       await updatePlaylistAfterChange(res);
+
+      // remove khỏi list gợi ý ngay lập tức (so sánh theo key)
+      setRecommendedSongs((prev) =>
+        (prev || []).filter((item) => getSongKey(item) !== songId)
+      );
+
+      setToastTitle("Thành công");
+      setToastMessage(`Đã thêm "${song?.title || "bài hát"}" vào playlist.`);
     } catch (err) {
       console.error("Add suggested song failed", err);
     } finally {
@@ -173,16 +268,21 @@ export default function PlaylistDetail() {
     }
   };
 
+  // ========== Remove song from playlist ==========
   const handleRemoveSong = async (song) => {
     if (!playlist?.id) return;
 
     try {
       setSaving(true);
-      const res = await removeSongFromPlaylist(
-        playlist.id,
-        song.id ?? song.song_id
-      );
+      const songId = getSongKey(song);
+      if (!songId) return;
+
+      const res = await removeSongFromPlaylist(playlist.id, songId);
       await updatePlaylistAfterChange(res);
+
+      // (Giữ nguyên hành vi cũ của bạn: không tự add lại vào gợi ý)
+      // Nếu bạn muốn sau khi xoá khỏi playlist thì có thể "refresh" gợi ý:
+      // loadRecommendations((updatedPlaylistSongsIds));
     } catch (err) {
       console.error("Remove song failed", err);
     } finally {
@@ -190,9 +290,7 @@ export default function PlaylistDetail() {
     }
   };
 
-  /* =======================
-     LOADING / EMPTY STATES
-     ======================= */
+  // ========== LOADING / EMPTY ==========
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] p-6 text-white/70">
@@ -213,26 +311,27 @@ export default function PlaylistDetail() {
     );
   }
 
-  /* =======================
-     MAIN RENDER
-     ======================= */
+  // ========== MAIN ==========
   return (
     <div className="min-h-screen space-y-8 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
-      {/* HEADER */}
+      <Toast
+        title={toastTitle}
+        message={toastMessage}
+        onClose={() => {
+          setToastTitle("");
+          setToastMessage("");
+        }}
+      />
+
       <PlaylistDetailHeader
         playlist={playlist}
         onPlay={handlePlaySong}
         onShuffle={() => {
-          const shuffled = [...playlistSongs].sort(
-            () => Math.random() - 0.5
-          );
+          const shuffled = [...playlistSongs].sort(() => Math.random() - 0.5);
           if (shuffled.length) handlePlaySong(shuffled[0], shuffled);
         }}
         onRename={() => {
-          const newName = prompt(
-            "Đổi tên playlist",
-            rename || playlist.title
-          );
+          const newName = prompt("Đổi tên playlist", rename || playlist.title);
           if (newName?.trim()) {
             handleRename(newName.trim());
           }
@@ -241,7 +340,6 @@ export default function PlaylistDetail() {
         renaming={saving}
       />
 
-      {/* SONG LIST */}
       <PlaylistSongsTable
         songs={playlistSongs}
         currentSong={currentSong}
@@ -252,12 +350,11 @@ export default function PlaylistDetail() {
         onToggleLike={toggleLike}
       />
 
-      {/* SUGGESTIONS */}
       <PlaylistSuggestions
         songs={recommendedSongs}
         loading={recommendationLoading}
         saving={saving}
-        onRefresh={loadRecommendations}
+        onRefresh={() => loadRecommendations(playlistSongIds)} // ✅ refresh vẫn lọc đúng
         onPlay={(song) => handlePlaySong(song, recommendedSongs)}
         onAdd={handleAddSuggestedSong}
       />

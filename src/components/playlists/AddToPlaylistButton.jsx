@@ -8,6 +8,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import clsx from "clsx";
+import Toast from "../common/Toast";
 import {
   addSongToPlaylist,
   createPlaylist,
@@ -17,71 +18,6 @@ import {
 import { normalizeSongId } from "../../store/player.store";
 
 const extractData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
-
-function Toast({ title = "Thông báo", message, onClose }) {
-  useEffect(() => {
-    if (!message) return undefined;
-
-    const timer = setTimeout(onClose, 3500);
-    return () => clearTimeout(timer);
-  }, [message, onClose]);
-
-  if (!message) return null;
-
-  return createPortal(
-    <div
-      className="
-        fixed top-6 left-1/2 -translate-x-1/2 z-[70] max-w-sm
-        rounded-xl border border-white/10
-        bg-[#0e1a2f] px-4 py-3 text-sm text-white
-        shadow-2xl shadow-cyan-500/20
-        animate-[toast-in_0.35s_cubic-bezier(0.22,1,0.36,1)]
-      "
-       onClick={(e) => {
-   e.stopPropagation();
- }}
-    >
-      <div className="flex items-start gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-cyan-200/80">
-            {title}
-          </p>
-          <p className="font-semibold leading-relaxed">{message}</p>
-        </div>
-        <button
-          onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          onClose();
-          }}
-          className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/80 transition hover:bg-white/20"
-          aria-label="Đóng thông báo"
-        >
-          <FiX />
-        </button>
-      </div>
-
-      {/* Inline keyframes */}
-      <style>
-        {`
-          @keyframes toast-in {
-            from {
-              opacity: 0;
-              transform: translate(-50%, -14px);
-            }
-            to {
-              opacity: 1;
-              transform: translate(-50%, 0);
-            }
-          }
-        `}
-      </style>
-    </div>,
-    document.body
-  );
-}
-
-
 
 export default function AddToPlaylistButton({
   song,
@@ -169,14 +105,31 @@ export default function AddToPlaylistButton({
   };
 
   const handleCreatePlaylist = async () => {
-    if (!newPlaylistName.trim()) return;
+    const trimmedName = newPlaylistName.trim();
+    if (!trimmedName) return;
+    const normalizedName = trimmedName.toLowerCase();
+    const duplicate = playlists.some(
+      (playlist) =>
+        (playlist?.name || playlist?.title || "")
+          .trim()
+          .toLowerCase() === normalizedName
+    );
+    if (duplicate) {
+      setToastTitle("Thông báo");
+      setToastMessage(`Playlist "${trimmedName}" đã tồn tại.`);
+      return;
+    }
     try {
       setSaving(true);
-      const res = await createPlaylist({ name: newPlaylistName.trim() });
+      const res = await createPlaylist({ name: trimmedName });
       const created = extractData(res);
       if (created) {
         setPlaylists((prev) => [created, ...prev]);
         setNewPlaylistName("");
+         setToastTitle("Thành công");
+        setToastMessage(
+          `Đã tạo playlist "${created?.name || created?.title || trimmedName}"`
+        );
       }
     } catch (err) {
       console.error("Create playlist failed", err);
