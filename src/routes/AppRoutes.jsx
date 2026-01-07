@@ -17,6 +17,9 @@ import Playlists from "../pages/Playlists";
 import PlaylistDetail from "../pages/PlaylistDetail";
 import Albums from "../pages/Albums";
 import SongDetail from "../pages/SongDetail";
+import FollowedArtists from "../pages/FollowedArtists";
+import LikedAlbums from "../pages/LikedAlbums";
+import LibraryPlaylists from "../pages/LibraryPlaylists";
 
 /* ===== DASHBOARD ===== */
 const ArtistDashboard = () => (
@@ -47,7 +50,13 @@ export default function AppRoutes() {
           <Route path="/new-release" element={<NewRelease />} />
           <Route path="/top-100" element={<Top100 />} />
           <Route path="/playlists" element={<Playlists />} />
-             <Route path="/playlists/:id" element={<PlaylistDetail />} />
+          <Route path="/playlists/:id" element={<PlaylistDetail />} />
+            <Route
+            path="/library/followed-artists"
+            element={<FollowedArtists />}
+          />
+          <Route path="/library/liked-albums" element={<LikedAlbums />} />
+          <Route path="/library/playlists" element={<LibraryPlaylists />} />
           <Route path="/albums" element={<Albums />} />
           <Route path="/history" element={<History />} />
           <Route path="/song/:id" element={<SongDetail />} />

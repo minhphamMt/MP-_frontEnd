@@ -5,9 +5,11 @@ export default function PlaylistGrid({
   loading = false,
   onOpen,
   totalCount,
+  layout = "grid",
 }) {
   const displayCount =
   typeof totalCount === "number" ? totalCount : playlists.length;
+  const isRowLayout = layout === "row";
 
   return (
     <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
@@ -26,17 +28,31 @@ export default function PlaylistGrid({
       </div>
 
       {/* GRID */}
-       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <div
+        className={
+          isRowLayout
+            ? "mt-5 flex gap-3 overflow-x-auto pb-2"
+            : "mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+        }
+      >
         {/* LOADING */}
         {loading && (
-          <div className="col-span-full rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-white/60">
+          <div
+            className={`rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-white/60 ${
+              isRowLayout ? "min-w-full" : "col-span-full"
+            }`}
+          >
             Đang tải playlist...
           </div>
         )}
 
         {/* EMPTY */}
         {!loading && !playlists.length && (
-          <div className="col-span-full rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-white/60">
+           <div
+            className={`rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-white/60 ${
+              isRowLayout ? "min-w-full" : "col-span-full"
+            }`}
+          >
             Bạn chưa tạo playlist nào.
           </div>
         )}
@@ -53,9 +69,13 @@ export default function PlaylistGrid({
                 key={pl.id || firstSongId}
                 type="button"
                 onClick={() => onOpen?.(pl)}
-                 className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 text-left shadow-lg transition
-                            hover:border-white/20 hover:shadow-[0_25px_70px_rgba(0,0,0,0.6)]
-                           focus:outline-none"
+                className={`group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 text-left shadow-lg transition
+                  hover:border-white/20 hover:shadow-[0_25px_70px_rgba(0,0,0,0.6)]
+                  focus:outline-none ${
+                    isRowLayout
+                      ? "w-40 shrink-0 sm:w-44 md:w-48"
+                      : ""
+                  }`}
               >
                 {/* COVER */}
                 <div className="relative aspect-square w-full overflow-hidden">
@@ -80,7 +100,7 @@ export default function PlaylistGrid({
                 </div>
 
                 {/* INFO */}
-                 <div className="p-2">
+                <div className="p-2">
                   <p className="truncate text-xs font-semibold text-white">
                     {pl.title || "Playlist"}
                   </p>

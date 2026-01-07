@@ -47,9 +47,6 @@ export default function Playlists() {
   const [loadingLikedSongs, setLoadingLikedSongs] = useState(true);
   const [loadingLikedAlbums, setLoadingLikedAlbums] = useState(true);
   const [saving, setSaving] = useState(false);
-   const [showAllArtists, setShowAllArtists] = useState(false);
-  const [showAllAlbums, setShowAllAlbums] = useState(false);
-  const [showAllPlaylists, setShowAllPlaylists] = useState(false);
   const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
 
   const user = useAuthStore((s) => s.user);
@@ -84,15 +81,9 @@ export default function Playlists() {
   const artistPreviewCount = 6;
   const albumPreviewCount = 6;
   const playlistPreviewCount = 8;
-  const visibleArtists = showAllArtists
-    ? followedArtists
-    : followedArtists.slice(0, artistPreviewCount);
-  const visibleAlbums = showAllAlbums
-    ? likedAlbums
-    : likedAlbums.slice(0, albumPreviewCount);
-  const visiblePlaylists = showAllPlaylists
-    ? playlists
-    : playlists.slice(0, playlistPreviewCount);
+  const visibleArtists = followedArtists.slice(0, artistPreviewCount);
+  const visibleAlbums = likedAlbums.slice(0, albumPreviewCount);
+  const visiblePlaylists = playlists.slice(0, playlistPreviewCount);
   const hydratePlaylist = useCallback(async (playlist) => {
     const normalized = {
       ...playlist,
@@ -290,10 +281,10 @@ export default function Playlists() {
           {followedArtists.length > artistPreviewCount && (
             <button
               type="button"
-              onClick={() => setShowAllArtists((prev) => !prev)}
+              onClick={() => navigate("/library/followed-artists")}
               className="text-sm font-semibold text-white/70 transition hover:text-white"
             >
-              {showAllArtists ? "Thu gọn" : "Xem tất cả"}
+                Xem tất cả
             </button>
           )}
         </div>
@@ -306,10 +297,10 @@ export default function Playlists() {
           {likedAlbums.length > albumPreviewCount && (
             <button
               type="button"
-              onClick={() => setShowAllAlbums((prev) => !prev)}
+              onClick={() => navigate("/library/liked-albums")}
               className="text-sm font-semibold text-white/70 transition hover:text-white"
             >
-              {showAllAlbums ? "Thu gọn" : "Xem tất cả"}
+               Xem tất cả
             </button>
           )}
         </div>
@@ -337,10 +328,10 @@ export default function Playlists() {
           {playlists.length > playlistPreviewCount && (
             <button
               type="button"
-              onClick={() => setShowAllPlaylists((prev) => !prev)}
+               onClick={() => navigate("/library/playlists")}
               className="text-sm font-semibold text-white/70 transition hover:text-white"
             >
-              {showAllPlaylists ? "Thu gọn" : "Xem tất cả"}
+               Xem tất cả
             </button>
           )}
         </div>
@@ -348,6 +339,7 @@ export default function Playlists() {
           playlists={visiblePlaylists}
           loading={loadingPlaylists}
           totalCount={playlists.length}
+          layout="row"
           onOpen={(pl) => pl?.id && navigate(`/playlists/${pl.id}`)}
         />
       </section>
