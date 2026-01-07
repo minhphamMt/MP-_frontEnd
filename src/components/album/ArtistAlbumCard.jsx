@@ -2,6 +2,7 @@ import { FiMusic, FiPlay, FiUsers } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import usePlayerStore from "../../store/player.store";
+import FollowArtistButton from "../artist/FollowArtistButton";
 
 export default function ArtistAlbumCard({ artist }) {
   const navigate = useNavigate();
@@ -105,6 +106,9 @@ export default function ArtistAlbumCard({ artist }) {
         <div className="flex items-center justify-center gap-2 text-sm text-white/70">
           <FiMusic className="text-violet-300" />
           <span>{artist.song_count} bài hát</span>
+        </div>
+         <div className="flex justify-center pt-2">
+          <FollowArtistButton artist={artist} size="sm" />
         </div>
       </div>
     </div>

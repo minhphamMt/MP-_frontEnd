@@ -6,10 +6,10 @@ import {
   getPlaylistById,
   getPlaylists,
 } from "../api/playlist.api";
-import { getArtistCollections } from "../api/artist.api";
 import { getLikedSongs } from "../api/like.api";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import useAuthStore from "../store/auth.store";
+import useArtistFollowStore from "../store/artist-follow.store";
 import {
   fetchPlayableSong,
   filterPlayableSongs,
@@ -47,7 +47,13 @@ export default function Playlists() {
 
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
-
+   const followedArtists = useArtistFollowStore((s) => s.followedArtists);
+  const loadFollowedArtists = useArtistFollowStore(
+    (s) => s.loadFollowedArtists
+  );
+  const clearFollowedArtists = useArtistFollowStore(
+    (s) => s.clearFollowedArtists
+  );
   const {
     playSong,
     pause,
@@ -103,14 +109,12 @@ export default function Playlists() {
   }, [hydratePlaylist]);
 
   const loadArtists = useCallback(async () => {
-    try {
-      const res = await getArtistCollections({ limit: 12 });
-      setArtists(res?.data?.data || []);
-    } catch (err) {
-      console.error("Load followed artists failed", err);
-      setArtists([]);
+    if (!user?.id) {
+      clearFollowedArtists();
+      return;
     }
-  }, []);
+   await loadFollowedArtists();
+  }, [clearFollowedArtists, loadFollowedArtists, user?.id]);
 
   const loadLikedSongsList = useCallback(async () => {
     try {
@@ -231,7 +235,7 @@ export default function Playlists() {
       {/* ARTISTS */}
       <section className="space-y-4">
         <h2 className="text-lg font-semibold text-white">Nghệ sĩ theo dõi</h2>
-        <ArtistFollowSection artists={artists} />
+        <ArtistFollowSection artists={followedArtists} />
       </section>
 
       {/* PLAYLIST GRID */}

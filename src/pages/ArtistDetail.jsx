@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/axios";
 import usePlayerStore from "../store/player.store";
+import FollowArtistButton from "../components/artist/FollowArtistButton";
 
 const formatTime = (s = 0) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -32,13 +33,14 @@ export default function ArtistDetail() {
       const songList = payload.songs || [];
         if (artistData) {
         setArtist({
-         name: artistData.name || artistData.alias || "Nghệ sĩ",
+          id: artistData.id,
+          name: artistData.name || artistData.alias || "Nghệ sĩ",
           alias: artistData.alias,
           realname: artistData.realname,
           birthday: artistData.birthday,
           national: artistData.national,
           cover: artistData.cover_url || artistData.avatar_url,
-           avatar: artistData.avatar_url,
+          avatar: artistData.avatar_url,
           bio: artistData.bio,
           shortBio: artistData.short_bio,
         });
@@ -145,8 +147,8 @@ export default function ArtistDetail() {
               </span>
             </div>
 
-            {songs.length > 0 && (
-              <div className="flex flex-wrap gap-3 pt-2">
+            <div className="flex flex-wrap gap-3 pt-2">
+              {songs.length > 0 && (
                 <button
                   onClick={() => playSong(songs[0], songs)}
                   className="rounded-full bg-gradient-to-r from-green-400 to-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900
@@ -155,12 +157,9 @@ export default function ArtistDetail() {
                 >
                   ▶ Phát tất cả
                 </button>
-
-                <button className="rounded-full border border-white/15 bg-white/5 px-6 py-2 text-sm text-white/80 transition hover:bg-white/10">
-                  + Theo dõi
-                </button>
-              </div>
-            )}
+)}
+                <FollowArtistButton artist={artist} size="lg" />
+            </div>
           </div>
         </div>
       </div>
