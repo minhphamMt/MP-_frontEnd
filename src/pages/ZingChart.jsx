@@ -384,8 +384,8 @@ const xStep =
     <div
       key={song.id || idx}
        onClick={() => handlePlay(song, weeklySongs)}
-      className={`group flex items-center justify-between gap-4 rounded-xl px-3 py-2 transition-all duration-300 hover:bg-white/10 hover:shadow-lg hover:shadow-black/30 hover:scale-[1.01] ${
-        song.audio_url ? "cursor-pointer" : "opacity-50 cursor-default"
+       className={`group flex items-center justify-between gap-4 rounded-xl px-3 py-2 transition-all duration-300 hover:bg-white/10 hover:shadow-lg hover:shadow-black/30 hover:scale-[1.01] hover:cursor-pointer ${
+        song.audio_url ? "cursor-pointer" : " cursor-not-allowed"
       }`}
     >
       <div className="flex items-center gap-3 min-w-0">
@@ -393,15 +393,14 @@ const xStep =
           {song.rank ?? idx + 1}
         </div>
 
-        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-md shadow-black/30">
+        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-md shadow-black/30 transition group-hover:ring-2 group-hover:ring-cyan-300/70 group-hover:ring-offset-2 group-hover:ring-offset-[#140d24]">
           <img
             src={getSongCover(song)}
             alt={song.title}
             className="h-full w-full object-cover"
           />
-          {/* overlay (giống vibe Home) */}
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition duration-300 group-hover:opacity-100">
-            <span className="rounded-full bg-cyan-400/90 p-2 text-[#0c0914] shadow-lg shadow-cyan-400/30">
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition duration-300 group-hover:opacity-100">
+            <span className="rounded-full bg-white/90 p-2 text-[#0c0914] shadow-lg shadow-cyan-400/30">
               <FaPlay size={12} />
             </span>
           </div>
@@ -444,7 +443,7 @@ const xStep =
         }
       >
         <div className="flex w-full flex-col gap-6">
-          <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#241540] via-[#1b0f33] to-[#0f0a22] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)] transition-all duration-300 hover:shadow-[0_30px_100px_rgba(56,189,248,0.20)]">
+          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#241540] via-[#1b0f33] to-[#0f0a22] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)] transition-all duration-300 hover:shadow-[0_30px_100px_rgba(56,189,248,0.20)]">
             {/* glow layers (đồng bộ vibe Home) */}
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.08),_transparent_40%)]" />
             <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-cyan-400/10 blur-3xl" />
@@ -735,24 +734,24 @@ const xStep =
                       <div
                         key={song.id || idx}
                         onClick={() => handlePlay(song)}
-                        className={`group/item flex items-center gap-3 rounded-xl px-2 py-2 transition-all duration-300 ${
+                          className={`group/item flex items-center gap-3 rounded-xl px-2 py-2 transition-all duration-300 hover:cursor-pointer ${
                           playable
                             ? "cursor-pointer hover:bg-white/10 hover:shadow-lg hover:shadow-black/20"
-                            : "cursor-default opacity-60"
+                               : "cursor-not-allowed"
                         }`}
                       >
                         <div className="w-8 text-center text-2xl font-black text-white/80">
                           {song.rank ?? idx + 1}
                         </div>
 
-                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-md shadow-black/25">
+                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-md shadow-black/25 transition group-hover/item:ring-2 group-hover/item:ring-cyan-300/70 group-hover/item:ring-offset-2 group-hover/item:ring-offset-[#120d23]">
                           <img
                             src={getSongCover(song)}
                             alt={song.title}
                             className="h-full w-full object-cover"
                           />
-                          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition duration-300 group-hover/item:opacity-100">
-                            <span className="rounded-full bg-cyan-400/90 p-2 text-[#0c0914] shadow-lg shadow-cyan-400/30">
+                           <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition duration-300 group-hover/item:opacity-100">
+                            <span className="rounded-full bg-white/90 p-2 text-[#0c0914] shadow-lg shadow-cyan-400/30">
                               <FaPlay size={12} />
                             </span>
                           </div>
