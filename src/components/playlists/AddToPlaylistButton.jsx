@@ -12,12 +12,13 @@ import {
   addSongToPlaylist,
   createPlaylist,
   getPlaylists,
+  getPlaylistById,
 } from "../../api/playlist.api";
 import { normalizeSongId } from "../../store/player.store";
 
 const extractData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
 
-function Toast({ message, onClose }) {
+function Toast({ title = "Thông báo", message, onClose }) {
   useEffect(() => {
     if (!message) return undefined;
 
@@ -28,26 +29,59 @@ function Toast({ message, onClose }) {
   if (!message) return null;
 
   return createPortal(
-    <div className="fixed bottom-6 left-6 z-[70] max-w-sm rounded-xl border border-white/10 bg-[#0e1a2f] px-4 py-3 text-sm text-white shadow-2xl shadow-cyan-500/20">
+    <div
+      className="
+        fixed top-6 left-1/2 -translate-x-1/2 z-[70] max-w-sm
+        rounded-xl border border-white/10
+        bg-[#0e1a2f] px-4 py-3 text-sm text-white
+        shadow-2xl shadow-cyan-500/20
+        animate-[toast-in_0.35s_cubic-bezier(0.22,1,0.36,1)]
+      "
+       onClick={(e) => {
+   e.stopPropagation();
+ }}
+    >
       <div className="flex items-start gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-cyan-200/80">
-            Thành công
+            {title}
           </p>
           <p className="font-semibold leading-relaxed">{message}</p>
         </div>
         <button
-          onClick={onClose}
+          onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          onClose();
+          }}
           className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/80 transition hover:bg-white/20"
           aria-label="Đóng thông báo"
         >
           <FiX />
         </button>
       </div>
+
+      {/* Inline keyframes */}
+      <style>
+        {`
+          @keyframes toast-in {
+            from {
+              opacity: 0;
+              transform: translate(-50%, -14px);
+            }
+            to {
+              opacity: 1;
+              transform: translate(-50%, 0);
+            }
+          }
+        `}
+      </style>
     </div>,
     document.body
   );
 }
+
+
 
 export default function AddToPlaylistButton({
   song,
@@ -60,6 +94,7 @@ export default function AddToPlaylistButton({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [toastTitle, setToastTitle] = useState("");
   const [newPlaylistName, setNewPlaylistName] = useState("");
 
   const songId = useMemo(() => normalizeSongId(song) || song?.id, [song]);
@@ -76,6 +111,19 @@ export default function AddToPlaylistButton({
     }
   };
 
+  const hasSongInPlaylist = (songs = []) =>
+  songs.some((item) => String(item?.id) === String(songId));
+
+
+  const showDuplicateToast = (playlist) => {
+    setOpen(false);
+    setToastTitle("Thông báo");
+    setToastMessage(
+      `Bài hát "${song?.title || "Bài hát"}" đã có trong playlist "${
+        playlist?.name || playlist?.title || "Playlist"
+      }"`
+    );
+  };
   useEffect(() => {
     if (open) {
       fetchPlaylists();
@@ -84,17 +132,36 @@ export default function AddToPlaylistButton({
 
   const handleAdd = async (playlist) => {
     if (!playlist?.id || !songId) return;
-
+    const playlistSongs = Array.isArray(playlist?.songs) ? playlist.songs : null;
     try {
+        if (!playlistSongs) {
+        const detailRes = await getPlaylistById(playlist.id);
+        const detail = extractData(detailRes);
+        const detailSongs = Array.isArray(detail?.songs) ? detail.songs : [];
+        if (hasSongInPlaylist(detailSongs)) {
+          showDuplicateToast(playlist);
+          return;
+        }
+      } else if (hasSongInPlaylist(playlistSongs)) {
+        showDuplicateToast(playlist);
+        return;
+      }
       setSaving(true);
       await addSongToPlaylist(playlist.id, { songId });
       setOpen(false);
+      setToastTitle("Thành công");
       setToastMessage(
         `Đã thêm bài hát "${song?.title || "Bài hát"}" vào playlist "${
           playlist?.name || playlist?.title || "Playlist"
         }"`
       );
     } catch (err) {
+       const status = err?.response?.status;
+      const message = err?.response?.data?.message || err?.message || "";
+      if (status === 409 || message.toLowerCase().includes("exist")) {
+        showDuplicateToast(playlist);
+        return;
+      }
       console.error("Add to playlist failed", err);
     } finally {
       setSaving(false);
@@ -118,7 +185,10 @@ export default function AddToPlaylistButton({
     }
   };
 
-  const closeToast = () => setToastMessage("");
+  const closeToast = () => {
+    setToastMessage("");
+    setToastTitle("");
+  };
 
   const renderTriggerContent = () => {
     if (variant === "text") {
@@ -242,7 +312,7 @@ export default function AddToPlaylistButton({
           document.body
         )}
 
-      <Toast message={toastMessage} onClose={closeToast} />
+       <Toast title={toastTitle} message={toastMessage} onClose={closeToast} />
     </>
   );
 }
