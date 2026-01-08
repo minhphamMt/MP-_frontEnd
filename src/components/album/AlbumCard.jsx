@@ -40,7 +40,7 @@ export default function AlbumCard({ album }) {
   return (
     <div
       onClick={() => navigate(`/album/${album.id}`)}
-      className="group relative w-52 shrink-0 cursor-pointer overflow-hidden rounded-2xl 
+      className="group relative w-44 shrink-0 cursor-pointer overflow-hidden rounded-2xl sm:w-52  
       border border-white/10 
       bg-gradient-to-br from-white/5 via-white/0 to-white/5 
       p-3 
@@ -72,7 +72,7 @@ export default function AlbumCard({ album }) {
         <img
           src={album.cover_url}
           alt={album.title}
-          className="h-44 w-full rounded-xl object-cover 
+          className="h-40 w-full rounded-xl object-cover sm:h-44 
           transition-transform duration-500 
           group-hover:scale-[1.05]"
         />

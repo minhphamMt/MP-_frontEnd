@@ -40,7 +40,7 @@ export default function ArtistAlbumCard({ artist }) {
   return (
     <div
       onClick={() => navigate(`/artist/${artist.artist_id}`)}
-      className="group relative w-52 shrink-0 cursor-pointer overflow-hidden rounded-2xl
+      className="group relative w-44 shrink-0 cursor-pointer overflow-hidden rounded-2xl sm:w-52
       border border-white/10
       bg-gradient-to-br from-white/5 via-white/0 to-white/5
       p-4
@@ -55,11 +55,11 @@ export default function ArtistAlbumCard({ artist }) {
       <div className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
 
       {/* AVATAR */}
-      <div className="relative mx-auto w-44 overflow-hidden rounded-full">
+      <div className="relative mx-auto w-36 overflow-hidden rounded-full sm:w-44">
         <img
           src={artist.cover_url}
           alt={artist.artist_name}
-          className="h-44 w-44 rounded-full object-cover
+          className="h-36 w-36 rounded-full object-cover sm:h-44 sm:w-44
           transition-transform duration-500
           group-hover:scale-[1.06]"
         />

@@ -208,97 +208,98 @@ export default function AlbumDetail() {
         </div>
       )}
       {/* ===== SONG LIST ===== */}
-      <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-        {/* TABLE HEADER */}
-         <div className="grid grid-cols-[60px_1fr_140px_100px] items-center bg-white/5 px-5 py-3 text-[11px] uppercase tracking-widest text-white/60">
-          <span className="text-center">#</span>
-          <span>Bài hát</span>
-          <span className="text-center">Hành động</span>
-          <span className="text-right">Thời gian</span>
-        </div>
+       <div className="overflow-x-auto rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)] scrollbar-muted">
+        <div className="min-w-[640px]">
+          {/* TABLE HEADER */}
+          <div className="grid grid-cols-[60px_1fr_140px_100px] items-center bg-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-white/60 sm:px-5">
+            <span className="text-center">#</span>
+            <span>Bài hát</span>
+            <span className="text-center">Hành động</span>
+            <span className="text-right">Thời gian</span>
+          </div>
 
-        {/* ROWS */}
-        <div className="divide-y divide-white/5">
-          {songs.map((song, index) => {
-            const songId = normalizeSongId(song);
-            const isActive = currentSong?.id === song.id;
-            const isLiked = songId && likedSongIds.includes(songId);
-            return (
-              <div
-                key={song.id}
-                onClick={() => playSong(song, songs)}
-                className={`grid grid-cols-[60px_1fr_140px_100px] items-center gap-3 px-5 py-3 cursor-pointer transition
-                  ${
+          {/* ROWS */}
+          <div className="divide-y divide-white/5">
+            {songs.map((song, index) => {
+              const songId = normalizeSongId(song);
+              const isActive = currentSong?.id === song.id;
+              const isLiked = songId && likedSongIds.includes(songId);
+              return (
+                <div
+                  key={song.id}
+                  onClick={() => playSong(song, songs)}
+                  className={`grid grid-cols-[60px_1fr_140px_100px] items-center gap-3 px-4 py-3 cursor-pointer transition sm:px-5 ${
                     isActive
                       ? "bg-gradient-to-r from-white/10 via-white/5 to-transparent"
                       : "hover:bg-white/5"
                   }`}
-              >
-                {/* INDEX */}
-                <div className="text-center text-sm font-semibold text-white/70">
-                  {index + 1}
-                </div>
+                >
+                  {/* INDEX */}
+                  <div className="text-center text-sm font-semibold text-white/70">
+                    {index + 1}
+                  </div>
 
-                {/* SONG */}
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/30">
-                    <img
-                      src={song.cover_url}
-                      alt={song.title}
-                      className="h-full w-full object-cover"
-                    />
+                  {/* SONG */}
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/30">
+                      <img
+                        src={song.cover_url}
+                        alt={song.title}
+                        className="h-full w-full object-cover"
+                      />
 
-                    {isActive && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                        <span className="text-sm">
-                          {isPlaying ? "⏸" : "▶"}
-                        </span>
+                      {isActive && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                          <span className="text-sm">
+                            {isPlaying ? "⏸" : "▶"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="min-w-0">
+                      <div
+                        className={`truncate font-semibold ${
+                          isActive ? "text-green-300" : "text-white"
+                        }`}
+                      >
+                        {song.title}
                       </div>
-                    )}
+                      <div className="truncate text-xs text-white/60">
+                        {song.artist_name}
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="min-w-0">
-                    <div
-                      className={`truncate font-semibold ${
-                        isActive ? "text-green-300" : "text-white"
+                  {/* ACTIONS */}
+                  <div className="flex items-center justify-center gap-2">
+                    <AddToPlaylistButton
+                      song={song}
+                      triggerClassName="h-9 w-9 !border-white/20 !bg-white/10 hover:!bg-white/20"
+                    />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (songId) toggleLike(songId);
+                      }}
+                      className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm transition ${
+                        isLiked
+                          ? "border-rose-400/40 text-rose-300"
+                          : "border-white/10 text-white/70 hover:bg-white/15"
                       }`}
+                      aria-label={isLiked ? "Bỏ thích bài hát" : "Thích bài hát"}
                     >
-                      {song.title}
-                    </div>
-                    <div className="truncate text-xs text-white/60">
-                      {song.artist_name}
-                    </div>
+                      <FiHeart />
+                    </button>
+                  </div>
+
+                  {/* DURATION */}
+                  <div className="text-right text-sm text-white/60">
+                    {formatTime(song.duration)}
                   </div>
                 </div>
- {/* ACTIONS */}
-                <div className="flex items-center justify-center gap-2">
-                  <AddToPlaylistButton
-                    song={song}
-                    triggerClassName="h-9 w-9 !border-white/20 !bg-white/10 hover:!bg-white/20"
-                  />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (songId) toggleLike(songId);
-                    }}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm transition ${
-                      isLiked
-                        ? "border-rose-400/40 text-rose-300"
-                        : "border-white/10 text-white/70 hover:bg-white/15"
-                    }`}
-                    aria-label={isLiked ? "Bỏ thích bài hát" : "Thích bài hát"}
-                  >
-                    <FiHeart />
-                  </button>
-                </div>
-
-                {/* DURATION */}
-                <div className="text-right text-sm text-white/60">
-                  {formatTime(song.duration)}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

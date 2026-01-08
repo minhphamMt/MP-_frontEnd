@@ -218,7 +218,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       {/* CLOSE */}
       <button
         onClick={onClose}
-        className="absolute top-6 right-8 z-50 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xl transition"
+        className="absolute right-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xl transition hover:bg-white/20 sm:right-8 sm:top-6"
       >
         ✕
       </button>
@@ -272,7 +272,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* MAIN */}
           <div className="flex flex-col items-center">
-            <div className="w-[360px] h-[360px] rounded-2xl overflow-hidden bg-white/5 shadow-[0_25px_70px_rgba(0,0,0,0.55)]">
+            <div className="h-64 w-64 overflow-hidden rounded-2xl bg-white/5 shadow-[0_25px_70px_rgba(0,0,0,0.55)] sm:h-72 sm:w-72 lg:h-[360px] lg:w-[360px]">
               {cover && (
                 <img
                   src={cover}

@@ -113,128 +113,130 @@ export default function SongTable({
     <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#1c132d] via-[#130f27] to-[#0b1424] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur">
       {renderHeader()}
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-        {/* Header */}
-        <div className="grid grid-cols-[64px_1fr_220px_90px] px-4 py-3 text-[11px] uppercase tracking-[0.18em] text-white/50">
-          <span className="text-center">#</span>
-          <span>Bài hát</span>
-          <span className="text-center">Hành động</span>
-          <span className="text-right">Thời gian</span>
-        </div>
+      <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-white/5 scrollbar-muted">
+        <div className="min-w-[640px]">
+          {/* Header */}
+          <div className="grid grid-cols-[64px_1fr_220px_90px] px-3 py-3 text-[11px] uppercase tracking-[0.18em] text-white/50 sm:px-4">
+            <span className="text-center">#</span>
+            <span>Bài hát</span>
+            <span className="text-center">Hành động</span>
+            <span className="text-right">Thời gian</span>
+          </div>
 
-        {/* Rows */}
-        <div className="divide-y divide-white/5">
-          {songs.map((song, index) => {
-            const songId = normalizeSongId(song);
-            const isActive = normalizeSongId(currentSong) === songId;
-            const isLiked = songId && likedSongIds.includes(songId);
-            const order = song.rank ?? index + 1;
+          {/* Rows */}
+          <div className="divide-y divide-white/5">
+            {songs.map((song, index) => {
+              const songId = normalizeSongId(song);
+              const isActive = normalizeSongId(currentSong) === songId;
+              const isLiked = songId && likedSongIds.includes(songId);
+              const order = song.rank ?? index + 1;
 
-            return (
-              <div
-                key={song.id || index}
-                onClick={() => handlePlaySong(song, songs)}
-                className={`group grid grid-cols-[64px_1fr_220px_90px] items-center gap-3 px-4 py-3 transition ${
-                  isActive
-                    ? "bg-gradient-to-r from-cyan-400/10 via-white/5 to-transparent"
-                    : "hover:bg-white/5"
-                }`}
-              >
-                {/* Rank */}
-                <div className="text-center">
-                  <span className={rankingStyle(order)}>{order}</span>
-                </div>
-
-                {/* Song info */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="relative h-12 w-12 overflow-hidden rounded-lg">
-                    <img
-                      src={song.cover_url}
-                      alt={song.title}
-                      className="h-full w-full object-cover transition group-hover:scale-110"
-                    />
-                    {isActive && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                        {isPlaying ? <FiPause /> : <FiPlay />}
-                      </div>
-                    )}
+              return (
+                <div
+                  key={song.id || index}
+                  onClick={() => handlePlaySong(song, songs)}
+                  className={`group grid grid-cols-[64px_1fr_220px_90px] items-center gap-3 px-3 py-3 transition sm:px-4 ${
+                    isActive
+                      ? "bg-gradient-to-r from-cyan-400/10 via-white/5 to-transparent"
+                      : "hover:bg-white/5"
+                  }`}
+                >
+                  {/* Rank */}
+                  <div className="text-center">
+                    <span className={rankingStyle(order)}>{order}</span>
                   </div>
 
-                  <div className="min-w-0">
-                    <div
-                      className={`truncate font-semibold ${
-                        isActive ? "text-cyan-300" : "text-white"
-                      }`}
-                    >
-                      {song.title}
-                    </div>
-                    <div className="truncate text-xs text-white/60">
-                      {song.artist_name}
-                      {song.album_id && song.album_title && (
-                        <>
-                          {" • "}
-                          <Link
-                            to={`/album/${song.album_id}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="hover:underline"
-                          >
-                            {song.album_title}
-                          </Link>
-                        </>
+                  {/* Song info */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="relative h-12 w-12 overflow-hidden rounded-lg">
+                      <img
+                        src={song.cover_url}
+                        alt={song.title}
+                        className="h-full w-full object-cover transition group-hover:scale-110"
+                      />
+                      {isActive && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                          {isPlaying ? <FiPause /> : <FiPlay />}
+                        </div>
                       )}
                     </div>
+
+                    <div className="min-w-0">
+                      <div
+                        className={`truncate font-semibold ${
+                          isActive ? "text-cyan-300" : "text-white"
+                        }`}
+                      >
+                        {song.title}
+                      </div>
+                      <div className="truncate text-xs text-white/60">
+                        {song.artist_name}
+                        {song.album_id && song.album_title && (
+                          <>
+                            {" • "}
+                            <Link
+                              to={`/album/${song.album_id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="hover:underline"
+                            >
+                              {song.album_title}
+                            </Link>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePlaySong(song, songs);
+                      }}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 transition hover:bg-white/20"
+                    >
+                      {isActive && isPlaying ? <FiPause /> : <FiPlay />}
+                    </button>
+
+                    <AddToPlaylistButton
+                      song={song}
+                      triggerClassName="h-9 w-9 !border-white/10 !bg-white/5 hover:!bg-white/15"
+                    />
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToQueue(song);
+                      }}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/15"
+                    >
+                      <FiList />
+                    </button>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleLike(songId);
+                      }}
+                      className={`flex h-9 w-9 items-center justify-center rounded-full border transition ${
+                        isLiked
+                          ? "border-rose-400/40 text-rose-300"
+                          : "border-white/10 text-white/70 hover:bg-white/15"
+                      }`}
+                    >
+                      <FiHeart />
+                    </button>
+                  </div>
+
+                  {/* Duration */}
+                  <div className="text-right text-sm text-white/60 tabular-nums">
+                    {formatDuration(song.duration)}
                   </div>
                 </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-center gap-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePlaySong(song, songs);
-                    }}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 transition hover:bg-white/20"
-                  >
-                    {isActive && isPlaying ? <FiPause /> : <FiPlay />}
-                  </button>
-
-   <AddToPlaylistButton
-                    song={song}
-                    triggerClassName="h-9 w-9 !border-white/10 !bg-white/5 hover:!bg-white/15"
-                  />
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addToQueue(song);
-                    }}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/15"
-                  >
-                   <FiList />
-                  </button>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleLike(songId);
-                    }}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full border transition ${
-                      isLiked
-                        ? "border-rose-400/40 text-rose-300"
-                        : "border-white/10 text-white/70 hover:bg-white/15"
-                    }`}
-                  >
-                    <FiHeart />
-                  </button>
-                </div>
-
-                {/* Duration */}
-                <div className="text-right text-sm text-white/60 tabular-nums">
-                  {formatDuration(song.duration)}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
