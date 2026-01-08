@@ -6,6 +6,8 @@ import {
   FaBackwardStep,
   FaShuffle,
   FaRepeat,
+  FaVolumeHigh,
+  FaVolumeXmark,
 } from "react-icons/fa6";
 import usePlayerStore from "../../store/player.store";
 
@@ -39,6 +41,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
     currentTime,
     duration,
     seek,
+    volume,
+    muted,
+    setVolume,
+    toggleMute,
   } = usePlayerStore();
 
   /* ================= animation ================= */
@@ -138,6 +144,14 @@ export default function PlayerDetail({ isOpen, onClose }) {
     isPlaying ? pause() : resume();
   };
 
+    const handleVolumeChange = (value) => {
+    const next = Number(value);
+    if (muted && next > 0) {
+      toggleMute();
+    }
+    setVolume(next);
+  };
+
   /* ================= upcoming ================= */
   const upcoming = useMemo(() => {
     const list = queue || [];
@@ -146,11 +160,17 @@ export default function PlayerDetail({ isOpen, onClose }) {
     return list.filter((_, i) => i !== currentIndex).slice(0, 3);
   }, [queue, currentIndex]);
 
+    const played = useMemo(() => {
+    const list = queue || [];
+    if (currentIndex <= 0) return [];
+    return list.slice(Math.max(0, currentIndex - 3), currentIndex);
+  }, [queue, currentIndex]);
+
   if (!mounted || !currentSong) return null;
 
   const cover =
     currentSong.cover ||
-    currentSong.cover_url ||
+ currentSong.cover_url ||
     currentSong.image;
 
   const animateClass =
@@ -204,10 +224,51 @@ export default function PlayerDetail({ isOpen, onClose }) {
       </button>
 
       {/* CONTENT */}
-      <div className="relative z-10 mx-auto mt-14 w-[min(1200px,92vw)] pb-10">
-<div
-  className={`grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-14 items-center ${songSlideClass}`}
+           <div className="relative z-10 mx-auto flex min-h-[calc(100vh-120px)] w-[min(1280px,94vw)] flex-col justify-center pb-10 pt-8">
+        <div
+  className={`grid grid-cols-1 lg:grid-cols-[360px_520px_360px] gap-10 items-start ${songSlideClass}`}
 >
+
+          {/* PLAYED */}
+          <div className="hidden lg:block">
+            <div className="mb-4 text-sm tracking-widest opacity-60">
+              ĐÃ PHÁT
+            </div>
+            <div className="flex gap-6 justify-end">
+              {played.length ? (
+                played.map((s, idx) => {
+                  const sCover = s.cover || s.cover_url || s.image;
+                  const realIndex = queue.findIndex((q) => q === s);
+                  return (
+                    <div
+  key={s.id || idx}
+  className="w-[150px] cursor-pointer hover:scale-[1.04] transition"
+  onClick={() => playAt(realIndex)}
+>
+  <div className="w-[150px] h-[150px] rounded-xl overflow-hidden bg-white/5 shadow-lg">
+    {sCover && (
+      <img
+        src={sCover}
+        alt={s.title}
+        className="w-full h-full object-cover"
+      />
+    )}
+  </div>
+  <div className="mt-2 text-sm font-semibold line-clamp-2 text-right">
+    {s.title}
+  </div>
+  <div className="text-xs opacity-70 line-clamp-1 text-right">
+    {s.artist?.name || s.artist_name || ""}
+  </div>
+</div>
+
+                  );
+                })
+              ) : (
+                <div className="text-sm opacity-50">Chưa có bài trước đó</div>
+              )}
+            </div>
+          </div>
 
           {/* MAIN */}
           <div className="flex flex-col items-center">
@@ -232,11 +293,11 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
 
           {/* UPCOMING */}
-          <div>
+ <div className="hidden lg:block">
             <div className="mb-4 text-sm tracking-widest opacity-60">
               TIẾP THEO
             </div>
-            <div className="flex gap-6">
+            <div className="flex gap-6 justify-start">
               {upcoming.map((s, idx) => {
                 const sCover = s.cover || s.cover_url || s.image;
                 const realIndex = queue.findIndex(
@@ -270,9 +331,79 @@ export default function PlayerDetail({ isOpen, onClose }) {
             </div>
           </div>
         </div>
+ <div className="mt-8 flex flex-col gap-6 lg:hidden">
+          <div>
+            <div className="mb-3 text-xs tracking-widest opacity-60">
+              ĐÃ PHÁT
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hidden">
+              {played.length ? (
+                played.map((s, idx) => {
+                  const sCover = s.cover || s.cover_url || s.image;
+                  const realIndex = queue.findIndex((q) => q === s);
+                  return (
+                    <button
+                      key={s.id || idx}
+                      type="button"
+                      onClick={() => playAt(realIndex)}
+                      className="w-28 flex-shrink-0 text-left"
+                    >
+                      <div className="h-24 w-24 overflow-hidden rounded-xl bg-white/10 shadow-lg">
+                        {sCover && (
+                          <img
+                            src={sCover}
+                            alt={s.title}
+                            className="h-full w-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="mt-2 text-xs font-semibold line-clamp-1">
+                        {s.title}
+                      </div>
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="text-xs opacity-50">Chưa có bài trước đó</div>
+              )}
+            </div>
+          </div>
 
+          <div>
+            <div className="mb-3 text-xs tracking-widest opacity-60">
+              TIẾP THEO
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hidden">
+              {upcoming.map((s, idx) => {
+                const sCover = s.cover || s.cover_url || s.image;
+                const realIndex = queue.findIndex((q) => q === s);
+                return (
+                  <button
+                    key={s.id || idx}
+                    type="button"
+                    onClick={() => playAt(realIndex)}
+                    className="w-28 flex-shrink-0 text-left"
+                  >
+                    <div className="h-24 w-24 overflow-hidden rounded-xl bg-white/10 shadow-lg">
+                      {sCover && (
+                        <img
+                          src={sCover}
+                          alt={s.title}
+                          className="h-full w-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="mt-2 text-xs font-semibold line-clamp-1">
+                      {s.title}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
         {/* CONTROLS */}
-        <div className="mt-16">
+        <div className="mt-12">
           {/* SEEK */}
           <div className="flex items-center gap-4">
             <span className="w-10 text-right text-xs opacity-70">
@@ -299,7 +430,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
 
           {/* BUTTONS */}
-          <div className="mt-8 flex items-center justify-center gap-10">
+         <div className="mt-8 relative flex flex-col items-center gap-6 lg:flex-row">
+            <div className="flex items-center justify-center gap-10 mt-8 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
             <button
               onClick={toggleShuffle}
               className={`transition ${
@@ -326,14 +458,38 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
             <button
               onClick={toggleRepeatMode}
-              className={`transition ${
+              className={`relative transition ${
                 repeatMode !== "off"
                   ? "text-violet-400"
                   : "opacity-70"
               }`}
             >
               <FaRepeat />
+               {repeatMode === "one" && (
+                <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold text-white">
+                  1
+                </span>
+              )}
             </button>
+             </div>
+
+            <div className="flex items-center gap-2 lg:absolute lg:right-0 mt-8">
+              <button
+                onClick={toggleMute}
+                className="text-lg opacity-70 hover:opacity-100 transition"
+              >
+                {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={muted ? 0 : volume}
+                onChange={(e) => handleVolumeChange(e.target.value)}
+                className="h-2 w-32 accent-violet-500"
+              />
+            </div>
           </div>
         </div>
       </div>

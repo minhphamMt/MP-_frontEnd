@@ -9,6 +9,7 @@ import {
   HiOutlineArrowsPointingOut,
   HiOutlineQueueList,
   HiOutlineSpeakerWave,
+  HiOutlineSpeakerXMark,
 } from "react-icons/hi2";
 import { RiRepeat2Fill } from "react-icons/ri";
 import { useState } from "react";
@@ -26,19 +27,29 @@ export default function PlayerBar() {
     currentTime,
     duration,
     volume,
+    muted,
     repeatMode,
     pause,
     resume,
     playNext,
     playPrev,
     seek,
+    toggleMute,
     setVolume,
     toggleRepeatMode,
   } = usePlayerStore();
 
   const progress = duration ? Math.min(100, (currentTime / duration) * 100) : 0;
   const volumePercent = Math.round((volume ?? 0) * 100);
+  const displayVolumePercent = muted ? 0 : volumePercent;
 
+  const handleVolumeChange = (value) => {
+    const next = Math.round(Number(value));
+    if (muted && next > 0) {
+      toggleMute();
+    }
+    setVolume(next / 100);
+  };
   if (!currentSong) {
     return (
       <div className="h-24 border-t border-white/10 bg-gradient-to-r from-[#140c26] via-[#120b22] to-[#0b0914] flex items-center px-6 backdrop-blur">
@@ -139,24 +150,24 @@ export default function PlayerBar() {
               <HiOutlineQueueList />
             </button>
 
-        <button
-  onMouseDown={(e) => {
-    e.preventDefault();
-    e.stopPropagation();     // ✅ chặn event lọt sang backdrop
-    setShowDetail(true);
-  }}
-  onClick={(e) => e.stopPropagation()} // ✅ dự phòng
-  className="p-2 text-white/70 transition hover:text-white"
-  aria-label="Mở trang chi tiết"
-  title="Trang chi tiết"
->
-  <HiOutlineArrowsPointingOut />
-</button>
+            <button
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation(); // ✅ chặn event lọt sang backdrop
+                setShowDetail(true);
+              }}
+              onClick={(e) => e.stopPropagation()} // ✅ dự phòng
+              className="p-2 text-white/70 transition hover:text-white"
+              aria-label="Mở trang chi tiết"
+              title="Trang chi tiết"
+            >
+              <HiOutlineArrowsPointingOut />
+            </button>
 
 
             <button
               onClick={toggleRepeatMode}
-              className={`p-2 transition ${
+              className={`relative p-2 transition ${
                 repeatMode !== "off"
                   ? "text-violet-300 drop-shadow-[0_0_12px_rgba(167,139,250,0.6)]"
                   : "text-white/70 hover:text-white"
@@ -170,22 +181,35 @@ export default function PlayerBar() {
                   : "Tắt lặp lại"
               }
             >
-              <RiRepeat2Fill
-                className={repeatMode === "one" ? "rotate-45" : ""}
-              />
+               <RiRepeat2Fill />
+              {repeatMode === "one" && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold text-white">
+                  1
+                </span>
+              )}
             </button>
 
             <div className="flex min-w-[160px] items-center gap-2">
-              <HiOutlineSpeakerWave className="text-xl text-white/70" />
+               <button
+                onClick={toggleMute}
+                className="text-xl text-white/70 transition hover:text-white"
+                aria-label={muted ? "Bật âm lượng" : "Tắt âm lượng"}
+              >
+                {muted || volumePercent === 0 ? (
+                  <HiOutlineSpeakerXMark />
+                ) : (
+                  <HiOutlineSpeakerWave />
+                )}
+              </button>
               <input
                 type="range"
                 min={0}
                 max={100}
-                value={volumePercent}
-                onChange={(e) => setVolume(Number(e.target.value) / 100)}
+                value={displayVolumePercent}
+                onChange={(e) => handleVolumeChange(e.target.value)}
                 className="player-slider flex-1"
                 style={{
-                  background: `linear-gradient(to right, #38bdf8 ${volumePercent}%, rgba(255,255,255,0.2) ${volumePercent}%)`,
+                  background: `linear-gradient(to right, #38bdf8 ${displayVolumePercent}%, rgba(255,255,255,0.2) ${displayVolumePercent}%)`,
                 }}
                 aria-label="Âm lượng"
               />
