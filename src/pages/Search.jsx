@@ -7,6 +7,7 @@ import Section from "../components/section/Section";
 import SongRow from "../components/song/SongRow";
 import { filterPlayableSongs } from "../utils/song";
 import { saveSearchHistory } from "../api/search.api";
+import useAuthStore from "../store/auth.store";
 
 const normalizeArtist = (artist) => ({
   ...artist,
@@ -40,6 +41,7 @@ export default function Search() {
   const [artists, setArtists] = useState([]);
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(false);
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     const loadResults = async () => {
@@ -64,10 +66,12 @@ export default function Search() {
         setArtists(rawArtists.map(normalizeArtist));
         setAlbums(rawAlbums.map(normalizeAlbum));
 
-        try {
-          await saveSearchHistory(keyword);
-        } catch (err) {
-          console.error("Save search history error", err);
+        if (user?.id) {
+          try {
+            await saveSearchHistory(keyword, user.id);
+          } catch (err) {
+            console.error("Save search history error", err);
+          }
         }
       } catch (err) {
         console.error("Search page error:", err);
@@ -80,7 +84,7 @@ export default function Search() {
     };
 
     loadResults();
-  }, [keyword]);
+  }, [keyword, user?.id]);
 
   return (
     <div className="space-y-8 pb-12">

@@ -6,6 +6,7 @@ import { getSongById } from "../../api/song.api";
 import { fetchPlayableSong, toPlayableSong } from "../../utils/song";
 import usePlayerStore from "../../store/player.store";
 import { saveSearchHistory } from "../../api/search.api";
+import useAuthStore from "../../store/auth.store";
 
 export default function SearchBox() {
   const location = useLocation();
@@ -20,7 +21,7 @@ export default function SearchBox() {
   const [hasFocus, setHasFocus] = useState(false);
 
   const { playSong } = usePlayerStore();
-
+  const user = useAuthStore((state) => state.user);
   const defaultKeyword = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return params.get("q") || params.get("keyword") || "";
@@ -36,8 +37,12 @@ export default function SearchBox() {
 
   useEffect(() => {
     const loadHistory = async () => {
+        if (!user?.id) {
+        setHistory([]);
+        return;
+      }
       try {
-        const res = await getSearchHistory({ limit: 6 });
+        const res = await getSearchHistory({ limit: 6, userId: user.id });
         const payload = res?.data?.data ?? res?.data ?? {};
         const items = Array.isArray(payload)
           ? payload
@@ -50,7 +55,7 @@ export default function SearchBox() {
     };
 
     loadHistory();
-  }, []);
+  }, [user?.id]);
 
   const fetchSuggestions = useCallback(async (term) => {
     const trimmed = term.trim();
@@ -131,10 +136,27 @@ useEffect(() => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-const handleSubmit = (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     const value = keyword.trim();
     if (!value) return;
+    if (user?.id) {
+      try {
+        await saveSearchHistory(value, user.id);
+        setHistory((prev) => {
+          const normalized = value.toLowerCase();
+          const filtered = prev.filter(
+            (item) => (item.keyword || "").toLowerCase() !== normalized
+          );
+          return [
+            { keyword: value, searched_at: new Date().toISOString() },
+            ...filtered,
+          ].slice(0, 6);
+        });
+      } catch (err) {
+        console.error("Lưu lịch sử tìm kiếm thất bại", err);
+      }
+    }
     navigate(`/search?q=${encodeURIComponent(value)}`);
     setOpen(false);
   };
@@ -148,15 +170,15 @@ const handleResultNavigate = async (item) => {
     item.name ||
     item.title;
 
-  if (nameToSave) {
+  if (nameToSave && user?.id) {
     try {
-      await saveSearchHistory(nameToSave);
+      await saveSearchHistory(nameToSave, user.id);
 
       // ✅ UPDATE HISTORY NGAY (optimistic)
       setHistory((prev) => {
         const filtered = prev.filter(h => h.keyword !== nameToSave);
         return [
-          { keyword: nameToSave, created_at: new Date().toISOString() },
+          { keyword: nameToSave, searched_at: new Date().toISOString() },
           ...filtered,
         ].slice(0, 6); // giới hạn 6 item
       });
@@ -325,7 +347,7 @@ const handleResultNavigate = async (item) => {
                 )}
                 <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
                   {history.map((item) => {
-                    const createdAt = item.createdAt || item.created_at;
+                    const createdAt = item.searched_at || item.createdAt || item.created_at;
 
                     return (
                       <button
