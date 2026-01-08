@@ -6,7 +6,7 @@ import {
   MdPlaylistPlay,
 } from "react-icons/md";
 import { FaChartLine } from "react-icons/fa";
-import { BsMusicNoteList } from "react-icons/bs";
+import { BsHeartFill, BsMusicNoteList } from "react-icons/bs";
 import SidebarItem from "./SidebarItem";
 import SidebarSection from "./SidebarSection";
 
@@ -71,10 +71,25 @@ export default function Sidebar() {
             icon={MdPlaylistPlay}
             label="Thư viện"
           />
-          <SidebarItem
+          {/* <SidebarItem
             to="/albums"
             icon={MdAlbum}
             label="Album"
+          /> */}
+                    <SidebarItem
+            to="/library/liked-songs"
+            icon={BsHeartFill}
+            label="Bài hát yêu thích"
+          />
+          <SidebarItem
+            to="/library/playlists"
+            icon={MdPlaylistPlay}
+            label="Playlist đã tạo"
+          />
+          <SidebarItem
+            to="/library/liked-albums"
+            icon={MdAlbum}
+            label="Album đã thích"
           />
         </SidebarSection>
       </div>
