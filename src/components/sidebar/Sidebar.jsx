@@ -7,12 +7,25 @@ import {
 } from "react-icons/md";
 import { FaChartLine } from "react-icons/fa";
 import { BsHeartFill, BsMusicNoteList } from "react-icons/bs";
+import { FiX } from "react-icons/fi";
 import SidebarItem from "./SidebarItem";
 import SidebarSection from "./SidebarSection";
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   return (
-    <aside className="relative z-30 flex h-full w-64 flex-col overflow-hidden bg-gradient-to-b from-[#1f1530] via-[#16112a] to-[#0b1424] text-white shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
+    <>
+      <div
+        className={`fixed inset-0 z-30 bg-black/60 transition-opacity md:hidden ${
+          isOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={onClose}
+        aria-hidden
+      />
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col overflow-hidden bg-gradient-to-b from-[#1f1530] via-[#16112a] to-[#0b1424] text-white shadow-[0_30px_90px_rgba(0,0,0,0.65)] transition-transform duration-200 md:static md:translate-x-0 ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
       {/* Glow nền trên */}
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.18),transparent_45%)]"
@@ -24,7 +37,7 @@ export default function Sidebar() {
       />
 
       {/* Logo / Brand */}
-      <div className="relative flex h-16 items-center px-5">
+      <div className="relative flex h-16 items-center justify-between px-5">
         <div className="flex items-center gap-2">
           <div className="h-9 w-1 rounded-full bg-gradient-to-b from-cyan-300 via-violet-400 to-fuchsia-400 shadow-[0_0_14px_rgba(56,189,248,0.55)]" />
           <span className="text-xl font-extrabold tracking-tight">
@@ -33,6 +46,14 @@ export default function Sidebar() {
             </span>
           </span>
         </div>
+                <button
+          onClick={onClose}
+          className="rounded-full border border-white/10 bg-white/5 p-2 text-white/80 transition hover:border-white/30 hover:bg-white/10 hover:text-white md:hidden"
+          aria-label="Đóng menu"
+          title="Đóng menu"
+        >
+          <FiX />
+        </button>
       </div>
 
       {/* Menu */}
@@ -76,7 +97,7 @@ export default function Sidebar() {
             icon={MdAlbum}
             label="Album"
           /> */}
-                    <SidebarItem
+            <SidebarItem
             to="/library/liked-songs"
             icon={BsHeartFill}
             label="Bài hát yêu thích"
@@ -100,5 +121,6 @@ export default function Sidebar() {
         aria-hidden
       />
     </aside>
+    </>
   );
 }

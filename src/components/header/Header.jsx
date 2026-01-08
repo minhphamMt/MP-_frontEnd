@@ -1,18 +1,18 @@
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiMenu } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import SearchBox from "./SearchBox";
 import UserMenu from "./UserMenu";
 
-export default function Header() {
+export default function Header({ onMenuClick }) {
   const navigate = useNavigate();
 
   return (
     <header
       className="
-        relative z-40 flex h-16 items-center gap-4
+        relative z-40 flex h-16 items-center gap-3 sm:gap-4
         border-b border-white/5
         bg-gradient-to-r from-[#1f1530]/90 via-[#1a1230]/80 to-[#0c182f]/80
-        px-6
+        px-4 sm:px-6
         backdrop-blur
       "
     >
@@ -30,6 +30,25 @@ export default function Header() {
 
       {/* LEFT ACTIONS */}
       <div className="relative flex items-center gap-2">
+                <button
+          onClick={onMenuClick}
+          className="
+            group flex h-9 w-9 items-center justify-center rounded-full
+            border border-white/10
+            bg-white/5
+            text-white/80
+            transition-all duration-200
+            hover:border-white/30
+            hover:bg-white/10
+            hover:text-white
+            active:scale-95
+            md:hidden
+          "
+          title="Mở menu"
+          aria-label="Mở menu"
+        >
+          <FiMenu />
+        </button>
         <button
           onClick={() => navigate(-1)}
           className="
@@ -68,7 +87,7 @@ export default function Header() {
       </div>
 
       {/* SEARCH */}
-      <div className="relative ml-4 flex-1 max-w-xl">
+      <div className="relative ml-2 flex-1 max-w-full sm:ml-4 sm:max-w-xl">
         <SearchBox />
       </div>
 

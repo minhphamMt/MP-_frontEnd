@@ -52,7 +52,7 @@ export default function PlayerBar() {
   };
   if (!currentSong) {
     return (
-      <div className="h-24 border-t border-white/10 bg-gradient-to-r from-[#140c26] via-[#120b22] to-[#0b0914] flex items-center px-6 backdrop-blur">
+      <div className="flex h-auto items-center border-t border-white/10 bg-gradient-to-r from-[#140c26] via-[#120b22] to-[#0b0914] px-4 py-4 sm:h-24 sm:px-6 sm:py-0 backdrop-blur">
         <span className="text-sm text-white/60">Chưa phát bài nào</span>
       </div>
     );
@@ -60,14 +60,14 @@ export default function PlayerBar() {
 
   return (
     <>
-      <div className="relative h-24 border-t border-white/10 bg-gradient-to-r from-[#140c26] via-[#120b22] to-[#0b0914] px-6 backdrop-blur">
+      <div className="relative border-t border-white/10 bg-gradient-to-r from-[#140c26] via-[#120b22] to-[#0b0914] px-4 py-4 sm:h-24 sm:px-6 sm:py-0 backdrop-blur">
         {/* glow */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(167,139,250,0.15),transparent_40%)]" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(56,189,248,0.15),transparent_40%)]" />
 
-        <div className="relative flex h-full items-center gap-6">
+        <div className="relative flex h-full flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
           {/* LEFT */}
-          <div className="flex w-1/3 items-center gap-3 min-w-0">
+          <div className="flex w-full min-w-0 items-center gap-3 sm:w-1/3">
             <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-lg shadow-black/30">
               {currentSong.cover_url ? (
                 <img
@@ -92,7 +92,7 @@ export default function PlayerBar() {
 
           {/* CENTER */}
           <div className="flex flex-1 flex-col items-center gap-2">
-            <div className="flex items-center gap-5 text-lg">
+            <div className="flex items-center gap-4 text-lg sm:gap-5">
               <button
                 onClick={playPrev}
                 className="p-2 text-white/70 transition hover:text-white"
@@ -119,7 +119,7 @@ export default function PlayerBar() {
             </div>
 
             <div className="flex w-full items-center gap-3 text-[11px] text-white/60">
-              <span className="w-12 text-right">
+              <span className="w-10 text-right sm:w-12">
                 {formatTime(currentTime)}
               </span>
 
@@ -137,60 +137,61 @@ export default function PlayerBar() {
                 aria-label="Thanh tiến trình"
               />
 
-              <span className="w-12">{formatTime(duration)}</span>
+              <span className="w-10 sm:w-12">{formatTime(duration)}</span>
             </div>
           </div>
 
           {/* RIGHT */}
-          <div className="flex w-1/3 items-center justify-end gap-4 text-lg">
-            <button
-              className="p-2 text-white/70 transition hover:text-white"
-              aria-label="Danh sách phát"
-            >
-              <HiOutlineQueueList />
-            </button>
+         <div className="flex w-full flex-wrap items-center justify-between gap-3 text-lg sm:w-1/3 sm:flex-nowrap sm:justify-end sm:gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                className="hidden p-2 text-white/70 transition hover:text-white sm:inline-flex"
+                aria-label="Danh sách phát"
+              >
+                <HiOutlineQueueList />
+              </button>
 
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation(); // ✅ chặn event lọt sang backdrop
-                setShowDetail(true);
-              }}
-              onClick={(e) => e.stopPropagation()} // ✅ dự phòng
-              className="p-2 text-white/70 transition hover:text-white"
-              aria-label="Mở trang chi tiết"
-              title="Trang chi tiết"
-            >
-              <HiOutlineArrowsPointingOut />
-            </button>
+             <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation(); // ✅ chặn event lọt sang backdrop
+                  setShowDetail(true);
+                }}
+                onClick={(e) => e.stopPropagation()} // ✅ dự phòng
+                className="p-2 text-white/70 transition hover:text-white"
+                aria-label="Mở trang chi tiết"
+                title="Trang chi tiết"
+              >
+                <HiOutlineArrowsPointingOut />
+              </button>
 
+              <button
+                onClick={toggleRepeatMode}
+                className={`relative hidden p-2 transition sm:inline-flex ${
+                  repeatMode !== "off"
+                    ? "text-violet-300 drop-shadow-[0_0_12px_rgba(167,139,250,0.6)]"
+                    : "text-white/70 hover:text-white"
+                }`}
+                aria-label="Lặp lại"
+                title={
+                  repeatMode === "all"
+                    ? "Lặp lại danh sách"
+                    : repeatMode === "one"
+                    ? "Lặp lại một bài"
+                    : "Tắt lặp lại"
+                }
+              >
+                <RiRepeat2Fill />
+                {repeatMode === "one" && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold text-white">
+                    1
+                  </span>
+                )}
+              </button>
+            </div>
 
-            <button
-              onClick={toggleRepeatMode}
-              className={`relative p-2 transition ${
-                repeatMode !== "off"
-                  ? "text-violet-300 drop-shadow-[0_0_12px_rgba(167,139,250,0.6)]"
-                  : "text-white/70 hover:text-white"
-              }`}
-              aria-label="Lặp lại"
-              title={
-                repeatMode === "all"
-                  ? "Lặp lại danh sách"
-                  : repeatMode === "one"
-                  ? "Lặp lại một bài"
-                  : "Tắt lặp lại"
-              }
-            >
-               <RiRepeat2Fill />
-              {repeatMode === "one" && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold text-white">
-                  1
-                </span>
-              )}
-            </button>
-
-            <div className="flex min-w-[160px] items-center gap-2">
-               <button
+            <div className="flex min-w-[120px] flex-1 items-center gap-2 sm:min-w-[160px] sm:flex-none">
+              <button
                 onClick={toggleMute}
                 className="text-xl text-white/70 transition hover:text-white"
                 aria-label={muted ? "Bật âm lượng" : "Tắt âm lượng"}
@@ -218,7 +219,7 @@ export default function PlayerBar() {
         </div>
       </div>
 
- <PlayerDetail isOpen={showDetail} onClose={() => setShowDetail(false)} />
+      <PlayerDetail isOpen={showDetail} onClose={() => setShowDetail(false)} />
 
 
     </>
