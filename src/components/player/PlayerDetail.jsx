@@ -4,6 +4,8 @@ import {
   FaPlay,
   FaForwardStep,
   FaBackwardStep,
+  FaShuffle,
+  FaRepeat,
 } from "react-icons/fa6";
 import usePlayerStore from "../../store/player.store";
 
@@ -11,7 +13,7 @@ import usePlayerStore from "../../store/player.store";
 const formatTime = (sec = 0) => {
   const s = Math.max(0, Math.floor(sec || 0));
   const m = Math.floor(s / 60);
- const r = String(s % 60).padStart(2, "0");
+  const r = String(s % 60).padStart(2, "0");
   return `${m}:${r}`;
 };
 
@@ -29,6 +31,11 @@ export default function PlayerDetail({ isOpen, onClose }) {
     resume,
     playNext,
     playPrev,
+    playAt,
+    shuffle,
+    toggleShuffle,
+    repeatMode,
+    toggleRepeatMode,
     currentTime,
     duration,
     seek,
@@ -49,33 +56,42 @@ export default function PlayerDetail({ isOpen, onClose }) {
       setMounted(true);
       setPhase("enter");
       setBackdropReady(false);
-
       const t = setTimeout(() => setBackdropReady(true), 80);
       return () => clearTimeout(t);
     }
 
-    // chỉ trigger exit nếu đang mounted (đang mở/đang enter)
     if (!isOpen) {
       setBackdropReady(false);
-
-      // nếu chưa mount thì thôi
       setPhase((prev) => (prev === "closed" ? "closed" : "exit"));
     }
   }, [isOpen]);
 
   const handleAnimEnd = () => {
     const p = phaseRef.current;
-
-    if (p === "enter") {
-      setPhase("open");
-      return;
-    }
-
+    if (p === "enter") setPhase("open");
     if (p === "exit") {
       setMounted(false);
       setPhase("closed");
     }
   };
+  /* ===== song switch animation (ADD) ===== */
+  const [songSlideClass, setSongSlideClass] = useState("");
+  const prevIndexRef = useRef(currentIndex);
+
+  useEffect(() => {
+    if (prevIndexRef.current === currentIndex) return;
+
+    if (currentIndex > prevIndexRef.current) {
+      setSongSlideClass("song-slide-next");
+    } else {
+      setSongSlideClass("song-slide-prev");
+    }
+
+    prevIndexRef.current = currentIndex;
+
+    const t = setTimeout(() => setSongSlideClass(""), 380);
+    return () => clearTimeout(t);
+  }, [currentIndex]);
 
   /* ================= seek logic (GIỮ NGUYÊN) ================= */
   const [isSeeking, setIsSeeking] = useState(false);
@@ -85,7 +101,6 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   useEffect(() => {
     if (!mounted) return;
-
     const audioEl = document.querySelector("audio");
     audioRef.current = audioEl;
 
@@ -95,10 +110,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
     syncDuration();
     audioEl?.addEventListener("loadedmetadata", syncDuration);
-
-    return () => {
+    return () =>
       audioEl?.removeEventListener("loadedmetadata", syncDuration);
-    };
   }, [mounted, currentSong]);
 
   const total = Number(duration || fallbackDuration || 0) || 0;
@@ -110,18 +123,12 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const doSeek = (t) => {
     const time = Math.max(0, Math.min(total, Number(t) || 0));
-    if (typeof seek === "function") {
-      seek(time);
-      return;
-    }
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
-    }
+    seek?.(time);
   };
 
   const onSeekStart = () => setIsSeeking(true);
   const onSeekChange = (e) => setSeekValue(Number(e.target.value));
- const onSeekCommit = () => {
+  const onSeekCommit = () => {
     setIsSeeking(false);
     doSeek(seekValue);
   };
@@ -154,7 +161,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       : "";
 
   const stableClass =
-       phase === "open" || phase === "enter"
+    phase === "open" || phase === "enter"
       ? "translate-y-0 opacity-100"
       : "translate-y-full opacity-0";
 
@@ -162,23 +169,22 @@ export default function PlayerDetail({ isOpen, onClose }) {
   return (
     <div
       className={`player-detail-shell fixed inset-0 z-[999] text-white ${stableClass} ${animateClass}`}
-      style={{ animationDuration: `${ANIM_MS}ms`, animationTimingFunction: ANIM_EASE }}
-         onAnimationEnd={handleAnimEnd}
+      style={{
+        animationDuration: `${ANIM_MS}ms`,
+        animationTimingFunction: ANIM_EASE,
+      }}
+      onAnimationEnd={handleAnimEnd}
     >
-      {/* ================= BACKGROUND GLASS ================= */}
-   <div
-  className="absolute inset-0 bg-black/60 backdrop-blur-2xl"
-  onMouseDown={(e) => {
-    // ✅ chỉ khi bấm đúng nền (backdrop)
-    if (e.target !== e.currentTarget) return;
+      {/* BACKDROP */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-2xl"
+        onMouseDown={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (backdropReady) onClose?.();
+        }}
+      />
 
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (backdropReady) onClose?.();
-  }}
-/>
-
+      {/* BG IMAGE */}
       <div
         className="absolute inset-0 opacity-40 blur-3xl"
         style={{
@@ -189,10 +195,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-black" />
 
-      {/* ================= CLOSE ================= */}
-      <div className="absolute inset-x-0 top-3 z-50 flex justify-center">
-        <div className="h-1.5 w-16 rounded-full bg-white/30" />
-      </div>
+      {/* CLOSE */}
       <button
         onClick={onClose}
         className="absolute top-6 right-8 z-50 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xl transition"
@@ -200,39 +203,25 @@ export default function PlayerDetail({ isOpen, onClose }) {
         ✕
       </button>
 
-      {/* ================= TABS ================= */}
-      <div className="relative z-10 flex justify-center pt-10">
-        <div className="flex items-center gap-1 rounded-full bg-white/10 p-1">
-          <button className="px-5 py-2 rounded-full bg-white/20 text-sm font-semibold">
-            Danh sách phát
-          </button>
-          <button className="px-5 py-2 rounded-full text-sm opacity-70 hover:opacity-100">
-            Karaoke
-          </button>
-          <button className="px-5 py-2 rounded-full text-sm opacity-70 hover:opacity-100">
-            Lời bài hát
-          </button>
-        </div>
-      </div>
+      {/* CONTENT */}
+      <div className="relative z-10 mx-auto mt-14 w-[min(1200px,92vw)] pb-10">
+<div
+  className={`grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-14 items-center ${songSlideClass}`}
+>
 
-      {/* ================= CONTENT ================= */}
-      <div className="relative z-10 mx-auto mt-12 w-[min(1200px,92vw)] pb-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-14 items-center">
-          {/* ===== MAIN SONG ===== */}
+          {/* MAIN */}
           <div className="flex flex-col items-center">
             <div className="w-[360px] h-[360px] rounded-2xl overflow-hidden bg-white/5 shadow-[0_25px_70px_rgba(0,0,0,0.55)]">
-              {cover ? (
+              {cover && (
                 <img
                   src={cover}
                   alt={currentSong.title}
                   className="w-full h-full object-cover"
                 />
-              ) : (
-                <div className="w-full h-full bg-white/10" />
               )}
             </div>
 
-            <h2 className="mt-6 text-3xl font-semibold tracking-tight text-center">
+            <h2 className="mt-6 text-3xl font-semibold text-center">
               {currentSong.title}
             </h2>
             <p className="mt-1 text-sm opacity-70 text-center">
@@ -242,29 +231,31 @@ export default function PlayerDetail({ isOpen, onClose }) {
             </p>
           </div>
 
-          {/* ===== UPCOMING ===== */}
+          {/* UPCOMING */}
           <div>
             <div className="mb-4 text-sm tracking-widest opacity-60">
               TIẾP THEO
             </div>
-
             <div className="flex gap-6">
-              {upcoming.map((s) => {
+              {upcoming.map((s, idx) => {
                 const sCover = s.cover || s.cover_url || s.image;
+                const realIndex = queue.findIndex(
+                  (q) => q === s
+                );
+
                 return (
                   <div
-                    key={s.id}
-                    className="w-[150px] cursor-pointer transition hover:scale-[1.04]"
+                    key={s.id || idx}
+                    className="w-[150px] cursor-pointer hover:scale-[1.04] transition"
+                    onClick={() => playAt(realIndex)}
                   >
                     <div className="w-[150px] h-[150px] rounded-xl overflow-hidden bg-white/5 shadow-lg">
-                      {sCover ? (
+                      {sCover && (
                         <img
                           src={sCover}
                           alt={s.title}
                           className="w-full h-full object-cover"
                         />
-                      ) : (
-                        <div className="w-full h-full bg-white/10" />
                       )}
                     </div>
                     <div className="mt-2 text-sm font-semibold line-clamp-2">
@@ -280,9 +271,9 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* ================= CONTROLS ================= */}
+        {/* CONTROLS */}
         <div className="mt-16">
-          {/* ===== SEEK ===== */}
+          {/* SEEK */}
           <div className="flex items-center gap-4">
             <span className="w-10 text-right text-xs opacity-70">
               {formatTime(displayedTime)}
@@ -299,7 +290,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
               onChange={onSeekChange}
               onMouseUp={onSeekCommit}
               onTouchEnd={onSeekCommit}
-              className="flex-1 h-2 cursor-pointer accent-violet-500"
+              className="flex-1 h-2 accent-violet-500"
             />
 
             <span className="w-10 text-xs opacity-70">
@@ -307,27 +298,41 @@ export default function PlayerDetail({ isOpen, onClose }) {
             </span>
           </div>
 
-          {/* ===== BUTTONS ===== */}
-          <div className="mt-8 flex items-center justify-center gap-12">
+          {/* BUTTONS */}
+          <div className="mt-8 flex items-center justify-center gap-10">
             <button
-              onClick={playPrev}
-              className="opacity-80 hover:opacity-100 transition"
+              onClick={toggleShuffle}
+              className={`transition ${
+                shuffle ? "text-violet-400" : "opacity-70"
+              }`}
             >
+              <FaShuffle />
+            </button>
+
+            <button onClick={playPrev}>
               <FaBackwardStep size={20} />
             </button>
 
             <button
               onClick={togglePlay}
-              className="h-14 w-14 rounded-full bg-violet-500 hover:bg-violet-400 shadow-xl flex items-center justify-center transition"
+              className="h-14 w-14 rounded-full bg-violet-500 hover:bg-violet-400 shadow-xl flex items-center justify-center"
             >
-              {isPlaying ? <FaPause size={18} /> : <FaPlay size={18} />}
+              {isPlaying ? <FaPause /> : <FaPlay />}
+            </button>
+
+            <button onClick={playNext}>
+              <FaForwardStep size={20} />
             </button>
 
             <button
-              onClick={playNext}
-              className="opacity-80 hover:opacity-100 transition"
+              onClick={toggleRepeatMode}
+              className={`transition ${
+                repeatMode !== "off"
+                  ? "text-violet-400"
+                  : "opacity-70"
+              }`}
             >
-              <FaForwardStep size={20} />
+              <FaRepeat />
             </button>
           </div>
         </div>

@@ -5,6 +5,9 @@ import { getLikedSongs } from "../api/like.api";
 import { getSongById, recordSongPlay } from "../api/song.api";
 import { fetchPlayableSong, toPlayableSong } from "../utils/song";
 
+/* =====================
+   HELPERS
+===================== */
 export const normalizeSongId = (song) => {
   const rawId =
     song?.id ??
@@ -31,61 +34,61 @@ const extractSongsFromResponse = (payload) => {
     payload?.likedSongs,
     payload,
   ];
-
   return sources.find(Array.isArray) || [];
 };
+
 const audio = new Audio();
 
+/* =====================
+   STORE
+===================== */
 const usePlayerStore = create((set, get) => ({
-  /* =====================
-     STATE
-     ===================== */
+  /* ===== STATE ===== */
   currentSong: null,
   queue: [],
   currentIndex: -1,
-  repeatMode: "off", // off | all | one
 
   isPlaying: false,
+  repeatMode: "off", // off | all | one
+  shuffle: false,
+  shuffleHistory: [],
+
   duration: 0,
   currentTime: 0,
-   hasRecordedPlay: false,
-  volume: 1,
+  hasRecordedPlay: false,
 
-  /* ===== LIKE ===== */
+  volume: 1,
+  muted: false,
+
   likedSongIds: [],
 
-  /* =====================
-     INTERNAL
-     ===================== */
+  /* ===== INTERNAL ===== */
   audio,
 
   /* =====================
-     ACTIONS – PLAYER
-     ===================== */
+     PLAYER CORE
+  ===================== */
 
   playSong: async (song, queue = []) => {
-    // console.log("playSong called with song:", song);
     const hydratedList = (queue.length ? queue : [song]).map((item) =>
       toPlayableSong(item)
-    
     );
+
     const targetIndex = hydratedList.findIndex(
       (s) => normalizeSongId(s) === normalizeSongId(song)
     );
 
     let playable = toPlayableSong(song);
-    console.log("Playable song after toPlayableSong:", playable);
     if (!playable.audio_url) {
       const fetched = await fetchPlayableSong(playable, getSongById);
       if (fetched) playable = fetched;
     }
-
     if (!playable?.audio_url) return;
 
     const targetId = normalizeSongId(playable);
     const updatedQueue = hydratedList.map((item) => {
       const id = normalizeSongId(item);
-      if (id && id === targetId) return { ...item, ...playable };
+      if (id === targetId) return { ...item, ...playable };
       if (!item.audio_url) return toPlayableSong(item);
       return item;
     });
@@ -100,11 +103,10 @@ const usePlayerStore = create((set, get) => ({
       currentIndex: targetIndex !== -1 ? targetIndex : 0,
       isPlaying: true,
       currentTime: 0,
-       hasRecordedPlay: false,
+      hasRecordedPlay: false,
+      shuffleHistory: [],
     });
-
   },
-
 
   pause: () => {
     audio.pause();
@@ -116,57 +118,145 @@ const usePlayerStore = create((set, get) => ({
     set({ isPlaying: true });
   },
 
+  togglePlay: () => {
+    const { isPlaying } = get();
+    isPlaying ? get().pause() : get().resume();
+  },
+
   seek: (time) => {
     audio.currentTime = time;
     set({ currentTime: time });
   },
-   recordListeningProgress: (durationSeconds) => {
-    const { currentSong, hasRecordedPlay } = get();
 
-    if (hasRecordedPlay) return;
+  /* =====================
+     SHUFFLE / NEXT / PREV
+  ===================== */
 
-    const duration = Math.floor(durationSeconds ?? audio.currentTime ?? 0);
-    const songId = normalizeSongId(currentSong);
+  toggleShuffle: () =>
+    set((s) => ({ shuffle: !s.shuffle, shuffleHistory: [] })),
 
-    if (!songId || !Number.isFinite(duration) || duration < 30) return;
-
-    set({ hasRecordedPlay: true });
-
-    recordSongPlay(songId, duration).catch((err) => {
-      console.error("Record listening history failed", err);
-      set({ hasRecordedPlay: false });
-    });
+  playAt: (index) => {
+    const { queue } = get();
+    const song = queue[index];
+    if (!song) return;
+    get().playSong(song, queue);
   },
- setVolume: (value) => {
-    const volume = Math.min(1, Math.max(0, value));
-    audio.volume = volume;
-    set({ volume });
-  },
+
   playNext: () => {
-      const { queue, currentIndex, repeatMode } = get();
+    const { queue, currentIndex, repeatMode, shuffle, shuffleHistory } = get();
     if (!queue.length) return;
 
-    if (currentIndex < queue.length - 1) {
-      get().playSong(queue[currentIndex + 1], queue);
-        } else if (repeatMode === "all") {
-      get().playSong(queue[0], queue);
+    let nextIndex = currentIndex;
+
+    if (shuffle) {
+      if (queue.length === 1) return;
+      do {
+        nextIndex = Math.floor(Math.random() * queue.length);
+      } while (nextIndex === currentIndex);
+
+      set({ shuffleHistory: [...shuffleHistory, currentIndex] });
+    } else {
+      nextIndex = currentIndex + 1;
     }
-    
+
+    if (nextIndex >= queue.length) {
+      if (repeatMode === "all") nextIndex = 0;
+      else return;
+    }
+
+    get().playSong(queue[nextIndex], queue);
   },
 
   playPrev: () => {
-    const { queue, currentIndex } = get();
+    const { shuffle, shuffleHistory, currentIndex, queue } = get();
+
+    if (shuffle && shuffleHistory.length) {
+      const prevIndex = shuffleHistory[shuffleHistory.length - 1];
+      set({ shuffleHistory: shuffleHistory.slice(0, -1) });
+      get().playSong(queue[prevIndex], queue);
+      return;
+    }
+
     if (currentIndex > 0) {
       get().playSong(queue[currentIndex - 1], queue);
     }
   },
 
-   toggleRepeatMode: () => {
+  toggleRepeatMode: () => {
     const order = ["off", "all", "one"];
     const current = get().repeatMode;
     const next = order[(order.indexOf(current) + 1) % order.length];
     audio.loop = next === "one";
     set({ repeatMode: next });
+  },
+
+  /* =====================
+     VOLUME
+  ===================== */
+
+  setVolume: (value) => {
+    const volume = Math.min(1, Math.max(0, value));
+    audio.volume = volume;
+    set({ volume });
+  },
+
+  toggleMute: () => {
+    audio.muted = !audio.muted;
+    set({ muted: audio.muted });
+  },
+
+  /* =====================
+     QUEUE
+  ===================== */
+
+  addToQueue: (songs) => {
+    const list = Array.isArray(songs) ? songs : [songs];
+    set((state) => {
+      const ids = new Set(
+        state.queue.map((s) => normalizeSongId(s)).filter(Boolean)
+      );
+      const newItems = list.filter(
+        (s) => !ids.has(normalizeSongId(s))
+      );
+      return { queue: [...state.queue, ...newItems] };
+    });
+  },
+
+  removeFromQueue: (index) =>
+    set((state) => {
+      if (index === state.currentIndex) {
+        get().playNext();
+      }
+      return {
+        queue: state.queue.filter((_, i) => i !== index),
+      };
+    }),
+
+  clearQueue: () =>
+    set({
+      queue: [],
+      currentSong: null,
+      currentIndex: -1,
+      isPlaying: false,
+    }),
+
+  /* =====================
+     HISTORY
+  ===================== */
+
+  recordListeningProgress: (durationSeconds) => {
+    const { currentSong, hasRecordedPlay } = get();
+    if (hasRecordedPlay) return;
+
+    const duration = Math.floor(durationSeconds ?? audio.currentTime ?? 0);
+    const songId = normalizeSongId(currentSong);
+
+    if (!songId || duration < 30) return;
+
+    set({ hasRecordedPlay: true });
+    recordSongPlay(songId, duration).catch(() =>
+      set({ hasRecordedPlay: false })
+    );
   },
 
   loadLastPlayed: async () => {
@@ -175,20 +265,13 @@ const usePlayerStore = create((set, get) => ({
     try {
       const res = await getMyHistory({ limit: 1 });
       const payload = res?.data?.data ?? res?.data ?? {};
-      const items = Array.isArray(payload)
-        ? payload
-        : payload?.items ?? payload?.data ?? [];
+      const items = payload?.items ?? payload ?? [];
 
-      const lastSong = toPlayableSong(items[0]);
-
-      if (!lastSong?.id) return;
-
-      let playable = lastSong;
-      if (!playable.audio_url) {
+      let playable = toPlayableSong(items[0]);
+      if (!playable?.audio_url) {
         const fetched = await fetchPlayableSong(playable, getSongById);
         if (fetched) playable = fetched;
       }
-
       if (!playable?.audio_url) return;
 
       audio.src = playable.audio_url;
@@ -200,29 +283,22 @@ const usePlayerStore = create((set, get) => ({
         currentIndex: 0,
         isPlaying: false,
         currentTime: 0,
-         hasRecordedPlay: false,
+        hasRecordedPlay: false,
       });
     } catch (err) {
       console.error("Load last played song failed", err);
     }
   },
-  
+
   /* =====================
-     ACTIONS – LIKE (BACKEND)
-     ===================== */
+     LIKE
+  ===================== */
 
   loadLikedSongs: async () => {
     try {
-         const res = await getLikedSongs();
+      const res = await getLikedSongs();
       const songs = extractSongsFromResponse(res);
-
-      const ids = [
-        ...new Set(
-          songs
-            .map((s) => normalizeSongId(s))
-            .filter((id) => id !== null && id !== "")
-        ),
-      ];
+      const ids = [...new Set(songs.map(normalizeSongId).filter(Boolean))];
       set({ likedSongIds: ids });
     } catch (err) {
       console.error("Load liked songs error", err);
@@ -236,7 +312,6 @@ const usePlayerStore = create((set, get) => ({
     const { likedSongIds } = get();
     const isLiked = likedSongIds.includes(targetId);
 
-    // optimistic update
     set({
       likedSongIds: isLiked
         ? likedSongIds.filter((id) => id !== targetId)
@@ -244,78 +319,42 @@ const usePlayerStore = create((set, get) => ({
     });
 
     try {
-      if (isLiked) {
-        await api.delete(`/songs/${targetId}/like`);
-      } else {
-        await api.post(`/songs/${targetId}/like`);
-      }
-    } catch (err) {
-      console.error("Toggle like error", err);
-      // rollback
+      isLiked
+        ? await api.delete(`/songs/${targetId}/like`)
+        : await api.post(`/songs/${targetId}/like`);
+    } catch {
       set({ likedSongIds });
     }
-  },
-  
-  /* =====================
-     ACTIONS – QUEUE
-     ===================== */
-
-  addToQueue: (songs) => {
-    const list = Array.isArray(songs) ? songs : [songs];
-
-    set((state) => {
-      const existingIds = new Set(
-        state.queue
-          .map((s) => normalizeSongId(s))
-          .filter((id) => id !== null)
-      );
-
-      const newItems = list.filter((item) => {
-        const id = normalizeSongId(item);
-        return id && !existingIds.has(id);
-      });
-
-      return { queue: [...state.queue, ...newItems] };
-    });
   },
 }));
 
 /* =====================
    AUDIO EVENTS
-   ===================== */
+===================== */
 audio.addEventListener("loadedmetadata", () => {
-  usePlayerStore.setState({
-    duration: audio.duration || 0,
-  });
+  usePlayerStore.setState({ duration: audio.duration || 0 });
 });
 
 audio.addEventListener("timeupdate", () => {
-   const currentTime = audio.currentTime || 0;
+  const time = audio.currentTime || 0;
   const state = usePlayerStore.getState();
 
-  if (!state.hasRecordedPlay && currentTime >= 30) {
-    state.recordListeningProgress(currentTime);
+  if (!state.hasRecordedPlay && time >= 30) {
+    state.recordListeningProgress(time);
   }
-  usePlayerStore.setState({
-    currentTime,
-  });
+  usePlayerStore.setState({ currentTime: time });
 });
 
 audio.addEventListener("ended", () => {
- const state = usePlayerStore.getState();
+  const state = usePlayerStore.getState();
   if (state.repeatMode === "one") {
     audio.currentTime = 0;
     audio.play();
     return;
   }
-
-  const { queue, currentIndex } = state;
-  if (currentIndex < queue.length - 1 || state.repeatMode === "all") {
-    state.playNext();
-  } else {
-    state.pause();
-    audio.currentTime = 0;
-  }
+  state.playNext();
 });
+
 audio.volume = usePlayerStore.getState().volume ?? 1;
+
 export default usePlayerStore;

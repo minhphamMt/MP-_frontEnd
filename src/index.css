@@ -65,6 +65,21 @@ body {
   will-change: transform, opacity;
   backface-visibility: hidden;
 }
+/* ================= PLAYER DETAIL ANIMATION ================= */
+
+.player-detail-anim-in {
+  animation-name: player-detail-slide-in;
+  animation-duration: var(--player-detail-anim-ms, 450ms);
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: forwards;
+}
+
+.player-detail-anim-out {
+  animation-name: player-detail-slide-out;
+  animation-duration: var(--player-detail-anim-ms, 450ms);
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: forwards;
+}
 
 @keyframes player-detail-slide-in {
   from {
@@ -88,17 +103,44 @@ body {
   }
 }
 
-.player-detail-anim-in {
-  animation-name: player-detail-slide-in;
-  animation-duration: 5s;        /* 👈 thêm */
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-  animation-fill-mode: forwards;
+/* Cover disc spin when playing */
+@keyframes player-detail-disc-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
-.player-detail-anim-out {
-  animation-name: player-detail-slide-out;
-  animation-duration: 5s;        /* 👈 thêm */
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-  animation-fill-mode: forwards;
+.player-detail-disc-playing {
+  animation: player-detail-disc-spin 12s linear infinite;
+}
+
+/* ===== song switch slide ===== */
+@keyframes song-slide-from-right {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes song-slide-from-left {
+  from {
+    transform: translateX(-40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.song-slide-next {
+  animation: song-slide-from-right 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.song-slide-prev {
+  animation: song-slide-from-left 380ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
