@@ -61,12 +61,20 @@ export default function SearchBox() {
 
     setLoading(true);
     try {
-      const res = await searchEntities({ keyword: trimmed, limit: 8 });
+       const res = await searchEntities({ q: trimmed, limit: 8, page: 1 });
       const payload = res?.data?.data ?? res?.data ?? {};
-      const items = Array.isArray(payload)
-        ? payload
-        : payload?.items ?? res?.data?.items ?? [];
-      const normalized = (items || []).map((item) => ({
+      const items = payload?.items ?? payload;
+      const songs = Array.isArray(items?.songs) ? items.songs : [];
+      const artists = Array.isArray(items?.artists) ? items.artists : [];
+      const albums = Array.isArray(items?.albums) ? items.albums : [];
+
+      const merged = [
+        ...songs.map((item) => ({ ...item, type: "song" })),
+        ...artists.map((item) => ({ ...item, type: "artist" })),
+        ...albums.map((item) => ({ ...item, type: "album" })),
+      ];
+
+      const normalized = merged.map((item) => ({
         ...item,
         displayLabel:
           item.highlight?.display_name ||
@@ -89,9 +97,7 @@ export default function SearchBox() {
           item.image,
       }));
 
-      const entities = normalized.filter((item) => item.type && item.type !== "keyword");
-
-      setResults(entities);
+      setResults(normalized);
     } catch (err) {
       console.error("Search suggestions error", err);
       setResults([]);
@@ -126,17 +132,12 @@ useEffect(() => {
   }, []);
 
 const handleSubmit = (e) => {
-  e.preventDefault();
-  const value = keyword.trim();
-  if (!value) return;
-
-  fetchSuggestions(value);
-  setOpen(true);
-
-  // ✅ CLEAR INPUT
-  setKeyword("");
-};
-
+    e.preventDefault();
+    const value = keyword.trim();
+    if (!value) return;
+    navigate(`/search?q=${encodeURIComponent(value)}`);
+    setOpen(false);
+  };
 
 const handleResultNavigate = async (item) => {
   if (!item) return;
@@ -261,7 +262,7 @@ const handleResultNavigate = async (item) => {
                   </div>
                 )}
 
-                <div className="space-y-1">
+                <div className="max-h-80 space-y-1 overflow-y-auto pr-1">
                   {results.map((item) => (
                     <div
                       key={`${item.type}-${item.id}`}
@@ -322,7 +323,7 @@ const handleResultNavigate = async (item) => {
                     Bạn chưa có lịch sử tìm kiếm.
                   </div>
                 )}
-                <div className="space-y-1">
+                <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
                   {history.map((item) => {
                     const createdAt = item.createdAt || item.created_at;
 
