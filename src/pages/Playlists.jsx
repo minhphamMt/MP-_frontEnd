@@ -110,6 +110,20 @@ export default function Playlists() {
   );
 }, []);
 
+useEffect(() => {
+  setShowAllLikedSongs(
+    typeof likedSongsPreviewLimit === "number" &&
+      likedSongs.length > likedSongsPreviewLimit
+  );
+}, [likedSongs.length, likedSongsPreviewLimit]);
+useEffect(() => {
+  setLikedSongs((prev) =>
+    (prev || []).filter((song) => {
+      const id = normalizeSongId(song);
+      return id && likedSongIds.includes(id);
+    })
+  );
+}, [likedSongIds]);
 
 useEffect(() => {
   if (!artistListRef.current) return;
@@ -131,8 +145,6 @@ useEffect(() => {
 
   return () => observer.disconnect();
 }, [calculateVisibleCount, followedArtists.length]);
-
-
 
 useEffect(() => {
   if (!albumListRef.current) return;
