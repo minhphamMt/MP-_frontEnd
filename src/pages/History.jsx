@@ -96,11 +96,7 @@ export default function History() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
- const {
-  playSong,
-  likedSongIds,
-  toggleLike,
-} = usePlayerStore();
+  const { playSong, likedSongIds, toggleLike } = usePlayerStore();
 
 
   /* =======================
@@ -183,7 +179,7 @@ export default function History() {
      ======================= */
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] p-6">
+      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
         <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           Đang tải lịch sử...
         </div>
@@ -193,9 +189,14 @@ export default function History() {
 
   if (!history.length) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] p-6">
+      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
         <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-          <h1 className="text-2xl font-bold text-white">Nghe gần đây</h1>
+          <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
+            Thói quen
+          </p>
+          <h1 className="mt-1 text-2xl font-bold text-white">
+            Nghe gần đây
+          </h1>
           <div className="mt-2 text-sm text-white/60">
             Bạn chưa nghe bài hát nào.
           </div>
@@ -208,26 +209,33 @@ export default function History() {
      UI
      ======================= */
   return (
-    <div className="min-h-screen space-y-6 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+    <div className="min-h-screen space-y-8 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
       {/* HEADER */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
-            Thói quen
-          </p>
-          <h1 className="text-3xl font-bold text-white">Nghe gần đây</h1>
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)] backdrop-blur">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
+              Thói quen
+            </p>
+            <h1 className="mt-1 text-3xl font-extrabold text-white">
+              Nghe gần đây
+            </h1>
+            <p className="mt-2 text-sm text-white/60">
+              Lịch sử phát gần đây của bạn.
+            </p>
+          </div>
+          <button
+            onClick={loadHistory}
+            className="rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-cyan-400/30 transition hover:shadow-cyan-300/50"
+          >
+            Làm mới
+          </button>
         </div>
-        <button
-          onClick={loadHistory}
-          className="rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-cyan-400/30 transition hover:shadow-cyan-300/50"
-        >
-          Làm mới
-        </button>
       </div>
 
       {/* TABLE */}
-      <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
- <div className="grid grid-cols-[3fr_2fr_2fr_1fr_48px_48px_1fr] gap-3 bg-white/5 px-5 py-3 text-[11px] uppercase tracking-[0.16em] text-white/60">
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#1c132d] via-[#130f27] to-[#0b1424] shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur">
+        <div className="grid grid-cols-[3fr_2fr_2fr_1fr_48px_48px_1fr] gap-3 bg-white/5 px-5 py-3 text-[11px] uppercase tracking-[0.16em] text-white/60">
           <div>Bài hát</div>
           <div>Album</div>
           <div>Nghệ sĩ</div>
@@ -276,7 +284,7 @@ export default function History() {
               <div className="text-sm text-white/70">
                 {formatDuration(item.duration)}
               </div>
-                 <div className="flex justify-center">
+              <div className="flex justify-center">
                 <AddToPlaylistButton
                   song={item}
                   triggerClassName="h-9 w-9 !border-white/20 !bg-white/10 hover:!bg-white/20"

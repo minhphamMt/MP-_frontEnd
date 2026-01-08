@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 
 import Login from "../pages/Login";
@@ -12,7 +12,8 @@ import History from "../pages/History";
 import ZingChart from "../pages/ZingChart";
 import RegionChart from "../pages/RegionChart";
 import NewRelease from "../pages/NewRelease";
-import Top100 from "../pages/Top100";
+import Top50Genres from "../pages/Top50Genres";
+import Top50GenreDetail from "../pages/Top50GenreDetail";
 import Playlists from "../pages/Playlists";
 import PlaylistDetail from "../pages/PlaylistDetail";
 import Albums from "../pages/Albums";
@@ -49,7 +50,9 @@ export default function AppRoutes() {
           <Route path="/zing-chart" element={<ZingChart />} />
            <Route path="/zing-chart/region/:region" element={<RegionChart />} />
           <Route path="/new-release" element={<NewRelease />} />
-          <Route path="/top-100" element={<Top100 />} />
+          <Route path="/top-50" element={<Top50Genres />} />
+          <Route path="/top-50/:id" element={<Top50GenreDetail />} />
+          <Route path="/top-100" element={<Navigate to="/top-50" replace />} />
           <Route path="/playlists" element={<Playlists />} />
           <Route path="/playlists/:id" element={<PlaylistDetail />} />
             <Route

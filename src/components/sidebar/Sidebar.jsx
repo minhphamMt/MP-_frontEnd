@@ -54,9 +54,9 @@ export default function Sidebar() {
             label="BXH nhạc mới"
           />
           <SidebarItem
-            to="/top-100"
+            to="/top-50"
             icon={MdLibraryMusic}
-            label="Top 100"
+            label="Top 50"
           />
         </SidebarSection>
 
