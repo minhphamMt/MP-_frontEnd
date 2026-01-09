@@ -7,6 +7,7 @@ import { fetchPlayableSong, toPlayableSong } from "../../utils/song";
 import usePlayerStore from "../../store/player.store";
 import { saveSearchHistory } from "../../api/search.api";
 import useAuthStore from "../../store/auth.store";
+import { createPortal } from "react-dom";
 
 export default function SearchBox() {
   const location = useLocation();
@@ -26,6 +27,38 @@ export default function SearchBox() {
     const params = new URLSearchParams(location.search);
     return params.get("q") || params.get("keyword") || "";
   }, [location.search]);
+const [dropdownStyle, setDropdownStyle] = useState(null);
+
+useEffect(() => {
+  if (!open) return;
+
+  const update = () => {
+    const el = containerRef.current; // wrapper của SearchBox
+    if (!el) return;
+
+    const rect = el.getBoundingClientRect();
+    const gap = 12; // giống mt-3
+
+    setDropdownStyle({
+      position: "fixed",
+      left: rect.left,
+      top: rect.bottom + gap,
+      width: rect.width,
+      zIndex: 9999,
+    });
+  };
+
+  update();
+
+  // Update khi scroll/resize (kể cả scroll trong container)
+  window.addEventListener("resize", update);
+  window.addEventListener("scroll", update, true);
+
+  return () => {
+    window.removeEventListener("resize", update);
+    window.removeEventListener("scroll", update, true);
+  };
+}, [open, keyword]); // keyword đổi có thể làm height input/layout thay đổi nhẹ
 
   useEffect(() => {
     setKeyword(defaultKeyword);
@@ -238,7 +271,7 @@ const handleResultNavigate = async (item) => {
   };
 
   return (
-    <div className="relative z-50 w-full max-w-lg" ref={containerRef}>
+    <div className="relative z-500 w-full max-w-lg" ref={containerRef}>
       <form onSubmit={handleSubmit} className="relative" key={defaultKeyword}>
         <FiSearch
           className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-cyan-200"
@@ -259,126 +292,152 @@ const handleResultNavigate = async (item) => {
         />
       </form>
 
-      {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-3 rounded-2xl border border-cyan-500/15 bg-[#0b1530] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
-          <div className="rounded-xl border border-white/5 bg-[#0f1f3f] p-4 shadow-inner shadow-black/20">
-            <div className="flex items-center justify-between text-sm text-white/70">
-              <div className="font-semibold text-white">Tìm kiếm nhanh</div>
-              {keyword.trim() && (
-                <div className="text-xs uppercase tracking-[0.2em] text-cyan-200">"{keyword}"</div>
-              )}
-              {!keyword.trim() && <div className="text-xs text-white/50">Nhấn từ khóa để xem gợi ý</div>}
-            </div>
-
-            {keyword.trim() ? (
-              <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-[#122449] p-3">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/60">
-                  <FiHeadphones className="text-pink-200" />
-                  <span>Gợi ý kết quả</span>
-                  {loading && <span className="text-[11px] text-cyan-200/80">Đang tìm...</span>}
-                </div>
-
-                {!loading && !results.length && (
-                  <div className="rounded-lg border border-white/10 bg-[#0b1b38] px-3 py-2 text-sm text-white/70">
-                    Không tìm thấy gợi ý phù hợp.
-                  </div>
-                )}
-
-                <div className="max-h-80 space-y-1 overflow-y-auto pr-1">
-                  {results.map((item) => (
-                    <div
-                      key={`${item.type}-${item.id}`}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white transition hover:bg-[#0c1c38]"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => handleResultNavigate(item)}
-                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                      >
-                        <div className="relative h-12 w-12 overflow-hidden rounded-lg border border-white/10 bg-gradient-to-br from-[#1b2c54] via-[#13264a] to-[#0f1f3f]">
-                          {item.cover ? (
-                            <img
-                              src={item.cover}
-                              alt={item.displayLabel || item.name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-lg text-white/70">
-                              {resultIcon(item.type)}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate font-semibold">
-                            {renderHighlighted(item.displayLabel || item.name || item.title)}
-                          </div>
-                          {renderSecondary(item)}
-                        </div>
-                      </button>
-
-                      <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.15em] text-white/60">
-                        <span className="rounded-full bg-[#0b1b38] px-2 py-1 text-white/70">{item.type}</span>
-                        {item.type === "song" && (
-                          <button
-                            type="button"
-                            onClick={() => handlePlaySong(item)}
-                            className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-400/50 bg-cyan-400/15 text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-400/25"
-                          >
-                            <FiMusic />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+{open &&
+  dropdownStyle &&
+  createPortal(
+    <div style={dropdownStyle} className="px-0">
+      <div className="rounded-2xl border border-cyan-500/15 bg-[#0b1530] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
+        <div className="rounded-xl border border-white/5 bg-[#0f1f3f] p-4 shadow-inner shadow-black/20">
+          <div className="flex items-center justify-between text-sm text-white/70">
+            <div className="font-semibold text-white">Tìm kiếm nhanh</div>
+            {keyword.trim() && (
+              <div className="text-xs uppercase tracking-[0.2em] text-cyan-200">
+                "{keyword}"
               </div>
-            ) : (
-              <div className="mt-3 space-y-3 rounded-xl border border-white/10 bg-[#122449] p-3">
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/60">
-                  <FiClock />
-                  <span>Lịch sử tìm kiếm</span>
-                  {loading && <span className="text-[11px] text-cyan-200/80">Đang tải...</span>}
-                </div>
-                {!history.length && (
-                  <div className="rounded-lg border border-white/10 bg-[#0b1b38] px-3 py-2 text-sm text-white/70">
-                    Bạn chưa có lịch sử tìm kiếm.
-                  </div>
-                )}
-                <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
-                  {history.map((item) => {
-                    const createdAt = item.searched_at || item.createdAt || item.created_at;
-
-                    return (
-                      <button
-                        type="button"
-                        key={item.id || item.keyword}
-                       onClick={() => {
-  setKeyword(item.keyword);
-  fetchSuggestions(item.keyword);
-  setOpen(true);
-}}
-
-                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white transition hover:bg-[#0c1c38]"
-                      >
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0b1b38] text-cyan-200">
-                          <FiClock />
-                        </div>
-                        <div className="flex-1 truncate">{item.keyword}</div>
-                        {createdAt && (
-                          <span className="text-[11px] text-white/40">
-                            {new Date(createdAt).toLocaleDateString("vi-VN")}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+            )}
+            {!keyword.trim() && (
+              <div className="text-xs text-white/50">
+                Nhấn từ khóa để xem gợi ý
               </div>
             )}
           </div>
+
+          {keyword.trim() ? (
+            <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-[#122449] p-3">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/60">
+                <FiHeadphones className="text-pink-200" />
+                <span>Gợi ý kết quả</span>
+                {loading && (
+                  <span className="text-[11px] text-cyan-200/80">
+                    Đang tìm...
+                  </span>
+                )}
+              </div>
+
+              {!loading && !results.length && (
+                <div className="rounded-lg border border-white/10 bg-[#0b1b38] px-3 py-2 text-sm text-white/70">
+                  Không tìm thấy gợi ý phù hợp.
+                </div>
+              )}
+
+              <div className="max-h-80 space-y-1 overflow-y-auto pr-1">
+                {results.map((item) => (
+                  <div
+                    key={`${item.type}-${item.id}`}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white transition hover:bg-[#0c1c38]"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleResultNavigate(item)}
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    >
+                      <div className="relative h-12 w-12 overflow-hidden rounded-lg border border-white/10 bg-gradient-to-br from-[#1b2c54] via-[#13264a] to-[#0f1f3f]">
+                        {item.cover ? (
+                          <img
+                            src={item.cover}
+                            alt={item.displayLabel || item.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-lg text-white/70">
+                            {resultIcon(item.type)}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-semibold">
+                          {renderHighlighted(
+                            item.displayLabel || item.name || item.title
+                          )}
+                        </div>
+                        {renderSecondary(item)}
+                      </div>
+                    </button>
+
+                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.15em] text-white/60">
+                      <span className="rounded-full bg-[#0b1b38] px-2 py-1 text-white/70">
+                        {item.type}
+                      </span>
+                      {item.type === "song" && (
+                        <button
+                          type="button"
+                          onClick={() => handlePlaySong(item)}
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-400/50 bg-cyan-400/15 text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-400/25"
+                        >
+                          <FiMusic />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="mt-3 space-y-3 rounded-xl border border-white/10 bg-[#122449] p-3">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/60">
+                <FiClock />
+                <span>Lịch sử tìm kiếm</span>
+                {loading && (
+                  <span className="text-[11px] text-cyan-200/80">
+                    Đang tải...
+                  </span>
+                )}
+              </div>
+
+              {!history.length && (
+                <div className="rounded-lg border border-white/10 bg-[#0b1b38] px-3 py-2 text-sm text-white/70">
+                  Bạn chưa có lịch sử tìm kiếm.
+                </div>
+              )}
+
+              <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
+                {history.map((item) => {
+                  const createdAt =
+                    item.searched_at || item.createdAt || item.created_at;
+
+                  return (
+                    <button
+                      type="button"
+                      key={item.id || item.keyword}
+                      onClick={() => {
+                        setKeyword(item.keyword);
+                        fetchSuggestions(item.keyword);
+                        setOpen(true);
+                      }}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white transition hover:bg-[#0c1c38]"
+                    >
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0b1b38] text-cyan-200">
+                        <FiClock />
+                      </div>
+                      <div className="flex-1 truncate">{item.keyword}</div>
+                      {createdAt && (
+                        <span className="text-[11px] text-white/40">
+                          {new Date(createdAt).toLocaleDateString("vi-VN")}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
+    </div>,
+    document.body
+  )}
+
     </div>
   );
 }
