@@ -14,6 +14,7 @@ export default function SearchBox() {
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const containerRef = useRef(null);
+  const dropdownRef = useRef(null);
   const [keyword, setKeyword] = useState("");
   const [results, setResults] = useState([]);
   const [history, setHistory] = useState([]);
@@ -160,38 +161,51 @@ useEffect(() => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setOpen(false);
+       const target = event.target;
+      if (
+        containerRef.current?.contains(target) ||
+        dropdownRef.current?.contains(target)
+      ) {
+        return;
       }
+       setOpen(false);
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    const value = keyword.trim();
-    if (!value) return;
-    if (user?.id) {
-      try {
-        await saveSearchHistory(value, user.id);
-        setHistory((prev) => {
-          const normalized = value.toLowerCase();
-          const filtered = prev.filter(
-            (item) => (item.keyword || "").toLowerCase() !== normalized
-          );
-          return [
-            { keyword: value, searched_at: new Date().toISOString() },
-            ...filtered,
-          ].slice(0, 6);
-        });
-      } catch (err) {
-        console.error("Lưu lịch sử tìm kiếm thất bại", err);
+const handleSearch = useCallback(
+    async (rawValue) => {
+      const value = rawValue.trim();
+      if (!value) return;
+      setKeyword(value);
+      if (user?.id) {
+        try {
+          await saveSearchHistory(value, user.id);
+          setHistory((prev) => {
+            const normalized = value.toLowerCase();
+            const filtered = prev.filter(
+              (item) => (item.keyword || "").toLowerCase() !== normalized
+            );
+            return [
+              { keyword: value, searched_at: new Date().toISOString() },
+              ...filtered,
+            ].slice(0, 6);
+          });
+        } catch (err) {
+          console.error("Lưu lịch sử tìm kiếm thất bại", err);
+        }
       }
-    }
     navigate(`/search?q=${encodeURIComponent(value)}`);
-    setOpen(false);
+      setOpen(false);
+    },
+    [navigate, user?.id]
+  );
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleSearch(keyword);
   };
 
 const handleResultNavigate = async (item) => {
@@ -295,7 +309,7 @@ const handleResultNavigate = async (item) => {
 {open &&
   dropdownStyle &&
   createPortal(
-    <div style={dropdownStyle} className="px-0">
+     <div style={dropdownStyle} className="px-0" ref={dropdownRef}>
       <div className="rounded-2xl border border-cyan-500/15 bg-[#0b1530] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
         <div className="rounded-xl border border-white/5 bg-[#0f1f3f] p-4 shadow-inner shadow-black/20">
           <div className="flex items-center justify-between text-sm text-white/70">
@@ -410,11 +424,7 @@ const handleResultNavigate = async (item) => {
                     <button
                       type="button"
                       key={item.id || item.keyword}
-                      onClick={() => {
-                        setKeyword(item.keyword);
-                        fetchSuggestions(item.keyword);
-                        setOpen(true);
-                      }}
+                       onClick={() => handleSearch(item.keyword || "")}
                       className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white transition hover:bg-[#0c1c38]"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0b1b38] text-cyan-200">

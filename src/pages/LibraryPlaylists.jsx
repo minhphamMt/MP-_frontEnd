@@ -66,7 +66,7 @@ export default function LibraryPlaylists() {
               Thư viện
             </p>
             <h1 className="text-3xl font-extrabold text-white">
-              Tất cả playlist
+              Playlist đã tạo
             </h1>
             <p className="text-sm text-white/60">
               {playlists.length} playlist đã tạo
@@ -83,13 +83,21 @@ export default function LibraryPlaylists() {
         </div>
       </div>
 
-      <section>
-        <PlaylistGrid
-          playlists={playlists}
-          loading={loading}
-          totalCount={playlists.length}
-          onOpen={(pl) => pl?.id && navigate(`/playlists/${pl.id}`)}
-        />
+      <section className="space-y-4">
+        {loading ? (
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+            Đang tải playlist...
+          </div>
+        ) : playlists.length ? (
+          <PlaylistGrid
+            playlists={playlists}
+            onOpen={(pl) => pl?.id && navigate(`/playlists/${pl.id}`)}
+          />
+        ) : (
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+            Bạn chưa tạo playlist nào.
+          </div>
+        )}
       </section>
     </div>
   );
