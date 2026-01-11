@@ -89,6 +89,18 @@ const useAuthStore = create((set, get) => ({
     set({ accessToken: token });
     persistAuthState(nextState);
   },
+  updateUser: (user) => {
+    const currentState = get();
+    const nextState = {
+      ...currentState,
+      user,
+      role: user?.role || currentState.role || null,
+      isAuthenticated: Boolean(user && currentState.accessToken),
+    };
+
+    set(nextState);
+    persistAuthState(nextState);
+  },
 
   /* ===== LOGIN ===== */
   login: async ({ email, password }) => {

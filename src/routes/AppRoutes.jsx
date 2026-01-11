@@ -23,6 +23,7 @@ import LikedAlbums from "../pages/LikedAlbums";
 import LibraryPlaylists from "../pages/LibraryPlaylists";
 import LikedSongs from "../pages/LikedSongs";
 import Search from "../pages/Search";
+import Profile from "../pages/Profile";
 
 /* ===== DASHBOARD ===== */
 const ArtistDashboard = () => (
@@ -67,7 +68,7 @@ export default function AppRoutes() {
           <Route path="/history" element={<History />} />
           <Route path="/search" element={<Search />} />
           <Route path="/song/:id" element={<SongDetail />} />
-
+          <Route path="/me" element={<Profile />} />
           {/* 🔴 PUBLIC CONTENT */}
           <Route path="/artist/:id" element={<ArtistDetail />} />
           <Route path="/album/:id" element={<AlbumDetail />} />

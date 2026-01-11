@@ -7,7 +7,7 @@ import {
 } from "react-icons/md";
 import { FaChartLine } from "react-icons/fa";
 import { BsHeartFill, BsMusicNoteList } from "react-icons/bs";
-import { FiX } from "react-icons/fi";
+import { FiUser, FiX } from "react-icons/fi";
 import SidebarItem from "./SidebarItem";
 import SidebarSection from "./SidebarSection";
 
@@ -113,6 +113,7 @@ export default function Sidebar({ isOpen, onClose }) {
             label="Album đã thích"
           />
         </SidebarSection>
+        
       </div>
 
       {/* Fade dưới để ăn nhập PlayerBar */}
