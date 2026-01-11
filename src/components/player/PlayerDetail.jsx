@@ -430,8 +430,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
 
           {/* BUTTONS */}
-         <div className="mt-8 relative flex flex-col items-center gap-6 lg:flex-row">
-            <div className="flex items-center justify-center gap-10 mt-8 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
+         <div className="mt-10 ml-14 relative flex flex-col items-center  lg:flex-row">
+            <div className="flex  items-center justify-center gap-8 mt-8 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
             <button
               onClick={toggleShuffle}
               className={`transition ${
