@@ -66,7 +66,7 @@ export default function RegionChart() {
         <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
           Bảng xếp hạng
         </p>
-        <h1 className="mt-1 text-3xl font-extrabold text-white">
+        <h1 className="mt-1 text-2xl font-extrabold text-white sm:text-3xl">
           {config.title}
         </h1>
         <p className="mt-2 text-sm text-white/60">

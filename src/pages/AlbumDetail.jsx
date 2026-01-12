@@ -131,7 +131,7 @@ export default function AlbumDetail() {
               <p className="mb-2 text-xs uppercase tracking-[0.35em] text-white/50">
                 Album
               </p>
-              <h1 className="text-3xl font-extrabold leading-tight text-white">
+              <h1 className="text-2xl font-extrabold leading-tight text-white sm:text-3xl">
                 {album.title}
               </h1>
                {artistDisplayName && (

@@ -148,7 +148,7 @@ const renderBioHtml = (bio = "") => {
               <p className="mb-2 text-xs uppercase tracking-[0.35em] text-white/50">
                 Nghệ sĩ
               </p>
-              <h1 className="text-3xl font-extrabold leading-tight text-white">
+              <h1 className="text-2xl font-extrabold leading-tight text-white sm:text-3xl">
                 {artist?.name}
               </h1>
                 {artist?.alias && artist.alias !== artist.name && (

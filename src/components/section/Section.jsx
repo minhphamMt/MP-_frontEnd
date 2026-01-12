@@ -16,7 +16,7 @@ export default function Section({ title, subtitle, action, children }) {
           <div className="flex items-center gap-3">
             {/* Accent bar */}
             <div className="h-8 w-1 rounded-full bg-gradient-to-b from-violet-400 via-fuchsia-400 to-cyan-300 shadow-[0_0_14px_rgba(56,189,248,0.55)]" />
-            <h2 className="text-2xl font-bold text-white drop-shadow-sm">
+             <h2 className="text-xl font-bold text-white drop-shadow-sm sm:text-2xl">
               {title}
             </h2>
           </div>

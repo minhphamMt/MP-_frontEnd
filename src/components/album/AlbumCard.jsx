@@ -40,21 +40,17 @@ export default function AlbumCard({ album }) {
   return (
     <div
       onClick={() => navigate(`/album/${album.id}`)}
-      className="group relative w-44 shrink-0 cursor-pointer overflow-hidden rounded-2xl sm:w-52  
-      border border-white/10 
-      bg-gradient-to-br from-white/5 via-white/0 to-white/5 
-      p-3 
-      shadow-[0_20px_60px_rgba(0,0,0,0.45)] 
-      backdrop-blur 
-      transition-all duration-300 
-       hover:shadow-[0_30px_80px_rgba(56,189,248,0.25)]"
+      className="group relative w-40 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-white/10
+      bg-gradient-to-br from-white/5 via-white/0 to-white/5 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)]
+      backdrop-blur transition-all duration-300 hover:shadow-[0_30px_80px_rgba(56,189,248,0.25)]
+      sm:w-44 sm:p-4 lg:w-52"
     >
       {/* glow nền */}
       <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
 
       {/* COVER */}
-        <div className="relative w-full overflow-hidden rounded-xl">
+         <div className="relative w-full overflow-hidden rounded-xl">
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -72,9 +68,8 @@ export default function AlbumCard({ album }) {
         <img
           src={album.cover_url}
           alt={album.title}
-          className="h-40 w-full rounded-xl object-cover sm:h-44 
-          transition-transform duration-500 
-          group-hover:scale-[1.05]"
+         className="h-36 w-full rounded-xl object-cover transition-transform duration-500 group-hover:scale-[1.05]
+          sm:h-40 lg:h-44"
         />
 
         {/* overlay gradient */}
@@ -112,12 +107,12 @@ export default function AlbumCard({ album }) {
           Album
         </div>
 
-        <h3 className="truncate text-base font-semibold text-white drop-shadow-sm">
+         <h3 className="truncate text-sm font-semibold text-white drop-shadow-sm sm:text-base">
           {album.title}
         </h3>
 
-        <div className="flex items-center gap-2 text-sm text-white/70">
-          <FiMusic className="text-violet-300 shrink-0" />
+       <div className="flex items-center gap-2 text-xs text-white/70 sm:text-sm">
+          <FiMusic className="shrink-0 text-violet-300" />
           <span className="truncate">
             {album.artist_name || album.artist?.name || ""}
           </span>

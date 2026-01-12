@@ -93,7 +93,7 @@ export default function Search() {
           <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
             Kết quả tìm kiếm
           </p>
-          <h1 className="text-3xl font-semibold text-white">
+          <h1 className="text-2xl font-semibold text-white sm:text-3xl">
             {keyword ? `“${keyword}”` : "Nhập từ khóa để tìm kiếm"}
           </h1>
           <p className="text-sm text-white/60">

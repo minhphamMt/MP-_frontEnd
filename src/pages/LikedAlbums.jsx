@@ -60,7 +60,7 @@ export default function LikedAlbums() {
             <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
               Thư viện
             </p>
-            <h1 className="text-3xl font-extrabold text-white">
+            <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
               Album đã thích
             </h1>
             <p className="text-sm text-white/60">
@@ -84,7 +84,7 @@ export default function LikedAlbums() {
             Đang tải album yêu thích...
           </div>
         ) : likedAlbums.length ? (
-          <div className="flex flex-wrap gap-5">
+          <div className="flex flex-wrap gap-4 sm:gap-5">
             {likedAlbums.map((album) => (
               <AlbumCard key={album.id || album.title} album={album} />
             ))}

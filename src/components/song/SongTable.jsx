@@ -103,9 +103,9 @@ export default function SongTable({
   }
 
   const rankingStyle = (order) => {
-    if (order === 1) return "text-3xl font-black text-amber-300";
-    if (order === 2) return "text-3xl font-black text-sky-200";
-    if (order === 3) return "text-3xl font-black text-rose-200";
+    if (order === 1) return "text-2xl font-black text-amber-300 sm:text-3xl";
+    if (order === 2) return "text-2xl font-black text-sky-200 sm:text-3xl";
+    if (order === 3) return "text-2xl font-black text-rose-200 sm:text-3xl";
     return "text-lg font-semibold text-white/60";
   };
 

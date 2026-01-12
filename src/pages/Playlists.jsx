@@ -409,7 +409,7 @@ setToastTitle("Thành công");
               <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
                 Thư viện
               </p>
-              <h1 className="text-3xl font-extrabold text-white">
+               <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
                 Playlist của bạn
               </h1>
               <p className="text-sm text-white/60">
@@ -420,12 +420,12 @@ setToastTitle("Thành công");
 
           <form
             onSubmit={handleCreatePlaylist}
-            className="flex flex-wrap items-center gap-2"
+             className="flex w-full flex-wrap items-center gap-2 sm:w-auto"
           >
             <input
               value={creatingName}
               onChange={(e) => setCreatingName(e.target.value)}
-              className="w-64 rounded-full bg-white/10 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-green-400/60"
+              className="w-full rounded-full bg-white/10 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-green-400/60 sm:w-64"
               placeholder="Tên playlist mới"
             />
             <button
@@ -481,7 +481,7 @@ setToastTitle("Thành công");
         ) : likedAlbums.length ? (
           <div
             ref={albumListRef}
-            className="flex flex-nowrap gap-5 overflow-hidden"
+            className="flex flex-nowrap gap-4 overflow-x-auto pr-4 scrollbar-hidden sm:gap-5"
           >
            {visibleAlbums.map((album) => (
               <AlbumCard key={album.id || album.title} album={album} />
@@ -514,7 +514,7 @@ setToastTitle("Thành công");
         ) : playlists.length ? (
           <div
             ref={playlistListRef}
-            className="flex flex-nowrap gap-5 overflow-hidden pb-2"
+            className="flex flex-nowrap gap-4 overflow-x-auto pb-2 pr-4 scrollbar-hidden sm:gap-5"
           >
            {visiblePlaylists.map((playlist) => (
               <PlaylistCard

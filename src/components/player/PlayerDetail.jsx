@@ -282,7 +282,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
               )}
             </div>
 
-            <h2 className="mt-6 text-3xl font-semibold text-center">
+             <h2 className="mt-6 text-2xl font-semibold text-center sm:text-3xl">
               {currentSong.title}
             </h2>
             <p className="mt-1 text-sm opacity-70 text-center">

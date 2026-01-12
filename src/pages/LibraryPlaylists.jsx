@@ -65,7 +65,7 @@ export default function LibraryPlaylists() {
             <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
               Thư viện
             </p>
-            <h1 className="text-3xl font-extrabold text-white">
+             <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
               Playlist đã tạo
             </h1>
             <p className="text-sm text-white/60">
