@@ -7,6 +7,15 @@ export default function UserMenu() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const displayName = user?.display_name || user?.email || "User";
+  const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
+const resolveAvatarUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  return `${API_BASE_URL}${url}`;
+};
+
   return (
     <div className="relative">
       {/* Avatar */}
@@ -19,10 +28,11 @@ export default function UserMenu() {
       >
         {user?.avatar_url ? (
           <img
-            src={user.avatar_url}
-            alt={displayName}
-            className="h-full w-full object-cover"
-          />
+  src={resolveAvatarUrl(user.avatar_url)}
+  alt={displayName}
+  className="h-full w-full object-cover"
+/>
+
         ) : (
           <span>{displayName.charAt(0).toUpperCase()}</span>
         )}

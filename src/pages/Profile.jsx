@@ -7,8 +7,21 @@ import {
   FiUser,
 } from "react-icons/fi";
 import Toast from "../components/common/Toast";
-import { getCurrentUser, updateUserPassword, updateUserProfile } from "../api/user.api";
+import {
+  getCurrentUser,
+  updateUserPassword,
+  updateUserProfile,
+  uploadUserAvatar,
+} from "../api/user.api";
 import useAuthStore from "../store/auth.store";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
+const resolveAvatarUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  return `${API_BASE_URL}${url}`;
+};
 
 const emptyProfile = {
   display_name: "",
@@ -27,6 +40,7 @@ export default function Profile() {
   });
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [loadingPassword, setLoadingPassword] = useState(false);
+  const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [toast, setToast] = useState({ title: "", message: "" });
 
   useEffect(() => {
@@ -79,22 +93,6 @@ export default function Profile() {
 
   const maxAvatarLength = 480;
 
-  const compressAvatar = async (file) => {
-    const image = await createImageBitmap(file);
-    const maxSize = 256;
-    const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
-    const width = Math.round(image.width * scale);
-    const height = Math.round(image.height * scale);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
-
-    ctx.drawImage(image, 0, 0, width, height);
-    return canvas.toDataURL("image/webp", 0.7);
-  };
 
   const handleAvatarUpload = async (event) => {
     const file = event.target.files?.[0];
@@ -107,31 +105,35 @@ export default function Profile() {
       });
       return;
     }
-
+    setLoadingAvatar(true);
     try {
-      const dataUrl = await compressAvatar(file);
-      if (!dataUrl) {
-        throw new Error("Không thể xử lý ảnh");
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const res = await uploadUserAvatar(formData);
+      const payload = res.data?.data || res.data;
+      const avatarUrl = payload?.avatar_url;
+      const updatedUser = payload?.user;
+
+      if (avatarUrl) {
+        setProfile((prev) => ({ ...prev, avatar_url: avatarUrl }));
       }
-      if (dataUrl.length > maxAvatarLength) {
-        setToast({
-          title: "Ảnh vẫn quá lớn",
-          message:
-            "Ảnh sau khi nén vẫn dài. Hãy chọn ảnh nhỏ hơn hoặc dùng URL ảnh.",
-        });
-        setProfile((prev) => ({ ...prev, avatar_url: "" }));
-        return;
+      if (updatedUser) {
+        updateUser(updatedUser);
       }
 
-      setProfile((prev) => ({
-        ...prev,
-        avatar_url: dataUrl,
-      }));
+      setToast({
+        title: "Tải ảnh thành công",
+        message: "Ảnh đại diện đã được cập nhật.",
+      });
     } catch (error) {
       setToast({
         title: "Tải ảnh thất bại",
-        message: error?.message || "Không thể xử lý ảnh đã chọn.",
+        message: error?.response?.data?.message || error?.message || "Có lỗi xảy ra",
       });
+       } finally {
+      setLoadingAvatar(false);
+      event.target.value = "";
     }
   };
 
@@ -230,10 +232,11 @@ export default function Profile() {
             <div className="relative h-16 w-16 overflow-hidden rounded-full border border-white/10 bg-white/10">
               {profile.avatar_url ? (
                 <img
-                  src={profile.avatar_url}
+                  src={resolveAvatarUrl(profile.avatar_url)}
                   alt={profile.display_name || "User avatar"}
                   className="h-full w-full object-cover"
                 />
+
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-xl font-semibold text-white/70">
                   {(profile.display_name || authUser?.email || "U")
@@ -306,7 +309,7 @@ export default function Profile() {
               </label>
             </div>
 
-            <label className="space-y-2 text-sm text-white/70">
+            {/* <label className="space-y-2 text-sm text-white/70">
               <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
                 <FiCamera className="text-violet-300" /> Avatar URL
               </span>
@@ -319,7 +322,7 @@ export default function Profile() {
               <p className="text-xs text-white/45">
                 Dán đường dẫn ảnh để cập nhật avatar của bạn.
               </p>
-            </label>
+            </label> */}
 
             <label className="space-y-2 text-sm text-white/70">
               <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
@@ -330,10 +333,11 @@ export default function Profile() {
                   type="file"
                   accept="image/*"
                   onChange={handleAvatarUpload}
+                  disabled={loadingAvatar}
                   className="w-full rounded-2xl border border-dashed border-white/20 bg-white/5 px-4 py-3 text-sm text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 file:transition hover:border-white/30 hover:bg-white/10"
                 />
                 <span className="text-xs text-white/50">
-                  Ảnh sẽ được nén nhỏ (webp 256px) để tránh link quá dài.
+                  Ảnh sẽ được tải lên máy chủ và cập nhật ngay lập tức.
                 </span>
               </div>
             </label>
