@@ -256,7 +256,9 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 <img
                   src={cover}
                   alt={currentSong.title}
-                  className="h-full w-full object-cover"
+                  className={`h-full w-full object-cover ${
+                    isPlaying ? "player-detail-disc-playing" : ""
+                  }`}
                 />
               )}
             </div>
@@ -347,7 +349,14 @@ export default function PlayerDetail({ isOpen, onClose }) {
                   : "text-white/60"
               }`}
             >
-              <FaRepeat />
+              <span className="relative inline-flex">
+                <FaRepeat />
+                {repeatMode === "one" && (
+                  <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold text-white">
+                    1
+                  </span>
+                )}
+              </span>
             </button>
           </div>
         </div>
@@ -452,77 +461,6 @@ export default function PlayerDetail({ isOpen, onClose }) {
                       {s.artist?.name || s.artist_name || ""}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
- <div className="mt-6 flex flex-col gap-6 lg:hidden">
-          <div>
-            <div className="mb-3 text-xs tracking-widest opacity-60">
-              ĐÃ PHÁT
-            </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hidden">
-              {played.length ? (
-                played.map((s, idx) => {
-                  const sCover = s.cover || s.cover_url || s.image;
-                  const realIndex = queue.findIndex((q) => q === s);
-                  return (
-                    <button
-                      key={s.id || idx}
-                      type="button"
-                      onClick={() => playAt(realIndex)}
-                      className="w-28 flex-shrink-0 text-left"
-                    >
-                      <div className="h-24 w-24 overflow-hidden rounded-xl bg-white/10 shadow-lg">
-                        {sCover && (
-                          <img
-                            src={sCover}
-                            alt={s.title}
-                            className="h-full w-full object-cover"
-                          />
-                        )}
-                      </div>
-                      <div className="mt-2 text-xs font-semibold line-clamp-1">
-                        {s.title}
-                      </div>
-                    </button>
-                  );
-                })
-              ) : (
-                <div className="text-xs opacity-50">Chưa có bài trước đó</div>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <div className="mb-3 text-xs tracking-widest opacity-60">
-              TIẾP THEO
-            </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hidden">
-              {upcoming.map((s, idx) => {
-                const sCover = s.cover || s.cover_url || s.image;
-                const realIndex = queue.findIndex((q) => q === s);
-                return (
-                  <button
-                    key={s.id || idx}
-                    type="button"
-                    onClick={() => playAt(realIndex)}
-                    className="w-28 flex-shrink-0 text-left"
-                  >
-                    <div className="h-24 w-24 overflow-hidden rounded-xl bg-white/10 shadow-lg">
-                      {sCover && (
-                        <img
-                          src={sCover}
-                          alt={s.title}
-                          className="h-full w-full object-cover"
-                        />
-                      )}
-                    </div>
-                    <div className="mt-2 text-xs font-semibold line-clamp-1">
-                      {s.title}
-                    </div>
-                  </button>
                 );
               })}
             </div>

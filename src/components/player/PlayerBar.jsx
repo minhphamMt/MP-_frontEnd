@@ -13,7 +13,7 @@ import {
 } from "react-icons/hi2";
 import { RiRepeat2Fill } from "react-icons/ri";
 import { useState } from "react";
-import usePlayerStore from "../../store/player.store";
+import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import PlayerDetail from "./PlayerDetail";
 
 const formatTime = (t = 0) =>
@@ -21,7 +21,6 @@ const formatTime = (t = 0) =>
 
 export default function PlayerBar() {
   const [showDetail, setShowDetail] = useState(false);
-  const [liked, setLiked] = useState(false); // 👉 mock like state
 
   const {
     currentSong,
@@ -39,6 +38,8 @@ export default function PlayerBar() {
     toggleMute,
     setVolume,
     toggleRepeatMode,
+    likedSongIds,
+    toggleLike,
   } = usePlayerStore();
 
   if (!currentSong) {
@@ -55,6 +56,7 @@ export default function PlayerBar() {
 
   const volumePercent = Math.round((volume ?? 0) * 100);
   const displayVolumePercent = muted ? 0 : volumePercent;
+  const volumeGradient = `linear-gradient(to right, #a78bfa ${displayVolumePercent}%, rgba(255,255,255,0.2) ${displayVolumePercent}%)`;
 
   const handleVolumeChange = (value) => {
     const next = Math.round(Number(value));
@@ -94,13 +96,20 @@ export default function PlayerBar() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setLiked(!liked);
+              const songId = normalizeSongId(currentSong);
+              if (songId) toggleLike(songId);
             }}
             className={`text-lg transition ${
-              liked ? "text-pink-400" : "text-white/70"
+              likedSongIds.includes(normalizeSongId(currentSong))
+                ? "text-pink-400"
+                : "text-white/70"
             }`}
           >
-            {liked ? <HiHeart /> : <HiOutlineHeart />}
+            {likedSongIds.includes(normalizeSongId(currentSong)) ? (
+              <HiHeart />
+            ) : (
+              <HiOutlineHeart />
+            )}
           </button>
 
           {/* Play / Pause */}
@@ -205,9 +214,6 @@ export default function PlayerBar() {
 
           {/* RIGHT */}
           <div className="flex w-1/3 items-center justify-end gap-4">
-            <button className="text-white/70 hover:text-white">
-              <HiOutlineQueueList />
-            </button>
 
             <button
               onClick={() => setShowDetail(true)}
@@ -224,7 +230,14 @@ export default function PlayerBar() {
                   : "text-white/70"
               }
             >
-              <RiRepeat2Fill />
+              <span className="relative inline-flex">
+                <RiRepeat2Fill />
+                {repeatMode === "one" && (
+                  <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold text-white">
+                    1
+                  </span>
+                )}
+              </span>
             </button>
 
             <div className="flex items-center gap-2 min-w-[140px]">
@@ -245,6 +258,9 @@ export default function PlayerBar() {
                 value={displayVolumePercent}
                 onChange={(e) => handleVolumeChange(e.target.value)}
                 className="player-slider flex-1"
+                style={{
+                  background: volumeGradient,
+                }}
               />
             </div>
           </div>
