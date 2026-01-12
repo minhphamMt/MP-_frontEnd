@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FiPlay, FiPause, FiHeart, FiPlus, FiList } from "react-icons/fi";
+import { FiPlay, FiPause, FiHeart, FiList } from "react-icons/fi";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { formatDuration, fetchPlayableSong } from "../../utils/song";
 import { getSongById } from "../../api/song.api";
@@ -12,6 +12,8 @@ export default function SongTable({
   loading,
   onRefresh,
   headerActions,
+  hideQueueAction = false,
+  hidePlayOnMobile = false,
 }) {
   const {
     playSong,
@@ -194,7 +196,9 @@ export default function SongTable({
                         e.stopPropagation();
                         handlePlaySong(song, songs);
                       }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/10 transition hover:bg-white/20 sm:h-9 sm:w-9"
+                      className={`flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/10 transition hover:bg-white/20 sm:h-9 sm:w-9 ${
+                        hidePlayOnMobile ? "hidden sm:flex" : ""
+                      }`}
                     >
                       {isActive && isPlaying ? <FiPause /> : <FiPlay />}
                     </button>
@@ -204,15 +208,17 @@ export default function SongTable({
                       triggerClassName="h-8 w-8 !border-white/10 !bg-white/5 hover:!bg-white/15 sm:h-9 sm:w-9"
                     />
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToQueue(song);
-                      }}
-                       className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/15 sm:h-9 sm:w-9"
-                    >
-                      <FiList />
-                    </button>
+                    {!hideQueueAction && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToQueue(song);
+                        }}
+                         className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/15 sm:h-9 sm:w-9"
+                      >
+                        <FiList />
+                      </button>
+                    )}
 
                     <button
                       onClick={(e) => {

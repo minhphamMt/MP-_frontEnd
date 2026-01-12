@@ -14,8 +14,8 @@ export default function ArtistFollowSection({
   }));
 
   const layoutClassName = singleRow
-    ? "flex flex-nowrap justify-center gap-4 overflow-x-auto pr-4 scrollbar-hidden sm:justify-start sm:gap-5"
-    : "flex flex-wrap justify-center gap-4 sm:justify-start sm:gap-5";
+    ? "flex flex-nowrap justify-start gap-3 overflow-x-auto pr-4 scrollbar-hidden sm:gap-5"
+    : "flex flex-wrap justify-start gap-3 sm:gap-5";
 
   return (
     <>

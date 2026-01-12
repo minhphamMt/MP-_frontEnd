@@ -97,6 +97,8 @@ export default function Top50GenreDetail() {
         songs={songs}
         loading={loading}
         onRefresh={loadDetail}
+        hideQueueAction
+        hidePlayOnMobile
       />
     </div>
   );

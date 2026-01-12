@@ -248,7 +248,7 @@ const renderBioHtml = (bio = "") => {
 
       {/* ===== SONG LIST ===== */}
          <div className="overflow-x-auto rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)] scrollbar-muted">
-        <div className="min-w-[720px]">
+        <div className="min-w-0 sm:min-w-[720px]">
           {/* TABLE HEADER */}
           <div className="grid grid-cols-[60px_1fr_160px_140px_100px] items-center bg-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-white/60 sm:px-5">
             <span className="text-center">#</span>

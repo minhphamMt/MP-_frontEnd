@@ -53,6 +53,8 @@ export default function NewRelease() {
         songs={songs}
         loading={loading}
         onRefresh={loadChart}
+        hideQueueAction
+        hidePlayOnMobile
       />
     </div>
   );

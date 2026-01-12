@@ -487,7 +487,7 @@ setToastTitle("Thành công");
         ) : likedAlbums.length ? (
           <div
             ref={albumListRef}
-            className="flex flex-nowrap justify-center gap-4 overflow-x-auto pr-4 scrollbar-hidden sm:justify-start sm:gap-5"
+            className="flex flex-nowrap justify-start gap-3 overflow-x-auto pr-4 scrollbar-hidden sm:gap-5"
           >
            {visibleAlbums.map((album) => (
               <AlbumCard key={album.id || album.title} album={album} />

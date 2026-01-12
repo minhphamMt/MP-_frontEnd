@@ -84,7 +84,7 @@ export default function LikedAlbums() {
             Đang tải album yêu thích...
           </div>
         ) : likedAlbums.length ? (
-          <div className="flex flex-wrap gap-4 sm:gap-5">
+          <div className="flex flex-wrap items-start justify-start gap-3 sm:gap-5">
             {likedAlbums.map((album) => (
               <AlbumCard key={album.id || album.title} album={album} />
             ))}
