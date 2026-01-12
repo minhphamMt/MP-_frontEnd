@@ -9,7 +9,8 @@ import {
   FaVolumeHigh,
   FaVolumeXmark,
 } from "react-icons/fa6";
-import usePlayerStore from "../../store/player.store";
+import { FiChevronDown, FiMoreHorizontal, FiShare2, FiHeart } from "react-icons/fi";
+import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 
 /* ================= utils ================= */
 const formatTime = (sec = 0) => {
@@ -45,6 +46,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
     muted,
     setVolume,
     toggleMute,
+    likedSongIds,
+    toggleLike,
   } = usePlayerStore();
 
   /* ================= animation ================= */
@@ -188,7 +191,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
   /* ================= render ================= */
   return (
     <div
-      className={`player-detail-shell fixed inset-0 z-[999] text-white ${stableClass} ${animateClass}`}
+      className={`player-detail-shell fixed inset-0 z-[999] overflow-y-auto text-white ${stableClass} ${animateClass}`}
       style={{
         animationDuration: `${ANIM_MS}ms`,
         animationTimingFunction: ANIM_EASE,
@@ -218,15 +221,138 @@ export default function PlayerDetail({ isOpen, onClose }) {
       {/* CLOSE */}
       <button
         onClick={onClose}
-        className="absolute right-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xl transition hover:bg-white/20 sm:right-8 sm:top-6"
+        className="absolute right-4 top-4 z-50 hidden h-9 w-9 items-center justify-center rounded-full bg-white/10 text-lg transition hover:bg-white/20 sm:right-8 sm:top-6 sm:flex sm:h-10 sm:w-10 sm:text-xl"
       >
         ✕
       </button>
 
       {/* CONTENT */}
-           <div className="relative z-10 mx-auto flex min-h-[calc(100vh-120px)] w-[min(1280px,94vw)] flex-col justify-center pb-10 pt-8">
+           <div className="relative z-10 mx-auto flex min-h-[calc(100vh-160px)] w-[min(1280px,94vw)] flex-col justify-center pb-24 pt-6 sm:min-h-[calc(100vh-120px)] sm:pb-10 sm:pt-8">
+        <div className="flex flex-col gap-6 sm:hidden">
+          <div className="flex items-center justify-between text-lg">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/90"
+              aria-label="Đóng chi tiết"
+            >
+              <FiChevronDown />
+            </button>
+            <div className="truncate text-sm font-semibold uppercase tracking-[0.3em] text-white/70">
+              {currentSong.title}
+            </div>
+            <button
+              type="button"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/90"
+              aria-label="Tùy chọn"
+            >
+              <FiMoreHorizontal />
+            </button>
+          </div>
+
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-64 w-64 overflow-hidden rounded-full border border-white/20 bg-white/5 shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+              {cover && (
+                <img
+                  src={cover}
+                  alt={currentSong.title}
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </div>
+
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-white">
+                {currentSong.title}
+              </h2>
+              <p className="mt-1 text-sm text-white/70">
+                {currentSong.artist?.name ||
+                  currentSong.artist_name ||
+                  "Unknown"}
+              </p>
+            </div>
+
+            <div className="flex w-full items-center justify-between text-lg">
+              <button
+                type="button"
+                className="text-white/70"
+                aria-label="Chia sẻ"
+              >
+                <FiShare2 />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const songId = normalizeSongId(currentSong);
+                  if (songId) toggleLike(songId);
+                }}
+                className={`text-xl transition ${
+                  likedSongIds.includes(normalizeSongId(currentSong))
+                    ? "text-rose-300"
+                    : "text-white/70"
+                }`}
+                aria-label="Yêu thích"
+              >
+                <FiHeart />
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <input
+              type="range"
+              min={0}
+              max={total || 0}
+              step={0.1}
+              value={Math.min(displayedTime, total || 0)}
+              onMouseDown={onSeekStart}
+              onTouchStart={onSeekStart}
+              onChange={onSeekChange}
+              onMouseUp={onSeekCommit}
+              onTouchEnd={onSeekCommit}
+              className="h-2 w-full accent-violet-400"
+            />
+            <div className="flex items-center justify-between text-xs text-white/70">
+              <span>{formatTime(displayedTime)}</span>
+              <span>{formatTime(total)}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xl">
+            <button
+              onClick={toggleShuffle}
+              className={`transition ${
+                shuffle ? "text-violet-300" : "text-white/60"
+              }`}
+            >
+              <FaShuffle />
+            </button>
+            <button onClick={playPrev} className="text-white/80">
+              <FaBackwardStep />
+            </button>
+            <button
+              onClick={togglePlay}
+              className="flex h-16 w-16 items-center justify-center rounded-full border border-white/30 bg-white/10 text-2xl text-white"
+            >
+              {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
+            </button>
+            <button onClick={playNext} className="text-white/80">
+              <FaForwardStep />
+            </button>
+            <button
+              onClick={toggleRepeatMode}
+              className={`relative transition ${
+                repeatMode !== "off"
+                  ? "text-violet-300"
+                  : "text-white/60"
+              }`}
+            >
+              <FaRepeat />
+            </button>
+          </div>
+        </div>
         <div
-  className={`grid grid-cols-1 lg:grid-cols-[360px_520px_360px] gap-10 items-start ${songSlideClass}`}
+  className={`hidden grid-cols-1 lg:grid-cols-[360px_520px_360px] gap-10 items-start sm:grid ${songSlideClass}`}
 >
 
           {/* PLAYED */}
@@ -272,7 +398,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* MAIN */}
           <div className="flex flex-col items-center">
-            <div className="h-64 w-64 overflow-hidden rounded-2xl bg-white/5 shadow-[0_25px_70px_rgba(0,0,0,0.55)] sm:h-72 sm:w-72 lg:h-[360px] lg:w-[360px]">
+             <div className="h-56 w-56 overflow-hidden rounded-2xl bg-white/5 shadow-[0_25px_70px_rgba(0,0,0,0.55)] sm:h-72 sm:w-72 lg:h-[360px] lg:w-[360px]">
               {cover && (
                 <img
                   src={cover}
@@ -282,10 +408,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
               )}
             </div>
 
-             <h2 className="mt-6 text-2xl font-semibold text-center sm:text-3xl">
+               <h2 className="mt-4 text-xl font-semibold text-center sm:mt-6 sm:text-3xl">
               {currentSong.title}
             </h2>
-            <p className="mt-1 text-sm opacity-70 text-center">
+             <p className="mt-1 text-xs opacity-70 text-center sm:text-sm">
               {currentSong.artist?.name ||
                 currentSong.artist_name ||
                 "Unknown"}
@@ -331,7 +457,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             </div>
           </div>
         </div>
- <div className="mt-8 flex flex-col gap-6 lg:hidden">
+ <div className="mt-6 flex flex-col gap-6 lg:hidden">
           <div>
             <div className="mb-3 text-xs tracking-widest opacity-60">
               ĐÃ PHÁT
@@ -403,7 +529,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
         </div>
         {/* CONTROLS */}
-        <div className="mt-12">
+       <div className="mt-6 sm:mt-12">
           {/* SEEK */}
           <div className="flex items-center gap-4">
             <span className="w-10 text-right text-xs opacity-70">
@@ -430,8 +556,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
 
           {/* BUTTONS */}
-         <div className="mt-10 ml-14 relative flex flex-col items-center  lg:flex-row">
-            <div className="flex  items-center justify-center gap-8 mt-8 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
+         <div className="mt-6 relative flex flex-col items-center sm:mt-10 sm:ml-14 lg:flex-row">
+            <div className="flex items-center justify-center gap-6 sm:gap-8 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
             <button
               onClick={toggleShuffle}
               className={`transition ${
@@ -447,7 +573,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
             <button
               onClick={togglePlay}
-              className="h-14 w-14 rounded-full bg-violet-500 hover:bg-violet-400 shadow-xl flex items-center justify-center"
+              className="h-12 w-12 rounded-full bg-violet-500 hover:bg-violet-400 shadow-xl flex items-center justify-center sm:h-14 sm:w-14"
             >
               {isPlaying ? <FaPause /> : <FaPlay />}
             </button>
@@ -473,7 +599,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             </button>
              </div>
 
-            <div className="flex items-center gap-2 lg:absolute lg:right-0 mt-8">
+              <div className="hidden items-center gap-2 sm:flex lg:absolute lg:right-0">
               <button
                 onClick={toggleMute}
                 className="text-lg opacity-70 hover:opacity-100 transition"

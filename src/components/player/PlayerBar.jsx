@@ -1,15 +1,15 @@
 import {
   FaBackwardStep,
-  FaForwardStep,
   FaPause,
   FaPlay,
-  FaForwardStep as FaNext,
+  FaForwardStep,
 } from "react-icons/fa6";
 import {
-  HiOutlineArrowsPointingOut,
   HiOutlineQueueList,
   HiOutlineSpeakerWave,
   HiOutlineSpeakerXMark,
+  HiOutlineHeart,
+  HiHeart,
 } from "react-icons/hi2";
 import { RiRepeat2Fill } from "react-icons/ri";
 import { useState } from "react";
@@ -21,6 +21,8 @@ const formatTime = (t = 0) =>
 
 export default function PlayerBar() {
   const [showDetail, setShowDetail] = useState(false);
+  const [liked, setLiked] = useState(false); // 👉 mock like state
+
   const {
     currentSong,
     isPlaying,
@@ -39,52 +41,119 @@ export default function PlayerBar() {
     toggleRepeatMode,
   } = usePlayerStore();
 
-  const progress = duration ? Math.min(100, (currentTime / duration) * 100) : 0;
-  const volumePercent = Math.round((volume ?? 0) * 100);
-  const displayVolumePercent = muted ? 0 : volumePercent;
-
-  const handleVolumeChange = (value) => {
-    const next = Math.round(Number(value));
-    if (muted && next > 0) {
-      toggleMute();
-    }
-    setVolume(next / 100);
-  };
   if (!currentSong) {
     return (
-      <div className="flex h-auto items-center border-t border-white/10 bg-gradient-to-r from-[#140c26] via-[#120b22] to-[#0b0914] px-4 py-4 sm:h-24 sm:px-6 sm:py-0 backdrop-blur">
+      <div className="border-t border-white/10 bg-[#0b0914] px-4 py-3">
         <span className="text-sm text-white/60">Chưa phát bài nào</span>
       </div>
     );
   }
 
+  const progress = duration
+    ? Math.min(100, (currentTime / duration) * 100)
+    : 0;
+
+  const volumePercent = Math.round((volume ?? 0) * 100);
+  const displayVolumePercent = muted ? 0 : volumePercent;
+
+  const handleVolumeChange = (value) => {
+    const next = Math.round(Number(value));
+    if (muted && next > 0) toggleMute();
+    setVolume(next / 100);
+  };
+
   return (
     <>
-      <div className="relative border-t border-white/10 bg-gradient-to-r from-[#140c26] via-[#120b22] to-[#0b0914] px-4 py-4 sm:h-24 sm:px-6 sm:py-0 backdrop-blur">
-        {/* glow */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(167,139,250,0.15),transparent_40%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(56,189,248,0.15),transparent_40%)]" />
+      <div className="relative border-t border-white/10 bg-gradient-to-r from-[#140c26] via-[#120b22] to-[#0b0914] backdrop-blur">
 
-        <div className="relative flex h-full flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-          {/* LEFT */}
-          <div className="flex w-full min-w-0 items-center gap-3 sm:w-1/3">
-            <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-lg shadow-black/30">
-              {currentSong.cover_url ? (
-                <img
-                  src={currentSong.cover_url}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="h-full w-full bg-gradient-to-br from-purple-500/60 to-white/20" />
-              )}
+        {/* ================= MOBILE MINI PLAYER ================= */}
+        <div
+          className="relative flex items-center gap-3 px-3 py-2.5 sm:hidden"
+          onClick={() => setShowDetail(true)} // 👈 tap toàn bar để mở detail
+        >
+          {/* Cover */}
+          <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md bg-white/10">
+            <img
+              src={currentSong.cover_url}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          </div>
+
+          {/* Title + Artist */}
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-medium text-white">
+              {currentSong.title}
             </div>
+            <div className="truncate text-xs text-white/60">
+              {currentSong.artist_name}
+            </div>
+          </div>
 
+          {/* ❤️ Like */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setLiked(!liked);
+            }}
+            className={`text-lg transition ${
+              liked ? "text-pink-400" : "text-white/70"
+            }`}
+          >
+            {liked ? <HiHeart /> : <HiOutlineHeart />}
+          </button>
+
+          {/* Play / Pause */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              isPlaying ? pause() : resume();
+            }}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white"
+          >
+            {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
+          </button>
+
+          {/* Next */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              playNext();
+            }}
+            className="text-white/70"
+          >
+            <FaForwardStep />
+          </button>
+
+          {/* Progress bar (BOTTOM) */}
+          <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white/10">
+            <div
+              className="h-full transition-all"
+              style={{
+                width: `${progress}%`,
+                background:
+                  "linear-gradient(90deg, #a78bfa, #38bdf8, #22d3ee)",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* ================= DESKTOP FULL PLAYER ================= */}
+        <div className="hidden sm:flex h-24 items-center px-6">
+          {/* LEFT */}
+          <div className="flex w-1/3 items-center gap-3 min-w-0">
+            <div className="h-14 w-14 overflow-hidden rounded-xl bg-white/10">
+              <img
+                src={currentSong.cover_url}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            </div>
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-white">
+              <div className="truncate font-semibold text-white">
                 {currentSong.title}
               </div>
-              <div className="truncate text-xs text-white/60">
+              <div className="truncate text-sm text-white/60">
                 {currentSong.artist_name}
               </div>
             </div>
@@ -92,109 +161,76 @@ export default function PlayerBar() {
 
           {/* CENTER */}
           <div className="flex flex-1 flex-col items-center gap-2">
-            <div className="flex items-center gap-4 text-lg sm:gap-5">
+            <div className="flex items-center gap-5 text-lg">
               <button
                 onClick={playPrev}
-                className="p-2 text-white/70 transition hover:text-white"
-                aria-label="Bài trước"
+                className="text-white/70 hover:text-white"
               >
                 <FaBackwardStep />
               </button>
 
               <button
                 onClick={isPlaying ? pause : resume}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/10 text-base shadow-lg shadow-black/40 transition hover:scale-[1.05] hover:bg-white/15"
-                aria-label={isPlaying ? "Tạm dừng" : "Phát"}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white"
               >
                 {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
               </button>
 
               <button
                 onClick={playNext}
-                className="p-2 text-white/70 transition hover:text-white"
-                aria-label="Bài tiếp"
+                className="text-white/70 hover:text-white"
               >
-                <FaNext />
+                <FaForwardStep />
               </button>
             </div>
 
-            <div className="flex w-full items-center gap-3 text-[11px] text-white/60">
-              <span className="w-10 text-right sm:w-12">
+            <div className="flex w-full items-center gap-3 text-xs text-white/60">
+              <span className="w-10 text-right">
                 {formatTime(currentTime)}
               </span>
-
               <input
                 type="range"
                 min={0}
                 max={duration || 0}
-                step={0.01}
                 value={currentTime}
                 onChange={(e) => seek(Number(e.target.value))}
                 className="player-slider flex-1"
                 style={{
                   background: `linear-gradient(to right, #a78bfa ${progress}%, rgba(255,255,255,0.2) ${progress}%)`,
                 }}
-                aria-label="Thanh tiến trình"
               />
-
-              <span className="w-10 sm:w-12">{formatTime(duration)}</span>
+              <span className="w-10">{formatTime(duration)}</span>
             </div>
           </div>
 
           {/* RIGHT */}
-        <div className="flex w-full flex-wrap items-center justify-end gap-3 text-lg sm:w-1/3 sm:flex-nowrap sm:justify-end sm:gap-4">
-            <div className="flex items-center gap-3">
-              <button
-                className="hidden p-2 text-white/70 transition hover:text-white sm:inline-flex"
-                aria-label="Danh sách phát"
-              >
-                <HiOutlineQueueList />
-              </button>
+          <div className="flex w-1/3 items-center justify-end gap-4">
+            <button className="text-white/70 hover:text-white">
+              <HiOutlineQueueList />
+            </button>
 
-             <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation(); // ✅ chặn event lọt sang backdrop
-                  setShowDetail(true);
-                }}
-                onClick={(e) => e.stopPropagation()} // ✅ dự phòng
-                className="p-2 text-white/70 transition hover:text-white"
-                aria-label="Mở trang chi tiết"
-                title="Trang chi tiết"
-              >
-                <HiOutlineArrowsPointingOut />
-              </button>
+            <button
+              onClick={() => setShowDetail(true)}
+              className="text-white/70 hover:text-white"
+            >
+              <HiOutlineQueueList />
+            </button>
 
-              <button
-                onClick={toggleRepeatMode}
-                className={`relative hidden p-2 transition sm:inline-flex ${
-                  repeatMode !== "off"
-                    ? "text-violet-300 drop-shadow-[0_0_12px_rgba(167,139,250,0.6)]"
-                    : "text-white/70 hover:text-white"
-                }`}
-                aria-label="Lặp lại"
-                title={
-                  repeatMode === "all"
-                    ? "Lặp lại danh sách"
-                    : repeatMode === "one"
-                    ? "Lặp lại một bài"
-                    : "Tắt lặp lại"
-                }
-              >
-                <RiRepeat2Fill />
-                {repeatMode === "one" && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold text-white">
-                    1
-                  </span>
-                )}
-              </button>
-            </div>
+            <button
+              onClick={toggleRepeatMode}
+              className={
+                repeatMode !== "off"
+                  ? "text-violet-300"
+                  : "text-white/70"
+              }
+            >
+              <RiRepeat2Fill />
+            </button>
 
-            <div className="hidden min-w-[120px] flex-1 items-center gap-2 sm:flex sm:min-w-[160px] sm:flex-none">
+            <div className="flex items-center gap-2 min-w-[140px]">
               <button
                 onClick={toggleMute}
-                className="text-xl text-white/70 transition hover:text-white"
-                aria-label={muted ? "Bật âm lượng" : "Tắt âm lượng"}
+                className="text-white/70 hover:text-white"
               >
                 {muted || volumePercent === 0 ? (
                   <HiOutlineSpeakerXMark />
@@ -209,19 +245,16 @@ export default function PlayerBar() {
                 value={displayVolumePercent}
                 onChange={(e) => handleVolumeChange(e.target.value)}
                 className="player-slider flex-1"
-                style={{
-                  background: `linear-gradient(to right, #38bdf8 ${displayVolumePercent}%, rgba(255,255,255,0.2) ${displayVolumePercent}%)`,
-                }}
-                aria-label="Âm lượng"
               />
             </div>
           </div>
         </div>
       </div>
 
-      <PlayerDetail isOpen={showDetail} onClose={() => setShowDetail(false)} />
-
-
+      <PlayerDetail
+        isOpen={showDetail}
+        onClose={() => setShowDetail(false)}
+      />
     </>
   );
 }
