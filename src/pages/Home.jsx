@@ -186,7 +186,7 @@ export default function Home() {
      UI
      ======================= */
   return (
-    <div className="min-h-screen space-y-14 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+     <div className="min-h-screen space-y-8 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:space-y-14 sm:px-8">
       {/* ===== SONG RECOMMEND ===== */}
       <Section
         title="Gợi Ý Bài Hát"
@@ -194,13 +194,13 @@ export default function Home() {
         action={
           <button
             onClick={loadHome}
-            className="rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-2 text-[13px] font-semibold text-slate-950 shadow-lg shadow-cyan-400/30 transition hover:shadow-cyan-300/50"
+            className="rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 px-3 py-1.5 text-[12px] font-semibold text-slate-950 shadow-lg shadow-cyan-400/30 transition hover:shadow-cyan-300/50 sm:px-4 sm:py-2 sm:text-[13px]"
           >
             Làm mới
           </button>
         }
       >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-3">
           {songs.map((song) => (
             <SongCard key={song.id} song={song} queue={songs} />
           ))}
