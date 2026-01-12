@@ -269,20 +269,20 @@ const renderBioHtml = (bio = "") => {
                 <div
                   key={song.id}
                   onClick={() => playSong(song, songs)}
-                  className={`grid grid-cols-[60px_1fr_160px_140px_100px] items-center gap-3 px-4 py-3 cursor-pointer transition sm:px-5 ${
+                 className={`grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 cursor-pointer transition sm:grid-cols-[60px_1fr_160px_140px_100px] sm:gap-3 sm:px-5 ${
                     isActive
                       ? "bg-gradient-to-r from-white/10 via-white/5 to-transparent"
                       : "hover:bg-white/5"
                   }`}
                 >
                   {/* INDEX */}
-                  <div className="text-center text-sm font-semibold text-white/70">
+                 <div className="hidden text-center text-sm font-semibold text-white/70 sm:block">
                     {index + 1}
                   </div>
 
                   {/* SONG */}
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/30">
+                     <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/30 sm:h-12 sm:w-12">
                       <img
                         src={song.cover_url}
                         alt={song.title}
@@ -300,34 +300,34 @@ const renderBioHtml = (bio = "") => {
 
                     <div className="min-w-0">
                       <div
-                        className={`truncate font-semibold ${
+                         className={`truncate text-sm font-semibold sm:text-base ${
                           isActive ? "text-green-300" : "text-white"
                         }`}
                       >
                         {song.title}
                       </div>
-                      <div className="truncate text-xs text-white/60">
+                      <div className="hidden truncate text-xs text-white/60 sm:block">
                         {song.artist_name}
                       </div>
                     </div>
                   </div>
 
                   {/* ALBUM */}
-                  <div className="truncate text-center text-sm text-white/60">
+                  <div className="hidden truncate text-center text-sm text-white/60 sm:block">
                     {song.album_title || "Single"}
                   </div>
                   {/* ACTIONS */}
-                  <div className="flex items-center justify-center gap-2">
+                   <div className="flex items-center justify-end gap-2 sm:justify-center">
                     <AddToPlaylistButton
                       song={song}
-                      triggerClassName="h-9 w-9 !border-white/20 !bg-white/10 hover:!bg-white/20"
+                       triggerClassName="h-8 w-8 !border-white/20 !bg-white/10 hover:!bg-white/20 sm:h-9 sm:w-9"
                     />
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         if (songId) toggleLike(songId);
                       }}
-                      className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm transition ${
+                      className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm transition sm:h-9 sm:w-9 ${
                         isLiked
                           ? "border-rose-400/40 text-rose-300"
                           : "border-white/10 text-white/70 hover:bg-white/15"
@@ -338,7 +338,7 @@ const renderBioHtml = (bio = "") => {
                     </button>
                   </div>
                   {/* DURATION */}
-                  <div className="text-right text-sm text-white/60">
+                  <div className="hidden text-right text-sm text-white/60 sm:block">
                     {formatTime(song.duration)}
                   </div>
                 </div>

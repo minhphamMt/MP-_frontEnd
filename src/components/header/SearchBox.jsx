@@ -309,7 +309,11 @@ const handleResultNavigate = async (item) => {
 {open &&
   dropdownStyle &&
   createPortal(
-     <div style={dropdownStyle} className="px-0" ref={dropdownRef}>
+      <div
+        style={dropdownStyle}
+        className="max-h-[70vh] overflow-y-auto px-0 sm:max-h-none"
+        ref={dropdownRef}
+      >
       <div className="rounded-2xl border border-cyan-500/15 bg-[#0b1530] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
         <div className="rounded-xl border border-white/5 bg-[#0f1f3f] p-4 shadow-inner shadow-black/20">
           <div className="flex items-center justify-between text-sm text-white/70">

@@ -114,9 +114,9 @@ export default function SongTable({
       {renderHeader()}
 
       <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-white/5 scrollbar-muted">
-        <div className="min-w-[640px]">
+        <div className="min-w-0 sm:min-w-[640px]">
           {/* Header */}
-          <div className="grid grid-cols-[64px_1fr_220px_90px] px-3 py-3 text-[11px] uppercase tracking-[0.18em] text-white/50 sm:px-4">
+          <div className="hidden grid-cols-[64px_1fr_220px_90px] px-3 py-3 text-[11px] uppercase tracking-[0.18em] text-white/50 sm:grid sm:px-4">
             <span className="text-center">#</span>
             <span>Bài hát</span>
             <span className="text-center">Hành động</span>
@@ -135,20 +135,20 @@ export default function SongTable({
                 <div
                   key={song.id || index}
                   onClick={() => handlePlaySong(song, songs)}
-                  className={`group grid grid-cols-[64px_1fr_220px_90px] items-center gap-3 px-3 py-3 transition sm:px-4 ${
+                  className={`group grid grid-cols-[1fr_auto] items-center gap-2 px-3 py-3 transition sm:grid-cols-[64px_1fr_220px_90px] sm:gap-3 sm:px-4 ${
                     isActive
                       ? "bg-gradient-to-r from-cyan-400/10 via-white/5 to-transparent"
                       : "hover:bg-white/5"
                   }`}
                 >
                   {/* Rank */}
-                  <div className="text-center">
+                  <div className="hidden text-center sm:block">
                     <span className={rankingStyle(order)}>{order}</span>
                   </div>
 
                   {/* Song info */}
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="relative h-12 w-12 overflow-hidden rounded-lg">
+                    <div className="relative h-10 w-10 overflow-hidden rounded-lg sm:h-12 sm:w-12">
                       <img
                         src={song.cover_url}
                         alt={song.title}
@@ -163,13 +163,13 @@ export default function SongTable({
 
                     <div className="min-w-0">
                       <div
-                        className={`truncate font-semibold ${
+                        className={`truncate text-sm font-semibold sm:text-base ${
                           isActive ? "text-cyan-300" : "text-white"
                         }`}
                       >
                         {song.title}
                       </div>
-                      <div className="truncate text-xs text-white/60">
+                      <div className="hidden truncate text-xs text-white/60 sm:block">
                         {song.artist_name}
                         {song.album_id && song.album_title && (
                           <>
@@ -188,20 +188,20 @@ export default function SongTable({
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center justify-center gap-2">
+                   <div className="flex items-center justify-end gap-2 sm:justify-center">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handlePlaySong(song, songs);
                       }}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 transition hover:bg-white/20"
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/10 transition hover:bg-white/20 sm:h-9 sm:w-9"
                     >
                       {isActive && isPlaying ? <FiPause /> : <FiPlay />}
                     </button>
 
                     <AddToPlaylistButton
                       song={song}
-                      triggerClassName="h-9 w-9 !border-white/10 !bg-white/5 hover:!bg-white/15"
+                      triggerClassName="h-8 w-8 !border-white/10 !bg-white/5 hover:!bg-white/15 sm:h-9 sm:w-9"
                     />
 
                     <button
@@ -209,7 +209,7 @@ export default function SongTable({
                         e.stopPropagation();
                         addToQueue(song);
                       }}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/15"
+                       className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/15 sm:h-9 sm:w-9"
                     >
                       <FiList />
                     </button>
@@ -219,7 +219,7 @@ export default function SongTable({
                         e.stopPropagation();
                         toggleLike(songId);
                       }}
-                      className={`flex h-9 w-9 items-center justify-center rounded-full border transition ${
+                      className={`flex h-8 w-8 items-center justify-center rounded-full border transition sm:h-9 sm:w-9 ${
                         isLiked
                           ? "border-rose-400/40 text-rose-300"
                           : "border-white/10 text-white/70 hover:bg-white/15"
@@ -230,7 +230,7 @@ export default function SongTable({
                   </div>
 
                   {/* Duration */}
-                  <div className="text-right text-sm text-white/60 tabular-nums">
+                  <div className="hidden text-right text-sm text-white/60 tabular-nums sm:block">
                     {formatDuration(song.duration)}
                   </div>
                 </div>

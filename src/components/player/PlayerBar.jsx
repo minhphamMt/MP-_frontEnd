@@ -142,7 +142,7 @@ export default function PlayerBar() {
           </div>
 
           {/* RIGHT */}
-         <div className="flex w-full flex-wrap items-center justify-between gap-3 text-lg sm:w-1/3 sm:flex-nowrap sm:justify-end sm:gap-4">
+        <div className="flex w-full flex-wrap items-center justify-end gap-3 text-lg sm:w-1/3 sm:flex-nowrap sm:justify-end sm:gap-4">
             <div className="flex items-center gap-3">
               <button
                 className="hidden p-2 text-white/70 transition hover:text-white sm:inline-flex"
@@ -190,7 +190,7 @@ export default function PlayerBar() {
               </button>
             </div>
 
-            <div className="flex min-w-[120px] flex-1 items-center gap-2 sm:min-w-[160px] sm:flex-none">
+            <div className="hidden min-w-[120px] flex-1 items-center gap-2 sm:flex sm:min-w-[160px] sm:flex-none">
               <button
                 onClick={toggleMute}
                 className="text-xl text-white/70 transition hover:text-white"

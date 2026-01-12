@@ -23,7 +23,6 @@ import AlbumCard from "../components/album/AlbumCard";
 import PlaylistCard from "../components/playlists/PlaylistCard";
 import Toast from "../components/common/Toast";
 const getData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
-
 const extractSongsFromResponse = (payload) => {
   const sources = [
     payload?.data,
@@ -49,7 +48,14 @@ export default function Playlists() {
   const [toastMessage, setToastMessage] = useState("");
   const [toastTitle, setToastTitle] = useState("");
   const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
+  const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
+const resolveAvatarUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  return `${API_BASE_URL}${url}`;
+};
   const user = useAuthStore((s) => s.user);
   useEffect(() => {
   setLikedAlbums((prev) =>
@@ -396,7 +402,7 @@ setToastTitle("Thành công");
             <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-emerald-500 text-2xl font-bold text-slate-900 shadow-lg">
               {user?.avatar_url ? (
                 <img
-                  src={user.avatar_url}
+                  src={resolveAvatarUrl(user.avatar_url)}
                   alt={user.display_name}
                   className="h-full w-full object-cover"
                 />
@@ -481,7 +487,7 @@ setToastTitle("Thành công");
         ) : likedAlbums.length ? (
           <div
             ref={albumListRef}
-            className="flex flex-nowrap gap-4 overflow-x-auto pr-4 scrollbar-hidden sm:gap-5"
+            className="flex flex-nowrap justify-center gap-4 overflow-x-auto pr-4 scrollbar-hidden sm:justify-start sm:gap-5"
           >
            {visibleAlbums.map((album) => (
               <AlbumCard key={album.id || album.title} album={album} />
@@ -514,7 +520,7 @@ setToastTitle("Thành công");
         ) : playlists.length ? (
           <div
             ref={playlistListRef}
-            className="flex flex-nowrap gap-4 overflow-x-auto pb-2 pr-4 scrollbar-hidden sm:gap-5"
+            className="flex flex-nowrap justify-center gap-4 overflow-x-auto pb-2 pr-4 scrollbar-hidden sm:justify-start sm:gap-5"
           >
            {visiblePlaylists.map((playlist) => (
               <PlaylistCard
