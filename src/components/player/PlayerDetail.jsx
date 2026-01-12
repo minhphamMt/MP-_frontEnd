@@ -349,7 +349,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
                   : "text-white/60"
               }`}
             >
-              <span className="relative inline-flex">
+             <span className="relative inline-flex">
                 <FaRepeat />
                 {repeatMode === "one" && (
                   <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold text-white">
@@ -467,7 +467,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
         </div>
         {/* CONTROLS */}
-       <div className="mt-6 sm:mt-12">
+        <div className="mt-6 hidden sm:block sm:mt-12">
           {/* SEEK */}
           <div className="flex items-center gap-4">
             <span className="w-10 text-right text-xs opacity-70">

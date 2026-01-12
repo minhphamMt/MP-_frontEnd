@@ -70,7 +70,9 @@ export default function PlayerBar() {
 
         {/* ================= MOBILE MINI PLAYER ================= */}
         <div
-          className="relative flex items-center gap-3 px-3 py-2.5 sm:hidden"
+           className={`relative flex items-center gap-3 px-3 py-2.5 sm:hidden ${
+            showDetail ? "hidden" : ""
+          }`}
           onClick={() => setShowDetail(true)} // 👈 tap toàn bar để mở detail
         >
           {/* Cover */}
@@ -96,7 +98,7 @@ export default function PlayerBar() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              const songId = normalizeSongId(currentSong);
+             const songId = normalizeSongId(currentSong);
               if (songId) toggleLike(songId);
             }}
             className={`text-lg transition ${
