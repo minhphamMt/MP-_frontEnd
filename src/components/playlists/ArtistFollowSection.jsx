@@ -50,7 +50,7 @@ export default function ArtistFollowSection({
   return (
     <div
       ref={containerRef}
-      className="flex flex-wrap items-start justify-start gap-4 sm:gap-6"
+      className="grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 sm:gap-6"
     >
       {normalizedArtists.map((artist) => (
         <ArtistAlbumCard key={artist.artist_id} artist={artist} variant="grid" />

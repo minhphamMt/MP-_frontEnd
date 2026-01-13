@@ -51,7 +51,11 @@ title: s.title,
         backdrop-blur
         transition-all duration-300
         active:scale-[0.98]
-        ${isRail ? "p-3 shadow-[0_10px_28px_rgba(0,0,0,0.30)]" : "w-44 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)] sm:w-60 sm:p-4 lg:w-64"}
+        ${
+          isRail
+            ? "p-3 shadow-[0_10px_28px_rgba(0,0,0,0.30)]"
+            : "p-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)] sm:p-4"
+        }
         hover:shadow-[0_30px_80px_rgba(56,189,248,0.25)]
       `}
     >

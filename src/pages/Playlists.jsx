@@ -97,9 +97,10 @@ const resolveAvatarUrl = (url) => {
   const [artistVisibleCount, setArtistVisibleCount] = useState(0);
   const [albumVisibleCount, setAlbumVisibleCount] = useState(0);
   const [playlistVisibleCount, setPlaylistVisibleCount] = useState(0);
- const ARTIST_CARD_WIDTH = 240;
+  const ARTIST_CARD_WIDTH = 240;
   const ALBUM_CARD_WIDTH = 240;
   const PLAYLIST_CARD_WIDTH = 240;
+  const PREVIEW_ROWS = 2;
   const calculateVisibleCount = useCallback((node, fallbackWidth) => {
     if (!node) return 0;
     const styles = getComputedStyle(node);
@@ -199,38 +200,48 @@ useEffect(() => {
 }, [calculateVisibleCount, playlists.length]);
 
 
+ const artistPreviewCount = artistVisibleCount
+    ? artistVisibleCount * PREVIEW_ROWS
+    : 0;
+  const albumPreviewCount = albumVisibleCount
+    ? albumVisibleCount * PREVIEW_ROWS
+    : 0;
+  const playlistPreviewCount = playlistVisibleCount
+    ? playlistVisibleCount * PREVIEW_ROWS
+    : 0;
+
   useEffect(() => {
     setShowAllArtists(
-      artistVisibleCount > 0 && followedArtists.length > artistVisibleCount
+      artistPreviewCount > 0 && followedArtists.length > artistPreviewCount
     );
-     }, [artistVisibleCount, followedArtists.length]);
+    }, [artistPreviewCount, followedArtists.length]);
 
   useEffect(() => {
       setShowAllAlbums(
-      albumVisibleCount > 0 && likedAlbums.length > albumVisibleCount
+      albumPreviewCount > 0 && likedAlbums.length > albumPreviewCount
     );
-    }, [albumVisibleCount, likedAlbums.length]);
+    }, [albumPreviewCount, likedAlbums.length]);
 
   useEffect(() => {
     setShowAllPlaylists(
-      playlistVisibleCount > 0 && playlists.length > playlistVisibleCount
+       playlistPreviewCount > 0 && playlists.length > playlistPreviewCount
     );
-     }, [playlistVisibleCount, playlists.length]);
+  }, [playlistPreviewCount, playlists.length]);
 
   const visibleArtists = useMemo(() => {
-    if (!artistVisibleCount) return followedArtists;
-    return followedArtists.slice(0, artistVisibleCount);
-  }, [artistVisibleCount, followedArtists]);
+    if (!artistPreviewCount) return followedArtists;
+    return followedArtists.slice(0, artistPreviewCount);
+  }, [artistPreviewCount, followedArtists]);
 
   const visibleAlbums = useMemo(() => {
-    if (!albumVisibleCount) return likedAlbums;
-    return likedAlbums.slice(0, albumVisibleCount);
-  }, [albumVisibleCount, likedAlbums]);
+    if (!albumPreviewCount) return likedAlbums;
+    return likedAlbums.slice(0, albumPreviewCount);
+  }, [albumPreviewCount, likedAlbums]);
 
   const visiblePlaylists = useMemo(() => {
-    if (!playlistVisibleCount) return playlists;
-    return playlists.slice(0, playlistVisibleCount);
-  }, [playlistVisibleCount, playlists]);
+    if (!playlistPreviewCount) return playlists;
+    return playlists.slice(0, playlistPreviewCount);
+  }, [playlistPreviewCount, playlists]);
   const hydratePlaylist = useCallback(async (playlist) => {
     const normalized = {
       ...playlist,
@@ -448,8 +459,8 @@ setToastTitle("Thành công");
         </div>
       </div>
 
-  {/* ARTISTS */}
-       <section className="space-y-4 px-2 sm:px-0">
+      {/* ARTISTS */}
+      <section className="space-y-4 px-2 sm:px-0">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-white">Nghệ sĩ theo dõi</h2>
           {showAllArtists && (
@@ -464,7 +475,6 @@ setToastTitle("Thành công");
         </div>
         <ArtistFollowSection
           artists={visibleArtists}
-          singleRow
           containerRef={artistListRef}
         />
       </section>
@@ -490,10 +500,14 @@ setToastTitle("Thành công");
         ) : likedAlbums.length ? (
           <div
             ref={albumListRef}
-           className="grid grid-cols-2 justify-items-center gap-4 min-[420px]:grid-cols-3 sm:flex sm:flex-nowrap sm:justify-start sm:gap-6 sm:overflow-x-auto sm:px-2 scrollbar-hidden"
+           className="grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 sm:gap-6"
           >
            {visibleAlbums.map((album) => (
-              <AlbumCard key={album.id || album.title} album={album} />
+              <AlbumCard
+                key={album.id || album.title}
+                album={album}
+                variant="grid"
+              />
             ))}
           </div>
         ) : (
@@ -523,7 +537,7 @@ setToastTitle("Thành công");
         ) : playlists.length ? (
           <div
             ref={playlistListRef}
-            className="grid grid-cols-1 justify-items-center gap-4 min-[420px]:grid-cols-2 sm:flex sm:flex-nowrap sm:justify-start sm:gap-6 sm:overflow-x-auto sm:px-2"
+           className="grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 sm:gap-6"
           >
            {visiblePlaylists.map((playlist) => (
               <PlaylistCard

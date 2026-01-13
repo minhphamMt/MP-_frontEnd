@@ -122,7 +122,7 @@ export default function Search() {
 
       {!!artists.length && (
         <Section title="Nghệ sĩ" subtitle="Artists">
-          <div className="flex flex-wrap gap-6">
+           <div className="grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 sm:gap-6">
             {artists.map((artist) => (
               <ArtistAlbumCard
                 key={artist.artist_id}
@@ -135,9 +135,9 @@ export default function Search() {
 
       {!!albums.length && (
         <Section title="Album" subtitle="Albums">
-          <div className="flex flex-wrap gap-6">
+          <div className="grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 sm:gap-6">
             {albums.map((album) => (
-              <AlbumCard key={album.id} album={album} />
+              <AlbumCard key={album.id} album={album} variant="grid" />
             ))}
           </div>
         </Section>

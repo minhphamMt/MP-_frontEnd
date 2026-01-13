@@ -12,7 +12,7 @@ export default function PlaylistGrid({
       className={
         isRowLayout
            ? "flex gap-4 overflow-x-auto pb-2 sm:gap-5 scrollbar-hidden"
-          : "grid grid-cols-1 gap-4 justify-items-center min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 sm:gap-5 sm:justify-items-stretch"
+          : "grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 sm:gap-5"
       }
     >
       {playlists.map((pl) => {
@@ -28,7 +28,7 @@ export default function PlaylistGrid({
             className={`group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 text-left shadow-lg transition
               hover:border-white/20 hover:shadow-[0_25px_70px_rgba(0,0,0,0.6)]
               focus:outline-none ${
-                isRowLayout ? "w-40 shrink-0 sm:w-44 md:w-48" : ""
+                 isRowLayout ? "w-40 shrink-0 sm:w-44 md:w-48" : "w-full"
               }`}
           >
             <div className="relative aspect-square w-full overflow-hidden">

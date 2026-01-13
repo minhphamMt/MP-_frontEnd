@@ -6,13 +6,14 @@ import useAlbumLikeStore, {
 } from "../../store/album-like.store";
 import usePlayerStore from "../../store/player.store";
 
-export default function AlbumCard({ album }) {
+export default function AlbumCard({ album, variant = "rail" }) {
   const navigate = useNavigate();
   const playSong = usePlayerStore((s) => s.playSong);
   const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
   const toggleAlbumLike = useAlbumLikeStore((s) => s.toggleAlbumLike);
   const albumId = normalizeAlbumId(album);
   const isLiked = albumId && likedAlbumIds.includes(albumId);
+  const isRail = variant === "rail";
 
   const handlePlayAlbum = async (e) => {
     e.stopPropagation();
@@ -41,10 +42,14 @@ export default function AlbumCard({ album }) {
     <div
       data-card
       onClick={() => navigate(`/album/${album.id}`)}
-    className="group relative w-44 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-white/10
-      bg-gradient-to-br from-white/5 via-white/0 to-white/5 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)]
-      backdrop-blur transition-all duration-300 hover:shadow-[0_30px_80px_rgba(56,189,248,0.25)]
-      sm:w-60 sm:p-4 lg:w-64"
+    className={`group relative cursor-pointer overflow-hidden rounded-2xl border border-white/10
+        bg-gradient-to-br from-white/5 via-white/0 to-white/5 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)]
+        backdrop-blur transition-all duration-300 hover:shadow-[0_30px_80px_rgba(56,189,248,0.25)]
+        ${
+          isRail
+            ? "w-44 shrink-0 sm:w-60 sm:p-4 lg:w-64"
+            : "w-full sm:p-4"
+        }`}
     >
       {/* glow nền */}
       <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
@@ -69,8 +74,8 @@ export default function AlbumCard({ album }) {
         <img
           src={album.cover_url}
           alt={album.title}
-          className="h-32 w-full rounded-xl object-cover transition-transform duration-500 group-hover:scale-[1.05]
-          sm:h-44 lg:h-52"
+           className={`h-40 w-full rounded-xl object-cover transition-transform duration-500 group-hover:scale-[1.05]
+          ${isRail ? "sm:h-44 lg:h-52" : "sm:h-48 lg:h-56"}`}
         />
 
         {/* overlay gradient */}
