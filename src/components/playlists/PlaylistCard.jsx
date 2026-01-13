@@ -8,10 +8,10 @@ export default function PlaylistCard({ playlist, onOpen }) {
     <button
       type="button"
       onClick={() => onOpen?.(playlist)}
-      className="group relative w-40 shrink-0 overflow-hidden rounded-2xl border border-white/10
+      className="group relative w-full overflow-hidden rounded-2xl border border-white/10
         bg-gradient-to-br from-white/5 via-white/0 to-white/5 p-3 text-left
         shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur transition-all duration-300
-        hover:shadow-[0_30px_80px_rgba(56,189,248,0.25)] sm:w-44 sm:p-4 lg:w-52"
+        hover:shadow-[0_30px_80px_rgba(56,189,248,0.25)] sm:w-44 sm:shrink-0 sm:p-4 lg:w-52"
     >
       <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />

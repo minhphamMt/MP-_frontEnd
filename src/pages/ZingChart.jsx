@@ -485,7 +485,7 @@ const xStep =
                   ref={chartRef}
                   viewBox={`0 0 ${chartWidth} ${chartHeight}`}
                   preserveAspectRatio="none"
-                  className="h-[340px] w-full"
+                  className="h-[220px] w-full sm:h-[300px] lg:h-[340px]"
                   onMouseMove={handleChartHover}
                   onMouseLeave={() => {
                     setHoveredIndex(null);

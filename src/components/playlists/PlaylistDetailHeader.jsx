@@ -1,3 +1,5 @@
+import { FiEdit2, FiPlay, FiShuffle, FiTrash2 } from "react-icons/fi";
+
 export default function PlaylistDetailHeader({
   playlist,
   onPlay,
@@ -43,43 +45,42 @@ export default function PlaylistDetailHeader({
         </div>
 
         {/* ACTIONS */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* SHUFFLE */}
           <button
             onClick={() => onShuffle?.()}
-            className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition
-                       hover:bg-white/20 hover:scale-[1.03] active:scale-[0.97]"
+            className="group flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 shadow-md shadow-black/30 backdrop-blur transition hover:border-cyan-300/40 hover:bg-white/15 hover:text-white"
           >
-            🔀 Ngẫu nhiên
+             <FiShuffle className="text-cyan-200" />
+            Ngẫu nhiên
           </button>
 
           {/* PLAY */}
           <button
             onClick={() => onPlay?.(playlist?.songs?.[0], playlist?.songs)}
-            className="rounded-full bg-gradient-to-r from-green-400 to-emerald-400 px-5 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-green-400/30 transition
-                       hover:brightness-110 hover:scale-[1.05] active:scale-[0.97]"
+           className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-400/30 transition hover:brightness-110 hover:scale-[1.03] active:scale-[0.97]"
           >
-            ▶ Phát tất cả
+            <FiPlay />
+            Phát tất cả
           </button>
 
           {/* RENAME */}
           <button
             onClick={() => onRename?.()}
             disabled={renaming}
-            className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition
-                       hover:bg-white/20 hover:scale-[1.03]
-                       disabled:cursor-not-allowed disabled:opacity-60"
+            className="group flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 shadow-md shadow-black/30 backdrop-blur transition hover:border-violet-300/40 hover:bg-white/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
-            ✎ Đổi tên
+            <FiEdit2 className="text-violet-200" />
+            Đổi tên
           </button>
 
           {/* DELETE */}
           <button
             onClick={() => onDelete?.()}
-            className="rounded-full border border-rose-300/40 bg-rose-500/20 px-4 py-2 text-sm font-semibold text-rose-100 transition
-                       hover:bg-rose-500/30 hover:scale-[1.03] active:scale-[0.97]"
+            className="group flex items-center gap-2 rounded-full border border-rose-300/40 bg-rose-500/15 px-4 py-2 text-sm font-semibold text-rose-100 shadow-md shadow-black/30 transition hover:bg-rose-500/25 hover:border-rose-200/60"
           >
-            ✕ Xóa
+           <FiTrash2 className="text-rose-200" />
+            Xóa
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { normalizeSongId } from "../../store/player.store";
-
+import { FiHeart, FiPause, FiPlay, FiTrash2 } from "react-icons/fi";
 export default function PlaylistSongsTable({
   songs = [],
   currentSong,
@@ -9,8 +9,6 @@ export default function PlaylistSongsTable({
   onRemove,
   onToggleLike,
 }) {
-  console.log("bài hát trong danh sách phát:", songs);
-
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 shadow-[0_25px_80px_rgba(0,0,0,0.55)]">
       {/* BACKGROUND GLOW */}
@@ -59,7 +57,7 @@ export default function PlaylistSongsTable({
                     className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
                   >
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg">
-                      {isPlayingCurrent && isPlaying ? "⏸" : "▶"}
+                      {isPlayingCurrent && isPlaying ? <FiPause /> : <FiPlay />}
                     </span>
                   </button>
                 </div>
@@ -87,7 +85,7 @@ export default function PlaylistSongsTable({
                   onClick={() => onPlay?.(song)}
                   className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:bg-white/20 sm:hidden"
                 >
-                  {isPlayingCurrent && isPlaying ? "⏸" : "▶"}
+                  {isPlayingCurrent && isPlaying ? <FiPause /> : <FiPlay />}
                 </button>
 
                 {/* LIKE */}
@@ -100,15 +98,15 @@ export default function PlaylistSongsTable({
                         : "border-white/15 bg-white/10 text-white hover:bg-white/20"
                     }`}
                 >
-                  ♥
+                 <FiHeart />
                 </button>
 
                 {/* REMOVE */}
                 <button
                   onClick={() => onRemove?.(song)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:bg-white/20"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:border-rose-300/60 hover:bg-rose-500/15 hover:text-rose-100"
                 >
-                  ✕
+                 <FiTrash2 />
                 </button>
               </div>
             </div>

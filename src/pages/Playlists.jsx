@@ -487,7 +487,7 @@ setToastTitle("Thành công");
         ) : likedAlbums.length ? (
           <div
             ref={albumListRef}
-            className="flex flex-nowrap justify-start gap-3 overflow-x-auto pr-4 scrollbar-hidden sm:gap-5"
+             className="grid grid-cols-2 justify-items-center gap-3 sm:flex sm:flex-nowrap sm:justify-start sm:gap-5 sm:overflow-x-auto sm:pr-4 scrollbar-hidden"
           >
            {visibleAlbums.map((album) => (
               <AlbumCard key={album.id || album.title} album={album} />
@@ -520,7 +520,7 @@ setToastTitle("Thành công");
         ) : playlists.length ? (
           <div
             ref={playlistListRef}
-            className="flex flex-nowrap justify-center gap-4 overflow-x-auto pb-2 pr-4 scrollbar-hidden sm:justify-start sm:gap-5"
+            className="grid grid-cols-2 justify-items-center gap-3 sm:flex sm:flex-nowrap sm:justify-start sm:gap-5 sm:overflow-x-auto sm:pr-4"
           >
            {visiblePlaylists.map((playlist) => (
               <PlaylistCard

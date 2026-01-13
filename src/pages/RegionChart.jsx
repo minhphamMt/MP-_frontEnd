@@ -81,6 +81,8 @@ export default function RegionChart() {
         songs={songs}
         loading={loading}
         onRefresh={loadChart}
+        hideActions
+        hidePlayAll
       />
     </div>
   );
