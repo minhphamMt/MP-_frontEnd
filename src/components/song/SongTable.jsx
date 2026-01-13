@@ -55,7 +55,7 @@ export default function SongTable({
           </p>
         )}
         <div className="flex items-center gap-3">
-          <div className="h-8 w-1 rounded-full bg-gradient-to-b from-cyan-400 to-violet-500 shadow-[0_0_12px_rgba(34,211,238,0.45)]" />
+           <div className="h-8 w-1 rounded-full bg-gradient-to-b from-emerald-300 to-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.45)]" />
           <h2 className="text-2xl font-extrabold text-white drop-shadow-sm">
             {title}
           </h2>
@@ -67,14 +67,14 @@ export default function SongTable({
         {onRefresh && (
           <button
             onClick={onRefresh}
-            className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10"
+            className="rounded-full border border-white/10 bg-[#242424] px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-[#2a2a2a]"
           >
             Làm mới
           </button>
         )}
         <button
           onClick={playAll}
-          className="rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 px-5 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-cyan-400/30 transition hover:shadow-cyan-300/50"
+          className="rounded-full bg-emerald-400 px-5 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition hover:bg-emerald-300"
         >
           ▶ Phát tất cả
         </button>
@@ -84,7 +84,7 @@ export default function SongTable({
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+      <div className="rounded-2xl border border-white/5 bg-[#181818] p-6 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
         Đang tải dữ liệu...
       </div>
     );
@@ -92,7 +92,7 @@ export default function SongTable({
 
   if (!songs.length) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+      <div className="rounded-2xl border border-white/5 bg-[#181818] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
         {renderHeader()}
         <div className="mt-4 text-sm text-white/60">
           Không có bài hát để hiển thị.
@@ -109,10 +109,10 @@ export default function SongTable({
   };
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#1c132d] via-[#130f27] to-[#0b1424] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur">
+    <div className="rounded-3xl border border-white/5 bg-[#181818] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur">
       {renderHeader()}
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-white/5 scrollbar-muted">
+      <div className="mt-6 overflow-x-auto rounded-2xl border border-white/5 bg-[#121212] scrollbar-muted">
         <div className="min-w-0 sm:min-w-[640px]">
           {/* Header */}
            <div className="hidden grid-cols-[64px_1fr_160px_90px] px-3 py-3 text-[11px] uppercase tracking-[0.18em] text-white/50 sm:grid sm:px-4">
@@ -136,8 +136,8 @@ export default function SongTable({
                   onClick={() => handlePlaySong(song, songs)}
                   className={`group grid grid-cols-[1fr_auto] items-center gap-2 px-3 py-3 transition sm:grid-cols-[64px_1fr_160px_90px] sm:gap-3 sm:px-4 ${
                     isActive
-                      ? "bg-gradient-to-r from-cyan-400/10 via-white/5 to-transparent"
-                      : "hover:bg-white/5"
+                      ? "bg-[#242424]"
+                      : "hover:bg-[#1f1f1f]"
                   }`}
                 >
                   {/* Rank */}
@@ -163,7 +163,7 @@ export default function SongTable({
                     <div className="min-w-0">
                       <div
                         className={`truncate text-sm font-semibold sm:text-base ${
-                          isActive ? "text-cyan-300" : "text-white"
+                          isActive ? "text-emerald-300" : "text-white"
                         }`}
                       >
                         {song.title}
@@ -191,7 +191,7 @@ export default function SongTable({
 
                     <AddToPlaylistButton
                       song={song}
-                      triggerClassName="h-8 w-8 !border-white/10 !bg-white/5 hover:!bg-white/15 sm:h-9 sm:w-9"
+                      triggerClassName="h-8 w-8 !border-white/10 !bg-[#242424] hover:!bg-[#2a2a2a] sm:h-9 sm:w-9"
                     />
                     <button
                       onClick={(e) => {
@@ -201,7 +201,7 @@ export default function SongTable({
                       className={`flex h-8 w-8 items-center justify-center rounded-full border transition sm:h-9 sm:w-9 ${
                         isLiked
                           ? "border-rose-400/40 text-rose-300"
-                          : "border-white/10 text-white/70 hover:bg-white/15"
+                          : "border-white/10 text-white/70 hover:bg-[#2a2a2a]"
                       }`}
                     >
                       <FiHeart />

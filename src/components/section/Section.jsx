@@ -3,8 +3,7 @@ export default function Section({ title, subtitle, action, children }) {
     <section className="relative space-y-4">
       {/* Header */}
       <div className="relative flex items-center justify-between gap-3">
-        {/* Glow nền nhẹ */}
-        <div className="pointer-events-none absolute -inset-x-4 -top-4 h-20 bg-[radial-gradient(circle_at_20%_50%,rgba(167,139,250,0.18),transparent_55%)]" />
+        <div className="pointer-events-none absolute -inset-x-4 -top-4 h-16 bg-[radial-gradient(circle_at_20%_50%,rgba(34,197,94,0.12),transparent_55%)]" />
 
         <div className="relative">
           {subtitle && (
@@ -15,7 +14,7 @@ export default function Section({ title, subtitle, action, children }) {
 
           <div className="flex items-center gap-3">
             {/* Accent bar */}
-            <div className="h-8 w-1 rounded-full bg-gradient-to-b from-violet-400 via-fuchsia-400 to-cyan-300 shadow-[0_0_14px_rgba(56,189,248,0.55)]" />
+            <div className="h-8 w-1 rounded-full bg-gradient-to-b from-emerald-300 via-emerald-400 to-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.55)]" />
              <h2 className="text-xl font-bold text-white drop-shadow-sm sm:text-2xl">
               {title}
             </h2>
@@ -30,10 +29,8 @@ export default function Section({ title, subtitle, action, children }) {
       </div>
 
       {/* Content */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/6 via-white/3 to-white/6 p-4 shadow-[0_25px_70px_rgba(0,0,0,0.5)] backdrop-blur-md transition">
-        {/* Inner glow */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(56,189,248,0.12),transparent_45%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(167,139,250,0.12),transparent_45%)]" />
+      <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-4 shadow-[0_20px_50px_rgba(0,0,0,0.45)] transition">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(34,197,94,0.08),transparent_45%)]" />
 
         <div className="relative">{children}</div>
       </div>

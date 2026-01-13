@@ -396,14 +396,14 @@ const xStep =
           {song.rank ?? idx + 1}
         </div>
 
-        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-md shadow-black/30 transition group-hover:ring-2 group-hover:ring-cyan-300/70 group-hover:ring-offset-2 group-hover:ring-offset-[#140d24]">
+        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/5 bg-[#242424] shadow-md shadow-black/30 transition group-hover:ring-2 group-hover:ring-emerald-400/60 group-hover:ring-offset-2 group-hover:ring-offset-[#121212]">
           <img
             src={getSongCover(song)}
             alt={song.title}
             className="h-full w-full object-cover"
           />
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition duration-300 group-hover:opacity-100">
-            <span className="rounded-full bg-white/90 p-2 text-[#0c0914] shadow-lg shadow-cyan-400/30">
+            <span className="rounded-full bg-white/90 p-2 text-[#0c0914] shadow-lg shadow-emerald-400/30">
               <FaPlay size={12} />
             </span>
           </div>
@@ -423,13 +423,13 @@ const xStep =
   );
 
   return (
-    <div className="space-y-10">
+     <div className="min-h-screen space-y-10 bg-[#121212] px-4 py-6 sm:px-8">
       <Section
         title="MinhChart"
         subtitle="Dữ liệu tuần này"
         action={
           <div className="flex items-center gap-2 text-xs text-white/70">
-            <span className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 backdrop-blur">
+             <span className="flex items-center gap-2 rounded-full border border-white/10 bg-[#242424] px-3 py-1">
               <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
               Live
             </span>
@@ -439,7 +439,7 @@ const xStep =
             </span>
             <button
               onClick={loadChart}
-              className="rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/80 backdrop-blur transition hover:border-white/40 hover:bg-white/10"
+              className="rounded-full border border-white/10 bg-[#242424] px-3 py-1.5 text-[11px] font-semibold text-white/80 transition hover:bg-[#2a2a2a]"
             >
               Làm mới dữ liệu
             </button>
@@ -447,11 +447,8 @@ const xStep =
         }
       >
         <div className="flex w-full flex-col gap-6">
-          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#241540] via-[#1b0f33] to-[#0f0a22] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)] transition-all duration-300 hover:shadow-[0_30px_100px_rgba(56,189,248,0.20)]">
-            {/* glow layers (đồng bộ vibe Home) */}
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.08),_transparent_40%)]" />
-            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-cyan-400/10 blur-3xl" />
-            <div className="pointer-events-none absolute -left-20 -bottom-20 h-56 w-56 rounded-full bg-violet-500/10 blur-3xl" />
+         <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)] transition-all duration-300 hover:bg-[#1f1f1f]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.08),_transparent_40%)]" />
 
             <div className="relative mb-4 flex flex-wrap items-center justify-between gap-3">
               <div className="space-y-1">
@@ -464,22 +461,20 @@ const xStep =
                 </div>
               </div>
 
-              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/70 backdrop-blur">
+               <div className="rounded-full border border-white/10 bg-[#242424] px-3 py-1 text-[11px] text-white/70">
                Cập nhật bảng xếp hạng tuần
               </div>
             </div>
 
             {!loading && !songs.length && (
-              <div className="relative mb-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70 backdrop-blur">
+              <div className="relative mb-4 rounded-xl border border-white/5 bg-[#242424] px-4 py-3 text-sm text-white/70">
                 Không có dữ liệu bảng xếp hạng để hiển thị. Hãy thử làm mới.
               </div>
             )}
 
             <div className="flex flex-col gap-6 lg:flex-row">
               {/* CHART */}
-              <div className="relative flex-1 rounded-2xl border border-white/10 bg-black/20 p-2 shadow-lg shadow-black/30">
-                <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_20%_10%,rgba(56,189,248,0.14),transparent_35%)]" />
-                <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_85%_60%,rgba(167,139,250,0.12),transparent_40%)]" />
+               <div className="relative flex-1 rounded-2xl border border-white/5 bg-[#121212] p-2 shadow-lg shadow-black/30">
 
                 <svg
                   ref={chartRef}
@@ -600,7 +595,7 @@ const xStep =
 
                 {crosshairPoint && activePoints.length > 0 && (
                   <div
-                    className="pointer-events-none absolute left-0 top-0 z-20 rounded-2xl border border-white/10 bg-black/60 px-3 py-2 shadow-[0_20px_60px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+                    className="pointer-events-none absolute left-0 top-0 z-20 rounded-2xl border border-white/10 bg-[#1f1f1f] px-3 py-2 shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
                     style={tooltipStyle || undefined}
                   >
                     <div className="mb-2 text-[11px] text-white/60">
@@ -619,7 +614,7 @@ const xStep =
                               className="h-2 w-2 shrink-0 rounded-full"
                               style={{ backgroundColor: point.line.color.main }}
                             />
-                            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#242424]">
                               <img
                                 src={getSongCover(point.line.song)}
                                 alt={point.line.song?.title}
@@ -644,20 +639,19 @@ const xStep =
                 )}
 
                 {loadingSeries && (
-                  <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40 text-sm text-white/70 backdrop-blur-sm">
+                 <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/60 text-sm text-white/70">
                     Đang tải dữ liệu biểu đồ...
                   </div>
                 )}
                 {!loadingSeries && !chartLines.length && (
-                  <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/55 text-sm text-white/70 backdrop-blur-sm">
+                   <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/70 text-sm text-white/70">
                     Chưa có dữ liệu biểu đồ để hiển thị.
                   </div>
                 )}
               </div>
 
               {/* WEEKLY LIST */}
-              <div className="relative w-full rounded-2xl border border-white/10 bg-white/5 p-4 shadow-lg shadow-black/30 backdrop-blur lg:w-[360px]">
-                <div className="pointer-events-none absolute -top-12 -right-10 h-40 w-40 rounded-full bg-emerald-400/10 blur-3xl" />
+              <div className="relative w-full rounded-2xl border border-white/5 bg-[#181818] p-4 shadow-lg shadow-black/30 lg:w-[360px]">
                 <div className="mb-3 flex items-center justify-between px-1">
                   <div className="text-sm font-semibold text-white/85">BXH tuần</div>
                   <div className="text-xs text-white/60">Cập nhật mỗi thứ 2</div>
@@ -679,9 +673,9 @@ const xStep =
               {highlightedSeries.map((item, idx) => (
                 <div
                   key={item.song?.id || idx}
-                  className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/10 hover:shadow-lg hover:shadow-black/30"
+                  className="group flex items-center gap-3 rounded-xl border border-white/5 bg-[#242424] px-3 py-2 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#2a2a2a] hover:shadow-lg hover:shadow-black/30"
                 >
-                  <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                  <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/10 bg-[#1f1f1f]">
                     <img
                       src={getSongCover(item.song)}
                       alt={item.song?.title}
@@ -720,12 +714,9 @@ const xStep =
            {weeklyColumns.map((column) => (
             <div
               key={column.title}
-              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:bg-white/10 hover:shadow-[0_22px_70px_rgba(56,189,248,0.18)]"
+               className="group relative overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#202020]"
             >
-              {/* glow */}
-              <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_35%)]" />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.08),_transparent_35%)]" />
 
               <div className="relative mb-4 flex items-center justify-between">
                 <div className="text-lg font-semibold text-white">
@@ -734,7 +725,7 @@ const xStep =
                 {column.link && (
                   <Link
                     to={column.link}
-                    className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/80 backdrop-blur transition hover:border-white/30 hover:bg-white/10"
+                   className="rounded-full border border-white/10 bg-[#242424] px-3 py-2 text-xs text-white/80 transition hover:bg-[#2a2a2a]"
                   >
                     Xem tất cả
                   </Link>
@@ -768,14 +759,14 @@ const xStep =
                           {song.rank ?? idx + 1}
                         </div>
 
-                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-md shadow-black/25 transition group-hover/item:ring-2 group-hover/item:ring-cyan-300/70 group-hover/item:ring-offset-2 group-hover/item:ring-offset-[#120d23]">
+                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/5 bg-[#242424] shadow-md shadow-black/25 transition group-hover/item:ring-2 group-hover/item:ring-emerald-400/60 group-hover/item:ring-offset-2 group-hover/item:ring-offset-[#121212]">
                           <img
                             src={getSongCover(song)}
                             alt={song.title}
                             className="h-full w-full object-cover"
                           />
                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition duration-300 group-hover/item:opacity-100">
-                            <span className="rounded-full bg-white/90 p-2 text-[#0c0914] shadow-lg shadow-cyan-400/30">
+                           <span className="rounded-full bg-white/90 p-2 text-[#0c0914] shadow-lg shadow-emerald-400/30">
                               <FaPlay size={12} />
                             </span>
                           </div>

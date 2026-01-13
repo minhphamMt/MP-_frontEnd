@@ -52,7 +52,7 @@ export default function Top50Genres() {
   const content = useMemo(() => {
     if (loading) {
       return (
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white/60">
+         <div className="rounded-2xl border border-white/5 bg-[#181818] p-4 text-xs text-white/60">
           Đang tải Top 50 theo thể loại...
         </div>
       );
@@ -60,7 +60,7 @@ export default function Top50Genres() {
 
     if (!genres.length) {
       return (
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white/60">
+        <div className="rounded-2xl border border-white/5 bg-[#181818] p-4 text-xs text-white/60">
           Chưa có thể loại đủ dữ liệu để hiển thị.
         </div>
       );
@@ -77,9 +77,9 @@ export default function Top50Genres() {
               key={genre?.id}
               to={`/top-50/${genre?.id}`}
               state={{ genre, songs }}
-              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-3 shadow-[0_12px_40px_rgba(0,0,0,0.45)] transition "
+              className="group relative overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-3 shadow-[0_12px_40px_rgba(0,0,0,0.45)] transition hover:bg-[#202020]"
             >
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-transparent to-fuchsia-400/10 opacity-0 transition group-hover:opacity-100" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-400/10 via-transparent to-emerald-500/10 opacity-0 transition group-hover:opacity-100" />
 
               <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
                 {cover ? (
@@ -112,7 +112,7 @@ export default function Top50Genres() {
 
               <div className="relative mt-3 flex items-center justify-between text-xs text-white/60">
                 <span>{songs.length} bài hát</span>
-                <span className="flex items-center gap-1 font-semibold uppercase tracking-[0.25em] text-cyan-300">
+                <span className="flex items-center gap-1 font-semibold uppercase tracking-[0.25em] text-emerald-300">
                   Xem <FiChevronRight />
                 </span>
               </div>
@@ -125,7 +125,7 @@ export default function Top50Genres() {
 
   return (
      <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+      <div className="rounded-2xl border border-white/5 bg-[#181818] p-4">
         <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
           Bảng xếp hạng
         </p>

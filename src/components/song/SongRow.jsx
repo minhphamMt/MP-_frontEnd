@@ -24,18 +24,17 @@ export default function SongRow({ song, queue }) {
       className={`
         group relative flex items-center gap-4 rounded-xl px-3 py-2
         cursor-pointer transition-all duration-200
-        hover:bg-white/5
+        hover:bg-[#2a2a2a]
         ${
           isActive
-            ? "bg-gradient-to-r from-cyan-400/10 via-white/5 to-transparent ring-1 ring-cyan-300/40"
+            ? "bg-[#242424] ring-1 ring-emerald-400/40"
             : ""
         }
       `}
     >
       {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100">
-        <div className="absolute -left-10 -top-10 h-28 w-28 rounded-full bg-cyan-400/10 blur-3xl" />
-        <div className="absolute -right-10 -bottom-10 h-28 w-28 rounded-full bg-violet-400/10 blur-3xl" />
+        <div className="absolute -left-10 -top-10 h-28 w-28 rounded-full bg-emerald-400/10 blur-3xl" />
       </div>
 
       {/* Cover */}
@@ -58,7 +57,7 @@ export default function SongRow({ song, queue }) {
             }
           `}
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-violet-500 text-white shadow-md shadow-cyan-400/30">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-400 text-black shadow-md shadow-emerald-400/30">
             {isActive && isPlaying ? (
               <FiPause size={14} />
             ) : (
@@ -72,7 +71,7 @@ export default function SongRow({ song, queue }) {
       <div className="min-w-0 flex-1">
         <div
           className={`truncate text-sm font-semibold ${
-            isActive ? "text-cyan-200" : "text-white"
+            isActive ? "text-emerald-300" : "text-white"
           }`}
         >
           {song.title}
@@ -87,7 +86,7 @@ export default function SongRow({ song, queue }) {
               <Link
                 to={`/album/${song.album_id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="truncate text-white/70 hover:text-cyan-300 hover:underline transition"
+                className="truncate text-white/70 hover:text-emerald-300 hover:underline transition"
               >
                 {song.album_title}
               </Link>

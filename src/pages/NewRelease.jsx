@@ -9,7 +9,7 @@ export default function NewRelease() {
 
   const loadChart = async () => {
     try {
-      setLoading(true);
+            setLoading(true);
       const res = await getNewReleaseChart();
       const rawSongs =
         res?.data?.data?.songs ||
@@ -34,7 +34,7 @@ export default function NewRelease() {
   return (
    <div className="min-h-screen bg-[#121212] px-4 py-6 sm:px-8">
       {/* PAGE HEADER */}
-      <div className="mb-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
+      <div className="mb-6 rounded-3xl border border-white/5 bg-[#181818] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
         <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
           Bảng xếp hạng
         </p>

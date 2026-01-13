@@ -63,7 +63,7 @@ export default function Top50GenreDetail() {
 
   const header = useMemo(
     () => (
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/5 bg-[#181818] p-4">
         <div>
           <Link
             to="/top-50"
@@ -79,7 +79,7 @@ export default function Top50GenreDetail() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-white/70">
+        <div className="rounded-xl border border-white/10 bg-[#242424] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-white/70">
           Top 50
         </div>
       </div>
