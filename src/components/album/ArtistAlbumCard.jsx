@@ -10,7 +10,13 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
 
   const isRail = variant === "rail";
   const isLibrary = variant === "library";
-  
+  const songCount =
+    artist?.song_count ??
+    artist?.track_count ??
+    artist?.songs_count ??
+    artist?.songs?.length ??
+    0;
+
   const handlePlayArtist = async (e) => {
     e.stopPropagation();
 
@@ -46,9 +52,9 @@ title: s.title,
       onClick={() => navigate(`/artist/${artist.artist_id}`)}
       className={`group relative w-full overflow-hidden transition-all duration-300 active:scale-[0.98] ${
         isLibrary
-          ? "rounded-lg border border-transparent bg-[#181818] p-4 shadow-none hover:bg-[#242424]"
-           : "rounded-2xl border border-[#242424] bg-[#181818] hover:bg-[#202020]"
-      } ${isRail ? "p-3 shadow-[0_10px_28px_rgba(0,0,0,0.30)]" : "p-3 shadow-[0_18px_50px_rgba(0,0,0,0.35)] sm:p-4"}`}
+          ? "rounded-lg border border-transparent bg-[#181818] hover:bg-[#242424]"
+          : "rounded-xl border border-white/10 bg-[#181818] hover:bg-[#242424]"
+      } ${isRail ? "p-3" : "p-3 sm:p-4"}`}
     >
       {/* COVER */}
        <div
@@ -116,7 +122,7 @@ title: s.title,
         <div className="flex items-center justify-between gap-2 text-xs text-white/70">
           <div className="flex items-center gap-1">
             <FiMusic className="shrink-0 text-white/60" />
-            <span>{artist.song_count ?? 0} bài hát</span>
+             <span>{songCount} bài hát</span>
           </div>
           {!isLibrary && (
             <FollowArtistButton

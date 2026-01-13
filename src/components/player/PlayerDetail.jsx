@@ -9,7 +9,12 @@ import {
   FaVolumeHigh,
   FaVolumeXmark,
 } from "react-icons/fa6";
-import { FiChevronDown, FiMoreHorizontal, FiShare2, FiHeart } from "react-icons/fi";
+import {
+  FiChevronDown,
+  FiMoreHorizontal,
+  FiShare2,
+  FiHeart,
+} from "react-icons/fi";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 
 /* ================= utils ================= */
@@ -216,7 +221,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           backgroundPosition: "center",
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-black" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#121212]/85 to-black" />
 
       {/* CLOSE */}
       <button
@@ -290,7 +295,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 }}
                 className={`text-xl transition ${
                   likedSongIds.includes(normalizeSongId(currentSong))
-                    ? "text-rose-300"
+                    ? "text-[#1db954]"
                     : "text-white/70"
                 }`}
                 aria-label="Yêu thích"
@@ -312,7 +317,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
               onChange={onSeekChange}
               onMouseUp={onSeekCommit}
               onTouchEnd={onSeekCommit}
-              className="h-2 w-full accent-violet-400"
+              className="h-2 w-full accent-[#1db954]"
             />
             <div className="flex items-center justify-between text-xs text-white/70">
               <span>{formatTime(displayedTime)}</span>
@@ -324,7 +329,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             <button
               onClick={toggleShuffle}
               className={`transition ${
-                shuffle ? "text-violet-300" : "text-white/60"
+                shuffle ? "text-[#1db954]" : "text-white/60"
               }`}
             >
               <FaShuffle />
@@ -334,7 +339,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             </button>
             <button
               onClick={togglePlay}
-              className="flex h-16 w-16 items-center justify-center rounded-full border border-white/30 bg-white/10 text-2xl text-white"
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-[#1db954] text-2xl text-black shadow-xl shadow-[#1db954]/40"
             >
               {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
             </button>
@@ -345,14 +350,14 @@ export default function PlayerDetail({ isOpen, onClose }) {
               onClick={toggleRepeatMode}
               className={`relative transition ${
                 repeatMode !== "off"
-                  ? "text-violet-300"
+                  ? "text-[#1db954]"
                   : "text-white/60"
               }`}
             >
              <span className="relative inline-flex">
                 <FaRepeat />
                 {repeatMode === "one" && (
-                  <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold text-white">
+                  <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
                     1
                   </span>
                 )}
@@ -485,7 +490,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
               onChange={onSeekChange}
               onMouseUp={onSeekCommit}
               onTouchEnd={onSeekCommit}
-              className="flex-1 h-2 accent-violet-500"
+              className="flex-1 h-2 accent-[#1db954]"
             />
 
             <span className="w-10 text-xs opacity-70">
@@ -499,7 +504,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             <button
               onClick={toggleShuffle}
               className={`transition ${
-                shuffle ? "text-violet-400" : "opacity-70"
+                shuffle ? "text-[#1db954]" : "opacity-70"
               }`}
             >
               <FaShuffle />
@@ -511,7 +516,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
             <button
               onClick={togglePlay}
-              className="h-12 w-12 rounded-full bg-violet-500 hover:bg-violet-400 shadow-xl flex items-center justify-center sm:h-14 sm:w-14"
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1db954] text-black shadow-xl shadow-[#1db954]/40 hover:bg-[#1ed760] sm:h-14 sm:w-14"
             >
               {isPlaying ? <FaPause /> : <FaPlay />}
             </button>
@@ -524,13 +529,13 @@ export default function PlayerDetail({ isOpen, onClose }) {
               onClick={toggleRepeatMode}
               className={`relative transition ${
                 repeatMode !== "off"
-                  ? "text-violet-400"
+                  ? "text-[#1db954]"
                   : "opacity-70"
               }`}
             >
               <FaRepeat />
                {repeatMode === "one" && (
-                <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold text-white">
+                <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
                   1
                 </span>
               )}
@@ -551,7 +556,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 step={0.01}
                 value={muted ? 0 : volume}
                 onChange={(e) => handleVolumeChange(e.target.value)}
-                className="h-2 w-32 accent-violet-500"
+                 className="h-2 w-32 accent-[#1db954]"
               />
             </div>
           </div>

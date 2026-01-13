@@ -21,7 +21,8 @@ export default function MainLayout() {
     window.scrollTo({ top: 0, behavior: "auto" });
     setIsSidebarOpen(false);
   }, [location.pathname]);
- useEffect(() => {
+
+  useEffect(() => {
     const backgroundEl = backgroundRef.current;
 
     const animejs = window.anime;
@@ -58,7 +59,7 @@ export default function MainLayout() {
       animejs.remove(backgroundEl);
     };
   }, []);
-  
+
   return (
     <div className="flex h-screen flex-col bg-[#000000] text-white">
       <Header onMenuClick={() => setIsSidebarOpen(true)} />
@@ -72,7 +73,7 @@ export default function MainLayout() {
           ref={mainRef}
           className="scrollbar-muted relative flex-1 overflow-y-auto bg-[#121212] px-4 py-4 sm:px-6 sm:py-6"
         >
-           <div
+          <div
             ref={backgroundRef}
             className="pointer-events-none absolute inset-0 overflow-hidden"
             aria-hidden="true"

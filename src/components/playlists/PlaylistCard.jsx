@@ -13,16 +13,9 @@ export default function PlaylistCard({ playlist, onOpen, variant = "grid" }) {
       className={`group relative w-full overflow-hidden text-left transition-all duration-300 sm:w-60 sm:shrink-0 sm:p-4 lg:w-64 ${
         isLibrary
           ? "rounded-lg border border-transparent bg-[#181818] p-4 shadow-none hover:bg-[#242424]"
-          : "rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 via-white/0 to-white/5 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur hover:shadow-[0_30px_80px_rgba(56,189,248,0.25)]"
+          : "rounded-xl border border-white/10 bg-[#181818] p-3 hover:bg-[#242424]"
       }`}
     >
-      {!isLibrary && (
-        <>
-          <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
-        </>
-      )}
-
       <div
         className={`relative w-full overflow-hidden ${
           isLibrary ? "rounded-md" : "rounded-xl"

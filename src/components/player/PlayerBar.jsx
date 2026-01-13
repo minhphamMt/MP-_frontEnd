@@ -56,7 +56,7 @@ export default function PlayerBar() {
 
   const volumePercent = Math.round((volume ?? 0) * 100);
   const displayVolumePercent = muted ? 0 : volumePercent;
-  const volumeGradient = `linear-gradient(to right, #a78bfa ${displayVolumePercent}%, rgba(255,255,255,0.2) ${displayVolumePercent}%)`;
+  const volumeGradient = `linear-gradient(to right, #1db954 ${displayVolumePercent}%, rgba(255,255,255,0.2) ${displayVolumePercent}%)`;
 
   const handleVolumeChange = (value) => {
     const next = Math.round(Number(value));
@@ -66,7 +66,7 @@ export default function PlayerBar() {
 
   return (
     <>
-      <div className="relative border-t border-white/10 bg-[#181818]">
+      <div className="relative border-t border-white/10 bg-[#181818] shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
 
         {/* ================= MOBILE MINI PLAYER ================= */}
         <div
@@ -103,7 +103,7 @@ export default function PlayerBar() {
             }}
             className={`text-lg transition ${
               likedSongIds.includes(normalizeSongId(currentSong))
-                ? "text-pink-400"
+                ? "text-[#1db954]"
                 : "text-white/70"
             }`}
           >
@@ -120,7 +120,7 @@ export default function PlayerBar() {
               e.stopPropagation();
               isPlaying ? pause() : resume();
             }}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1db954] text-black shadow-lg shadow-[#1db954]/40"
           >
             {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
           </button>
@@ -142,8 +142,7 @@ export default function PlayerBar() {
               className="h-full transition-all"
               style={{
                 width: `${progress}%`,
-                background:
-                  "linear-gradient(90deg, #a78bfa, #38bdf8, #22d3ee)",
+               background: "#1db954",
               }}
             />
           </div>
@@ -168,6 +167,24 @@ export default function PlayerBar() {
                 {currentSong.artist_name}
               </div>
             </div>
+            <button
+              onClick={() => {
+                const songId = normalizeSongId(currentSong);
+                if (songId) toggleLike(songId);
+              }}
+              className={`ml-auto flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-sm transition hover:border-white/20 ${
+                likedSongIds.includes(normalizeSongId(currentSong))
+                  ? "text-[#1db954]"
+                  : "text-white/60"
+              }`}
+              aria-label="Yêu thích"
+            >
+              {likedSongIds.includes(normalizeSongId(currentSong)) ? (
+                <HiHeart />
+              ) : (
+                <HiOutlineHeart />
+              )}
+            </button>
           </div>
 
           {/* CENTER */}
@@ -182,7 +199,7 @@ export default function PlayerBar() {
 
               <button
                 onClick={isPlaying ? pause : resume}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1db954] text-black shadow-lg shadow-[#1db954]/40"
               >
                 {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
               </button>
@@ -207,7 +224,7 @@ export default function PlayerBar() {
                 onChange={(e) => seek(Number(e.target.value))}
                 className="player-slider flex-1"
                 style={{
-                  background: `linear-gradient(to right, #a78bfa ${progress}%, rgba(255,255,255,0.2) ${progress}%)`,
+                  background: `linear-gradient(to right, #1db954 ${progress}%, rgba(255,255,255,0.2) ${progress}%)`,
                 }}
               />
               <span className="w-10">{formatTime(duration)}</span>
@@ -228,14 +245,14 @@ export default function PlayerBar() {
               onClick={toggleRepeatMode}
               className={
                 repeatMode !== "off"
-                  ? "text-violet-300"
+                  ? "text-[#1db954]"
                   : "text-white/70"
               }
             >
               <span className="relative inline-flex">
                 <RiRepeat2Fill />
                 {repeatMode === "one" && (
-                  <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold text-white">
+                 <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
                     1
                   </span>
                 )}

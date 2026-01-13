@@ -17,6 +17,17 @@ const normalizeArtistId = (artist) => {
   return String(rawId);
 };
 
+const resolveSongCount = (artist) =>
+  artist?.song_count ??
+  artist?.track_count ??
+  artist?.songs_count ??
+  artist?.songs?.length ??
+  artist?.artist?.song_count ??
+  artist?.artist?.track_count ??
+  artist?.artist?.songs_count ??
+  artist?.artist?.songs?.length ??
+  0;
+
 const normalizeFollowedArtist = (artist) => ({
   id: artist?.id ?? artist?.artist_id ?? artist?.artistId,
   name: artist?.name ?? artist?.artist_name ?? artist?.alias ?? "Nghệ sĩ",
@@ -26,7 +37,7 @@ const normalizeFollowedArtist = (artist) => ({
   cover_url: artist?.cover_url ?? artist?.avatar_url ?? artist?.cover,
   national: artist?.national,
   follow_count: artist?.follow_count,
-  song_count: artist?.song_count,
+  song_count: resolveSongCount(artist),
   followed_at: artist?.followed_at,
 });
 

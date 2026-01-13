@@ -46,8 +46,8 @@ export default function AlbumCard({ album, variant = "rail" }) {
      className={`group relative cursor-pointer overflow-hidden transition-all duration-300
         ${
           isLibrary
-            ? "rounded-lg border border-transparent bg-[#181818] p-4 shadow-none hover:bg-[#242424]"
-            : "rounded-2xl border border-[#242424] bg-[#181818] p-3 shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:bg-[#202020]"
+            ? "rounded-lg border border-transparent bg-[#181818] p-4 hover:bg-[#242424]"
+            : "rounded-xl border border-white/10 bg-[#181818] p-3 hover:bg-[#242424]"
         }
         ${
           isRail
