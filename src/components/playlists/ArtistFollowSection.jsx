@@ -14,8 +14,8 @@ export default function ArtistFollowSection({
   }));
 
   const layoutClassName = singleRow
-    ? "grid grid-cols-2 justify-items-center gap-4 sm:flex sm:flex-nowrap sm:justify-center sm:gap-6 sm:overflow-x-auto sm:px-4 scrollbar-hidden"
-    : "grid grid-cols-2 justify-items-center gap-4 sm:flex sm:flex-wrap sm:justify-center sm:gap-6";
+    ? "flex flex-wrap justify-center gap-4 sm:flex-nowrap sm:justify-center sm:gap-6 sm:overflow-x-auto sm:px-4 scrollbar-hidden"
+    : "flex flex-wrap justify-center gap-4 sm:gap-6";
 
   return (
     <>

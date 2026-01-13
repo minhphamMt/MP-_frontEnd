@@ -125,13 +125,13 @@ const renderBioHtml = (bio = "") => {
 
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center">
           {/* AVATAR */}
-          <div className="w-full max-w-[260px]">
+          <div className="mx-auto w-full max-w-[260px] lg:mx-0">
             <div className="relative overflow-hidden rounded-2xl shadow-xl shadow-black/40">
                {coverUrl ? (
                 <img
                   src={coverUrl}
                   alt={artist?.name}
-                  className="aspect-square w-full object-cover transition duration-500 hover:scale-105"
+                  className="aspect-square h-full w-full object-cover object-center transition duration-500 hover:scale-105"
                 />
               ) : (
                 <div className="flex aspect-square w-full items-center justify-center bg-white/10 text-sm text-white/70">
