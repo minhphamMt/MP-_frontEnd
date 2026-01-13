@@ -11,8 +11,8 @@ export default function PlaylistGrid({
     <div
       className={
         isRowLayout
-          ? "flex gap-5 overflow-x-auto pb-2"
-          : "grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+           ? "flex gap-4 overflow-x-auto pb-2 sm:gap-5 scrollbar-hidden"
+          : "grid grid-cols-1 gap-4 justify-items-center min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 sm:gap-5 sm:justify-items-stretch"
       }
     >
       {playlists.map((pl) => {

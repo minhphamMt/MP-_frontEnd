@@ -224,12 +224,12 @@ export default function Home() {
           >
             {artistAlbums.map((artist) => (
   <div
-    key={artist.artist_id}
-    className="w-[180px] shrink-0"
-  >
-    <ArtistAlbumCard artist={artist} />
-  </div>
-))}
+                key={artist.artist_id}
+                className="w-44 shrink-0 sm:w-60 lg:w-64"
+              >
+                <ArtistAlbumCard artist={artist} />
+              </div>
+            ))}
 
           </div>
 

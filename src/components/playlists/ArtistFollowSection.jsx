@@ -29,15 +29,15 @@ export default function ArtistFollowSection({
       <div
         ref={containerRef}
         className="
-          flex gap-3 overflow-x-auto pb-2
+            flex gap-3 overflow-x-auto pb-2 sm:gap-4
           scroll-smooth scrollbar-hidden
         "
       >
         {normalizedArtists.map((artist) => (
           <div
             key={artist.artist_id}
-            // ✅ width theo breakpoint để không “lỗi” trên desktop
-            className="shrink-0 w-[160px] sm:w-[190px] lg:w-[210px]"
+            // ✅ width theo breakpoint để khớp với thẻ album
+            className="shrink-0 w-44 sm:w-60 lg:w-64"
           >
             <ArtistAlbumCard artist={artist} variant="rail" />
           </div>
@@ -50,10 +50,7 @@ export default function ArtistFollowSection({
   return (
     <div
       ref={containerRef}
-      className="
-        grid gap-3
-        [grid-template-columns:repeat(auto-fill,minmax(190px,1fr))]
-      "
+      className="flex flex-wrap items-start justify-start gap-4 sm:gap-6"
     >
       {normalizedArtists.map((artist) => (
         <ArtistAlbumCard key={artist.artist_id} artist={artist} variant="grid" />

@@ -449,7 +449,7 @@ setToastTitle("Thành công");
       </div>
 
   {/* ARTISTS */}
-      <section className="space-y-4 px-4 sm:px-0">
+       <section className="space-y-4 px-2 sm:px-0">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-white">Nghệ sĩ theo dõi</h2>
           {showAllArtists && (
@@ -490,7 +490,7 @@ setToastTitle("Thành công");
         ) : likedAlbums.length ? (
           <div
             ref={albumListRef}
-           className="flex flex-wrap justify-center gap-4 sm:flex-nowrap sm:justify-center sm:gap-6 sm:overflow-x-auto sm:px-4 scrollbar-hidden"
+           className="grid grid-cols-2 justify-items-center gap-4 min-[420px]:grid-cols-3 sm:flex sm:flex-nowrap sm:justify-start sm:gap-6 sm:overflow-x-auto sm:px-2 scrollbar-hidden"
           >
            {visibleAlbums.map((album) => (
               <AlbumCard key={album.id || album.title} album={album} />
@@ -523,7 +523,7 @@ setToastTitle("Thành công");
         ) : playlists.length ? (
           <div
             ref={playlistListRef}
-            className="grid grid-cols-2 justify-items-center gap-4 sm:flex sm:flex-nowrap sm:justify-center sm:gap-6 sm:overflow-x-auto sm:px-4"
+            className="grid grid-cols-1 justify-items-center gap-4 min-[420px]:grid-cols-2 sm:flex sm:flex-nowrap sm:justify-start sm:gap-6 sm:overflow-x-auto sm:px-2"
           >
            {visiblePlaylists.map((playlist) => (
               <PlaylistCard
