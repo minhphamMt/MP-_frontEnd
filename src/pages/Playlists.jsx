@@ -400,8 +400,8 @@ setToastTitle("Thành công");
   };
 
   return (
-    <div className="min-h-screen space-y-10 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
-            <Toast
+<div className="min-h-screen space-y-10 bg-[#121212] px-4 py-6 sm:px-8">
+      <Toast
         title={toastTitle}
         message={toastMessage}
         onClose={() => {
@@ -410,53 +410,51 @@ setToastTitle("Thành công");
         }}
       />
       {/* HEADER */}
-      <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-emerald-500 text-2xl font-bold text-slate-900 shadow-lg">
-              {user?.avatar_url ? (
-                <img
-                  src={resolveAvatarUrl(user.avatar_url)}
-                  alt={user.display_name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span>{user?.display_name?.[0]?.toUpperCase() || "♪"}</span>
-              )}
-            </div>
-
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-                Thư viện
-              </p>
-               <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-                Playlist của bạn
-              </h1>
-              <p className="text-sm text-white/60">
-                Nghệ sĩ theo dõi & playlist tự tạo
-              </p>
-            </div>
+      <div className="flex flex-col gap-6 border-b border-white/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-[#282828] text-lg font-bold text-white">
+            {user?.avatar_url ? (
+              <img
+                src={resolveAvatarUrl(user.avatar_url)}
+                alt={user.display_name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span>{user?.display_name?.[0]?.toUpperCase() || "♪"}</span>
+            )}
           </div>
 
-          <form
-            onSubmit={handleCreatePlaylist}
-             className="flex w-full flex-wrap items-center gap-2 sm:w-auto"
-          >
-            <input
-              value={creatingName}
-              onChange={(e) => setCreatingName(e.target.value)}
-              className="w-full rounded-full bg-white/10 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-green-400/60 sm:w-64"
-              placeholder="Tên playlist mới"
-            />
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-full bg-gradient-to-r from-green-400 to-emerald-400 px-5 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-green-400/30 transition hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
-            >
-              Tạo playlist
-            </button>
-          </form>
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+              Thư viện
+            </p>
+            <h1 className="text-2xl font-semibold text-white sm:text-3xl">
+              Playlist của bạn
+            </h1>
+            <p className="text-sm text-white/60">
+              Nghệ sĩ theo dõi & playlist tự tạo
+            </p>
+          </div>
         </div>
+
+        <form
+          onSubmit={handleCreatePlaylist}
+          className="flex w-full flex-wrap items-center gap-2 sm:w-auto"
+        >
+          <input
+            value={creatingName}
+            onChange={(e) => setCreatingName(e.target.value)}
+            className="w-full rounded-full border border-white/10 bg-[#242424] px-4 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 sm:w-64"
+            placeholder="Tên playlist mới"
+          />
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-black transition hover:bg-white/90 active:scale-[0.98] disabled:opacity-60"
+          >
+            Tạo playlist
+          </button>
+        </form>
       </div>
 
       {/* ARTISTS */}
@@ -476,6 +474,8 @@ setToastTitle("Thành công");
         <ArtistFollowSection
           artists={visibleArtists}
           containerRef={artistListRef}
+          cardVariant="library"
+          gridClassName="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6"
         />
       </section>
       {/* LIKED ALBUMS */}
@@ -494,24 +494,24 @@ setToastTitle("Thành công");
         </div>
 
         {loadingLikedAlbums ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
             Đang tải album yêu thích...
           </div>
         ) : likedAlbums.length ? (
           <div
             ref={albumListRef}
-           className="grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 sm:gap-6"
+            className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
           >
-           {visibleAlbums.map((album) => (
+            {visibleAlbums.map((album) => (
               <AlbumCard
                 key={album.id || album.title}
                 album={album}
-                variant="grid"
+                variant="library"
               />
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
             Chưa có album nào được thích.
           </div>
         )}
@@ -531,24 +531,25 @@ setToastTitle("Thành công");
           )}
         </div>
         {loadingPlaylists ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
             Đang tải playlist...
           </div>
         ) : playlists.length ? (
           <div
             ref={playlistListRef}
-           className="grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 sm:gap-6"
+            className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
           >
-           {visiblePlaylists.map((playlist) => (
+            {visiblePlaylists.map((playlist) => (
               <PlaylistCard
                 key={playlist.id || playlist.title}
                 playlist={playlist}
                 onOpen={(pl) => pl?.id && navigate(`/playlists/${pl.id}`)}
+                variant="library"
               />
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
             Bạn chưa tạo playlist nào.
           </div>
         )}
