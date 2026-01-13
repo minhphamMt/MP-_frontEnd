@@ -22,19 +22,10 @@ export default function Sidebar({ isOpen, onClose }) {
         aria-hidden
       />
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col overflow-hidden bg-gradient-to-b from-[#1f1530] via-[#16112a] to-[#0b1424] text-white shadow-[0_30px_90px_rgba(0,0,0,0.65)] transition-transform duration-200 md:static md:translate-x-0 ${
+       className={`fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col overflow-hidden bg-[#000000] text-white shadow-[0_30px_90px_rgba(0,0,0,0.65)] transition-transform duration-200 md:static md:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-      {/* Glow nền trên */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.18),transparent_45%)]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_80%_10%,rgba(167,139,250,0.18),transparent_45%)]"
-        aria-hidden
-      />
 
       {/* Logo / Brand */}
       <div className="relative flex h-16 items-center justify-between px-5">
@@ -118,7 +109,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Fade dưới để ăn nhập PlayerBar */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#0e0818] to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#000000] to-transparent"
         aria-hidden
       />
     </aside>

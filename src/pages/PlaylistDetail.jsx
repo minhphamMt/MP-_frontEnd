@@ -250,7 +250,7 @@ export default function PlaylistDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] p-6 text-white/70">
+       <div className="min-h-screen bg-[#121212] p-6 text-white/70">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
           Đang tải playlist...
         </div>
@@ -260,7 +260,7 @@ export default function PlaylistDetail() {
 
   if (!playlist) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] p-6 text-white/70">
+      <div className="min-h-screen bg-[#121212] p-6 text-white/70">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
           Không tìm thấy playlist. Vui lòng thử lại.
         </div>
@@ -270,7 +270,7 @@ export default function PlaylistDetail() {
 
   // ========== MAIN ==========
   return (
-    <div className="min-h-screen space-y-8 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
       <Toast
         title={toastTitle}
         message={toastMessage}

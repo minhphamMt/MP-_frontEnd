@@ -53,48 +53,46 @@ export default function LikedAlbums() {
   }, [loadLikedAlbumsList]);
 
   return (
-    <div className="min-h-screen space-y-8 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-              Thư viện
-            </p>
-            <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-              Album đã thích
-            </h1>
-            <p className="text-sm text-white/60">
-              {likedAlbums.length} album được lưu
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => navigate("/playlists")}
-            className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-white/40 hover:text-white"
-          >
-            ← Quay lại thư viện
-          </button>
+     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+            Thư viện
+          </p>
+          <h1 className="text-2xl font-semibold text-white sm:text-3xl">
+            Album đã thích
+          </h1>
+          <p className="text-sm text-white/60">
+            {likedAlbums.length} album được lưu
+          </p>
         </div>
-      </div>
+
+        <button
+          type="button"
+          onClick={() => navigate("/playlists")}
+          className="rounded-full border border-white/10 bg-[#181818] px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-[#242424]"
+        >
+          ← Quay lại thư viện
+        </button>
+      </header>
 
       <section className="space-y-4">
         {loading ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
             Đang tải album yêu thích...
           </div>
         ) : likedAlbums.length ? (
-             <div className="grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 sm:gap-6">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {likedAlbums.map((album) => (
               <AlbumCard
                 key={album.id || album.title}
                 album={album}
-                variant="grid"
+                variant="library"
               />
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
             Chưa có album nào được thích.
           </div>
         )}

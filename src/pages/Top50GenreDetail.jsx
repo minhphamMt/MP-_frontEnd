@@ -88,7 +88,7 @@ export default function Top50GenreDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+    <div className="min-h-screen bg-[#121212] px-4 py-6 sm:px-8">
       {header}
 
       <SongTable

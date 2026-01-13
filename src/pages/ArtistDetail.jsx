@@ -97,7 +97,7 @@ const renderBioHtml = (bio = "") => {
      ======================= */
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] p-6 text-white/60">
+       <div className="min-h-screen bg-[#121212] p-6 text-white/60">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
           Đang tải nghệ sĩ...
         </div>
@@ -116,7 +116,7 @@ const renderBioHtml = (bio = "") => {
      UI
      ======================= */
   return (
-    <div className="min-h-screen space-y-8 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+   <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
       {/* ===== HERO ===== */}
       <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
         {/* GLOW */}

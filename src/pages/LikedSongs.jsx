@@ -78,7 +78,7 @@ export default function LikedSongs() {
   };
 
   return (
-    <div className="min-h-screen space-y-8 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+     <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
       <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>

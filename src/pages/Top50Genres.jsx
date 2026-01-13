@@ -124,7 +124,7 @@ export default function Top50Genres() {
   }, [genres, loading]);
 
   return (
-    <div className="min-h-screen space-y-6 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
         <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
           Bảng xếp hạng

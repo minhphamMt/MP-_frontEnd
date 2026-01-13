@@ -31,7 +31,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0b1d3a] via-[#1a0f2f] to-[#080612] px-4">
+     <div className="min-h-screen flex items-center justify-center bg-[#121212] px-4">
       <div className="w-full max-w-md">
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
           {/* GLOW */}

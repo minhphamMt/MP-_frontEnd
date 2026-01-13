@@ -217,7 +217,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen space-y-8 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
       <Toast
         title={toast.title}
         message={toast.message}

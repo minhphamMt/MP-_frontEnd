@@ -179,7 +179,7 @@ export default function History() {
      ======================= */
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+       <div className="min-h-screen bg-[#121212] px-4 py-6 sm:px-8">
         <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           Đang tải lịch sử...
         </div>
@@ -189,7 +189,7 @@ export default function History() {
 
   if (!history.length) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+       <div className="min-h-screen bg-[#121212] px-4 py-6 sm:px-8">
         <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
             Thói quen
@@ -209,7 +209,7 @@ export default function History() {
      UI
      ======================= */
   return (
-    <div className="min-h-screen space-y-8 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:px-8">
+   <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
       {/* HEADER */}
       <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)] backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-3">

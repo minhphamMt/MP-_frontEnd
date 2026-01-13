@@ -174,7 +174,7 @@ export default function Home() {
      ======================= */
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] p-6">
+       <div className="min-h-screen bg-[#121212] p-6">
         <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           Đang tải trang chủ...
         </div>
@@ -186,7 +186,7 @@ export default function Home() {
      UI
      ======================= */
   return (
-     <div className="min-h-screen space-y-8 bg-gradient-to-b from-[#0b1d3a] via-[#0c2144] to-[#08162e] px-4 py-6 sm:space-y-14 sm:px-8">
+     <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:space-y-14 sm:px-8">
       {/* ===== SONG RECOMMEND ===== */}
       <Section
         title="Gợi Ý Bài Hát"
