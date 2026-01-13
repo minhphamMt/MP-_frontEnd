@@ -39,23 +39,24 @@ export default function ArtistAlbumCard({ artist }) {
 
   return (
     <div
+      data-card
       onClick={() => navigate(`/artist/${artist.artist_id}`)}
-      className="group relative w-32 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-white/10
-      bg-gradient-to-br from-white/5 via-white/0 to-white/5 p-2.5 backdrop-blur
+      className="group relative w-full cursor-pointer overflow-hidden rounded-2xl border border-white/10
+      bg-gradient-to-br from-white/5 via-white/0 to-white/5 p-3 backdrop-blur
       shadow-[0_20px_60px_rgba(0,0,0,0.45)] transition-all duration-300
-      hover:shadow-[0_30px_80px_rgba(56,189,248,0.25)] sm:w-40 sm:p-3 lg:w-52 lg:p-4"
+      hover:shadow-[0_30px_80px_rgba(56,189,248,0.25)] sm:w-60 sm:shrink-0 sm:p-4 lg:w-64"
     >
       {/* glow nền */}
       <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
 
       {/* AVATAR */}
-       <div className="relative mx-auto w-24 overflow-hidden rounded-full sm:w-32 lg:w-44">
+       <div className="relative mx-auto w-28 overflow-hidden rounded-full sm:w-36 lg:w-44">
         <img
           src={artist.cover_url}
           alt={artist.artist_name}
-          className="h-24 w-24 rounded-full object-cover transition-transform duration-500 group-hover:scale-[1.06]
-          sm:h-32 sm:w-32 lg:h-44 lg:w-44"
+          className="h-28 w-28 rounded-full object-cover transition-transform duration-500 group-hover:scale-[1.06]
+          sm:h-36 sm:w-36 lg:h-44 lg:w-44"
         />
 
         {/* overlay */}

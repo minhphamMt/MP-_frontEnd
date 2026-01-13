@@ -39,11 +39,12 @@ export default function AlbumCard({ album }) {
 
   return (
     <div
+      data-card
       onClick={() => navigate(`/album/${album.id}`)}
-      className="group relative w-32 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-white/10
-      bg-gradient-to-br from-white/5 via-white/0 to-white/5 p-2.5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]
+      className="group relative w-full cursor-pointer overflow-hidden rounded-2xl border border-white/10
+      bg-gradient-to-br from-white/5 via-white/0 to-white/5 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)]
       backdrop-blur transition-all duration-300 hover:shadow-[0_30px_80px_rgba(56,189,248,0.25)]
-      sm:w-40 sm:p-3 lg:w-52 lg:p-4"
+      sm:w-60 sm:shrink-0 sm:p-4 lg:w-64"
     >
       {/* glow nền */}
       <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" />
@@ -68,8 +69,8 @@ export default function AlbumCard({ album }) {
         <img
           src={album.cover_url}
           alt={album.title}
-          className="h-32 w-full rounded-xl object-cover transition-transform duration-500 group-hover:scale-[1.05]
-          sm:h-36 lg:h-44"
+          className="h-36 w-full rounded-xl object-cover transition-transform duration-500 group-hover:scale-[1.05]
+          sm:h-44 lg:h-52"
         />
 
         {/* overlay gradient */}

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FiPlay, FiPause, FiHeart, FiList } from "react-icons/fi";
+import { FiPlay, FiPause, FiHeart } from "react-icons/fi";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { formatDuration, fetchPlayableSong } from "../../utils/song";
 import { getSongById } from "../../api/song.api";
@@ -12,8 +12,6 @@ export default function SongTable({
   loading,
   onRefresh,
   headerActions,
-  hideQueueAction = false,
-  hidePlayOnMobile = false,
 }) {
   const {
     playSong,
@@ -23,7 +21,6 @@ export default function SongTable({
     isPlaying,
     likedSongIds,
     toggleLike,
-    addToQueue,
   } = usePlayerStore();
 
   const handlePlaySong = async (song, queue) => {
@@ -118,7 +115,7 @@ export default function SongTable({
       <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-white/5 scrollbar-muted">
         <div className="min-w-0 sm:min-w-[640px]">
           {/* Header */}
-          <div className="hidden grid-cols-[64px_1fr_220px_90px] px-3 py-3 text-[11px] uppercase tracking-[0.18em] text-white/50 sm:grid sm:px-4">
+           <div className="hidden grid-cols-[64px_1fr_160px_90px] px-3 py-3 text-[11px] uppercase tracking-[0.18em] text-white/50 sm:grid sm:px-4">
             <span className="text-center">#</span>
             <span>Bài hát</span>
             <span className="text-center">Hành động</span>
@@ -137,7 +134,7 @@ export default function SongTable({
                 <div
                   key={song.id || index}
                   onClick={() => handlePlaySong(song, songs)}
-                  className={`group grid grid-cols-[1fr_auto] items-center gap-2 px-3 py-3 transition sm:grid-cols-[64px_1fr_220px_90px] sm:gap-3 sm:px-4 ${
+                  className={`group grid grid-cols-[1fr_auto] items-center gap-2 px-3 py-3 transition sm:grid-cols-[64px_1fr_160px_90px] sm:gap-3 sm:px-4 ${
                     isActive
                       ? "bg-gradient-to-r from-cyan-400/10 via-white/5 to-transparent"
                       : "hover:bg-white/5"
@@ -190,36 +187,12 @@ export default function SongTable({
                   </div>
 
                   {/* Actions */}
-                   <div className="flex items-center justify-end gap-2 sm:justify-center">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePlaySong(song, songs);
-                      }}
-                      className={`flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/10 transition hover:bg-white/20 sm:h-9 sm:w-9 ${
-                        hidePlayOnMobile ? "hidden sm:flex" : ""
-                      }`}
-                    >
-                      {isActive && isPlaying ? <FiPause /> : <FiPlay />}
-                    </button>
+                  <div className="flex items-center justify-end gap-2 sm:justify-center">
 
                     <AddToPlaylistButton
                       song={song}
                       triggerClassName="h-8 w-8 !border-white/10 !bg-white/5 hover:!bg-white/15 sm:h-9 sm:w-9"
                     />
-
-                    {!hideQueueAction && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToQueue(song);
-                        }}
-                         className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/15 sm:h-9 sm:w-9"
-                      >
-                        <FiList />
-                      </button>
-                    )}
-
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

@@ -97,24 +97,27 @@ const resolveAvatarUrl = (url) => {
   const [artistVisibleCount, setArtistVisibleCount] = useState(0);
   const [albumVisibleCount, setAlbumVisibleCount] = useState(0);
   const [playlistVisibleCount, setPlaylistVisibleCount] = useState(0);
-  const ARTIST_CARD_WIDTH = 230;
-  const ALBUM_CARD_WIDTH = 230;
-  const PLAYLIST_CARD_WIDTH = 230;
-  const calculateVisibleCount = useCallback((node, cardWidth) => {
-  if (!node) return 0;
-  const styles = getComputedStyle(node);
-  const gap = parseFloat(styles.columnGap || styles.gap || "0") || 0;
-  const paddingLeft = parseFloat(styles.paddingLeft || "0") || 0;
-  const paddingRight = parseFloat(styles.paddingRight || "0") || 0;
+ const ARTIST_CARD_WIDTH = 240;
+  const ALBUM_CARD_WIDTH = 240;
+  const PLAYLIST_CARD_WIDTH = 240;
+  const calculateVisibleCount = useCallback((node, fallbackWidth) => {
+    if (!node) return 0;
+    const styles = getComputedStyle(node);
+    const gap = parseFloat(styles.columnGap || styles.gap || "0") || 0;
+    const paddingLeft = parseFloat(styles.paddingLeft || "0") || 0;
+    const paddingRight = parseFloat(styles.paddingRight || "0") || 0;
+    const card = node.querySelector("[data-card]");
+    const cardWidth =
+      card?.getBoundingClientRect().width || fallbackWidth || 1;
 
-  const availableWidth = node.clientWidth - paddingLeft - paddingRight;
-  if (availableWidth <= 0) return 0;
+    const availableWidth = node.clientWidth - paddingLeft - paddingRight;
+    if (availableWidth <= 0) return 0;
 
-  return Math.max(
-    1,
-    Math.floor((availableWidth + gap) / (cardWidth + gap))
-  );
-}, []);
+    return Math.max(
+      1,
+      Math.floor((availableWidth + gap) / (cardWidth + gap))
+    );
+  }, []);
 
 useEffect(() => {
   setShowAllLikedSongs(
@@ -487,7 +490,7 @@ setToastTitle("Thành công");
         ) : likedAlbums.length ? (
           <div
             ref={albumListRef}
-             className="grid grid-cols-2 justify-items-center gap-3 sm:flex sm:flex-nowrap sm:justify-start sm:gap-5 sm:overflow-x-auto sm:pr-4 scrollbar-hidden"
+            className="grid grid-cols-2 justify-items-center gap-4 sm:flex sm:flex-nowrap sm:justify-center sm:gap-6 sm:overflow-x-auto sm:px-4 scrollbar-hidden"
           >
            {visibleAlbums.map((album) => (
               <AlbumCard key={album.id || album.title} album={album} />
@@ -520,7 +523,7 @@ setToastTitle("Thành công");
         ) : playlists.length ? (
           <div
             ref={playlistListRef}
-            className="grid grid-cols-2 justify-items-center gap-3 sm:flex sm:flex-nowrap sm:justify-start sm:gap-5 sm:overflow-x-auto sm:pr-4"
+            className="grid grid-cols-2 justify-items-center gap-4 sm:flex sm:flex-nowrap sm:justify-center sm:gap-6 sm:overflow-x-auto sm:px-4"
           >
            {visiblePlaylists.map((playlist) => (
               <PlaylistCard
