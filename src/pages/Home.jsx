@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getAlbums } from "../api/album.api";
 import { getArtistCollections } from "../api/artist.api";
 import { getRecommendations } from "../api/recommendation.api";
@@ -7,6 +7,7 @@ import AlbumCard from "../components/album/AlbumCard";
 import ArtistAlbumCard from "../components/album/ArtistAlbumCard";
 import Section from "../components/section/Section";
 import SongCard from "../components/song/SongCard";
+import usePlayerStore from "../store/player.store";
 
 export default function Home() {
   const [artistAlbums, setArtistAlbums] = useState([]);
@@ -21,6 +22,15 @@ export default function Home() {
   const newAlbumTimerRef = useRef(null);
   const artistResumeRef = useRef(null);
   const newAlbumResumeRef = useRef(null);
+   const playSong = usePlayerStore((state) => state.playSong);
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Chào buổi sáng";
+    if (hour < 18) return "Chào buổi chiều";
+    return "Chào buổi tối";
+  }, []);
+
+  const quickPicks = useMemo(() => songs.slice(0, 6), [songs]);
 
   /* =======================
      LOAD HOME (GIỮ NGUYÊN)
@@ -174,8 +184,8 @@ export default function Home() {
      ======================= */
   if (loading) {
     return (
-       <div className="min-h-screen bg-[#121212] p-6">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+        <div className="min-h-screen bg-[#121212] p-6">
+        <div className="rounded-3xl border border-[#242424] bg-[#181818] p-8 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           Đang tải trang chủ...
         </div>
       </div>
@@ -186,15 +196,65 @@ export default function Home() {
      UI
      ======================= */
   return (
-     <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:space-y-14 sm:px-8">
+      <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:space-y-14 sm:px-8">
+      <div className="rounded-3xl border border-[#242424] bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.4)] sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">
+              Dành cho bạn
+            </p>
+            <h1 className="mt-1 text-2xl font-bold text-white sm:text-3xl">
+              {greeting}
+            </h1>
+          </div>
+          <button
+            onClick={loadHome}
+            className="rounded-full border border-white/10 bg-[#1f1f1f] px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-[#2a2a2a]"
+          >
+            Làm mới
+          </button>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {quickPicks.map((song) => (
+            <button
+              key={song.id}
+              type="button"
+              onClick={() => playSong(song, songs)}
+              className="group flex items-center gap-3 overflow-hidden rounded-xl border border-[#242424] bg-[#181818] pr-4 text-left transition hover:bg-[#242424]"
+            >
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden">
+                <img
+                  src={song.cover_url}
+                  alt={song.title}
+                  className="h-full w-full object-cover"
+                />
+                <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1db954] text-black shadow-lg shadow-[#1db954]/40">
+                    ▶
+                  </span>
+                </span>
+              </div>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold text-white">
+                  {song.title}
+                </div>
+                <div className="truncate text-xs text-white/60">
+                  {song.artist_name}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
       {/* ===== SONG RECOMMEND ===== */}
       <Section
-        title="Gợi Ý Bài Hát"
-        subtitle="Cá nhân hóa cho bạn"
+        title="Dành cho bạn"
+        subtitle="Gợi ý bài hát"
         action={
           <button
             onClick={loadHome}
-            className="rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 px-3 py-1.5 text-[12px] font-semibold text-slate-950 shadow-lg shadow-cyan-400/30 transition hover:shadow-cyan-300/50 sm:px-4 sm:py-2 sm:text-[13px]"
+            className="rounded-full border border-white/10 bg-[#1f1f1f] px-3 py-1.5 text-[12px] font-semibold text-white/80 transition hover:bg-[#2a2a2a] sm:px-4 sm:py-2 sm:text-[13px]"
           >
             Làm mới
           </button>

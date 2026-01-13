@@ -14,7 +14,9 @@ export default function PlaylistGrid({
       className={
         isRowLayout
            ? "flex gap-4 overflow-x-auto pb-2 sm:gap-5 scrollbar-hidden"
-          : "grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 sm:gap-5"
+          : isLibrary
+            ? "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+            : "grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 sm:gap-5"
       }
     >
       {playlists.map((pl) => {
@@ -55,7 +57,9 @@ export default function PlaylistGrid({
               <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100">
                 <div
                   className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg ${
-                    isLibrary ? "bg-green-500 text-black" : "bg-white text-slate-900"
+                    isLibrary
+                      ? "bg-[#1db954] text-black"
+                      : "bg-white text-slate-900"
                   }`}
                 >
                   Mở playlist
@@ -63,8 +67,8 @@ export default function PlaylistGrid({
               </div>
             </div>
 
-            <div className="p-2">
-              <p className="truncate text-xs font-semibold text-white">
+            <div className={`p-2 ${isLibrary ? "sm:p-2" : "sm:p-3"}`}>
+              <p className="truncate text-xs font-semibold text-white sm:text-sm">
                 {pl.title || "Playlist"}
               </p>
               <p className="mt-0.5 text-[11px] text-white/60">

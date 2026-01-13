@@ -58,7 +58,7 @@ export default function LibraryPlaylists() {
   }, [loadPlaylists]);
 
   return (
-     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
+      <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -71,10 +71,10 @@ export default function LibraryPlaylists() {
             {playlists.length} playlist đã tạo
           </p>
         </div>
- <button
+        <button
           type="button"
           onClick={() => navigate("/playlists")}
-          className="rounded-full border border-white/10 bg-[#181818] px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-[#242424]"
+          className="rounded-full border border-white/10 bg-[#1f1f1f] px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-[#2a2a2a]"
         >
           ← Quay lại thư viện
         </button>
@@ -82,7 +82,7 @@ export default function LibraryPlaylists() {
 
       <section className="space-y-4">
         {loading ? (
-          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
+          <div className="rounded-lg border border-[#242424] bg-[#181818] p-6 text-sm text-white/60">
             Đang tải playlist...
           </div>
         ) : playlists.length ? (
@@ -92,7 +92,7 @@ export default function LibraryPlaylists() {
             variant="library"
           />
         ) : (
-          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
+          <div className="rounded-lg border border-[#242424] bg-[#181818] p-6 text-sm text-white/60">
             Bạn chưa tạo playlist nào.
           </div>
         )}

@@ -267,7 +267,7 @@ const handleResultNavigate = async (item) => {
 
   const renderHighlighted = (html) => (
     <span
-      className="[&_em]:text-cyan-300 [&_em]:not-italic"
+       className="[&_em]:text-[#1db954] [&_em]:not-italic"
       dangerouslySetInnerHTML={{ __html: html || "" }}
     />
   );
@@ -279,16 +279,16 @@ const handleResultNavigate = async (item) => {
   };
 
   const resultIcon = (type) => {
-    if (type === "artist") return <FiUser className="text-violet-200" />;
-    if (type === "album") return <FiDisc className="text-emerald-200" />;
-    return <FiMusic className="text-cyan-200" />;
+    if (type === "artist") return <FiUser className="text-white/70" />;
+    if (type === "album") return <FiDisc className="text-white/70" />;
+    return <FiMusic className="text-white/70" />;
   };
 
   return (
     <div className="relative z-500 w-full max-w-lg" ref={containerRef}>
       <form onSubmit={handleSubmit} className="relative" key={defaultKeyword}>
         <FiSearch
-          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-cyan-200"
+          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/70"
           size={18}
         />
         <input
@@ -297,12 +297,12 @@ const handleResultNavigate = async (item) => {
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
          onFocus={() => {
-  setHasFocus(true);
+          setHasFocus(true);
   setOpen(true);
 }}
 
           placeholder="Tìm kiếm bài hát, nghệ sĩ, lời bài hát..."
-          className="w-full rounded-2xl border border-cyan-500/30 bg-[#0f2145] py-2.5 pl-12 pr-4 text-sm text-white placeholder:text-white/60 shadow-[0_18px_48px_rgba(0,0,0,0.45)] outline-none transition focus:border-cyan-300 focus:shadow-[0_20px_60px_rgba(6,182,212,0.25)]"
+          className="w-full rounded-full border border-[#2a2a2a] bg-[#1f1f1f] py-2.5 pl-12 pr-4 text-sm text-white placeholder:text-white/50 shadow-[0_14px_40px_rgba(0,0,0,0.35)] outline-none transition focus:border-[#1db954] focus:bg-[#232323]"
         />
       </form>
 
@@ -311,15 +311,15 @@ const handleResultNavigate = async (item) => {
   createPortal(
       <div
         style={dropdownStyle}
-        className="max-h-[70vh] overflow-y-auto px-0 sm:max-h-none"
+        className="max-h-[65vh] overflow-y-auto px-0 sm:max-h-none"
         ref={dropdownRef}
       >
-      <div className="rounded-2xl border border-cyan-500/15 bg-[#0b1530] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
-        <div className="rounded-xl border border-white/5 bg-[#0f1f3f] p-4 shadow-inner shadow-black/20">
+      <div className="rounded-2xl border border-[#2a2a2a] bg-[#181818] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
+        <div className="rounded-xl border border-white/5 bg-[#202020] p-4 shadow-inner shadow-black/20">
           <div className="flex items-center justify-between text-sm text-white/70">
             <div className="font-semibold text-white">Tìm kiếm nhanh</div>
             {keyword.trim() && (
-              <div className="text-xs uppercase tracking-[0.2em] text-cyan-200">
+              <div className="text-xs uppercase tracking-[0.2em] text-[#1db954]">
                 "{keyword}"
               </div>
             )}
@@ -331,19 +331,19 @@ const handleResultNavigate = async (item) => {
           </div>
 
           {keyword.trim() ? (
-            <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-[#122449] p-3">
+            <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-[#1a1a1a] p-3">
               <div className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/60">
-                <FiHeadphones className="text-pink-200" />
+                <FiHeadphones className="text-white/70" />
                 <span>Gợi ý kết quả</span>
                 {loading && (
-                  <span className="text-[11px] text-cyan-200/80">
+                  <span className="text-[11px] text-[#1db954]/80">
                     Đang tìm...
                   </span>
                 )}
               </div>
 
               {!loading && !results.length && (
-                <div className="rounded-lg border border-white/10 bg-[#0b1b38] px-3 py-2 text-sm text-white/70">
+                <div className="rounded-lg border border-white/10 bg-[#232323] px-3 py-2 text-sm text-white/70">
                   Không tìm thấy gợi ý phù hợp.
                 </div>
               )}
@@ -352,14 +352,14 @@ const handleResultNavigate = async (item) => {
                 {results.map((item) => (
                   <div
                     key={`${item.type}-${item.id}`}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white transition hover:bg-[#0c1c38]"
+                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white transition hover:bg-[#2a2a2a]"
                   >
                     <button
                       type="button"
                       onClick={() => handleResultNavigate(item)}
                       className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     >
-                      <div className="relative h-12 w-12 overflow-hidden rounded-lg border border-white/10 bg-gradient-to-br from-[#1b2c54] via-[#13264a] to-[#0f1f3f]">
+                      <div className="relative h-12 w-12 overflow-hidden rounded-lg border border-white/10 bg-[#2a2a2a]">
                         {item.cover ? (
                           <img
                             src={item.cover}
@@ -384,14 +384,14 @@ const handleResultNavigate = async (item) => {
                     </button>
 
                     <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.15em] text-white/60">
-                      <span className="rounded-full bg-[#0b1b38] px-2 py-1 text-white/70">
+                      <span className="rounded-full bg-[#2a2a2a] px-2 py-1 text-white/70">
                         {item.type}
                       </span>
                       {item.type === "song" && (
                         <button
                           type="button"
                           onClick={() => handlePlaySong(item)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-400/50 bg-cyan-400/15 text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-400/25"
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#1db954]/60 bg-[#1db954]/20 text-[#1db954] transition hover:border-[#1ed760] hover:bg-[#1db954]/30"
                         >
                           <FiMusic />
                         </button>
@@ -402,24 +402,24 @@ const handleResultNavigate = async (item) => {
               </div>
             </div>
           ) : (
-            <div className="mt-3 space-y-3 rounded-xl border border-white/10 bg-[#122449] p-3">
+            <div className="mt-3 space-y-3 rounded-xl border border-white/10 bg-[#1a1a1a] p-3">
               <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/60">
                 <FiClock />
                 <span>Lịch sử tìm kiếm</span>
                 {loading && (
-                  <span className="text-[11px] text-cyan-200/80">
+                  <span className="text-[11px] text-[#1db954]/80">
                     Đang tải...
                   </span>
                 )}
               </div>
 
               {!history.length && (
-                <div className="rounded-lg border border-white/10 bg-[#0b1b38] px-3 py-2 text-sm text-white/70">
+                <div className="rounded-lg border border-white/10 bg-[#232323] px-3 py-2 text-sm text-white/70">
                   Bạn chưa có lịch sử tìm kiếm.
                 </div>
               )}
 
-              <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
+              <div className="max-h-80 space-y-1 overflow-y-auto pr-1 sm:max-h-72">
                 {history.map((item) => {
                   const createdAt =
                     item.searched_at || item.createdAt || item.created_at;
@@ -429,14 +429,14 @@ const handleResultNavigate = async (item) => {
                       type="button"
                       key={item.id || item.keyword}
                        onClick={() => handleSearch(item.keyword || "")}
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white transition hover:bg-[#0c1c38]"
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white transition hover:bg-[#2a2a2a]"
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0b1b38] text-cyan-200">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2a2a2a] text-white/70">
                         <FiClock />
                       </div>
                       <div className="flex-1 truncate">{item.keyword}</div>
                       {createdAt && (
-                        <span className="text-[11px] text-white/40">
+                        <span className="hidden text-[11px] text-white/40 sm:inline">
                           {new Date(createdAt).toLocaleDateString("vi-VN")}
                         </span>
                       )}

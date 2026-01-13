@@ -179,8 +179,8 @@ export default function History() {
      ======================= */
   if (loading) {
     return (
-       <div className="min-h-screen bg-[#121212] px-4 py-6 sm:px-8">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+        <div className="min-h-screen bg-[#121212] px-4 py-6 sm:px-8">
+        <div className="rounded-3xl border border-[#242424] bg-[#181818] p-6 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           Đang tải lịch sử...
         </div>
       </div>
@@ -189,8 +189,8 @@ export default function History() {
 
   if (!history.length) {
     return (
-       <div className="min-h-screen bg-[#121212] px-4 py-6 sm:px-8">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+      <div className="min-h-screen bg-[#121212] px-4 py-6 sm:px-8">
+        <div className="rounded-3xl border border-[#242424] bg-[#181818] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
             Thói quen
           </p>
@@ -209,9 +209,9 @@ export default function History() {
      UI
      ======================= */
   return (
-   <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
+    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
       {/* HEADER */}
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)] backdrop-blur">
+      <div className="rounded-3xl border border-[#242424] bg-[#181818] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
@@ -226,7 +226,7 @@ export default function History() {
           </div>
           <button
             onClick={loadHistory}
-            className="rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-cyan-400/30 transition hover:shadow-cyan-300/50"
+            className="rounded-full border border-white/10 bg-[#1f1f1f] px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-[#2a2a2a]"
           >
             Làm mới
           </button>
@@ -234,9 +234,9 @@ export default function History() {
       </div>
 
       {/* TABLE */}
-          <div className="overflow-x-auto rounded-3xl border border-white/10 bg-gradient-to-br from-[#1c132d] via-[#130f27] to-[#0b1424] shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur scrollbar-muted">
+      <div className="overflow-x-auto rounded-3xl border border-[#242424] bg-[#181818] shadow-[0_30px_90px_rgba(0,0,0,0.55)] scrollbar-muted">
         <div className="min-w-0 sm:min-w-[920px]">
-          <div className="hidden grid-cols-[3fr_2fr_2fr_1fr_48px_48px_1fr] gap-3 bg-white/5 px-4 py-3 text-[11px] uppercase tracking-[0.16em] text-white/60 sm:grid sm:px-5">
+          <div className="hidden grid-cols-[3fr_2fr_2fr_1fr_48px_48px_1fr] gap-3 border-b border-white/5 bg-[#202020] px-4 py-3 text-[11px] uppercase tracking-[0.16em] text-white/60 sm:grid sm:px-5">
             <div>Bài hát</div>
             <div>Album</div>
             <div>Nghệ sĩ</div>
@@ -252,7 +252,7 @@ export default function History() {
                 type="button"
                 key={`${item.history_id || item.id}-${item.listened_at}`}
                 onClick={() => handlePlaySong(item)}
-                className="grid w-full grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 text-left transition hover:bg-white/5 sm:grid-cols-[3fr_2fr_2fr_1fr_48px_48px_1fr] sm:px-5"
+                className="grid w-full grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 text-left transition hover:bg-[#242424] sm:grid-cols-[3fr_2fr_2fr_1fr_48px_48px_1fr] sm:px-5"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl shadow-md shadow-black/30">

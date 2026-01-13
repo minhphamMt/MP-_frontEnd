@@ -47,17 +47,9 @@ title: s.title,
       className={`group relative w-full overflow-hidden transition-all duration-300 active:scale-[0.98] ${
         isLibrary
           ? "rounded-lg border border-transparent bg-[#181818] p-4 shadow-none hover:bg-[#242424]"
-          : "rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 via-white/0 to-white/5 backdrop-blur hover:shadow-[0_30px_80px_rgba(56,189,248,0.25)]"
-      } ${isRail ? "p-3 shadow-[0_10px_28px_rgba(0,0,0,0.30)]" : "p-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)] sm:p-4"}`}
+           : "rounded-2xl border border-[#242424] bg-[#181818] hover:bg-[#202020]"
+      } ${isRail ? "p-3 shadow-[0_10px_28px_rgba(0,0,0,0.30)]" : "p-3 shadow-[0_18px_50px_rgba(0,0,0,0.35)] sm:p-4"}`}
     >
-      {/* glow (giảm bớt cho rail để không “bệt/loá”) */}
-      {!isRail && !isLibrary && (
-        <>
-          <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-cyan-400/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-violet-500/10 blur-3xl" />
-        </>
-      )}
-
       {/* COVER */}
        <div
         className={`relative w-full overflow-hidden ${
@@ -94,9 +86,9 @@ title: s.title,
         >
           <span
             className={`flex h-11 w-11 items-center justify-center rounded-full
-              bg-gradient-to-br from-cyan-400 to-violet-500
-              text-lg text-[#0c0914]
-              shadow-lg shadow-cyan-400/40
+              bg-[#1db954]
+              text-lg text-black
+              shadow-lg shadow-[#1db954]/40
               transition-transform duration-300 group-hover:scale-110 ${
                 isRail ? "h-10 w-10 text-base" : "sm:h-12 sm:w-12 sm:text-xl"
               }`}
@@ -113,7 +105,7 @@ title: s.title,
         }`}
       >
         <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/50">
-          <FiUsers className="text-cyan-300" />
+          <FiUsers className="text-[#1db954]" />
           Nghệ sĩ
         </div>
 
@@ -123,7 +115,7 @@ title: s.title,
 
         <div className="flex items-center justify-between gap-2 text-xs text-white/70">
           <div className="flex items-center gap-1">
-            <FiMusic className="shrink-0 text-violet-300" />
+            <FiMusic className="shrink-0 text-white/60" />
             <span>{artist.song_count ?? 0} bài hát</span>
           </div>
           {!isLibrary && (
