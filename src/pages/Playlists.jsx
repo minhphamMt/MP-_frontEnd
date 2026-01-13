@@ -449,7 +449,7 @@ setToastTitle("Thành công");
       </div>
 
   {/* ARTISTS */}
-      <section className="space-y-4">
+      <section className="space-y-4 px-4 sm:px-0">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-white">Nghệ sĩ theo dõi</h2>
           {showAllArtists && (

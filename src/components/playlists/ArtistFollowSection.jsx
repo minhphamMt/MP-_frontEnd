@@ -13,28 +13,51 @@ export default function ArtistFollowSection({
     cover_url: artist?.cover_url ?? artist?.avatar_url ?? artist?.cover,
   }));
 
-  const layoutClassName = singleRow
-    ? "flex flex-wrap justify-center gap-4 sm:flex-nowrap sm:justify-center sm:gap-6 sm:overflow-x-auto sm:px-4 scrollbar-hidden"
-    : "flex flex-wrap justify-center gap-4 sm:gap-6";
+  if (!normalizedArtists.length) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+        Chưa có nghệ sĩ nào được theo dõi.
+        <br />
+        Hãy khám phá để tìm nghệ sĩ bạn yêu thích 🎧
+      </div>
+    );
+  }
 
+  // ===== SLIDER MODE =====
+  if (singleRow) {
+    return (
+      <div
+        ref={containerRef}
+        className="
+          flex gap-3 overflow-x-auto pb-2
+          scroll-smooth scrollbar-hidden
+        "
+      >
+        {normalizedArtists.map((artist) => (
+          <div
+            key={artist.artist_id}
+            // ✅ width theo breakpoint để không “lỗi” trên desktop
+            className="shrink-0 w-[160px] sm:w-[190px] lg:w-[210px]"
+          >
+            <ArtistAlbumCard artist={artist} variant="rail" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ===== GRID MODE =====
   return (
-    <>
-      {normalizedArtists.length ? (
-        <div ref={containerRef} className={layoutClassName}>
-          {normalizedArtists.map((artist) => (
-            <ArtistAlbumCard
-              key={artist.artist_id || artist.id}
-              artist={artist}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
-          Chưa có nghệ sĩ nào được theo dõi.
-          <br />
-          Hãy khám phá để tìm nghệ sĩ bạn yêu thích 🎧
-        </div>
-      )}
-    </>
+    <div
+      ref={containerRef}
+      className="
+        grid gap-3
+        [grid-template-columns:repeat(auto-fill,minmax(190px,1fr))]
+      "
+    >
+      {normalizedArtists.map((artist) => (
+        <ArtistAlbumCard key={artist.artist_id} artist={artist} variant="grid" />
+      ))}
+    </div>
   );
 }

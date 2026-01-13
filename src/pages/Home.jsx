@@ -223,8 +223,14 @@ export default function Home() {
             className="flex gap-4 overflow-x-auto pb-2 pr-10 scroll-smooth scrollbar-hidden"
           >
             {artistAlbums.map((artist) => (
-              <ArtistAlbumCard key={artist.artist_id} artist={artist} />
-            ))}
+  <div
+    key={artist.artist_id}
+    className="w-[180px] shrink-0"
+  >
+    <ArtistAlbumCard artist={artist} />
+  </div>
+))}
+
           </div>
 
           {/* CONTROLS */}
