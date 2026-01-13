@@ -9,9 +9,9 @@ export default function FollowArtistButton({
 }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const ensureLoaded = useArtistFollowStore((s) => s.ensureLoaded);
-  const isFollowing = useArtistFollowStore((s) => s.isFollowing);
   const toggleFollow = useArtistFollowStore((s) => s.toggleFollow);
   const pendingIds = useArtistFollowStore((s) => s.pendingIds);
+ const followedArtistIds = useArtistFollowStore((s) => s.followedArtistIds);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -21,7 +21,11 @@ export default function FollowArtistButton({
 
   const artistId =
     artist?.id ?? artist?.artist_id ?? artist?.artistId ?? artist?.artist?.id;
-  const following = isFollowing(artistId);
+  const normalizedId =
+    artistId === undefined || artistId === null ? null : String(artistId);
+  const following = normalizedId
+    ? followedArtistIds.includes(normalizedId)
+    : false;
   const isPending = pendingIds.includes(String(artistId));
 
   const sizeClasses =
