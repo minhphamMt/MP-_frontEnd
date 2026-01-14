@@ -10,8 +10,12 @@ import { BsHeartFill, BsMusicNoteList } from "react-icons/bs";
 import { FiUser, FiX } from "react-icons/fi";
 import SidebarItem from "./SidebarItem";
 import SidebarSection from "./SidebarSection";
+import ArtistSidebar from "./ArtistSidebar";
+import useAuthStore from "../../store/auth.store";
+
 
 export default function Sidebar({ isOpen, onClose }) {
+  const role = useAuthStore((s) => s.role);
   return (
     <>
       <div
@@ -104,7 +108,7 @@ export default function Sidebar({ isOpen, onClose }) {
             label="Album đã thích"
           />
         </SidebarSection>
-        
+        {role === "ARTIST" && <ArtistSidebar />}
       </div>
 
       {/* Fade dưới để ăn nhập PlayerBar */}

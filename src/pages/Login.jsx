@@ -57,7 +57,8 @@ export default function Login({ initialMode = "login" }) {
       const user = await login({ email: loginEmail, password: loginPassword });
 
       if (user.role === "ADMIN") return navigate("/admin", { replace: true });
-      if (user.role === "ARTIST") return navigate("/artist", { replace: true });
+       if (user.role === "ARTIST")
+        return navigate("/artist/dashboard", { replace: true });
       return navigate("/", { replace: true });
     } catch (err) {
       const msg =
@@ -85,7 +86,8 @@ export default function Login({ initialMode = "login" }) {
       });
 
       if (user.role === "ADMIN") return navigate("/admin", { replace: true });
-      if (user.role === "ARTIST") return navigate("/artist", { replace: true });
+      if (user.role === "ARTIST")
+        return navigate("/artist/dashboard", { replace: true });
       return navigate("/", { replace: true });
     } catch (err) {
       const msg =

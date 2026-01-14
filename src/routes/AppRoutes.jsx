@@ -24,11 +24,12 @@ import LibraryPlaylists from "../pages/LibraryPlaylists";
 import LikedSongs from "../pages/LikedSongs";
 import Search from "../pages/Search";
 import Profile from "../pages/Profile";
+import ArtistDashboard from "../pages/artist/ArtistDashboard";
+import ArtistAlbums from "../pages/artist/ArtistAlbums";
+import ArtistAlbumForm from "../pages/artist/ArtistAlbumForm";
+import ArtistSongs from "../pages/artist/ArtistSongs";
 
 /* ===== DASHBOARD ===== */
-const ArtistDashboard = () => (
-  <div style={{ padding: 20 }}>ARTIST DASHBOARD</div>
-);
 
 const AdminDashboard = () => (
   <div style={{ padding: 20 }}>ADMIN DASHBOARD</div>
@@ -51,7 +52,7 @@ export default function AppRoutes() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/zing-chart" element={<ZingChart />} />
-           <Route path="/zing-chart/region/:region" element={<RegionChart />} />
+          <Route path="/zing-chart/region/:region" element={<RegionChart />} />
           <Route path="/new-release" element={<NewRelease />} />
           <Route path="/top-50" element={<Top50Genres />} />
           <Route path="/top-50/:id" element={<Top50GenreDetail />} />
@@ -77,9 +78,15 @@ export default function AppRoutes() {
       </Route>
 
       {/* ===== ARTIST ROLE ===== */}
-      <Route element={<ProtectedRoute allowedRoles={["ARTIST"]} />}>
-        <Route path="/artist/dashboard" element={<ArtistDashboard />} />
-      </Route>
+       <Route element={<MainLayout />}>
+          <Route path="/artist" element={<Navigate to="/artist/dashboard" replace />} />
+          <Route path="/artist/dashboard" element={<ArtistDashboard />} />
+          <Route path="/artist/albums" element={<ArtistAlbums />} />
+          <Route path="/artist/albums/new" element={<ArtistAlbumForm />} />
+          <Route path="/artist/albums/:id/edit" element={<ArtistAlbumForm />} />
+          <Route path="/artist/songs" element={<ArtistSongs />} />
+        </Route>
+      
 
       {/* ===== ADMIN ===== */}
       <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
