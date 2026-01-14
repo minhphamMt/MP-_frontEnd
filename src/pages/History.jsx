@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getMyHistory } from "../api/history.api";
 import { getSongById } from "../api/song.api";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { fetchPlayableSong } from "../utils/song";
-import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
+import { FiHeart, FiMusic } from "react-icons/fi";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -63,10 +63,10 @@ const dedupeHistoryItems = (items) => {
 
   items.forEach((item) => {
     const key =
+      item?.song_id ||
+      item?.id ||
       item?.history_id ||
-           `${item?.song_id || item?.id || item?.title}-${
-        item?.listened_at || item?.listen_time || ""
-      }`;
+      `${item?.title}-${item?.artist_name || item?.artist}`;
 
     if (!seen.has(key)) {
       seen.add(key);
@@ -95,7 +95,7 @@ export default function History() {
   const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const loadingMoreRef = useRef(false);
+
   const {
     playSong,
     likedSongIds,
@@ -110,10 +110,9 @@ export default function History() {
      ======================= */
   const loadHistory = useCallback(
     async (page = 1, append = false) => {
-       if (append && loadingMoreRef.current) return;
       if (append) setLoadingMore(true);
       else setLoading(true);
-      if (append) loadingMoreRef.current = true;
+
       try {
         const res = await getMyHistory({ page, limit: DEFAULT_LIMIT });
         const { items, meta: resMeta } = extractHistoryPayload(res);
@@ -127,7 +126,6 @@ export default function History() {
       } catch (err) {
         console.error("Load listening history error", err);
       } finally {
-        if (append) loadingMoreRef.current = false;
         if (append) setLoadingMore(false);
         else setLoading(false);
       }
@@ -284,12 +282,8 @@ export default function History() {
                         onClick={() => handlePlaySong(item)}
                         className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
                       >
-                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1db954] text-black shadow-[0_8px_16px_rgba(29,185,84,0.35)]">
-                          {isPlayingCurrent && isPlaying ? (
-                            <FiPause className="text-sm" />
-                          ) : (
-                            <FiPlay className="ml-0.5 text-sm" />
-                          )}
+                        <span className="text-white text-sm">
+                          {isPlayingCurrent && isPlaying ? "⏸" : "▶"}
                         </span>
                       </button>
                     </div>
@@ -340,7 +334,7 @@ export default function History() {
                     {formatRelativeTime(item.listened_at)}
                   </div>
 
-                  <div className="flex shrink-0 items-center justify-end gap-2 sm:hidden">
+                  <div className="flex items-center justify-end gap-2 sm:hidden">
                     <AddToPlaylistButton
                       song={item}
                       triggerClassName="h-8 w-8 !border-white/20 !bg-white/5 hover:!bg-white/15"
@@ -360,7 +354,7 @@ export default function History() {
                     >
                       <FiHeart className="text-[14px]" />
                     </button>
-                    <span className="text-[11px] tabular-nums text-white/60">
+                    <span className="text-[11px] text-white/60">
                       {formatRelativeTime(item.listened_at)}
                     </span>
                   </div>
