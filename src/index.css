@@ -109,8 +109,14 @@ body {
   to   { transform: rotate(360deg); }
 }
 
-.player-detail-disc-playing {
+.player-detail-disc {
   animation: player-detail-disc-spin 12s linear infinite;
+  animation-play-state: paused;
+  transform-origin: center;
+}
+
+.player-detail-disc.is-playing {
+  animation-play-state: running;
 }
 
 /* ===== song switch slide ===== */

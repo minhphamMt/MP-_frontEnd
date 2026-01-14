@@ -294,25 +294,27 @@ const xStep =
     const pointY = hoverPosition?.y ?? crosshairPoint.y * heightRatio;
     const preferLeft = pointX > chartWidthPx * 0.55;
     const preferAbove = pointY > chartHeightPx * 0.45;
-    const baseLeft = preferLeft ? pointX - 12 : pointX + 12;
-    const baseTop = preferAbove ? pointY - 12 : pointY + 12;
-    const clampedLeft = Math.min(chartWidthPx - 16, Math.max(16, baseLeft));
-    const clampedTop = Math.min(chartHeightPx - 16, Math.max(16, baseTop));
+    const tooltipWidth = Math.min(260, Math.max(140, chartWidthPx - 24));
+    const estimatedHeight = 40 + activePoints.length * 44;
+    const baseLeft = preferLeft ? pointX - 12 - tooltipWidth : pointX + 12;
+    const baseTop = preferAbove ? pointY - 12 - estimatedHeight : pointY + 12;
+    const maxLeft = Math.max(8, chartWidthPx - tooltipWidth - 8);
+    const maxTop = Math.max(8, chartHeightPx - estimatedHeight - 8);
+    const clampedLeft = Math.min(maxLeft, Math.max(8, baseLeft));
+    const clampedTop = Math.min(maxTop, Math.max(8, baseTop));
 
     return {
       left: `${clampedLeft}px`,
       top: `${clampedTop}px`,
-      transform: `translate(${preferLeft ? "-100%" : "0%"}, ${
-        preferAbove ? "-100%" : "0%"
-      })`,
+      width: `${tooltipWidth}px`,
     };
   }, [
-    chartHeight,
     chartHeightPx,
     chartWidth,
     chartWidthPx,
     crosshairPoint,
     hoverPosition,
+    activePoints.length,
   ]);
 
   const handleChartHover = useCallback(
@@ -476,7 +478,7 @@ const xStep =
 
             <div className="flex flex-col gap-6 lg:flex-row">
               {/* CHART */}
-               <div className="relative flex-1 rounded-2xl border border-white/5 bg-[#121212] p-2 shadow-lg shadow-black/30">
+               <div className="relative flex-1 overflow-hidden rounded-2xl border border-white/5 bg-[#121212] p-2 shadow-lg shadow-black/30 sm:overflow-visible">
 
                 <svg
                   ref={chartRef}
@@ -597,7 +599,7 @@ const xStep =
 
                 {crosshairPoint && activePoints.length > 0 && (
                   <div
-                    className="pointer-events-none absolute left-0 top-0 z-20 rounded-2xl border border-white/10 bg-[#1f1f1f] px-3 py-2 shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
+                     className="pointer-events-none absolute left-0 top-0 z-20 rounded-2xl border border-white/10 bg-[#1f1f1f] px-3 py-2 text-[12px] shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
                     style={tooltipStyle || undefined}
                   >
                     <div className="mb-2 text-[11px] text-white/60">

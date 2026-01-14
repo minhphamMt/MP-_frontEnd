@@ -262,13 +262,13 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
 
          <div className="flex flex-1 flex-col items-center justify-center gap-4">
-            <div className="h-60 w-60 overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+             <div className="h-60 w-60 overflow-hidden rounded-full border border-white/10 bg-white/5 shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
               {cover && (
                 <img
                   src={cover}
                   alt={currentSong.title}
-                  className={`h-full w-full object-cover ${
-                    isPlaying ? "player-detail-disc-playing" : ""
+                  className={`player-detail-disc h-full w-full object-cover ${
+                  isPlaying ? "is-playing" : ""
                   }`}
                 />
               )}
@@ -395,12 +395,14 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* MAIN */}
           <div className="flex flex-col items-center">
-             <div className="h-56 w-56 overflow-hidden rounded-2xl bg-white/5 shadow-[0_25px_70px_rgba(0,0,0,0.55)] sm:h-72 sm:w-72 lg:h-[360px] lg:w-[360px]">
+             <div className="h-56 w-56 overflow-hidden rounded-full bg-white/5 shadow-[0_25px_70px_rgba(0,0,0,0.55)] sm:h-72 sm:w-72 lg:h-[360px] lg:w-[360px]">
               {cover && (
                 <img
                   src={cover}
                   alt={currentSong.title}
-                  className="w-full h-full object-cover"
+                  className={`player-detail-disc h-full w-full object-cover ${
+                    isPlaying ? "is-playing" : ""
+                  }`}
                 />
               )}
             </div>
