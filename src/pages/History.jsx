@@ -3,7 +3,7 @@ import { getMyHistory } from "../api/history.api";
 import { getSongById } from "../api/song.api";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { fetchPlayableSong } from "../utils/song";
-import { FiHeart } from "react-icons/fi";
+import { FiHeart, FiMusic } from "react-icons/fi";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -215,12 +215,11 @@ export default function History() {
      UI
      ======================= */
   return (
-    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
-      {/* HEADER */}
+    <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
       <div className="rounded-3xl border border-[#242424] bg-[#181818] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
+            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
               Thói quen
             </p>
             <h1 className="mt-1 text-2xl font-extrabold text-white sm:text-3xl">
@@ -239,17 +238,14 @@ export default function History() {
         </div>
       </div>
 
-      {/* TABLE */}
       <div className="overflow-x-auto rounded-3xl border border-[#242424] bg-[#181818] shadow-[0_30px_90px_rgba(0,0,0,0.55)] scrollbar-muted">
-        <div className="min-w-0 sm:min-w-[920px]">
-           <div className="hidden grid-cols-[3fr_2fr_2fr_1fr_48px_48px_1fr] gap-3 border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.35em] text-white/50 sm:grid sm:px-5">
-            <div>Bài hát</div>
-            <div>Album</div>
-            <div>Nghệ sĩ</div>
-            <div>Thời gian</div>
-            <div></div>
-            <div></div>
-            <div className="text-right">Nghe</div>
+        <div className="min-w-0 sm:min-w-[720px]">
+          <div className="hidden grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.35em] text-white/50 sm:grid">
+            <span />
+            <span>Bài hát</span>
+            <span>Album</span>
+            <span className="text-right">Thời gian</span>
+            <span className="text-right">Nghe</span>
           </div>
 
           <div className="divide-y divide-white/5">
@@ -258,64 +254,62 @@ export default function History() {
                 normalizeSongId(currentSong) === normalizeSongId(item);
 
               return (
-                <button
-                  type="button"
+                <div
                   key={`${item.history_id || item.id}-${item.listened_at}`}
-                  onClick={() => handlePlaySong(item)}
-                  className={`group grid w-full grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 text-left transition sm:grid-cols-[3fr_2fr_2fr_1fr_48px_48px_1fr] sm:px-5 ${
+                  className={`group grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 text-sm transition sm:grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] ${
                     isPlayingCurrent
                       ? "bg-gradient-to-r from-cyan-400/10 to-transparent"
                       : "hover:bg-white/5"
                   }`}
                 >
+                   <div className="hidden justify-center sm:flex">
+                    <FiMusic
+                      className={`transition ${
+                        isPlayingCurrent
+                          ? "text-cyan-400"
+                          : "text-white/40 group-hover:text-white"
+                      }`}
+                    />
+                  </div>
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl shadow-md shadow-black/30">
+                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md">
                       <img
                         src={item.cover_url}
                         alt=""
                         className="h-full w-full object-cover"
                       />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100">
+                      <button
+                        onClick={() => handlePlaySong(item)}
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
+                      >
                         <span className="text-white text-sm">
                           {isPlayingCurrent && isPlaying ? "⏸" : "▶"}
                         </span>
-                      </div>
+                      </button>
                     </div>
                     <div className="min-w-0">
                       <div
-                        className={`truncate text-sm font-semibold sm:text-base ${
+                        className={`truncate font-medium ${
                           isPlayingCurrent ? "text-cyan-300" : "text-white"
                         }`}
                       >
                         {item.title}
                       </div>
-                      {item.album_title && (
-                        <div className="hidden truncate text-[11px] text-white/60 sm:block">
-                          {item.album_title}
-                        </div>
-                      )}
+                      <div className="truncate text-xs text-white/60">
+                        {item.artist_name}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="hidden truncate text-sm text-white/80 sm:block">
-                    {item.album_title}
+                  <div className="hidden truncate text-xs text-white/70 sm:block">
+                    {item.album_title || "—"}
                   </div>
 
-                  <div className="hidden truncate text-sm text-white/80 sm:block">
-                    {item.artist_name}
-                  </div>
-
-                  <div className="hidden text-sm text-white/70 sm:block">
-                    {formatDuration(item.duration)}
-                  </div>
-                  <div className="hidden justify-center sm:flex">
+                  <div className="hidden items-center justify-end gap-4 text-xs text-white/70 sm:flex">
                     <AddToPlaylistButton
                       song={item}
-                      triggerClassName="h-9 w-9 !border-white/20 !bg-white/10 hover:!bg-white/20"
+                      triggerClassName="h-9 w-9 !border-white/20 !bg-white/5 hover:!bg-white/15"
                     />
-                  </div>
-                  {/* LIKE BUTTON */}
-                  <div className="hidden justify-center sm:flex">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -323,26 +317,27 @@ export default function History() {
                         const songId = normalizeSongId(item);
                         songId && toggleLike(songId);
                       }}
-                      className={`flex h-9 w-9 items-center justify-center rounded-full
-                    border transition-all duration-200
-                    ${
-                      likedSongIds.includes(normalizeSongId(item))
-                        ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
-                        : "border-white/20 text-white/60 hover:text-white hover:border-white/40"
-                    }`}
+                      className={`flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 ${
+                        likedSongIds.includes(normalizeSongId(item))
+                          ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
+                          : "border-white/20 text-white/60 hover:text-white hover:border-white/40"
+                      }`}
                     >
                       <FiHeart className="text-[16px]" />
                     </button>
+                    <span className="tabular-nums">
+                      {formatDuration(item.duration)}
+                    </span>
                   </div>
 
-                  <div className="hidden text-right text-sm text-white/60 sm:block">
+                  <div className="hidden text-right text-xs text-white/60 sm:block">
                     {formatRelativeTime(item.listened_at)}
                   </div>
 
                   <div className="flex items-center justify-end gap-2 sm:hidden">
                     <AddToPlaylistButton
                       song={item}
-                      triggerClassName="h-8 w-8 !border-white/20 !bg-white/10 hover:!bg-white/20"
+                      triggerClassName="h-8 w-8 !border-white/20 !bg-white/5 hover:!bg-white/15"
                     />
                     <button
                       type="button"
@@ -351,8 +346,7 @@ export default function History() {
                         const songId = normalizeSongId(item);
                         songId && toggleLike(songId);
                       }}
-                      className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200
-                      ${
+                      className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200 ${
                         likedSongIds.includes(normalizeSongId(item))
                           ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
                           : "border-white/20 text-white/60 hover:text-white hover:border-white/40"
@@ -364,7 +358,7 @@ export default function History() {
                       {formatRelativeTime(item.listened_at)}
                     </span>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>

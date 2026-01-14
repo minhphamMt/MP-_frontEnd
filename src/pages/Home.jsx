@@ -197,7 +197,7 @@ export default function Home() {
      ======================= */
   return (
       <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:space-y-14 sm:px-8">
-      <div className="rounded-3xl border border-[#242424] bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.4)] sm:p-6">
+      {/* <div className="rounded-3xl border border-[#242424] bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.4)] sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">
@@ -246,7 +246,7 @@ export default function Home() {
             </button>
           ))}
         </div>
-      </div>
+      </div> */}
       {/* ===== SONG RECOMMEND ===== */}
       <Section
         title="Dành cho bạn"

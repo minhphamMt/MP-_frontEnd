@@ -386,39 +386,41 @@ const xStep =
   const renderRankItem = (song, idx) => (
     <div
       key={song.id || idx}
-       onClick={() => handlePlay(song, weeklySongs)}
-       className={`group flex items-center justify-between gap-4 rounded-xl px-3 py-2 transition-all duration-300 hover:bg-white/10 hover:shadow-lg hover:shadow-black/30 hover:scale-[1.01] hover:cursor-pointer ${
-        song.audio_url ? "cursor-pointer" : " cursor-not-allowed"
+        onClick={() => handlePlay(song, weeklySongs)}
+      className={`group grid grid-cols-[32px_minmax(0,3fr)_minmax(0,1fr)] items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
+        song.audio_url ? "hover:bg-white/5" : "opacity-70 cursor-not-allowed"
       }`}
     >
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="w-10 text-center text-2xl font-black text-white/80 drop-shadow">
-          {song.rank ?? idx + 1}
-        </div>
+      <div className="text-center text-lg font-semibold text-white/70">
+        {song.rank ?? idx + 1}
+      </div>
 
-        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/5 bg-[#242424] shadow-md shadow-black/30 transition group-hover:ring-2 group-hover:ring-emerald-400/60 group-hover:ring-offset-2 group-hover:ring-offset-[#121212]">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md border border-white/5 bg-[#242424]">
           <img
             src={getSongCover(song)}
             alt={song.title}
             className="h-full w-full object-cover"
           />
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition duration-300 group-hover:opacity-100">
-            <span className="rounded-full bg-white/90 p-2 text-[#0c0914] shadow-lg shadow-emerald-400/30">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100">
+            <span className="text-white text-sm">
               <FaPlay size={12} />
             </span>
           </div>
         </div>
 
         <div className="min-w-0">
-          <div className="truncate font-semibold text-white">{song.title}</div>
-          <div className="truncate text-xs text-white/60">{song.artist_name}</div>
+          <div className="truncate font-medium text-white">{song.title}</div>
+          <div className="truncate text-xs text-white/60">
+            {song.artist_name}
+          </div>
         </div>
       </div>
 
-      <div className="ml-auto flex items-center gap-1 text-xs text-white/50">
-          <FaRegClock size={12} />
-          <span>{formatDuration(song.duration)}</span>
-       </div>
+      <div className="flex items-center justify-end gap-1 text-xs text-white/50">
+        <FaRegClock size={12} />
+        <span>{formatDuration(song.duration)}</span>
+      </div>
     </div>
   );
 

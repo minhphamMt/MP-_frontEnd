@@ -1,5 +1,5 @@
 import { normalizeSongId } from "../../store/player.store";
-import { FiHeart, FiPause, FiPlay, FiTrash2 } from "react-icons/fi";
+import { FiHeart, FiTrash2, FiMusic } from "react-icons/fi";
 export default function PlaylistSongsTable({
   songs = [],
   currentSong,
@@ -10,115 +10,139 @@ export default function PlaylistSongsTable({
   onToggleLike,
 }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 shadow-[0_25px_80px_rgba(0,0,0,0.55)]">
-      {/* BACKGROUND GLOW */}
-      <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-purple-500/20 blur-3xl" />
-
-      {/* HEADER */}
-      <div className="relative z-10 mb-5">
-        <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-          Danh sách
-        </p>
-        <h3 className="text-lg font-semibold text-white">
-          Bài hát trong playlist
-        </h3>
+    <div className="rounded-3xl border border-white/10 bg-[#181818] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.55)]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+            Danh sách
+          </p>
+          <h3 className="text-lg font-semibold text-white">
+            Bài hát trong playlist
+          </h3>
+        </div>
+        <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
+          {songs.length} bài hát
+        </span>
       </div>
 
-      {/* SONG LIST */}
-      <div className="relative z-10 divide-y divide-white/10">
-        {songs.map((song, index) => {
-          const songId = normalizeSongId(song);
-          const isPlayingCurrent =
-            normalizeSongId(currentSong) === songId;
-          const isLiked = songId && likedSongIds.includes(songId);
-
-          return (
-            <div
-              key={song.id || index}
-              className={`group flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between transition
-                ${
-                  isPlayingCurrent
-                    ? "bg-white/5"
-                    : "hover:bg-white/5"
-                } rounded-xl px-2`}
-            >
-              {/* LEFT */}
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
-                  <img
-                    src={song.cover_url}
-                    alt={song.title}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                  />
-
-                  {/* PLAY OVERLAY */}
-                  <button
-                    onClick={() => onPlay?.(song)}
-                    className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
-                  >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg">
-                      {isPlayingCurrent && isPlaying ? <FiPause /> : <FiPlay />}
-                    </span>
-                  </button>
-                </div>
-
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-white">
-                    {song.title}
-                  </p>
-                  <p className="truncate text-xs text-white/60">
-                    {song.artist_name || song.artist}
-                  </p>
-                </div>
-              </div>
-
-              {/* RIGHT */}
-              <div className="flex flex-wrap items-center gap-2 text-sm text-white/60">
-                <span className="hidden sm:inline truncate max-w-[10rem]">
-                  {song.album_title || song.album || ""}
-                </span>
-                <span className="hidden sm:inline">•</span>
-                <span>{song.duration}</span>
-
-                {/* PLAY (MOBILE) */}
-                <button
-                  onClick={() => onPlay?.(song)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:bg-white/20 sm:hidden"
-                >
-                  {isPlayingCurrent && isPlaying ? <FiPause /> : <FiPlay />}
-                </button>
-
-                {/* LIKE */}
-                <button
-                  onClick={() => songId && onToggleLike?.(songId)}
-                  className={`flex h-9 w-9 items-center justify-center rounded-full border transition
-                    ${
-                      isLiked
-                        ? "border-rose-300/60 bg-rose-500/20 text-rose-200"
-                        : "border-white/15 bg-white/10 text-white hover:bg-white/20"
-                    }`}
-                >
-                 <FiHeart />
-                </button>
-
-                {/* REMOVE */}
-                <button
-                  onClick={() => onRemove?.(song)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:border-rose-300/60 hover:bg-rose-500/15 hover:text-rose-100"
-                >
-                 <FiTrash2 />
-                </button>
-              </div>
-            </div>
-          );
-        })}
-
-        {/* EMPTY */}
-        {!songs.length && (
-          <div className="py-6 text-center text-sm text-white/60">
-            Chưa có bài hát nào trong playlist này.
+      <div className="mt-4 overflow-x-auto scrollbar-muted">
+        <div className="min-w-0 sm:min-w-[640px]">
+          <div className="hidden grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.35em] text-white/50 sm:grid">
+            <span />
+            <span>Bài hát</span>
+            <span>Album</span>
+            <span className="text-right">Thời gian</span>
           </div>
-        )}
+
+          {!songs.length && (
+            <p className="px-4 py-4 text-sm text-white/60">
+              Chưa có bài hát nào trong playlist này.
+            </p>
+          )}
+
+          <div className="divide-y divide-white/5">
+            {songs.map((song, index) => {
+              const songId = normalizeSongId(song);
+              const isPlayingCurrent =
+                normalizeSongId(currentSong) === songId;
+              const isLiked = songId && likedSongIds.includes(songId);
+
+              return (
+                <div
+                  key={song.id || index}
+                  className={`group grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 text-sm transition sm:grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)] ${
+                    isPlayingCurrent
+                      ? "bg-gradient-to-r from-cyan-400/10 to-transparent"
+                      : "hover:bg-white/5"
+                  }`}
+                >
+                  <div className="hidden justify-center sm:flex">
+                    <FiMusic
+                      className={`transition ${
+                        isPlayingCurrent
+                          ? "text-cyan-400"
+                          : "text-white/40 group-hover:text-white"
+                      }`}
+                    />
+                  </div>
+
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md">
+                      <img
+                        src={song.cover_url}
+                        alt={song.title}
+                        className="h-full w-full object-cover"
+                      />
+                      <button
+                        onClick={() => onPlay?.(song)}
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
+                      >
+                        <span className="text-white text-sm">
+                          {isPlayingCurrent && isPlaying ? "⏸" : "▶"}
+                        </span>
+                      </button>
+                    </div>
+
+                    <div className="min-w-0">
+                      <p
+                        className={`truncate font-medium ${
+                          isPlayingCurrent ? "text-cyan-300" : "text-white"
+                        }`}
+                      >
+                        {song.title}
+                      </p>
+                      <p className="truncate text-xs text-white/60">
+                        {song.artist_name || song.artist}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="hidden truncate text-xs text-white/70 sm:block">
+                    {song.album_title || song.album || "—"}
+                  </div>
+
+                  <div className="hidden items-center justify-end gap-4 text-xs text-white/70 sm:flex">
+                    <button
+                      onClick={() => songId && onToggleLike?.(songId)}
+                      className={`flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 ${
+                        isLiked
+                          ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
+                          : "border-white/20 text-white/60 hover:text-white hover:border-white/40"
+                      }`}
+                    >
+                      <FiHeart className="text-[16px]" />
+                    </button>
+                    <button
+                      onClick={() => onRemove?.(song)}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-white/60 transition hover:border-red-400/60 hover:text-red-300"
+                    >
+                      <FiTrash2 className="text-[16px]" />
+                    </button>
+                    <span className="tabular-nums">{song.duration}</span>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 sm:hidden">
+                    <button
+                      onClick={() => songId && onToggleLike?.(songId)}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200 ${
+                        isLiked
+                          ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
+                          : "border-white/20 text-white/60 hover:text-white hover:border-white/40"
+                      }`}
+                    >
+                      <FiHeart className="text-[14px]" />
+                    </button>
+                    <button
+                      onClick={() => onRemove?.(song)}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 text-white/60 transition hover:border-red-400/60 hover:text-red-300"
+                    >
+                      <FiTrash2 className="text-[14px]" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
