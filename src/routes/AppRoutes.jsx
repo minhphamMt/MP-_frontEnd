@@ -28,6 +28,8 @@ import ArtistDashboard from "../pages/artist/ArtistDashboard";
 import ArtistAlbums from "../pages/artist/ArtistAlbums";
 import ArtistAlbumForm from "../pages/artist/ArtistAlbumForm";
 import ArtistSongs from "../pages/artist/ArtistSongs";
+import ArtistSongForm from "../pages/artist/ArtistSongForm";
+import ArtistProfile from "../pages/artist/ArtistProfile";
 
 /* ===== DASHBOARD ===== */
 
@@ -78,14 +80,22 @@ export default function AppRoutes() {
       </Route>
 
       {/* ===== ARTIST ROLE ===== */}
-       <Route element={<MainLayout />}>
-          <Route path="/artist" element={<Navigate to="/artist/dashboard" replace />} />
+       <Route element={<ProtectedRoute allowedRoles={["ARTIST", "ADMIN"]} />}>
+        <Route element={<MainLayout />}>
+          <Route
+            path="/artist"
+            element={<Navigate to="/artist/dashboard" replace />}
+          />
           <Route path="/artist/dashboard" element={<ArtistDashboard />} />
+          <Route path="/artist/profile" element={<ArtistProfile />} />
           <Route path="/artist/albums" element={<ArtistAlbums />} />
           <Route path="/artist/albums/new" element={<ArtistAlbumForm />} />
           <Route path="/artist/albums/:id/edit" element={<ArtistAlbumForm />} />
           <Route path="/artist/songs" element={<ArtistSongs />} />
+          <Route path="/artist/songs/new" element={<ArtistSongForm />} />
+          <Route path="/artist/songs/:id/edit" element={<ArtistSongForm />} />
         </Route>
+      </Route>
       
 
       {/* ===== ADMIN ===== */}

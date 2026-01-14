@@ -1,0 +1,300 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { FiArrowLeft, FiMusic, FiSave } from "react-icons/fi";
+import useAuthStore from "../../store/auth.store";
+import { getAlbums } from "../../api/album.api";
+import { createSong, getSongById, updateSong } from "../../api/song.api";
+import { formatDuration } from "../../utils/song";
+
+const emptyForm = {
+  title: "",
+  album_id: "",
+  duration: "",
+  cover_url: "",
+  audio_path: "",
+  status: "pending",
+};
+
+const statusOptions = [
+  { value: "pending", label: "Chờ duyệt" },
+  { value: "approved", label: "Công khai" },
+  { value: "draft", label: "Nháp" },
+];
+
+export default function ArtistSongForm() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const isEdit = Boolean(id);
+  const user = useAuthStore((s) => s.user);
+
+  const artistId = user?.artist?.id ?? user?.artist_id ?? user?.id ?? "";
+  const [formValues, setFormValues] = useState(emptyForm);
+  const [albums, setAlbums] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const loadAlbums = useCallback(async () => {
+    try {
+      const res = await getAlbums({ artist_id: artistId, limit: 200 });
+      const data = res?.data?.data || [];
+      setAlbums(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Load artist albums failed", err);
+      setAlbums([]);
+    }
+  }, [artistId]);
+
+  const loadSong = useCallback(async () => {
+    if (!isEdit) return;
+    try {
+      setLoading(true);
+      const res = await getSongById(id);
+      const song = res?.data?.data ?? res?.data ?? {};
+      setFormValues({
+        title: song?.title || song?.name || "",
+        album_id: song?.album_id ?? song?.album?.id ?? "",
+        duration: song?.duration ?? "",
+        cover_url: song?.cover_url ?? song?.cover ?? "",
+        audio_path:
+          song?.audio_path ||
+          song?.audio_url ||
+          song?.audio ||
+          song?.source ||
+          "",
+        status: song?.status || "pending",
+      });
+    } catch (err) {
+      console.error("Load song failed", err);
+      setError("Không thể tải thông tin bài hát.");
+    } finally {
+      setLoading(false);
+    }
+  }, [id, isEdit]);
+
+  useEffect(() => {
+    loadAlbums();
+    loadSong();
+  }, [loadAlbums, loadSong]);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    if (!formValues.title.trim()) {
+      setError("Vui lòng nhập tên bài hát.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const payload = {
+        title: formValues.title.trim(),
+        album_id: formValues.album_id || null,
+        artist_id: artistId || null,
+        duration: formValues.duration ? Number(formValues.duration) : null,
+        cover_url: formValues.cover_url || null,
+        audio_path: formValues.audio_path || null,
+        status: formValues.status || null,
+      };
+
+      if (isEdit) {
+        await updateSong(id, payload);
+      } else {
+        await createSong(payload);
+      }
+
+      navigate("/artist/songs");
+    } catch (err) {
+      console.error("Save song failed", err);
+      setError("Lưu bài hát thất bại. Hãy thử lại nhé.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const coverPreview = useMemo(() => formValues.cover_url || "", [formValues]);
+
+  return (
+    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+              Nghệ sĩ
+            </p>
+            <h1 className="mt-2 text-3xl font-extrabold text-white">
+              {isEdit ? "Chỉnh sửa bài hát" : "Tạo bài hát mới"}
+            </h1>
+            <p className="mt-2 text-sm text-white/60">
+              {isEdit
+                ? "Cập nhật metadata cho bài hát của bạn."
+                : "Thêm bài hát mới vào kho nhạc nghệ sĩ."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/artist/songs")}
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition hover:border-white/30 hover:bg-white/10"
+          >
+            <FiArrowLeft />
+            Quay lại danh sách
+          </button>
+        </div>
+      </div>
+
+      <form
+        onSubmit={handleSubmit}
+        className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]"
+      >
+        <div className="space-y-6">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+            <h2 className="text-lg font-semibold text-white">Thông tin cơ bản</h2>
+            <div className="mt-6 space-y-4">
+              <div>
+                <label className="text-sm text-white/70">
+                  Tên bài hát <span className="text-rose-300">*</span>
+                </label>
+                <input
+                  name="title"
+                  value={formValues.title}
+                  onChange={handleChange}
+                  placeholder="Ví dụ: Hành trình mới"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-white/70">Album</label>
+                <select
+                  name="album_id"
+                  value={formValues.album_id}
+                  onChange={handleChange}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                >
+                  <option value="">Chọn album (tùy chọn)</option>
+                  {albums.map((album) => (
+                    <option key={album.id} value={album.id}>
+                      {album.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm text-white/70">Thời lượng (giây)</label>
+                <input
+                  name="duration"
+                  type="number"
+                  min="0"
+                  value={formValues.duration}
+                  onChange={handleChange}
+                  placeholder="Ví dụ: 225"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                />
+                {formValues.duration && (
+                  <p className="mt-2 text-xs text-white/50">
+                    Hiển thị: {formatDuration(formValues.duration)}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm text-white/70">Ảnh bìa</label>
+                <input
+                  name="cover_url"
+                  value={formValues.cover_url}
+                  onChange={handleChange}
+                  placeholder="https://..."
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-white/70">Audio path</label>
+                <input
+                  name="audio_path"
+                  value={formValues.audio_path}
+                  onChange={handleChange}
+                  placeholder="/uploads/songs/filename.mp3"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-white/70">Trạng thái</label>
+                <select
+                  name="status"
+                  value={formValues.status}
+                  onChange={handleChange}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                >
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+            <h2 className="text-lg font-semibold text-white">Xem trước</h2>
+            <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#181818]">
+              {coverPreview ? (
+                <img
+                  src={coverPreview}
+                  alt="Ảnh bìa"
+                  className="h-56 w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-56 items-center justify-center text-4xl text-white/50">
+                  <FiMusic />
+                </div>
+              )}
+              <div className="space-y-2 p-4">
+                <h3 className="text-lg font-semibold text-white">
+                  {formValues.title || "Tên bài hát"}
+                </h3>
+                <p className="text-sm text-white/60">
+                  {formValues.duration
+                    ? `Thời lượng: ${formatDuration(formValues.duration)}`
+                    : "Chưa có thời lượng"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+            {error && (
+              <div className="mb-4 rounded-2xl border border-rose-400/40 bg-rose-500/10 p-3 text-sm text-rose-200">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1db954] px-5 py-3 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              <FiSave />
+              {loading
+                ? "Đang lưu..."
+                : isEdit
+                  ? "Lưu thay đổi"
+                  : "Tạo bài hát"}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}

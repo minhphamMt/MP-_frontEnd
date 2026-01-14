@@ -16,6 +16,7 @@ import useAuthStore from "../../store/auth.store";
 
 export default function Sidebar({ isOpen, onClose }) {
   const role = useAuthStore((s) => s.role);
+  const isArtist = role === "ARTIST";
   return (
     <>
       <div
@@ -53,62 +54,54 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Menu */}
       <div className="relative flex-1 overflow-y-auto px-3 pb-6 pt-2 scrollbar-muted">
-        <SidebarSection>
-          <SidebarItem
-            to="/"
-            icon={MdExplore}
-            label="Khám phá"
-          />
-          <SidebarItem
-            to="/zing-chart"
-            icon={FaChartLine}
-            label="Minhchart"
-          />
-          <SidebarItem
-            to="/new-release"
-            icon={BsMusicNoteList}
-            label="BXH nhạc mới"
-          />
-          <SidebarItem
-            to="/top-50"
-            icon={MdLibraryMusic}
-            label="Top 50"
-          />
-        </SidebarSection>
+ {isArtist ? (
+          <ArtistSidebar />
+        ) : (
+          <>
+            <SidebarSection>
+              <SidebarItem to="/" icon={MdExplore} label="Khám phá" />
+              <SidebarItem
+                to="/zing-chart"
+                icon={FaChartLine}
+                label="Minhchart"
+              />
+              <SidebarItem
+                to="/new-release"
+                icon={BsMusicNoteList}
+                label="BXH nhạc mới"
+              />
+              <SidebarItem to="/top-50" icon={MdLibraryMusic} label="Top 50" />
+            </SidebarSection>
 
-        <SidebarSection title="Thư viện">
-          <SidebarItem
-            to="/history"
-            icon={MdHistory}
-            label="Nghe gần đây"
-          />
-          <SidebarItem
-            to="/playlists"
-            icon={MdPlaylistPlay}
-            label="Thư viện"
-          />
-          {/* <SidebarItem
-            to="/albums"
-            icon={MdAlbum}
-            label="Album"
-          /> */}
-            <SidebarItem
-            to="/library/liked-songs"
-            icon={BsHeartFill}
-            label="Bài hát yêu thích"
-          />
-          <SidebarItem
-            to="/library/playlists"
-            icon={MdPlaylistPlay}
-            label="Playlist đã tạo"
-          />
-          <SidebarItem
-            to="/library/liked-albums"
-            icon={MdAlbum}
-            label="Album đã thích"
-          />
-        </SidebarSection>
-        {role === "ARTIST" && <ArtistSidebar />}
+            <SidebarSection title="Thư viện">
+              <SidebarItem
+                to="/history"
+                icon={MdHistory}
+                label="Nghe gần đây"
+              />
+              <SidebarItem
+                to="/playlists"
+                icon={MdPlaylistPlay}
+                label="Thư viện"
+              />
+              <SidebarItem
+                to="/library/liked-songs"
+                icon={BsHeartFill}
+                label="Bài hát yêu thích"
+              />
+              <SidebarItem
+                to="/library/playlists"
+                icon={MdPlaylistPlay}
+                label="Playlist đã tạo"
+              />
+              <SidebarItem
+                to="/library/liked-albums"
+                icon={MdAlbum}
+                label="Album đã thích"
+              />
+            </SidebarSection>
+          </>
+        )}
       </div>
 
       {/* Fade dưới để ăn nhập PlayerBar */}

@@ -6,15 +6,18 @@ import {
   FiHeadphones,
   FiPlus,
   FiTrendingUp,
+  FiUser,
 } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
 import { getAlbums } from "../../api/album.api";
+import { getArtistSongs } from "../../api/song.api";
 import ArtistAlbumTile from "../../components/artist/ArtistAlbumTile";
 
 export default function ArtistDashboard() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const [albums, setAlbums] = useState([]);
+  const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const artistId = user?.artist?.id ?? user?.artist_id ?? user?.id;
@@ -31,9 +34,14 @@ export default function ArtistDashboard() {
       const res = await getAlbums({ artist_id: artistId, limit: 12 });
       const data = res?.data?.data || [];
       setAlbums(Array.isArray(data) ? data : []);
+      const songsRes = await getArtistSongs(artistId);
+      const payload = songsRes?.data?.data || songsRes?.data || {};
+      const list = payload?.songs || payload?.data || payload || [];
+      setSongs(Array.isArray(list) ? list : []);
     } catch (error) {
       console.error("Load artist albums failed", error);
       setAlbums([]);
+      setSongs([]);
     } finally {
       setLoading(false);
     }
@@ -45,16 +53,11 @@ export default function ArtistDashboard() {
 
   const stats = useMemo(() => {
     const totalAlbums = albums.length;
-    const totalSongs = albums.reduce(
-      (total, album) =>
-        total +
-        (album?.song_count ?? album?.track_count ?? album?.songs?.length ?? 0),
-      0
-    );
+    const totalSongs = songs.length;
     const newestAlbum = albums[0]?.title || "Chưa có album";
 
     return { totalAlbums, totalSongs, newestAlbum };
-  }, [albums]);
+  }, [albums, songs]);
 
   const latestAlbums = albums.slice(0, 3);
 
@@ -88,6 +91,14 @@ export default function ArtistDashboard() {
             >
               <FiPlus />
               Tạo album mới
+            </button>
+             <button
+              type="button"
+              onClick={() => navigate("/artist/profile")}
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
+            >
+              <FiUser />
+              Cập nhật hồ sơ
             </button>
           </div>
         </div>

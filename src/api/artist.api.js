@@ -3,6 +3,12 @@ import api from "./axios";
 export const getArtistCollections = (params = {}) =>
   api.get("/artists/collections", { params });
 
+export const getArtistById = (id) => api.get(`/artists/${id}`);
+
+export const createArtist = (payload) => api.post("/artists", payload);
+
+export const updateArtist = (id, payload) => api.put(`/artists/${id}`, payload);
+
 export const followArtist = (artistId) =>
   api.post(`/artists/${artistId}/follow`);
 
