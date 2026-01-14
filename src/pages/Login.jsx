@@ -168,7 +168,7 @@ export default function Login({ initialMode = "login" }) {
               </div>
             </div>
 
-            <div className="relative z-10">
+             <div className="relative z-10 min-h-[560px]">
               <AnimatePresence mode="wait">
                 {mode === "login" ? (
                   <motion.form
