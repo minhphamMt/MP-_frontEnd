@@ -39,6 +39,7 @@ export default function AppRoutes() {
     <Routes>
       {/* ===== PUBLIC ===== */}
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Login initialMode="register" />} />
       <Route path="/403" element={<Forbidden />} />
 
       {/* ===== USER / APP ===== */}
