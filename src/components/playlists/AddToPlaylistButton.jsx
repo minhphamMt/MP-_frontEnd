@@ -164,8 +164,8 @@ export default function AddToPlaylistButton({
           setOpen(true);
         }}
         className={clsx(
-          "flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-3 py-2 text-white/80 transition hover:border-white/30 hover:bg-white/15",
-          variant === "icon" ? "h-9 w-9" : "gap-2 text-xs",
+           "flex items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/80 transition hover:border-white/30 hover:bg-white/15",
+          variant === "icon" ? "h-9 w-9 p-0" : "gap-2 px-3 py-2 text-xs",
           triggerClassName
         )}
         title="Thêm vào playlist"
@@ -181,7 +181,7 @@ export default function AddToPlaylistButton({
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-xl rounded-3xl border border-white/10 bg-gradient-to-b from-[#0f1b33] to-[#0b1224] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.7)] backdrop-blur sm:max-w-2xl sm:p-8"
+              className="w-full max-w-xl rounded-3xl border border-white/10 bg-gradient-to-b from-[#1c1c1c] via-[#151515] to-[#101010] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.7)] backdrop-blur sm:max-w-2xl sm:p-8"
             >
               <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
                 <div className="space-y-1">
@@ -202,7 +202,7 @@ export default function AddToPlaylistButton({
                 </button>
               </div>
 
-              <div className="max-h-[55vh] overflow-y-auto rounded-2xl border border-white/10 bg-white/5">
+              <div className="max-h-[55vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#151515]">
                 {loading ? (
                   <div className="flex items-center justify-center gap-3 px-4 py-8 text-sm text-white/70">
                     <FiLoader className="animate-spin" />
@@ -217,7 +217,7 @@ export default function AddToPlaylistButton({
                       className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition hover:bg-white/10 disabled:opacity-60"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-cyan-300">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-300">
                           <FiMusic />
                         </span>
                         <div className="min-w-0">
@@ -239,7 +239,7 @@ export default function AddToPlaylistButton({
                 )}
               </div>
 
-              <div className="mt-5 flex flex-col items-start gap-4 rounded-2xl border border-white/10 bg-white/5 p-5 sm:mt-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-5 flex flex-col items-start gap-4 rounded-2xl border border-white/10 bg-[#151515] p-5 sm:mt-6 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-white">Playlist mới</p>
                   <p className="text-xs text-white/60">Thêm nhanh tên playlist rồi bấm tạo</p>
@@ -249,12 +249,12 @@ export default function AddToPlaylistButton({
                     value={newPlaylistName}
                     onChange={(e) => setNewPlaylistName(e.target.value)}
                     placeholder="Tên playlist"
-                    className="w-full min-w-[220px] rounded-lg border border-white/10 bg-[#0c1426] px-3 py-2 text-sm text-white outline-none ring-0 focus:border-cyan-400/60 focus:bg-[#0f1d36]"
+                    className="w-full min-w-[220px] rounded-lg border border-white/10 bg-[#1c1c1c] px-3 py-2 text-sm text-white outline-none ring-0 focus:border-emerald-400/60 focus:bg-[#202020]"
                   />
                   <button
                     onClick={handleCreatePlaylist}
                     disabled={!newPlaylistName.trim() || saving}
-                    className="rounded-lg bg-gradient-to-r from-cyan-400 to-emerald-400 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-400/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-lg bg-gradient-to-r from-emerald-400 to-emerald-500 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Tạo playlist
                   </button>

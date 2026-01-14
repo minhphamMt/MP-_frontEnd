@@ -1,4 +1,4 @@
-import { FiMusic, FiHeart } from "react-icons/fi";
+import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import AddToPlaylistButton from "./AddToPlaylistButton";
 import { normalizeSongId } from "../../store/player.store";
 
@@ -105,8 +105,12 @@ export default function LikedSongsSection({
                       bg-black/50 opacity-0 transition
                       group-hover:opacity-100"
                       >
-                        <span className="text-white text-sm">
-                          {isPlayingCurrent && isPlaying ? "⏸" : "▶"}
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1db954] text-black shadow-[0_8px_16px_rgba(29,185,84,0.35)]">
+                          {isPlayingCurrent && isPlaying ? (
+                            <FiPause className="text-sm" />
+                          ) : (
+                            <FiPlay className="ml-0.5 text-sm" />
+                          )}
                         </span>
                       </button>
                     </div>
@@ -153,7 +157,7 @@ export default function LikedSongsSection({
                       {song.duration || "--:--"}
                     </span>
                   </div>
-                   <div className="flex items-center justify-end gap-2 sm:hidden">
+                   <div className="flex shrink-0 items-center justify-end gap-2 sm:hidden">
                     <AddToPlaylistButton
                       song={song}
                       triggerClassName="h-8 w-8 !border-white/20 !bg-white/5 hover:!bg-white/15"

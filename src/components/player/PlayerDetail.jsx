@@ -11,8 +11,6 @@ import {
 } from "react-icons/fa6";
 import {
   FiChevronDown,
-  FiMoreHorizontal,
-  FiShare2,
   FiHeart,
 } from "react-icons/fi";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
@@ -196,7 +194,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
   /* ================= render ================= */
   return (
     <div
-      className={`player-detail-shell fixed inset-0 z-[999] overflow-y-auto text-white ${stableClass} ${animateClass}`}
+       className={`player-detail-shell fixed inset-0 z-[999] h-[100dvh] overflow-hidden text-white ${stableClass} ${animateClass}`}
       style={{
         animationDuration: `${ANIM_MS}ms`,
         animationTimingFunction: ANIM_EASE,
@@ -232,8 +230,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
       </button>
 
       {/* CONTENT */}
-           <div className="relative z-10 mx-auto flex min-h-[calc(100vh-160px)] w-[min(1280px,94vw)] flex-col justify-center pb-24 pt-6 sm:min-h-[calc(100vh-120px)] sm:pb-10 sm:pt-8">
-        <div className="flex flex-col gap-6 sm:hidden">
+        <div className="relative z-10 mx-auto flex min-h-[100dvh] w-[min(1280px,94vw)] flex-col justify-center pb-6 pt-6 sm:min-h-[calc(100vh-120px)] sm:pb-10 sm:pt-8">
+        <div className="flex h-full flex-col gap-6 sm:hidden">
           <div className="flex items-center justify-between text-lg">
             <button
               type="button"
@@ -243,20 +241,28 @@ export default function PlayerDetail({ isOpen, onClose }) {
             >
               <FiChevronDown />
             </button>
-            <div className="truncate text-sm font-semibold uppercase tracking-[0.3em] text-white/70">
+            <div className="flex-1 truncate px-3 text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-white/70">
               {currentSong.title}
             </div>
             <button
               type="button"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/90"
-              aria-label="Tùy chọn"
+             onClick={() => {
+                const songId = normalizeSongId(currentSong);
+                if (songId) toggleLike(songId);
+              }}
+              className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${
+                likedSongIds.includes(normalizeSongId(currentSong))
+                  ? "border-[#1db954] text-[#1db954] bg-[#1db954]/10"
+                  : "border-white/10 text-white/80 bg-white/5"
+              }`}
+              aria-label="Yêu thích"
             >
-              <FiMoreHorizontal />
+               <FiHeart />
             </button>
           </div>
 
-          <div className="flex flex-col items-center gap-4">
-            <div className="h-64 w-64 overflow-hidden rounded-full border border-white/20 bg-white/5 shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+         <div className="flex flex-1 flex-col items-center justify-center gap-4">
+            <div className="h-60 w-60 overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
               {cover && (
                 <img
                   src={cover}
@@ -279,30 +285,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
               </p>
             </div>
 
-            <div className="flex w-full items-center justify-between text-lg">
-              <button
-                type="button"
-                className="text-white/70"
-                aria-label="Chia sẻ"
-              >
-                <FiShare2 />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const songId = normalizeSongId(currentSong);
-                  if (songId) toggleLike(songId);
-                }}
-                className={`text-xl transition ${
-                  likedSongIds.includes(normalizeSongId(currentSong))
-                    ? "text-[#1db954]"
-                    : "text-white/70"
-                }`}
-                aria-label="Yêu thích"
-              >
-                <FiHeart />
-              </button>
-            </div>
+            <div className="h-px w-20 bg-white/10" />
           </div>
 
           <div className="space-y-3">

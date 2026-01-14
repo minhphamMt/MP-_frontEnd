@@ -391,7 +391,7 @@ const xStep =
         song.audio_url ? "hover:bg-white/5" : "opacity-70 cursor-not-allowed"
       }`}
     >
-      <div className="text-center text-lg font-semibold text-white/70">
+      <div className="flex items-center justify-center text-lg font-semibold text-white/70 tabular-nums leading-none">
         {song.rank ?? idx + 1}
       </div>
 
@@ -757,7 +757,7 @@ const xStep =
                                : "cursor-not-allowed"
                         }`}
                       >
-                        <div className="w-8 text-center text-2xl font-black text-white/80">
+                         <div className="flex w-8 shrink-0 items-center justify-center text-2xl font-black text-white/80 tabular-nums leading-none">
                           {song.rank ?? idx + 1}
                         </div>
 

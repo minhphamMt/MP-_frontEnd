@@ -22,8 +22,8 @@ export default function Toast({
       className="
         fixed top-6 left-1/2 -translate-x-1/2 z-[70] max-w-sm
         rounded-xl border border-white/10
-        bg-[#0e1a2f] px-4 py-3 text-sm text-white
-        shadow-2xl shadow-cyan-500/20
+        bg-[#1a1a1a] px-4 py-3 text-sm text-white
+        shadow-2xl shadow-emerald-500/20
         animate-[toast-in_0.35s_cubic-bezier(0.22,1,0.36,1)]
       "
       onClick={(e) => {
@@ -32,7 +32,7 @@ export default function Toast({
     >
       <div className="flex items-start gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-cyan-200/80">
+          <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80">
             {title}
           </p>
           <p className="font-semibold leading-relaxed">{message}</p>

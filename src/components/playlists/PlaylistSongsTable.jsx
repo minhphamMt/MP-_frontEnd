@@ -1,5 +1,5 @@
 import { normalizeSongId } from "../../store/player.store";
-import { FiHeart, FiTrash2, FiMusic } from "react-icons/fi";
+import { FiHeart, FiPause, FiPlay, FiTrash2, FiMusic } from "react-icons/fi";
 export default function PlaylistSongsTable({
   songs = [],
   currentSong,
@@ -77,8 +77,12 @@ export default function PlaylistSongsTable({
                         onClick={() => onPlay?.(song)}
                         className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
                       >
-                        <span className="text-white text-sm">
-                          {isPlayingCurrent && isPlaying ? "⏸" : "▶"}
+                         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1db954] text-black shadow-[0_8px_16px_rgba(29,185,84,0.35)]">
+                          {isPlayingCurrent && isPlaying ? (
+                            <FiPause className="text-sm" />
+                          ) : (
+                            <FiPlay className="ml-0.5 text-sm" />
+                          )}
                         </span>
                       </button>
                     </div>
