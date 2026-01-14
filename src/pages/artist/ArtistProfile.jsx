@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiSave, FiUser } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
-import { getArtistById, updateArtist } from "../../api/artist.api";
+import { getMyArtistProfile, updateArtist } from "../../api/artist.api";
 
 const emptyForm = {
   name: "",
@@ -14,7 +14,6 @@ const emptyForm = {
   cover_url: "",
   short_bio: "",
   bio: "",
-  zing_artist_id: "",
 };
 
 export default function ArtistProfile() {
@@ -22,22 +21,19 @@ export default function ArtistProfile() {
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
 
-  const artistId = user?.artist?.id ?? user?.artist_id ?? null;
+
+  const [artistId, setArtistId] = useState(null);
   const [formValues, setFormValues] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const loadArtist = useCallback(async () => {
-    if (!artistId) {
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
-      const res = await getArtistById(artistId);
+      const res = await getMyArtistProfile();
       const artist = res?.data?.data ?? res?.data ?? null;
+      setArtistId(artist?.id ?? null);
 
       setFormValues({
         name: artist?.name || "",
@@ -49,7 +45,6 @@ export default function ArtistProfile() {
         cover_url: artist?.cover_url || "",
         short_bio: artist?.short_bio || "",
         bio: artist?.bio || "",
-        zing_artist_id: artist?.zing_artist_id || "",
       });
     } catch (err) {
       console.error("Load artist profile failed", err);
@@ -57,7 +52,7 @@ export default function ArtistProfile() {
     } finally {
       setLoading(false);
     }
-  }, [artistId]);
+   }, []);
 
   useEffect(() => {
     loadArtist();
@@ -94,7 +89,6 @@ export default function ArtistProfile() {
         cover_url: formValues.cover_url || null,
         short_bio: formValues.short_bio || null,
         bio: formValues.bio || null,
-        zing_artist_id: formValues.zing_artist_id || null,
       };
 
       const res = await updateArtist(artistId, payload);
@@ -220,19 +214,6 @@ export default function ArtistProfile() {
                   value={formValues.national}
                   onChange={handleChange}
                   placeholder="Việt Nam"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="text-sm text-white/70">
-                  Zing artist ID
-                </label>
-                <input
-                  name="zing_artist_id"
-                  value={formValues.zing_artist_id}
-                  onChange={handleChange}
-                  placeholder="Zing artist id"
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
                 />
               </div>

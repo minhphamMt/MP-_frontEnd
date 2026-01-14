@@ -5,17 +5,43 @@ import useAuthStore from "../../store/auth.store";
 import { getAlbums } from "../../api/album.api";
 import { deleteSong, getArtistSongs } from "../../api/song.api";
 import { formatDuration } from "../../utils/song";
+import { getMyArtistProfile } from "../../api/artist.api";
 
 export default function ArtistSongs() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
-  const artistId = user?.artist?.id ?? user?.artist_id ?? user?.id;
+  const updateUser = useAuthStore((s) => s.updateUser);
+  const [artistProfile, setArtistProfile] = useState(user?.artist ?? null);
+  const artistId = artistProfile?.id ?? user?.artist_id ?? null;
 
   const [songs, setSongs] = useState([]);
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+   useEffect(() => {
+    const loadArtistProfile = async () => {
+      if (artistProfile?.id || user?.artist_id) return;
+      try {
+        const res = await getMyArtistProfile();
+        const artist = res?.data?.data ?? res?.data ?? null;
+        if (artist) {
+          setArtistProfile(artist);
+          if (user) {
+            updateUser({
+              ...user,
+              artist,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Load artist profile failed", error);
+      }
+    };
+
+    loadArtistProfile();
+  }, [artistProfile?.id, updateUser, user, user?.artist_id]);
 
   const loadAlbums = useCallback(async () => {
     if (!artistId) return;
@@ -30,7 +56,10 @@ export default function ArtistSongs() {
   }, [artistId]);
 
   const loadSongs = useCallback(async () => {
-    if (!artistId) return;
+    if (!artistId) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await getArtistSongs(artistId);

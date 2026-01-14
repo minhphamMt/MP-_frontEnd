@@ -5,7 +5,7 @@ export const getSongs = (params = {}) => api.get("/songs", { params });
 export const getSongById = (id) => api.get(`/songs/${id}`);
 
 export const getArtistSongs = (artistId, params = {}) =>
-  api.get("/songs/art", {
+  api.get("/songs", {
     params: {
       ...params,
       artist_id: artistId,

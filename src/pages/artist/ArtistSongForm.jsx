@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiArrowLeft, FiMusic, FiSave } from "react-icons/fi";
-import useAuthStore from "../../store/auth.store";
 import { getAlbums } from "../../api/album.api";
 import { createSong, getSongById, updateSong } from "../../api/song.api";
 import { formatDuration } from "../../utils/song";
+import { getMyArtistProfile } from "../../api/artist.api";
 
 const emptyForm = {
   title: "",
@@ -12,28 +12,36 @@ const emptyForm = {
   duration: "",
   cover_url: "",
   audio_path: "",
-  status: "pending",
 };
-
-const statusOptions = [
-  { value: "pending", label: "Chờ duyệt" },
-  { value: "approved", label: "Công khai" },
-  { value: "draft", label: "Nháp" },
-];
 
 export default function ArtistSongForm() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
-  const user = useAuthStore((s) => s.user);
 
-  const artistId = user?.artist?.id ?? user?.artist_id ?? user?.id ?? "";
+  const [artistId, setArtistId] = useState(null);
   const [formValues, setFormValues] = useState(emptyForm);
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    const loadArtistProfile = async () => {
+      try {
+        const res = await getMyArtistProfile();
+        const artist = res?.data?.data ?? res?.data ?? null;
+        setArtistId(artist?.id ?? null);
+      } catch (err) {
+        console.error("Load artist profile failed", err);
+        setArtistId(null);
+      }
+    };
+
+    loadArtistProfile();
+  }, []);
+
   const loadAlbums = useCallback(async () => {
+    if (!artistId) return;
     try {
       const res = await getAlbums({ artist_id: artistId, limit: 200 });
       const data = res?.data?.data || [];
@@ -61,7 +69,6 @@ export default function ArtistSongForm() {
           song?.audio ||
           song?.source ||
           "",
-        status: song?.status || "pending",
       });
     } catch (err) {
       console.error("Load song failed", err);
@@ -95,11 +102,9 @@ export default function ArtistSongForm() {
       const payload = {
         title: formValues.title.trim(),
         album_id: formValues.album_id || null,
-        artist_id: artistId || null,
         duration: formValues.duration ? Number(formValues.duration) : null,
         cover_url: formValues.cover_url || null,
         audio_path: formValues.audio_path || null,
-        status: formValues.status || null,
       };
 
       if (isEdit) {
@@ -224,22 +229,6 @@ export default function ArtistSongForm() {
                   placeholder="/uploads/songs/filename.mp3"
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
                 />
-              </div>
-
-              <div>
-                <label className="text-sm text-white/70">Trạng thái</label>
-                <select
-                  name="status"
-                  value={formValues.status}
-                  onChange={handleChange}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
-                >
-                  {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
               </div>
             </div>
           </div>

@@ -12,23 +12,53 @@ import useAuthStore from "../../store/auth.store";
 import { getAlbums } from "../../api/album.api";
 import { getArtistSongs } from "../../api/song.api";
 import ArtistAlbumTile from "../../components/artist/ArtistAlbumTile";
+import { getMyArtistProfile } from "../../api/artist.api";
 
 export default function ArtistDashboard() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const updateUser = useAuthStore((s) => s.updateUser);
   const [albums, setAlbums] = useState([]);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [artistProfile, setArtistProfile] = useState(user?.artist ?? null);
 
-  const artistId = user?.artist?.id ?? user?.artist_id ?? user?.id;
+  const artistId = artistProfile?.id ?? user?.artist_id ?? null;
   const artistName =
-    user?.artist?.name ||
+    artistProfile?.name ||
     user?.display_name ||
     user?.name ||
     user?.email ||
     "Nghệ sĩ";
 
+    useEffect(() => {
+    const loadArtistProfile = async () => {
+      if (artistProfile?.id || user?.artist_id) return;
+      try {
+        const res = await getMyArtistProfile();
+        const artist = res?.data?.data ?? res?.data ?? null;
+        if (artist) {
+          setArtistProfile(artist);
+          if (user) {
+            updateUser({
+              ...user,
+              artist,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Load artist profile failed", error);
+      }
+    };
+
+    loadArtistProfile();
+  }, [artistProfile?.id, updateUser, user, user?.artist_id]);
+
   const loadAlbums = useCallback(async () => {
+    if (!artistId) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await getAlbums({ artist_id: artistId, limit: 12 });

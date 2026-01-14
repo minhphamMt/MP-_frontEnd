@@ -4,17 +4,46 @@ import { FiPlus, FiSearch } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
 import { deleteAlbum, getAlbums } from "../../api/album.api";
 import ArtistAlbumTile from "../../components/artist/ArtistAlbumTile";
+import { getMyArtistProfile } from "../../api/artist.api";
 
 export default function ArtistAlbums() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const updateUser = useAuthStore((s) => s.updateUser);
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
+  const [artistProfile, setArtistProfile] = useState(user?.artist ?? null);
+  const artistId = artistProfile?.id ?? user?.artist_id ?? null;
 
-  const artistId = user?.artist?.id ?? user?.artist_id ?? user?.id;
+  useEffect(() => {
+    const loadArtistProfile = async () => {
+      if (artistProfile?.id || user?.artist_id) return;
+      try {
+        const res = await getMyArtistProfile();
+        const artist = res?.data?.data ?? res?.data ?? null;
+        if (artist) {
+          setArtistProfile(artist);
+          if (user) {
+            updateUser({
+              ...user,
+              artist,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Load artist profile failed", error);
+      }
+    };
+
+    loadArtistProfile();
+  }, [artistProfile?.id, updateUser, user, user?.artist_id]);
 
   const loadAlbums = useCallback(async () => {
+    if (!artistId) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await getAlbums({ artist_id: artistId, limit: 50 });

@@ -5,6 +5,8 @@ export const getArtistCollections = (params = {}) =>
 
 export const getArtistById = (id) => api.get(`/artists/${id}`);
 
+export const getMyArtistProfile = () => api.get("/artists/me");
+
 export const createArtist = (payload) => api.post("/artists", payload);
 
 export const updateArtist = (id, payload) => api.put(`/artists/${id}`, payload);

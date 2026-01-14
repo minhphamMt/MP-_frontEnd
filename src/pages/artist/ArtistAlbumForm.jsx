@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiArrowLeft, FiSave } from "react-icons/fi";
-import useAuthStore from "../../store/auth.store";
 import {
   createAlbum,
   getAlbumById,
@@ -13,26 +12,19 @@ const emptyForm = {
   release_date: "",
   cover_url: "",
   zing_album_id: "",
-  artist_id: "",
 };
 
 export default function ArtistAlbumForm() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
-  const user = useAuthStore((s) => s.user);
 
   const [formValues, setFormValues] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const artistId = user?.artist?.id ?? user?.artist_id ?? user?.id ?? "";
-
   useEffect(() => {
-    if (!isEdit) {
-      setFormValues((prev) => ({ ...prev, artist_id: artistId }));
-      return;
-    }
+    if (!isEdit) return;
 
     const loadAlbum = async () => {
       try {
@@ -46,7 +38,6 @@ export default function ArtistAlbumForm() {
             : "",
           cover_url: album?.cover_url || "",
           zing_album_id: album?.zing_album_id || "",
-          artist_id: album?.artist_id || artistId,
         });
       } catch (err) {
         console.error("Load album failed", err);
@@ -57,7 +48,7 @@ export default function ArtistAlbumForm() {
     };
 
     loadAlbum();
-  }, [artistId, id, isEdit]);
+   }, [id, isEdit]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -80,7 +71,6 @@ export default function ArtistAlbumForm() {
         release_date: formValues.release_date || null,
         cover_url: formValues.cover_url || null,
         zing_album_id: formValues.zing_album_id || null,
-        artist_id: formValues.artist_id || artistId || null,
       };
 
       if (isEdit) {
@@ -189,20 +179,6 @@ export default function ArtistAlbumForm() {
                   placeholder="Zing album id"
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
                 />
-              </div>
-
-              <div>
-                <label className="text-sm text-white/70">Artist ID</label>
-                <input
-                  name="artist_id"
-                  value={formValues.artist_id}
-                  onChange={handleChange}
-                  placeholder="Artist ID"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
-                />
-                <p className="mt-2 text-xs text-white/40">
-                  ID nghệ sĩ sẽ tự động điền theo tài khoản hiện tại.
-                </p>
               </div>
             </div>
           </div>
