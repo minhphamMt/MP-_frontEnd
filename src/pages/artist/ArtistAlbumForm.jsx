@@ -22,6 +22,7 @@ export default function ArtistAlbumForm() {
   const [formValues, setFormValues] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [coverFile, setCoverFile] = useState(null);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -66,12 +67,23 @@ export default function ArtistAlbumForm() {
 
     try {
       setLoading(true);
-      const payload = {
-        title: formValues.title,
+      let payload = {
+        title: formValues.title.trim(),
         release_date: formValues.release_date || null,
         cover_url: formValues.cover_url || null,
         zing_album_id: formValues.zing_album_id || null,
       };
+
+       if (coverFile) {
+        const formData = new FormData();
+        formData.append("cover", coverFile);
+        Object.entries(payload).forEach(([key, value]) => {
+          if (value !== null && value !== undefined && value !== "") {
+            formData.append(key, value);
+          }
+        });
+        payload = formData;
+      }
 
       if (isEdit) {
         await updateAlbum(id, payload);
@@ -88,10 +100,21 @@ export default function ArtistAlbumForm() {
     }
   };
 
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
   const coverPreview = useMemo(() => {
-    if (formValues.cover_url) return formValues.cover_url;
-    return null;
-  }, [formValues.cover_url]);
+     if (coverFile) {
+      return URL.createObjectURL(coverFile);
+    }
+    if (formValues.cover_url?.startsWith("/")) {
+      return `${apiBaseUrl}${formValues.cover_url}`;
+    }
+    return formValues.cover_url || null;
+  }, [apiBaseUrl, coverFile, formValues.cover_url]);
+
+  useEffect(() => {
+    if (!coverFile || !coverPreview) return;
+    return () => URL.revokeObjectURL(coverPreview);
+  }, [coverFile, coverPreview]);
 
   return (
     <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
@@ -142,7 +165,6 @@ export default function ArtistAlbumForm() {
                   required
                 />
               </div>
-
               <div>
                 <label className="text-sm text-white/70">Ngày phát hành</label>
                 <input
@@ -163,6 +185,19 @@ export default function ArtistAlbumForm() {
                   placeholder="https://..."
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
                 />
+                 <div className="mt-3">
+                  <label className="text-xs text-white/50">
+                    Hoặc tải ảnh bìa (PNG/JPG)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) =>
+                      setCoverFile(event.target.files?.[0] || null)
+                    }
+                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
+                  />
+                </div>
               </div>
             </div>
           </div>

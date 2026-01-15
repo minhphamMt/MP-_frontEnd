@@ -11,6 +11,11 @@ export const createArtist = (payload) => api.post("/artists", payload);
 
 export const updateArtist = (id, payload) => api.put(`/artists/${id}`, payload);
 
+export const uploadArtistAvatar = (payload) =>
+  api.post("/artists/me/avatar", payload, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
 export const followArtist = (artistId) =>
   api.post(`/artists/${artistId}/follow`);
 

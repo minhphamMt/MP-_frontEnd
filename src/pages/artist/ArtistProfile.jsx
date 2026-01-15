@@ -2,7 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiSave, FiUser } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
-import { getMyArtistProfile, updateArtist } from "../../api/artist.api";
+import {
+  getMyArtistProfile,
+  updateArtist,
+  uploadArtistAvatar,
+} from "../../api/artist.api";
 
 const emptyForm = {
   name: "",
@@ -27,6 +31,7 @@ export default function ArtistProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const loadArtist = useCallback(async () => {
     try {
@@ -111,9 +116,56 @@ export default function ArtistProfile() {
     }
   };
 
+  const handleAvatarUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setError("Vui lòng chọn tệp hình ảnh hợp lệ.");
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const res = await uploadArtistAvatar(formData);
+      const payload = res?.data?.data ?? res?.data ?? {};
+      const avatarUrl = payload.avatar_url;
+      const updatedArtist = payload.artist;
+
+      if (avatarUrl) {
+        setFormValues((prev) => ({ ...prev, avatar_url: avatarUrl }));
+      }
+      if (updatedArtist && user) {
+        updateUser({
+          ...user,
+          artist: {
+            ...(user.artist || {}),
+            ...updatedArtist,
+          },
+        });
+      }
+    } catch (err) {
+      console.error("Upload artist avatar failed", err);
+      setError("Tải avatar thất bại. Hãy thử lại nhé.");
+    } finally {
+      setUploadingAvatar(false);
+      event.target.value = "";
+    }
+  };
+
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
   const coverPreview = useMemo(
-    () => formValues.cover_url || formValues.avatar_url || "",
-    [formValues.cover_url, formValues.avatar_url]
+    () => {
+      const preview = formValues.cover_url || formValues.avatar_url || "";
+      if (preview?.startsWith("/")) {
+        return `${apiBaseUrl}${preview}`;
+      }
+      return preview;
+    },
+    [apiBaseUrl, formValues.cover_url, formValues.avatar_url]
   );
 
   if (loading) {
@@ -234,6 +286,18 @@ export default function ArtistProfile() {
                   placeholder="https://..."
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
                 />
+                <div className="mt-3">
+                  <label className="text-xs text-white/50">
+                    Tải avatar từ máy (PNG/JPG)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    disabled={uploadingAvatar}
+                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-70"
+                  />
+                </div>
               </div>
 
               <div>

@@ -6,7 +6,6 @@ import {
   createSong,
   getSongById,
   updateSong,
-  uploadSongAudio,
 } from "../../api/song.api";
 import { formatDuration } from "../../utils/song";
 import { getMyArtistProfile } from "../../api/artist.api";
@@ -105,7 +104,7 @@ export default function ArtistSongForm() {
 
     try {
       setLoading(true);
-      const payload = {
+      let payload = {
         title: formValues.title.trim(),
         album_id: formValues.album_id || null,
         duration: formValues.duration ? Number(formValues.duration) : null,
@@ -113,29 +112,25 @@ export default function ArtistSongForm() {
         audio_path: formValues.audio_path || null,
       };
 
+      if (audioFile) {
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("audio", audioFile);
+        Object.entries(payload).forEach(([key, value]) => {
+          if (value !== null && value !== undefined && value !== "") {
+            formData.append(key, value);
+          }
+        });
+        payload = formData;
+      }
+
       let songId = id;
       if (isEdit) {
-         const res = await updateSong(id, payload);
+        const res = await updateSong(id, payload);
         songId = res?.data?.data?.id ?? res?.data?.id ?? id;
       } else {
         const res = await createSong(payload);
         songId = res?.data?.data?.id ?? res?.data?.id ?? songId;
-      }
-
-      if (songId && audioFile) {
-        setUploading(true);
-        const audioData = new FormData();
-        audioData.append("audio", audioFile);
-        const audioRes = await uploadSongAudio(songId, audioData);
-        const audioPayload = audioRes?.data?.data ?? audioRes?.data ?? {};
-        const audioPath =
-          audioPayload.audio_path ||
-          audioPayload.audio_url ||
-          audioPayload.audio ||
-          "";
-        if (audioPath) {
-          setFormValues((prev) => ({ ...prev, audio_path: audioPath }));
-        }
       }
 
       navigate("/artist/songs");
@@ -143,8 +138,8 @@ export default function ArtistSongForm() {
       console.error("Save song failed", err);
       setError("Lưu bài hát thất bại. Hãy thử lại nhé.");
     } finally {
-    setUploading(false);
-    setLoading(false);
+      setUploading(false);
+      setLoading(false);
     }
   };
 
@@ -250,19 +245,6 @@ export default function ArtistSongForm() {
                   placeholder="https://..."
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
                 />
-                <div className="mt-3">
-                  <label className="text-xs text-white/50">
-                    Tải ảnh lên (PNG/JPG)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) =>
-                      setCoverFile(event.target.files?.[0] || null)
-                    }
-                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
-                  />
-                </div>
               </div>
 
               <div>
