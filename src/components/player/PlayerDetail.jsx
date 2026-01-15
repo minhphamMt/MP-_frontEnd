@@ -9,10 +9,7 @@ import {
   FaVolumeHigh,
   FaVolumeXmark,
 } from "react-icons/fa6";
-import {
-  FiChevronDown,
-  FiHeart,
-} from "react-icons/fi";
+import { FiChevronDown, FiHeart } from "react-icons/fi";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 
 /* ================= utils ================= */
@@ -122,8 +119,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
     syncDuration();
     audioEl?.addEventListener("loadedmetadata", syncDuration);
-    return () =>
-      audioEl?.removeEventListener("loadedmetadata", syncDuration);
+    return () => audioEl?.removeEventListener("loadedmetadata", syncDuration);
   }, [mounted, currentSong]);
 
   const total = Number(duration || fallbackDuration || 0) || 0;
@@ -150,7 +146,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     isPlaying ? pause() : resume();
   };
 
-    const handleVolumeChange = (value) => {
+  const handleVolumeChange = (value) => {
     const next = Number(value);
     if (muted && next > 0) {
       toggleMute();
@@ -166,7 +162,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     return list.filter((_, i) => i !== currentIndex).slice(0, 3);
   }, [queue, currentIndex]);
 
-    const played = useMemo(() => {
+  const played = useMemo(() => {
     const list = queue || [];
     if (currentIndex <= 0) return [];
     return list.slice(Math.max(0, currentIndex - 3), currentIndex);
@@ -174,10 +170,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   if (!mounted || !currentSong) return null;
 
-  const cover =
-    currentSong.cover ||
- currentSong.cover_url ||
-    currentSong.image;
+  const cover = currentSong.cover || currentSong.cover_url || currentSong.image;
 
   const animateClass =
     phase === "enter"
@@ -194,7 +187,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
   /* ================= render ================= */
   return (
     <div
-       className={`player-detail-shell fixed inset-0 z-[999] h-[100dvh] overflow-hidden text-white ${stableClass} ${animateClass}`}
+      className={`player-detail-shell fixed inset-0 z-[999] h-[100dvh] overflow-hidden text-white ${stableClass} ${animateClass}`}
       style={{
         animationDuration: `${ANIM_MS}ms`,
         animationTimingFunction: ANIM_EASE,
@@ -230,7 +223,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       </button>
 
       {/* CONTENT */}
-        <div className="relative z-10 mx-auto flex min-h-[100dvh] w-[min(1280px,94vw)] flex-col justify-center pb-6 pt-6 sm:min-h-[calc(100vh-120px)] sm:pb-10 sm:pt-8">
+      <div className="relative z-10 mx-auto flex min-h-[100dvh] w-[min(1280px,94vw)] flex-col justify-center pb-6 pt-6 sm:min-h-[calc(100vh-120px)] sm:pb-10 sm:pt-8">
         <div className="flex h-full flex-col gap-6 sm:hidden">
           <div className="flex items-center justify-between text-lg">
             <button
@@ -246,7 +239,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             </div>
             <button
               type="button"
-             onClick={() => {
+              onClick={() => {
                 const songId = normalizeSongId(currentSong);
                 if (songId) toggleLike(songId);
               }}
@@ -257,18 +250,18 @@ export default function PlayerDetail({ isOpen, onClose }) {
               }`}
               aria-label="Yêu thích"
             >
-               <FiHeart />
+              <FiHeart />
             </button>
           </div>
 
-         <div className="flex flex-1 flex-col items-center justify-center gap-4">
-             <div className="h-60 w-60 overflow-hidden rounded-full border border-white/10 bg-white/5 shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+          <div className="flex flex-1 flex-col items-center justify-center gap-4">
+            <div className="h-60 w-60 overflow-hidden rounded-full border border-white/10 bg-white/5 shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
               {cover && (
                 <img
                   src={cover}
                   alt={currentSong.title}
                   className={`player-detail-disc h-full w-full object-cover ${
-                  isPlaying ? "is-playing" : ""
+                    isPlaying ? "is-playing" : ""
                   }`}
                 />
               )}
@@ -332,12 +325,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
             <button
               onClick={toggleRepeatMode}
               className={`relative transition ${
-                repeatMode !== "off"
-                  ? "text-[#1db954]"
-                  : "text-white/60"
+                repeatMode !== "off" ? "text-[#1db954]" : "text-white/60"
               }`}
             >
-             <span className="relative inline-flex">
+              <span className="relative inline-flex">
                 <FaRepeat />
                 {repeatMode === "one" && (
                   <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
@@ -349,9 +340,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
         </div>
         <div
-  className={`hidden grid-cols-1 lg:grid-cols-[360px_520px_360px] gap-10 items-start sm:grid ${songSlideClass}`}
->
-
+          className={`hidden grid-cols-1 lg:grid-cols-[360px_520px_360px] gap-10 items-start sm:grid ${songSlideClass}`}
+        >
           {/* PLAYED */}
           <div className="hidden lg:block">
             <div className="mb-4 text-sm tracking-widest opacity-60">
@@ -364,27 +354,26 @@ export default function PlayerDetail({ isOpen, onClose }) {
                   const realIndex = queue.findIndex((q) => q === s);
                   return (
                     <div
-  key={s.id || idx}
-  className="w-[150px] cursor-pointer hover:scale-[1.04] transition"
-  onClick={() => playAt(realIndex)}
->
-  <div className="w-[150px] h-[150px] rounded-xl overflow-hidden bg-white/5 shadow-lg">
-    {sCover && (
-      <img
-        src={sCover}
-        alt={s.title}
-        className="w-full h-full object-cover"
-      />
-    )}
-  </div>
-  <div className="mt-2 text-sm font-semibold line-clamp-2 text-right">
-    {s.title}
-  </div>
-  <div className="text-xs opacity-70 line-clamp-1 text-right">
-    {s.artist?.name || s.artist_name || ""}
-  </div>
-</div>
-
+                      key={s.id || idx}
+                      className="w-[150px] cursor-pointer hover:scale-[1.04] transition"
+                      onClick={() => playAt(realIndex)}
+                    >
+                      <div className="w-[150px] h-[150px] rounded-xl overflow-hidden bg-white/5 shadow-lg">
+                        {sCover && (
+                          <img
+                            src={sCover}
+                            alt={s.title}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="mt-2 text-sm font-semibold line-clamp-2 text-right">
+                        {s.title}
+                      </div>
+                      <div className="text-xs opacity-70 line-clamp-1 text-right">
+                        {s.artist?.name || s.artist_name || ""}
+                      </div>
+                    </div>
                   );
                 })
               ) : (
@@ -395,7 +384,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* MAIN */}
           <div className="flex flex-col items-center">
-             <div className="h-56 w-56 overflow-hidden rounded-full bg-white/5 shadow-[0_25px_70px_rgba(0,0,0,0.55)] sm:h-72 sm:w-72 lg:h-[360px] lg:w-[360px]">
+            <div className="h-56 w-56 overflow-hidden rounded-full bg-white/5 shadow-[0_25px_70px_rgba(0,0,0,0.55)] sm:h-72 sm:w-72 lg:h-[360px] lg:w-[360px]">
               {cover && (
                 <img
                   src={cover}
@@ -407,27 +396,23 @@ export default function PlayerDetail({ isOpen, onClose }) {
               )}
             </div>
 
-               <h2 className="mt-4 text-xl font-semibold text-center sm:mt-6 sm:text-3xl">
+            <h2 className="mt-4 text-xl font-semibold text-center sm:mt-6 sm:text-3xl">
               {currentSong.title}
             </h2>
-             <p className="mt-1 text-xs opacity-70 text-center sm:text-sm">
-              {currentSong.artist?.name ||
-                currentSong.artist_name ||
-                "Unknown"}
+            <p className="mt-1 text-xs opacity-70 text-center sm:text-sm">
+              {currentSong.artist?.name || currentSong.artist_name || "Unknown"}
             </p>
           </div>
 
           {/* UPCOMING */}
- <div className="hidden lg:block">
+          <div className="hidden lg:block">
             <div className="mb-4 text-sm tracking-widest opacity-60">
               TIẾP THEO
             </div>
             <div className="flex gap-6 justify-start">
               {upcoming.map((s, idx) => {
                 const sCover = s.cover || s.cover_url || s.image;
-                const realIndex = queue.findIndex(
-                  (q) => q === s
-                );
+                const realIndex = queue.findIndex((q) => q === s);
 
                 return (
                   <div
@@ -478,56 +463,52 @@ export default function PlayerDetail({ isOpen, onClose }) {
               className="flex-1 h-2 accent-[#1db954]"
             />
 
-            <span className="w-10 text-xs opacity-70">
-              {formatTime(total)}
-            </span>
+            <span className="w-10 text-xs opacity-70">{formatTime(total)}</span>
           </div>
 
           {/* BUTTONS */}
-         <div className="mt-6 relative flex flex-col items-center sm:mt-10 sm:ml-14 lg:flex-row">
+          <div className="mt-6 relative flex flex-col items-center sm:mt-10 sm:ml-14 lg:flex-row">
             <div className="flex items-center justify-center gap-6 sm:gap-8 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
-            <button
-              onClick={toggleShuffle}
-              className={`transition ${
-                shuffle ? "text-[#1db954]" : "opacity-70"
-              }`}
-            >
-              <FaShuffle />
-            </button>
+              <button
+                onClick={toggleShuffle}
+                className={`transition ${
+                  shuffle ? "text-[#1db954]" : "opacity-70"
+                }`}
+              >
+                <FaShuffle />
+              </button>
 
-            <button onClick={playPrev}>
-              <FaBackwardStep size={20} />
-            </button>
+              <button onClick={playPrev}>
+                <FaBackwardStep size={20} />
+              </button>
 
-            <button
-              onClick={togglePlay}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1db954] text-black shadow-xl shadow-[#1db954]/40 hover:bg-[#1ed760] sm:h-14 sm:w-14"
-            >
-              {isPlaying ? <FaPause /> : <FaPlay />}
-            </button>
+              <button
+                onClick={togglePlay}
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1db954] text-black shadow-xl shadow-[#1db954]/40 hover:bg-[#1ed760] sm:h-14 sm:w-14"
+              >
+                {isPlaying ? <FaPause /> : <FaPlay />}
+              </button>
 
-            <button onClick={playNext}>
-              <FaForwardStep size={20} />
-            </button>
+              <button onClick={playNext}>
+                <FaForwardStep size={20} />
+              </button>
 
-            <button
-              onClick={toggleRepeatMode}
-              className={`relative transition ${
-                repeatMode !== "off"
-                  ? "text-[#1db954]"
-                  : "opacity-70"
-              }`}
-            >
-              <FaRepeat />
-               {repeatMode === "one" && (
-                <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
-                  1
-                </span>
-              )}
-            </button>
-             </div>
+              <button
+                onClick={toggleRepeatMode}
+                className={`relative transition ${
+                  repeatMode !== "off" ? "text-[#1db954]" : "opacity-70"
+                }`}
+              >
+                <FaRepeat />
+                {repeatMode === "one" && (
+                  <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
+                    1
+                  </span>
+                )}
+              </button>
+            </div>
 
-              <div className="hidden items-center gap-2 sm:flex lg:absolute lg:right-0">
+            <div className="hidden items-center gap-2 sm:flex lg:absolute lg:right-0">
               <button
                 onClick={toggleMute}
                 className="text-lg opacity-70 hover:opacity-100 transition"
@@ -541,7 +522,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 step={0.01}
                 value={muted ? 0 : volume}
                 onChange={(e) => handleVolumeChange(e.target.value)}
-                 className="h-2 w-32 accent-[#1db954]"
+                className="h-2 w-32 accent-[#1db954]"
               />
             </div>
           </div>

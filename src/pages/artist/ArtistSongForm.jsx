@@ -1,8 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiArrowLeft, FiMusic, FiSave } from "react-icons/fi";
 import { getAlbums } from "../../api/album.api";
-import { createSong, getSongById, updateSong } from "../../api/song.api";
+import {
+  createSong,
+  getSongById,
+  updateSong,
+  uploadSongAudio,
+} from "../../api/song.api";
 import { formatDuration } from "../../utils/song";
 import { getMyArtistProfile } from "../../api/artist.api";
 
@@ -24,7 +29,8 @@ export default function ArtistSongForm() {
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
+  const [audioFile, setAudioFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
   useEffect(() => {
     const loadArtistProfile = async () => {
       try {
@@ -107,10 +113,29 @@ export default function ArtistSongForm() {
         audio_path: formValues.audio_path || null,
       };
 
+      let songId = id;
       if (isEdit) {
-        await updateSong(id, payload);
+         const res = await updateSong(id, payload);
+        songId = res?.data?.data?.id ?? res?.data?.id ?? id;
       } else {
-        await createSong(payload);
+        const res = await createSong(payload);
+        songId = res?.data?.data?.id ?? res?.data?.id ?? songId;
+      }
+
+      if (songId && audioFile) {
+        setUploading(true);
+        const audioData = new FormData();
+        audioData.append("audio", audioFile);
+        const audioRes = await uploadSongAudio(songId, audioData);
+        const audioPayload = audioRes?.data?.data ?? audioRes?.data ?? {};
+        const audioPath =
+          audioPayload.audio_path ||
+          audioPayload.audio_url ||
+          audioPayload.audio ||
+          "";
+        if (audioPath) {
+          setFormValues((prev) => ({ ...prev, audio_path: audioPath }));
+        }
       }
 
       navigate("/artist/songs");
@@ -118,11 +143,18 @@ export default function ArtistSongForm() {
       console.error("Save song failed", err);
       setError("Lưu bài hát thất bại. Hãy thử lại nhé.");
     } finally {
-      setLoading(false);
+    setUploading(false);
+    setLoading(false);
     }
   };
 
-  const coverPreview = useMemo(() => formValues.cover_url || "", [formValues]);
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
+  const resolveAssetUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http") || url.startsWith("blob:")) return url;
+    if (url.startsWith("/")) return `${apiBaseUrl}${url}`;
+    return url;
+  };
 
   return (
     <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
@@ -218,6 +250,19 @@ export default function ArtistSongForm() {
                   placeholder="https://..."
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
                 />
+                <div className="mt-3">
+                  <label className="text-xs text-white/50">
+                    Tải ảnh lên (PNG/JPG)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) =>
+                      setCoverFile(event.target.files?.[0] || null)
+                    }
+                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
+                  />
+                </div>
               </div>
 
               <div>
@@ -229,6 +274,19 @@ export default function ArtistSongForm() {
                   placeholder="/uploads/songs/filename.mp3"
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
                 />
+                <div className="mt-3">
+                  <label className="text-xs text-white/50">
+                    Tải file nhạc lên (MP3/WAV)
+                  </label>
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    onChange={(event) =>
+                      setAudioFile(event.target.files?.[0] || null)
+                    }
+                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -238,9 +296,9 @@ export default function ArtistSongForm() {
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
             <h2 className="text-lg font-semibold text-white">Xem trước</h2>
             <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#181818]">
-              {coverPreview ? (
+               {formValues.cover_url ? (
                 <img
-                  src={coverPreview}
+                  src={resolveAssetUrl(formValues.cover_url)}
                   alt="Ảnh bìa"
                   className="h-56 w-full object-cover"
                 />
@@ -258,6 +316,11 @@ export default function ArtistSongForm() {
                     ? `Thời lượng: ${formatDuration(formValues.duration)}`
                     : "Chưa có thời lượng"}
                 </p>
+                {(formValues.audio_path || audioFile) && (
+                  <p className="text-xs text-white/50">
+                    {audioFile ? "Đã chọn file audio mới" : "Đã có file audio"}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -271,11 +334,11 @@ export default function ArtistSongForm() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploading}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1db954] px-5 py-3 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-70"
             >
               <FiSave />
-              {loading
+              {loading || uploading
                 ? "Đang lưu..."
                 : isEdit
                   ? "Lưu thay đổi"

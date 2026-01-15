@@ -17,6 +17,10 @@ export const createSong = (payload) => api.post("/songs", payload);
 export const updateSong = (id, payload) => api.put(`/songs/${id}`, payload);
 
 export const deleteSong = (id) => api.delete(`/songs/${id}`);
+export const uploadSongAudio = (id, payload) =>
+  api.post(`/songs/${id}/audio`, payload, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 export const recordSongPlay = (id, duration) =>
   api.post(`/songs/${id}/play`, { duration });
 export const getLikedSongs = () =>
