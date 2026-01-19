@@ -4,16 +4,18 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
+import { firebaseLoginApi } from "../api/auth.api";
+import useAuthStore from "../store/auth.store";
 
 // ===== Firebase config từ ENV =====
 const firebaseConfig = {
-  apiKey: "AIzaSyCNhLWahRkbPS1s2A2M_GZnd0oesA7R1GA",
-  authDomain: "khoaluantotnghiep-bc862.firebaseapp.com",
-  projectId: "khoaluantotnghiep-bc862",
-  storageBucket: "khoaluantotnghiep-bc862.firebasestorage.app",
-  messagingSenderId: "514446947158",
-  appId: "1:514446947158:web:581fb92ce4943a7e539cf7",
-  measurementId: "G-EJ18PMP8F4"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // ===== Guard: env phải tồn tại =====
