@@ -6,6 +6,7 @@ import {
   getAlbumById,
   updateAlbum,
 } from "../../api/album.api";
+import { resolveAssetUrl } from "../../utils/asset";
 
 const emptyForm = {
   title: "",
@@ -100,16 +101,12 @@ export default function ArtistAlbumForm() {
     }
   };
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
   const coverPreview = useMemo(() => {
      if (coverFile) {
       return URL.createObjectURL(coverFile);
     }
-    if (formValues.cover_url?.startsWith("/")) {
-      return `${apiBaseUrl}${formValues.cover_url}`;
-    }
-    return formValues.cover_url || null;
-  }, [apiBaseUrl, coverFile, formValues.cover_url]);
+    return formValues.cover_url ? resolveAssetUrl(formValues.cover_url) : null;
+  }, [coverFile, formValues.cover_url]);
 
   useEffect(() => {
     if (!coverFile || !coverPreview) return;

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiChevronRight, FiLogOut, FiUser } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
+import { resolveAssetUrl } from "../../utils/asset";
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -10,14 +11,7 @@ export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const displayName = user?.display_name || user?.email || "User";
-  const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-
-  const resolveAvatarUrl = (url) => {
-    if (!url) return "";
-    if (url.startsWith("http")) return url;
-    return `${API_BASE_URL}${url}`;
-  };
+  const resolveAvatarUrl = (url) => resolveAssetUrl(url);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {

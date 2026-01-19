@@ -7,11 +7,11 @@ export default function ArtistSidebar() {
     <SidebarSection title="Nghệ sĩ">
       <SidebarItem to="/artist/dashboard" icon={FiGrid} label="Tổng quan" />
       <SidebarItem to="/artist/albums" icon={FiDisc} label="Album" />
-      <SidebarItem
+      {/* <SidebarItem
         to="/artist/albums/new"
         icon={FiPlusCircle}
         label="Tạo album"
-      />
+      /> */}
       <SidebarItem to="/artist/songs" icon={FiMusic} label="Bài hát" />
       <SidebarItem to="/artist/profile" icon={FiUser} label="Hồ sơ" />
     </SidebarSection>

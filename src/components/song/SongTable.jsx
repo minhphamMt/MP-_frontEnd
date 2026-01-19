@@ -3,6 +3,7 @@ import { FiHeart, FiPause, FiPlay } from "react-icons/fi";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { formatDuration, fetchPlayableSong } from "../../utils/song";
 import { getSongById } from "../../api/song.api";
+import { resolveAssetUrl } from "../../utils/asset";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 
 export default function SongTable({
@@ -147,8 +148,8 @@ export default function SongTable({
                   {/* Song info */}
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md sm:h-12 sm:w-12">
-                      <img
-                        src={song.cover_url}
+                        <img
+                        src={resolveAssetUrl(song.cover_url)}
                         alt={song.title}
                         className="h-full w-full object-cover"
                       />

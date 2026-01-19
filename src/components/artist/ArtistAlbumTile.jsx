@@ -5,6 +5,7 @@ import {
   FiMusic,
   FiTrash2,
 } from "react-icons/fi";
+import { resolveAssetUrl } from "../../utils/asset";
 
 const formatReleaseDate = (value) => {
   if (!value) return "Chưa cập nhật";
@@ -22,11 +23,7 @@ export default function ArtistAlbumTile({
 const songCount =
   album?.song_count ?? album?.track_count ?? album?.songs?.length ?? 0;
 
-const coverUrl = album?.cover_url
-  ? album.cover_url.startsWith("http")
-    ? album.cover_url
-    : `${import.meta.env.VITE_API_BASE_URL.replace(/\/$/, "")}${album.cover_url}`
-  : "";
+const coverUrl = resolveAssetUrl(album?.cover_url);
 
 
   return (

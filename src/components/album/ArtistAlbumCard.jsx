@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import usePlayerStore from "../../store/player.store";
 import FollowArtistButton from "../artist/FollowArtistButton";
+import { resolveAssetUrl } from "../../utils/asset";
 
 export default function ArtistAlbumCard({ artist, variant = "grid" }) {
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ title: s.title,
         }`}
       >
         <img
-          src={artist.cover_url}
+          src={resolveAssetUrl(artist.cover_url)}
           alt={artist.artist_name}
           className={`h-32 w-full object-cover transition-transform duration-500 group-hover:scale-[1.05] ${
             isLibrary ? "rounded-full" : "rounded-xl"

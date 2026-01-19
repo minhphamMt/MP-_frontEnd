@@ -10,6 +10,7 @@ import {
 } from "../../api/song.api";
 import { formatDuration } from "../../utils/song";
 import { getMyArtistProfile } from "../../api/artist.api";
+import { resolveAssetUrl } from "../../utils/asset";
 
 const emptyForm = {
   title: "",
@@ -167,20 +168,12 @@ export default function ArtistSongForm() {
     }
   };
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
-  const resolveAssetUrl = (url) => {
-    if (!url) return "";
-    if (url.startsWith("http") || url.startsWith("blob:")) return url;
-    if (url.startsWith("/")) return `${apiBaseUrl}${url}`;
-    return url;
-  };
-
   const coverPreview = useMemo(() => {
     if (coverFile) {
       return URL.createObjectURL(coverFile);
     }
     return formValues.cover_url ? resolveAssetUrl(formValues.cover_url) : "";
-  }, [coverFile, formValues.cover_url, resolveAssetUrl]);
+   }, [coverFile, formValues.cover_url]);
 
   useEffect(() => {
     if (!coverFile || !coverPreview) return;

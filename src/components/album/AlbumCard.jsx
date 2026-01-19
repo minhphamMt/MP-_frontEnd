@@ -5,6 +5,7 @@ import useAlbumLikeStore, {
   normalizeAlbumId,
 } from "../../store/album-like.store";
 import usePlayerStore from "../../store/player.store";
+import { resolveAssetUrl } from "../../utils/asset";
 
 export default function AlbumCard({ album, variant = "rail" }) {
   const navigate = useNavigate();
@@ -79,7 +80,7 @@ export default function AlbumCard({ album, variant = "rail" }) {
           <FiHeart />
         </button>
         <img
-          src={album.cover_url}
+          src={resolveAssetUrl(album.cover_url)}
           alt={album.title}
           className={`h-40 w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]
           ${isLibrary ? "rounded-md" : "rounded-xl"}

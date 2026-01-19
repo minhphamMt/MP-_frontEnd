@@ -8,6 +8,7 @@ import {
   formatDuration,
   toPlayableSong,
 } from "../utils/song";
+import { resolveAssetUrl } from "../utils/asset";
 
 export default function SongDetail() {
   const { id } = useParams();
@@ -82,7 +83,7 @@ export default function SongDetail() {
             <div className="relative overflow-hidden rounded-2xl shadow-xl shadow-black/40">
               {song.cover_url ? (
                 <img
-                  src={song.cover_url}
+                  src={resolveAssetUrl(song.cover_url)}
                   alt={song.title}
                   className="aspect-square w-full object-cover transition duration-500 hover:scale-105"
                 />

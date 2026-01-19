@@ -5,6 +5,7 @@ import api from "../api/axios";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import FollowArtistButton from "../components/artist/FollowArtistButton";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
+import { resolveAssetUrl } from "../utils/asset";
 
 const formatTime = (s = 0) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -104,7 +105,7 @@ const renderBioHtml = (bio = "") => {
       </div>
     );
   }
- const coverUrl = artist?.cover || artist?.avatar;
+ const coverUrl = resolveAssetUrl(artist?.cover || artist?.avatar);
   const artistInfoItems = [
     { label: "Nghệ danh", value: artist?.alias },
     { label: "Tên thật", value: artist?.realname },
@@ -287,7 +288,7 @@ const renderBioHtml = (bio = "") => {
                   <div className="flex min-w-0 items-center gap-3">
                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/30 sm:h-12 sm:w-12">
                       <img
-                        src={song.cover_url}
+                        src={resolveAssetUrl(song.cover_url)}
                         alt={song.title}
                         className="h-full w-full object-cover"
                       />

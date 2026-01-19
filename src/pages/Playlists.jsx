@@ -22,6 +22,7 @@ import LikedSongsSection from "../components/playlists/LikedSongsSection";
 import AlbumCard from "../components/album/AlbumCard";
 import PlaylistCard from "../components/playlists/PlaylistCard";
 import Toast from "../components/common/Toast";
+import { resolveAssetUrl } from "../utils/asset";
 const getData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
 const extractSongsFromResponse = (payload) => {
   const sources = [
@@ -48,14 +49,6 @@ export default function Playlists() {
   const [toastMessage, setToastMessage] = useState("");
   const [toastTitle, setToastTitle] = useState("");
   const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
-  const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-
-const resolveAvatarUrl = (url) => {
-  if (!url) return "";
-  if (url.startsWith("http")) return url;
-  return `${API_BASE_URL}${url}`;
-};
   const user = useAuthStore((s) => s.user);
   useEffect(() => {
   setLikedAlbums((prev) =>
@@ -415,7 +408,7 @@ setToastTitle("Thành công");
           <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-[#282828] text-lg font-bold text-white">
             {user?.avatar_url ? (
               <img
-                src={resolveAvatarUrl(user.avatar_url)}
+                src={resolveAssetUrl(user.avatar_url)}
                 alt={user.display_name}
                 className="h-full w-full object-cover"
               />

@@ -7,6 +7,7 @@ import {
   updateArtist,
   uploadArtistAvatar,
 } from "../../api/artist.api";
+import { resolveAssetUrl } from "../../utils/asset";
 
 const emptyForm = {
   name: "",
@@ -156,17 +157,10 @@ export default function ArtistProfile() {
     }
   };
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
-  const coverPreview = useMemo(
-    () => {
-      const preview = formValues.cover_url || formValues.avatar_url || "";
-      if (preview?.startsWith("/")) {
-        return `${apiBaseUrl}${preview}`;
-      }
-      return preview;
-    },
-    [apiBaseUrl, formValues.cover_url, formValues.avatar_url]
-  );
+  const coverPreview = useMemo(() => {
+    const preview = formValues.cover_url || formValues.avatar_url || "";
+    return resolveAssetUrl(preview);
+  }, [formValues.cover_url, formValues.avatar_url]);
 
   if (loading) {
     return (

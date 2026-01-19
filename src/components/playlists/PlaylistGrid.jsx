@@ -1,4 +1,5 @@
 import { normalizeSongId } from "../../store/player.store";
+import { resolveAssetUrl } from "../../utils/asset";
 
 export default function PlaylistGrid({
   playlists = [],
@@ -20,7 +21,7 @@ export default function PlaylistGrid({
       }
     >
       {playlists.map((pl) => {
-        const cover = pl.songs?.[0]?.cover_url;
+        const cover = resolveAssetUrl(pl.songs?.[0]?.cover_url);
         const songCount = pl.songs?.length || 0;
         const firstSongId = normalizeSongId(pl.songs?.[0]);
 

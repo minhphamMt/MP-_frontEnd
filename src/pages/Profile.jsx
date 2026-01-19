@@ -14,14 +14,7 @@ import {
   uploadUserAvatar,
 } from "../api/user.api";
 import useAuthStore from "../store/auth.store";
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-
-const resolveAvatarUrl = (url) => {
-  if (!url) return "";
-  if (url.startsWith("http")) return url;
-  return `${API_BASE_URL}${url}`;
-};
+import { resolveAssetUrl } from "../utils/asset";
 
 const emptyProfile = {
   display_name: "",
@@ -232,7 +225,7 @@ export default function Profile() {
             <div className="relative h-16 w-16 overflow-hidden rounded-full border border-white/10 bg-white/10">
               {profile.avatar_url ? (
                 <img
-                  src={resolveAvatarUrl(profile.avatar_url)}
+                  src={resolveAssetUrl(profile.avatar_url)}
                   alt={profile.display_name || "User avatar"}
                   className="h-full w-full object-cover"
                 />

@@ -8,6 +8,7 @@ import ArtistAlbumCard from "../components/album/ArtistAlbumCard";
 import Section from "../components/section/Section";
 import SongCard from "../components/song/SongCard";
 import usePlayerStore from "../store/player.store";
+import { resolveAssetUrl } from "../utils/asset";
 
 export default function Home() {
   const [artistAlbums, setArtistAlbums] = useState([]);
@@ -70,7 +71,7 @@ export default function Home() {
               title: raw.title,
               artist_name: raw.artist_name || raw.artist?.name || "",
               duration: raw.duration,
-              cover_url: raw.cover_url,
+              cover_url: resolveAssetUrl(raw.cover_url),
               album_id: raw.album?.id || raw.album_id,
               album_title: raw.album?.title || raw.album_title,
               audio_url: `${import.meta.env.VITE_API_BASE_URL}${raw.audio_path}`,

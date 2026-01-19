@@ -1,7 +1,8 @@
 import { FiList, FiMusic } from "react-icons/fi";
+import { resolveAssetUrl } from "../../utils/asset";
 
 export default function PlaylistCard({ playlist, onOpen, variant = "grid" }) {
-  const cover = playlist?.songs?.[0]?.cover_url;
+  const cover = resolveAssetUrl(playlist?.songs?.[0]?.cover_url);
   const songCount = playlist?.songs?.length || 0;
   const isLibrary = variant === "library";
 

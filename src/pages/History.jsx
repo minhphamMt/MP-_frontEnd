@@ -4,6 +4,7 @@ import { getSongById } from "../api/song.api";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { fetchPlayableSong } from "../utils/song";
 import { FiHeart, FiMusic } from "react-icons/fi";
+import { resolveAssetUrl } from "../utils/asset";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -274,7 +275,7 @@ export default function History() {
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md">
                       <img
-                        src={item.cover_url}
+                        src={resolveAssetUrl(item.cover_url)}
                         alt=""
                         className="h-full w-full object-cover"
                       />

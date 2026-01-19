@@ -1,3 +1,5 @@
+import { resolveAssetUrl } from "../../utils/asset";
+
 export default function PlaylistSuggestions({
   songs = [],
   loading = false,
@@ -61,7 +63,7 @@ export default function PlaylistSuggestions({
             <div className="flex min-w-0 items-center gap-3">
               <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
                 <img
-                  src={song.cover_url}
+                  src={resolveAssetUrl(song.cover_url)}
                   alt={song.title}
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
                 />

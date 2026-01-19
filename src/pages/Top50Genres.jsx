@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FiChevronRight } from "react-icons/fi";
 import { getTop50ByGenres } from "../api/chart.api";
 import { filterPlayableSongs } from "../utils/song";
+import { resolveAssetUrl } from "../utils/asset";
 
 /* ================= utils ================= */
 const normalizeTopGenres = (payload) => {
@@ -69,7 +70,7 @@ export default function Top50Genres() {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {genres.map(({ genre, songs }) => {
-          const cover = songs[0]?.cover_url;
+          const cover = resolveAssetUrl(songs[0]?.cover_url);
           const artistPreview = getArtistPreview(songs);
 
           return (

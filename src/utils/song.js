@@ -1,3 +1,5 @@
+import { resolveAssetUrl } from "./asset";
+
 export const formatDuration = (s = 0) => {
   const total = Number.isFinite(Number(s)) ? Math.max(0, Math.round(Number(s))) : 0;
   const minutes = Math.floor(total / 60);
@@ -45,6 +47,22 @@ const audioPath =
   resolveAudioUrl(source.audio_path, baseUrl) ||
   resolveAudioUrl(raw.audio_path, baseUrl);
 
+  const cover =
+    source.cover_url ||
+    source.thumbnail ||
+    source.image_url ||
+    source.thumbnail_m ||
+    source.image ||
+    source.cover ||
+    source.album?.cover_url ||
+    raw.cover_url ||
+    raw.thumbnail ||
+    raw.image_url ||
+    raw.thumbnail_m ||
+    raw.image ||
+    raw.cover ||
+    raw.album?.cover_url ||
+    "";
 
   return {
     id:
@@ -65,22 +83,7 @@ const audioPath =
       raw.artist?.name ??
       "",
     duration: source.duration ?? source.length ?? raw.duration ?? raw.length ?? 0,
-    cover_url:
-      source.cover_url ||
-      source.thumbnail ||
-      source.image_url ||
-      source.thumbnail_m ||
-      source.image ||
-      source.cover ||
-      source.album?.cover_url ||
-      raw.cover_url ||
-      raw.thumbnail ||
-      raw.image_url ||
-      raw.thumbnail_m ||
-      raw.image ||
-      raw.cover ||
-      raw.album?.cover_url ||
-      "",
+    cover_url: resolveAssetUrl(cover, baseUrl),
     album_id: source.album_id ?? source.albumId ?? source.album?.id,
     album_title: source.album_title ?? source.albumTitle ?? source.album?.title,
     audio_url: audioPath || "",

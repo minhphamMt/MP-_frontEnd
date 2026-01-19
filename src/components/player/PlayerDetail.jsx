@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa6";
 import { FiChevronDown, FiHeart } from "react-icons/fi";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
+import { resolveAssetUrl } from "../../utils/asset";
 
 /* ================= utils ================= */
 const formatTime = (sec = 0) => {
@@ -170,7 +171,9 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   if (!mounted || !currentSong) return null;
 
-  const cover = currentSong.cover || currentSong.cover_url || currentSong.image;
+  const cover = resolveAssetUrl(
+    currentSong.cover || currentSong.cover_url || currentSong.image
+  );
 
   const animateClass =
     phase === "enter"
@@ -350,7 +353,9 @@ export default function PlayerDetail({ isOpen, onClose }) {
             <div className="flex gap-6 justify-end">
               {played.length ? (
                 played.map((s, idx) => {
-                  const sCover = s.cover || s.cover_url || s.image;
+                  const sCover = resolveAssetUrl(
+                    s.cover || s.cover_url || s.image
+                  );
                   const realIndex = queue.findIndex((q) => q === s);
                   return (
                     <div
@@ -411,7 +416,9 @@ export default function PlayerDetail({ isOpen, onClose }) {
             </div>
             <div className="flex gap-6 justify-start">
               {upcoming.map((s, idx) => {
-                const sCover = s.cover || s.cover_url || s.image;
+                const sCover = resolveAssetUrl(
+                  s.cover || s.cover_url || s.image
+                );
                 const realIndex = queue.findIndex((q) => q === s);
 
                 return (

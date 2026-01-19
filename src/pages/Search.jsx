@@ -7,6 +7,7 @@ import SongRow from "../components/song/SongRow";
 import { filterPlayableSongs } from "../utils/song";
 import { saveSearchHistory } from "../api/search.api";
 import useAuthStore from "../store/auth.store";
+import { resolveAssetUrl } from "../utils/asset";
 
 const normalizeArtist = (artist) => ({
   ...artist,
@@ -175,7 +176,7 @@ export default function Search() {
                 <div className="space-y-4">
                   {topResult.image ? (
                     <img
-                      src={topResult.image}
+                      src={resolveAssetUrl(topResult.image)}
                       alt={topResult.title}
                       className={`h-28 w-28 object-cover ${
                         topResult.isArtist ? "rounded-full" : "rounded-lg"

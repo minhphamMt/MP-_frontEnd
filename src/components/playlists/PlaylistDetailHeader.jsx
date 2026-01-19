@@ -1,4 +1,5 @@
 import { FiEdit2, FiPlay, FiShuffle, FiTrash2 } from "react-icons/fi";
+import { resolveAssetUrl } from "../../utils/asset";
 
 export default function PlaylistDetailHeader({
   playlist,
@@ -8,7 +9,7 @@ export default function PlaylistDetailHeader({
   onDelete,
   renaming,
 }) {
-  const cover = playlist?.songs?.[0]?.cover_url;
+  const cover = resolveAssetUrl(playlist?.songs?.[0]?.cover_url);
   const songCount = playlist?.songs?.length || 0;
 
   return (
