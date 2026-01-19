@@ -11,12 +11,14 @@ import { FiUser, FiX } from "react-icons/fi";
 import SidebarItem from "./SidebarItem";
 import SidebarSection from "./SidebarSection";
 import ArtistSidebar from "./ArtistSidebar";
+import AdminSidebar from "./AdminSidebar";
 import useAuthStore from "../../store/auth.store";
 
 
 export default function Sidebar({ isOpen, onClose }) {
   const role = useAuthStore((s) => s.role);
   const isArtist = role === "ARTIST";
+  const isAdmin = role === "ADMIN";
   return (
     <>
       <div
@@ -56,6 +58,8 @@ export default function Sidebar({ isOpen, onClose }) {
       <div className="relative flex-1 overflow-y-auto px-3 pb-6 pt-2 scrollbar-muted">
  {isArtist ? (
           <ArtistSidebar />
+          ) : isAdmin ? (
+          <AdminSidebar />
         ) : (
           <>
             <SidebarSection>

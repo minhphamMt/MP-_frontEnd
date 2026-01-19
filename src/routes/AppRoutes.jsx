@@ -30,12 +30,11 @@ import ArtistAlbumForm from "../pages/artist/ArtistAlbumForm";
 import ArtistSongs from "../pages/artist/ArtistSongs";
 import ArtistSongForm from "../pages/artist/ArtistSongForm";
 import ArtistProfile from "../pages/artist/ArtistProfile";
-
-/* ===== DASHBOARD ===== */
-
-const AdminDashboard = () => (
-  <div style={{ padding: 20 }}>ADMIN DASHBOARD</div>
-);
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import AdminUsers from "../pages/admin/AdminUsers";
+import AdminSongs from "../pages/admin/AdminSongs";
+import AdminGenres from "../pages/admin/AdminGenres";
+import AdminSearch from "../pages/admin/AdminSearch";
 
 export default function AppRoutes() {
   return (
@@ -100,7 +99,14 @@ export default function AppRoutes() {
 
       {/* ===== ADMIN ===== */}
       <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-        <Route path="/admin" element={<AdminDashboard />} />
+         <Route element={<MainLayout />}>
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/songs" element={<AdminSongs />} />
+          <Route path="/admin/genres" element={<AdminGenres />} />
+          <Route path="/admin/search" element={<AdminSearch />} />
+        </Route>
       </Route>
 
       {/* ===== FALLBACK ===== */}
