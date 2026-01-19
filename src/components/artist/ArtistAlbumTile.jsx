@@ -19,9 +19,15 @@ export default function ArtistAlbumTile({
   onDelete,
   onView,
 }) {
-  const songCount =
-    album?.song_count ?? album?.track_count ?? album?.songs?.length ?? 0;
-  const coverUrl = album?.cover_url;
+const songCount =
+  album?.song_count ?? album?.track_count ?? album?.songs?.length ?? 0;
+
+const coverUrl = album?.cover_url
+  ? album.cover_url.startsWith("http")
+    ? album.cover_url
+    : `${import.meta.env.VITE_API_BASE_URL.replace(/\/$/, "")}${album.cover_url}`
+  : "";
+
 
   return (
     <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#181818]/80 shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition hover:-translate-y-1 hover:border-white/20 hover:bg-[#202020]">

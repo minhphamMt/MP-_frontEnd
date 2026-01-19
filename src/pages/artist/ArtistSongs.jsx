@@ -56,59 +56,59 @@ export default function ArtistSongs() {
   }, [artistId]);
 
   const loadSongs = useCallback(async () => {
-    if (!artistId) {
-      setLoading(false);
-      return;
-    }
-    try {
-      setLoading(true);
-      const res = await getArtistSongs(artistId);
-      const payload = res?.data?.data || res?.data || {};
-      const list = payload?.songs || payload?.data || payload || [];
-      setSongs(Array.isArray(list) ? list : []);
-    } catch (error) {
-      console.error("Load artist songs failed", error);
-      setSongs([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [artistId]);
+  if (!artistId) {
+    setLoading(false);
+    return;
+  }
+  try {
+    setLoading(true);
+    const res = await getArtistSongs(artistId);
+    const payload = res?.data?.data || res?.data || {};
+    const list = payload?.songs || payload?.data || payload || [];
+    setSongs(Array.isArray(list) ? list : []);
+  } catch (error) {
+    console.error("Load artist songs failed", error);
+    setSongs([]);
+  } finally {
+    setLoading(false);
+  }
+}, [artistId]);
 
-  useEffect(() => {
-    loadAlbums();
-    loadSongs();
-  }, [loadAlbums, loadSongs]);
+useEffect(() => {
+  loadAlbums();
+  loadSongs();
+}, [loadAlbums, loadSongs]);
 
-  const albumMap = useMemo(() => {
-    return albums.reduce((acc, album) => {
-      acc[album.id] = album;
-      return acc;
-    }, {});
-  }, [albums]);
+const albumMap = useMemo(() => {
+  return albums.reduce((acc, album) => {
+    acc[album.id] = album;
+    return acc;
+  }, {});
+}, [albums]);
 
-  const filteredSongs = useMemo(() => {
-    const normalized = songs.map((song) => {
-      const songId = song.id ?? song.song_id ?? song.songId;
-      return {
-        ...song,
-        id: songId,
-        album_title:
-          song.album_title ||
-          song.album?.title ||
-          albumMap[song.album_id]?.title ||
-          "Single",
-      };
-    });
+const filteredSongs = useMemo(() => {
+  const normalized = songs.map((song) => {
+    const songId = song.id ?? song.song_id ?? song.songId;
+    return {
+      ...song,
+      id: songId,
+      album_title:
+        song.album_title ||
+        song.album?.title ||
+        albumMap[song.album_id]?.title ||
+        "Single",
+    };
+  });
 
-    return normalized.filter((song) => {
-      const matchesKeyword = keyword
-        ? (song.title || "").toLowerCase().includes(keyword.toLowerCase())
-        : true;
-      const matchesStatus =
-        statusFilter === "all" ? true : song.status === statusFilter;
-      return matchesKeyword && matchesStatus;
-    });
-  }, [albumMap, keyword, songs, statusFilter]);
+  return normalized.filter((song) => {
+    const matchesKeyword = keyword
+      ? (song.title || "").toLowerCase().includes(keyword.toLowerCase())
+      : true;
+    const matchesStatus =
+      statusFilter === "all" ? true : song.status === statusFilter;
+    return matchesKeyword && matchesStatus;
+  });
+}, [albumMap, keyword, songs, statusFilter]);
 
   const handleDelete = async (songId) => {
     if (!songId) return;

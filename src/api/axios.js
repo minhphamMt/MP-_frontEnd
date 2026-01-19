@@ -12,6 +12,10 @@ const api = axios.create({
 // ========== REQUEST: attach access token ==========
 api.interceptors.request.use(
   (config) => {
+    if (config.data instanceof FormData) {
+      config.headers = config.headers || {};
+      delete config.headers["Content-Type"];
+    }
     const token = useAuthStore.getState().accessToken;
     if (token) {
       config.headers = config.headers || {};
