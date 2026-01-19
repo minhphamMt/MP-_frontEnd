@@ -56,23 +56,19 @@ export default function ArtistSongs() {
   }, [artistId]);
 
   const loadSongs = useCallback(async () => {
-  if (!artistId) {
-    setLoading(false);
-    return;
-  }
   try {
-    setLoading(true);
-    const res = await getArtistSongs(artistId);
-    const payload = res?.data?.data || res?.data || {};
-    const list = payload?.songs || payload?.data || payload || [];
-    setSongs(Array.isArray(list) ? list : []);
-  } catch (error) {
-    console.error("Load artist songs failed", error);
-    setSongs([]);
-  } finally {
-    setLoading(false);
-  }
-}, [artistId]);
+      setLoading(true);
+      const res = await getArtistSongs(artistId);
+      const payload = res?.data?.data || res?.data || {};
+      const list = payload?.songs || payload?.data || payload || [];
+      setSongs(Array.isArray(list) ? list : []);
+    } catch (error) {
+      console.error("Load artist songs failed", error);
+      setSongs([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [artistId]);
 
 useEffect(() => {
   loadAlbums();

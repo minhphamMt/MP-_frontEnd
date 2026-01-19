@@ -4,6 +4,7 @@ import { FiArrowLeft, FiMusic, FiSave } from "react-icons/fi";
 import { getAlbums } from "../../api/album.api";
 import {
   createSong,
+  getArtistSongs,
   getSongById,
   updateSong,
 } from "../../api/song.api";
@@ -61,8 +62,25 @@ export default function ArtistSongForm() {
     if (!isEdit) return;
     try {
       setLoading(true);
-      const res = await getSongById(id);
-      const song = res?.data?.data ?? res?.data ?? {};
+      let song = null;
+      try {
+        const res = await getSongById(id);
+        song = res?.data?.data ?? res?.data ?? null;
+      } catch (err) {
+        if (!artistId) throw err;
+        const res = await getArtistSongs(artistId);
+        const payload = res?.data?.data || res?.data || {};
+        const list = payload?.songs || payload?.data || payload || [];
+        song =
+          Array.isArray(list)
+            ? list.find((item) => String(item?.id) === String(id))
+            : null;
+      }
+
+      if (!song) {
+        throw new Error("Song not found");
+      }
+
       setFormValues({
         title: song?.title || song?.name || "",
         album_id: song?.album_id ?? song?.album?.id ?? "",
@@ -81,7 +99,7 @@ export default function ArtistSongForm() {
     } finally {
       setLoading(false);
     }
-  }, [id, isEdit]);
+  }, [artistId, id, isEdit]);
 
   useEffect(() => {
     loadAlbums();

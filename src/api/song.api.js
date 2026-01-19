@@ -8,7 +8,7 @@ export const getArtistSongs = (artistId, params = {}) =>
   api.get("/songs/art", {
     params: {
       ...params,
-      artist_id: artistId,
+      ...(artistId ? { artist_id: artistId } : {}),
     },
   });
 
