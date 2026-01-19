@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiArrowLeft, FiMusic, FiSave } from "react-icons/fi";
 import { getAlbums } from "../../api/album.api";
@@ -30,6 +30,7 @@ export default function ArtistSongForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [audioFile, setAudioFile] = useState(null);
+  const [coverFile, setCoverFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   useEffect(() => {
     const loadArtistProfile = async () => {
@@ -130,10 +131,15 @@ export default function ArtistSongForm() {
         audio_path: formValues.audio_path || null,
       };
 
-      if (audioFile) {
+      if (audioFile || coverFile) {
         setUploading(true);
         const formData = new FormData();
-        formData.append("audio", audioFile);
+        if (audioFile) {
+          formData.append("audio", audioFile);
+        }
+        if (coverFile) {
+          formData.append("cover", coverFile);
+        }
         Object.entries(payload).forEach(([key, value]) => {
           if (value !== null && value !== undefined && value !== "") {
             formData.append(key, value);
@@ -169,6 +175,17 @@ export default function ArtistSongForm() {
     return url;
   };
 
+  const coverPreview = useMemo(() => {
+    if (coverFile) {
+      return URL.createObjectURL(coverFile);
+    }
+    return formValues.cover_url ? resolveAssetUrl(formValues.cover_url) : "";
+  }, [coverFile, formValues.cover_url, resolveAssetUrl]);
+
+  useEffect(() => {
+    if (!coverFile || !coverPreview) return;
+    return () => URL.revokeObjectURL(coverPreview);
+  }, [coverFile, coverPreview]);
   return (
     <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
       <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
@@ -263,6 +280,19 @@ export default function ArtistSongForm() {
                   placeholder="https://..."
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
                 />
+                <div className="mt-3">
+                  <label className="text-xs text-white/50">
+                    Hoặc tải ảnh bìa (PNG/JPG)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) =>
+                      setCoverFile(event.target.files?.[0] || null)
+                    }
+                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
+                  />
+                </div>
               </div>
 
               <div>
@@ -296,9 +326,9 @@ export default function ArtistSongForm() {
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
             <h2 className="text-lg font-semibold text-white">Xem trước</h2>
             <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#181818]">
-               {formValues.cover_url ? (
+               {coverPreview ? (
                 <img
-                  src={resolveAssetUrl(formValues.cover_url)}
+                  src={coverPreview}
                   alt="Ảnh bìa"
                   className="h-56 w-full object-cover"
                 />
