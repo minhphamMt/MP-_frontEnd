@@ -1,7 +1,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/auth.store";
+import { signInWithGoogle } from "../utils/firebase";
 
 const formVariants = {
   initial: { opacity: 0, y: 18 },
@@ -21,7 +23,7 @@ const modes = [
 
 export default function Login({ initialMode = "login" }) {
   const navigate = useNavigate();
-  const { login, register, loading } = useAuthStore();
+  const { login, register, firebaseLogin, loading } = useAuthStore();
   const [mode, setMode] = useState(initialMode);
 
   const [loginEmail, setLoginEmail] = useState("");
@@ -57,7 +59,7 @@ export default function Login({ initialMode = "login" }) {
       const user = await login({ email: loginEmail, password: loginPassword });
 
       if (user.role === "ADMIN") return navigate("/admin", { replace: true });
-       if (user.role === "ARTIST")
+      if (user.role === "ARTIST")
         return navigate("/artist/dashboard", { replace: true });
       return navigate("/", { replace: true });
     } catch (err) {
@@ -66,6 +68,30 @@ export default function Login({ initialMode = "login" }) {
         err?.message ||
         "Đăng nhập thất bại, thử lại nhé.";
       setLoginError(msg);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoginError("");
+    setRegisterError("");
+    try {
+      const { idToken } = await signInWithGoogle();
+      const user = await firebaseLogin({ idToken });
+
+      if (user.role === "ADMIN") return navigate("/admin", { replace: true });
+      if (user.role === "ARTIST")
+        return navigate("/artist/dashboard", { replace: true });
+      return navigate("/", { replace: true });
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Đăng nhập Google thất bại, thử lại nhé.";
+      if (mode === "register") {
+        setRegisterError(msg);
+      } else {
+        setLoginError(msg);
+      }
     }
   };
 
@@ -232,6 +258,22 @@ export default function Login({ initialMode = "login" }) {
                       {loading ? "Đang đăng nhập..." : "Đăng nhập"}
                     </button>
 
+<div className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-white/40">
+                      <span className="h-px flex-1 bg-white/10" />
+                      hoặc
+                      <span className="h-px flex-1 bg-white/10" />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleGoogleLogin}
+                      disabled={loading}
+                      className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <FcGoogle className="text-lg" />
+                      Đăng nhập với Google
+                    </button>
+
                     <p className="text-center text-xs text-white/50">
                       Chưa có tài khoản?{" "}
                       <button
@@ -332,6 +374,22 @@ export default function Login({ initialMode = "login" }) {
                       {loading ? "Đang đăng ký..." : "Đăng ký"}
                     </button>
 
+<div className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-white/40">
+                      <span className="h-px flex-1 bg-white/10" />
+                      hoặc
+                      <span className="h-px flex-1 bg-white/10" />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleGoogleLogin}
+                      disabled={loading}
+                      className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <FcGoogle className="text-lg" />
+                      Đăng nhập với Google
+                    </button>
+                    
                     <p className="text-center text-xs text-white/50">
                       Đã có tài khoản?{" "}
                       <button

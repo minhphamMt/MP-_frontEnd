@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import { loginApi, registerApi, getMeApi } from "../api/auth.api";
-
+import { loginApi, registerApi, getMeApi, firebaseLoginApi } from "../api/auth.api";
+import { initializeApp, getApps } from "firebase/app";
+import { getAuth } from "firebase/auth";
 const STORAGE_KEY = "auth-state";
 
 const safeParseJson = (value) => {
@@ -134,6 +135,37 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
+   /* ===== FIREBASE LOGIN ===== */
+  firebaseLogin: async ({ idToken }) => {
+    set({ loading: true, isAuthReady: false });
+    try {
+      const res = await firebaseLoginApi({ idToken });
+
+      const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
+      const user = res.data?.user || res.data?.data?.user;
+
+      if (!accessToken || !user) {
+        throw new Error("Firebase login response missing accessToken or user");
+      }
+
+      const nextState = {
+        user,
+        accessToken,
+        role: user.role,
+        isAuthenticated: true,
+        loading: false,
+        isAuthReady: true,
+      };
+
+      set(nextState);
+      persistAuthState(nextState);
+
+      return user;
+    } catch (err) {
+      set({ loading: false, isAuthReady: true });
+      throw err;
+    }
+  },
   /* ===== REGISTER ===== */
   register: async ({ email, password, display_name }) => {
     set({ loading: true, isAuthReady: false });
