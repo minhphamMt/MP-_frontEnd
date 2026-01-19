@@ -125,7 +125,6 @@ export default function AlbumDetail() {
               <div className="absolute inset-0 rounded-2xl border border-white/10" />
             </div>
           </div>
-
           {/* INFO */}
           <div className="flex-1 space-y-5">
             <div>
