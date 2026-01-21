@@ -121,13 +121,34 @@ useEffect(() => {
           .map((item) => {
             let type =
               item.type || item.entity_type || item.entityType || item.kind;
+
+            if (!type && (item.display_name || item.email)) type = "user";
             if (!type && item.role === "ARTIST") type = "artist";
-            if (!type && item.album_title) type = "song";
-            if (!type && item.title && item.artist_name) type = "album";
-            if (!type && item.display_name && item.email) type = "user";
-            if (!type && item.display_name) type = "artist";
+            if (
+              !type &&
+              item.title &&
+              (item.play_count !== undefined ||
+                item.audio_url ||
+                item.audio_path ||
+                item.duration !== undefined ||
+                item.album_id ||
+                item.album_title ||
+                item.weekly_play_count !== undefined)
+            )
+              type = "song";
+            if (
+              !type &&
+              item.title &&
+              (item.release_date ||
+                item.zing_album_id ||
+                item.artist_name ||
+                item.artist_id)
+            )
+              type = "album";
+            if (!type && item.name) type = "artist";
+
             const normalizedType = (type || "").toLowerCase();
-           if (!["artist", "song", "album", "user"].includes(normalizedType)) {
+            if (!["artist", "song", "album", "user"].includes(normalizedType)) {
               return null;
             }
 
@@ -238,8 +259,8 @@ useEffect(() => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-const handleSearch = useCallback(
-    async (rawValue) => {
+  const handleSearch = useCallback(
+    async (rawValue, { triggerAdminResults = false } = {}) => {
       const value = rawValue.trim();
       if (!value) return;
       setKeyword(value);
@@ -261,6 +282,11 @@ const handleSearch = useCallback(
         }
       }
     if (isAdmin) {
+        if (triggerAdminResults) {
+          navigate(`/admin/search?q=${encodeURIComponent(value)}`);
+          setOpen(false);
+          return;
+        }
         setOpen(true);
         await fetchSuggestions(value);
         return;
@@ -273,7 +299,7 @@ const handleSearch = useCallback(
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    handleSearch(keyword);
+    handleSearch(keyword, { triggerAdminResults: isAdmin });
   };
 
 const handleResultNavigate = async (item) => {
@@ -304,16 +330,32 @@ const handleResultNavigate = async (item) => {
 
   if (isAdmin) {
     const label = nameToSave || "";
+    const targetId = item.id ?? item._id ?? "";
     if (item.type === "artist") {
       navigate(
         `/admin/users?role=ARTIST&keyword=${encodeURIComponent(label)}`
       );
     } else if (item.type === "album") {
-      navigate(`/admin/albums?keyword=${encodeURIComponent(label)}`);
+      navigate(
+        `/admin/albums?keyword=${encodeURIComponent(label)}${
+          targetId ? `&targetId=${targetId}` : ""
+        }`
+      );
     } else if (item.type === "song") {
-      navigate(`/admin/songs?keyword=${encodeURIComponent(label)}`);
-    }} else if (item.type === "user") {
-      navigate(`/admin/users?keyword=${encodeURIComponent(label)}`);
+     navigate(
+        `/admin/songs?keyword=${encodeURIComponent(label)}${
+          targetId ? `&targetId=${targetId}` : ""
+        }`
+      );
+    } else if (item.type === "user") {
+      navigate(
+        `/admin/users?keyword=${encodeURIComponent(label)}${
+          targetId ? `&targetId=${targetId}` : ""
+        }`
+      );
+    } else {
+      navigate(`/admin/search?q=${encodeURIComponent(label)}`);
+    }
     setOpen(false);
     setKeyword("");
     return;

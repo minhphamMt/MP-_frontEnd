@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { FiEdit2, FiRefreshCw, FiShield, FiUserX, FiX } from "react-icons/fi";
 import {
   listUsers,
@@ -11,11 +12,13 @@ const ROLE_OPTIONS = ["USER", "ARTIST", "ADMIN"];
 const ROLE_FILTERS = ["ALL", ...ROLE_OPTIONS];
 
 export default function AdminUsers() {
+  const location = useLocation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
+  const [autoOpenedId, setAutoOpenedId] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [editPayload, setEditPayload] = useState({
     display_name: "",
@@ -45,6 +48,29 @@ export default function AdminUsers() {
     loadUsers();
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const nextKeyword = params.get("keyword") || "";
+    const nextRole = params.get("role") || "ALL";
+    setKeyword(nextKeyword);
+    if (ROLE_FILTERS.includes(nextRole)) {
+      setRoleFilter(nextRole);
+    }
+  }, [location.search]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const targetId = params.get("targetId") || params.get("id");
+    if (!targetId || targetId === autoOpenedId) return;
+    const match = users.find(
+      (user) => `${user.id}` === `${targetId}` || `${user._id}` === `${targetId}`
+    );
+    if (match) {
+      handleEditUser(match);
+      setAutoOpenedId(`${targetId}`);
+    }
+  }, [autoOpenedId, location.search, users]);
+  
   const filteredUsers = useMemo(() => {
     const normalized = keyword.trim().toLowerCase();
     return users.filter((user) => {

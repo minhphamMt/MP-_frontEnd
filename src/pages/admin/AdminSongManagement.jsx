@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { FiEdit2, FiRefreshCw, FiSearch, FiX } from "react-icons/fi";
 import {
   listAdminSongs,
@@ -23,6 +24,7 @@ const normalizeGenreValue = (genres) => {
 };
 
 export default function AdminSongManagement() {
+  const location = useLocation();
   const [songs, setSongs] = useState([]);
   const [genres, setGenres] = useState([]);
   const [keyword, setKeyword] = useState("");
@@ -30,6 +32,7 @@ export default function AdminSongManagement() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [editingSong, setEditingSong] = useState(null);
+  const [autoOpenedId, setAutoOpenedId] = useState(null);
   const [editPayload, setEditPayload] = useState({
     title: "",
     artist_id: "",
@@ -81,6 +84,11 @@ export default function AdminSongManagement() {
   useEffect(() => {
     loadGenres();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setKeyword(params.get("keyword") || "");
+  }, [location.search]);
 
   useEffect(() => {
     loadSongs();
@@ -135,6 +143,19 @@ export default function AdminSongManagement() {
 
   const filteredSongs = useMemo(() => songs, [songs]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const targetId = params.get("targetId") || params.get("id");
+    if (!targetId || targetId === autoOpenedId) return;
+    const match = songs.find(
+      (song) => `${song.id}` === `${targetId}` || `${song._id}` === `${targetId}`
+    );
+    if (match) {
+      handleEdit(match);
+      setAutoOpenedId(`${targetId}`);
+    }
+  }, [autoOpenedId, location.search, songs]);
+  
   return (
     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

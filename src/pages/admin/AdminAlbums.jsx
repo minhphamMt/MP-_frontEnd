@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { FiRefreshCw, FiSearch, FiX } from "react-icons/fi";
 import {
   deleteAlbum,
@@ -16,12 +17,14 @@ const formatDateInput = (value) => {
 };
 
 export default function AdminAlbums() {
+  const location = useLocation();
   const [albums, setAlbums] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedAlbum, setSelectedAlbum] = useState(null);
   const [editingAlbum, setEditingAlbum] = useState(null);
+  const [autoOpenedId, setAutoOpenedId] = useState(null);
   const [editPayload, setEditPayload] = useState({
     title: "",
     release_date: "",
@@ -50,6 +53,24 @@ export default function AdminAlbums() {
     loadAlbums();
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setKeyword(params.get("keyword") || "");
+  }, [location.search]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const targetId = params.get("targetId") || params.get("id");
+    if (!targetId || targetId === autoOpenedId) return;
+    const match = albums.find(
+      (album) => `${album.id}` === `${targetId}` || `${album._id}` === `${targetId}`
+    );
+    if (match) {
+      handleEdit(match);
+      setAutoOpenedId(`${targetId}`);
+    }
+  }, [albums, autoOpenedId, location.search]);
+  
   const filteredAlbums = useMemo(() => {
     const normalized = keyword.trim().toLowerCase();
     if (!normalized) return albums;
