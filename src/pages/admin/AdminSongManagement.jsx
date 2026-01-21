@@ -6,6 +6,7 @@ import {
   listGenres,
   updateAdminSong,
 } from "../../api/admin.api";
+import { resolveAssetUrl } from "../../utils/asset";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tất cả" },
@@ -22,6 +23,13 @@ const normalizeGenreValue = (genres) => {
   }
   return [];
 };
+
+const getSongCover = (song) =>
+  song?.cover_url ||
+  song?.cover ||
+  song?.thumbnail ||
+  song?.image ||
+  song?.album_cover;
 
 export default function AdminSongManagement() {
   const location = useLocation();
@@ -155,7 +163,7 @@ export default function AdminSongManagement() {
       setAutoOpenedId(`${targetId}`);
     }
   }, [autoOpenedId, location.search, songs]);
-  
+
   return (
     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -232,11 +240,24 @@ export default function AdminSongManagement() {
                 key={song.id}
                 className="grid grid-cols-[1.4fr_0.8fr_0.6fr_0.7fr] items-center gap-2 px-4 py-3 text-sm text-white/80"
               >
-                <div>
-                  <p className="font-semibold text-white">{song.title}</p>
-                  <p className="text-xs text-white/50">
-                    {song.album_title || "Single"}
-                  </p>
+                 <div className="flex items-center gap-3">
+                  {getSongCover(song) ? (
+                    <img
+                      src={resolveAssetUrl(getSongCover(song))}
+                      alt={song.title}
+                      className="h-12 w-12 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/10 text-[10px] text-white/60">
+                      No image
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-white">{song.title}</p>
+                    <p className="text-xs text-white/50">
+                      {song.album_title || "Single"}
+                    </p>
+                  </div>
                 </div>
                 <span>{song.artist_name || "-"}</span>
                 <span className="text-xs text-white/60">

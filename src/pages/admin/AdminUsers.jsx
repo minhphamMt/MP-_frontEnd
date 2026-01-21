@@ -7,9 +7,18 @@ import {
   updateUser,
   updateUserRole,
 } from "../../api/admin.api";
+import { resolveAssetUrl } from "../../utils/asset";
 
 const ROLE_OPTIONS = ["USER", "ARTIST", "ADMIN"];
 const ROLE_FILTERS = ["ALL", ...ROLE_OPTIONS];
+const getInitials = (name = "") =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 
 export default function AdminUsers() {
   const location = useLocation();
@@ -70,7 +79,7 @@ export default function AdminUsers() {
       setAutoOpenedId(`${targetId}`);
     }
   }, [autoOpenedId, location.search, users]);
-  
+
   const filteredUsers = useMemo(() => {
     const normalized = keyword.trim().toLowerCase();
     return users.filter((user) => {
@@ -82,6 +91,16 @@ export default function AdminUsers() {
         .some((value) => value.toLowerCase().includes(normalized));
     });
   }, [keyword, roleFilter, users]);
+
+  const getUserAvatar = (user) =>
+    user?.avatar ||
+    user?.avatar_url ||
+    user?.photo ||
+    user?.photo_url ||
+    user?.image ||
+    user?.image_url ||
+    user?.profile_image ||
+    user?.profile_photo;
 
   const handleToggleActive = async (user) => {
     try {
@@ -210,11 +229,24 @@ export default function AdminUsers() {
                 key={user.id}
                 className="grid grid-cols-[1.2fr_1fr_0.6fr_0.6fr_1fr] items-center gap-2 px-4 py-3 text-sm text-white/80"
               >
-                <div>
-                  <p className="font-semibold text-white">
-                    {user.display_name || user.name || "Người dùng"}
-                  </p>
-                  <p className="text-xs text-white/50">ID: {user.id}</p>
+                <div className="flex items-center gap-3">
+                  {getUserAvatar(user) ? (
+                    <img
+                      src={resolveAssetUrl(getUserAvatar(user))}
+                      alt={user.display_name || user.name || "User"}
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white/70">
+                      {getInitials(user.display_name || user.name || "U")}
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-white">
+                      {user.display_name || user.name || "Người dùng"}
+                    </p>
+                    <p className="text-xs text-white/50">ID: {user.id}</p>
+                  </div>
                 </div>
                 <span>{user.email || "-"}</span>
                 <div>

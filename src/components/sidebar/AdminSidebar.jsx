@@ -20,7 +20,7 @@ export default function AdminSidebar() {
       />
       <SidebarItem to="/admin/albums" icon={FiDisc} label="Quản lý album" />
       <SidebarItem to="/admin/genres" icon={FiTag} label="Thể loại" />
-      <SidebarItem to="/admin/search" icon={FiSearch} label="Tìm kiếm" />
+      {/* <SidebarItem to="/admin/search" icon={FiSearch} label="Tìm kiếm" /> */}
     </SidebarSection>
   );
 
