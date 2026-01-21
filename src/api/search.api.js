@@ -1,6 +1,13 @@
 import api from "./axios";
 
-export const searchEntities = (params = {}) => api.get("/search", { params });
+export const searchEntities = (params = {}) => {
+  const normalizedParams = { ...params };
+  if (normalizedParams.q && !normalizedParams.keyword) {
+    normalizedParams.keyword = normalizedParams.q;
+  }
+
+  return api.get("/search", { params: normalizedParams });
+};
 
 export const getSearchHistory = ({
   userId,
