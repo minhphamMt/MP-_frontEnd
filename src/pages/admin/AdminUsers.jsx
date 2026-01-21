@@ -1,18 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { FiRefreshCw, FiShield, FiUserX } from "react-icons/fi";
-import { listUsers, toggleUserActive, updateUserRole } from "../../api/admin.api";
+import { FiEdit2, FiRefreshCw, FiShield, FiUserX, FiX } from "react-icons/fi";
+import {
+  listUsers,
+  toggleUserActive,
+  updateUser,
+  updateUserRole,
+} from "../../api/admin.api";
 
 const ROLE_OPTIONS = ["USER", "ARTIST", "ADMIN"];
-const ROLE_FILTERS = ["ALL", ...ROLE_OPTIONS];
 
 export default function AdminUsers() {
-  const location = useLocation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
-  const [roleFilter, setRoleFilter] = useState("ALL");
   const [errorMessage, setErrorMessage] = useState("");
+  const [editingUser, setEditingUser] = useState(null);
+  const [editPayload, setEditPayload] = useState({
+    display_name: "",
+    password: "",
+  });
 
   const loadUsers = async () => {
     try {
@@ -36,12 +42,6 @@ export default function AdminUsers() {
   useEffect(() => {
     loadUsers();
   }, []);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    setKeyword(params.get("keyword") || "");
-    setRoleFilter((params.get("role") || "ALL").toUpperCase());
-  }, [location.search]);
 
   const filteredUsers = useMemo(() => {
     const normalized = keyword.trim().toLowerCase();
@@ -81,6 +81,32 @@ export default function AdminUsers() {
     } catch (error) {
       console.error("Update role failed", error);
       alert("Không thể cập nhật vai trò.");
+    }
+  };
+ const handleEditUser = (user) => {
+    setEditingUser(user);
+    setEditPayload({
+      display_name: user.display_name || user.name || "",
+      password: "",
+    });
+  };
+
+  const handleUpdateUser = async () => {
+    if (!editingUser) return;
+    try {
+      const res = await updateUser(editingUser.id, {
+        display_name: editPayload.display_name || undefined,
+        password: editPayload.password || undefined,
+      });
+      const updated = res?.data?.user ?? res?.data?.data ?? res?.data ?? null;
+      setUsers((prev) =>
+        prev.map((item) => (item.id === editingUser.id ? updated : item))
+      );
+      setEditingUser(null);
+      setEditPayload({ display_name: "", password: "" });
+    } catch (error) {
+      console.error("Update user failed", error);
+      alert("Không thể cập nhật thông tin người dùng.");
     }
   };
 
@@ -132,7 +158,7 @@ export default function AdminUsers() {
       )}
 
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1.2fr_1fr_0.6fr_0.6fr_0.8fr] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50">
+         <div className="grid grid-cols-[1.2fr_1fr_0.6fr_0.6fr_1fr] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50">
           <span>Người dùng</span>
           <span>Email</span>
           <span>Vai trò</span>
@@ -154,7 +180,7 @@ export default function AdminUsers() {
             filteredUsers.map((user) => (
               <div
                 key={user.id}
-                className="grid grid-cols-[1.2fr_1fr_0.6fr_0.6fr_0.8fr] items-center gap-2 px-4 py-3 text-sm text-white/80"
+                className="grid grid-cols-[1.2fr_1fr_0.6fr_0.6fr_1fr] items-center gap-2 px-4 py-3 text-sm text-white/80"
               >
                 <div>
                   <p className="font-semibold text-white">
@@ -186,18 +212,85 @@ export default function AdminUsers() {
                   {user.is_active ? "Đang hoạt động" : "Bị khóa"}
                 </span>
                 <div className="flex justify-end">
-                  <button
-                    onClick={() => handleToggleActive(user)}
-                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 transition hover:border-white/30 hover:bg-white/10"
-                  >
-                    {user.is_active ? <FiUserX /> : <FiShield />}
-                    {user.is_active ? "Khoá" : "Mở khoá"}
-                  </button>
+                   <div className="flex flex-wrap justify-end gap-2">
+                    <button
+                      onClick={() => handleEditUser(user)}
+                      className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 transition hover:border-white/30 hover:bg-white/10"
+                    >
+                      <FiEdit2 /> Sửa
+                    </button>
+                    <button
+                      onClick={() => handleToggleActive(user)}
+                      className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 transition hover:border-white/30 hover:bg-white/10"
+                    >
+                      {user.is_active ? <FiUserX /> : <FiShield />}
+                      {user.is_active ? "Khoá" : "Mở khoá"}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
         </div>
       </div>
+       {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#181818] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)]">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Cập nhật người dùng</h2>
+              <button
+                onClick={() => setEditingUser(null)}
+                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition hover:bg-white/10"
+              >
+                <FiX />
+              </button>
+            </div>
+            <div className="mt-4 space-y-4">
+              <label className="block text-sm text-white/70">
+                Tên hiển thị
+                <input
+                  value={editPayload.display_name}
+                  onChange={(event) =>
+                    setEditPayload((prev) => ({
+                      ...prev,
+                      display_name: event.target.value,
+                    }))
+                  }
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                />
+              </label>
+              <label className="block text-sm text-white/70">
+                Mật khẩu mới
+                <input
+                  type="password"
+                  value={editPayload.password}
+                  onChange={(event) =>
+                    setEditPayload((prev) => ({
+                      ...prev,
+                      password: event.target.value,
+                    }))
+                  }
+                  placeholder="Để trống nếu không đổi"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                />
+              </label>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setEditingUser(null)}
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10"
+              >
+                Huỷ
+              </button>
+              <button
+                onClick={handleUpdateUser}
+                className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-400/30 transition hover:bg-emerald-300"
+              >
+                Lưu thay đổi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

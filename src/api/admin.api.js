@@ -29,3 +29,12 @@ export const updateUserRole = (id, payload) =>
   api.patch(`/admin/users/${id}/role`, payload);
 
 export const listUsers = (params = {}) => api.get("/users", { params });
+
+export const updateUser = (id, payload) =>
+  api.patch(`/admin/users/${id}`, payload);
+
+export const listAdminSongs = (params = {}) =>
+  api.get("/admin/songs", { params });
+
+export const updateAdminSong = (id, payload) =>
+  api.put(`/admin/songs/${id}`, payload);

@@ -9,14 +9,20 @@ export default function AdminSearch() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleSearch = async () => {
-    if (!keyword.trim()) return;
+    const trimmed = keyword.trim();
+    if (!trimmed) return;
     try {
       setLoading(true);
-      const res = await searchAdmin({ q: keyword.trim(), page: 1, limit: 20 });
+      const res = await searchAdmin({
+        q: trimmed,
+        keyword: trimmed,
+        page: 1,
+        limit: 20,
+      });
       const payload = res?.data?.data ?? res?.data ?? [];
       const list = Array.isArray(payload)
         ? payload
-        : payload.items || payload.results || [];
+        : payload.items || payload.results || payload.data || [];
       setResults(list);
       setErrorMessage("");
     } catch (error) {

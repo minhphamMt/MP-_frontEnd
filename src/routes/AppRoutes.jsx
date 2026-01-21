@@ -31,6 +31,7 @@ import ArtistSongs from "../pages/artist/ArtistSongs";
 import ArtistSongForm from "../pages/artist/ArtistSongForm";
 import ArtistProfile from "../pages/artist/ArtistProfile";
 import AdminDashboard from "../pages/admin/AdminDashboard";
+import AdminSongManagement from "../pages/admin/AdminSongManagement";
 import AdminUsers from "../pages/admin/AdminUsers";
 import AdminSongs from "../pages/admin/AdminSongs";
 import AdminGenres from "../pages/admin/AdminGenres";
@@ -103,7 +104,9 @@ export default function AppRoutes() {
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/songs" element={<AdminSongs />} />
+          <Route path="/admin/songs" element={<AdminSongManagement />} />
+          <Route path="/admin/songs/review" element={<AdminSongs />} />
+          <Route path="/admin/albums" element={<AdminAlbums />} />
           <Route path="/admin/albums" element={<AdminAlbums />} />
           <Route path="/admin/genres" element={<AdminGenres />} />
         </Route>
