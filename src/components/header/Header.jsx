@@ -2,9 +2,12 @@ import { FiChevronLeft, FiChevronRight, FiMenu } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import SearchBox from "./SearchBox";
 import UserMenu from "./UserMenu";
+import useAuthStore from "../../store/auth.store";
 
 export default function Header({ onMenuClick }) {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const showSearch = user?.role !== "ARTIST";
 
   return (
     <header
@@ -77,9 +80,11 @@ export default function Header({ onMenuClick }) {
       </div>
 
       {/* SEARCH */}
-      <div className="relative ml-2 flex-1 max-w-full sm:ml-4 sm:max-w-xl">
-        <SearchBox />
-      </div>
+      {showSearch && (
+        <div className="relative ml-2 flex-1 max-w-full sm:ml-4 sm:max-w-xl">
+          <SearchBox />
+        </div>
+      )}
 
       {/* USER */}
       <div className="relative ml-auto">

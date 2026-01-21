@@ -34,7 +34,7 @@ import AdminDashboard from "../pages/admin/AdminDashboard";
 import AdminUsers from "../pages/admin/AdminUsers";
 import AdminSongs from "../pages/admin/AdminSongs";
 import AdminGenres from "../pages/admin/AdminGenres";
-import AdminSearch from "../pages/admin/AdminSearch";
+import AdminAlbums from "../pages/admin/AdminAlbums";
 
 export default function AppRoutes() {
   return (
@@ -104,8 +104,8 @@ export default function AppRoutes() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/songs" element={<AdminSongs />} />
+          <Route path="/admin/albums" element={<AdminAlbums />} />
           <Route path="/admin/genres" element={<AdminGenres />} />
-          <Route path="/admin/search" element={<AdminSearch />} />
         </Route>
       </Route>
 

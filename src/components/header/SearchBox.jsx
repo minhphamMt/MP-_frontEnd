@@ -9,6 +9,7 @@ import { saveSearchHistory } from "../../api/search.api";
 import useAuthStore from "../../store/auth.store";
 import { createPortal } from "react-dom";
 import { resolveAssetUrl } from "../../utils/asset";
+import { searchAdmin } from "../../api/admin.api";
 
 export default function SearchBox() {
   const location = useLocation();
@@ -25,6 +26,7 @@ export default function SearchBox() {
 
   const { playSong } = usePlayerStore();
   const user = useAuthStore((state) => state.user);
+  const isAdmin = user?.role === "ADMIN";
   const defaultKeyword = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return params.get("q") || params.get("keyword") || "";
@@ -101,50 +103,99 @@ useEffect(() => {
 
     setLoading(true);
     try {
-       const res = await searchEntities({ q: trimmed, limit: 8, page: 1 });
-      const payload = res?.data?.data ?? res?.data ?? {};
-      const items = payload?.items ?? payload;
-      const songs = Array.isArray(items?.songs) ? items.songs : [];
-      const artists = Array.isArray(items?.artists) ? items.artists : [];
-      const albums = Array.isArray(items?.albums) ? items.albums : [];
+       if (isAdmin) {
+        const res = await searchAdmin({ q: trimmed, limit: 8, page: 1 });
+        const payload = res?.data?.data ?? res?.data ?? {};
+        const items = Array.isArray(payload)
+          ? payload
+          : payload.items || payload.results || [];
 
-      const merged = [
-        ...songs.map((item) => ({ ...item, type: "song" })),
-        ...artists.map((item) => ({ ...item, type: "artist" })),
-        ...albums.map((item) => ({ ...item, type: "album" })),
-      ];
+        const normalized = items
+          .map((item) => {
+            let type =
+              item.type || item.entity_type || item.entityType || item.kind;
+            if (!type && item.role === "ARTIST") type = "artist";
+            if (!type && item.album_title) type = "song";
+            if (!type && item.title && item.artist_name) type = "album";
+            if (!type && item.display_name) type = "artist";
+            const normalizedType = (type || "").toLowerCase();
+            if (!["artist", "song", "album"].includes(normalizedType)) {
+              return null;
+            }
 
-      const normalized = merged.map((item) => ({
-        ...item,
-        displayLabel:
-          item.highlight?.display_name ||
-          item.highlight?.title ||
-          item.highlight?.name ||
-          item.highlight?.keyword ||
-          item.display_name ||
-          item.title ||
-          item.name ||
-          item.keyword,
-        secondaryLabel:
-          item.highlight?.artist_name ||
-          item.artist_name ||
-          item.artist?.name,
-        cover:
-          item.cover_url ||
-          item.thumbnail ||
-          item.image_url ||
-          item.thumbnail_m ||
-          item.image,
-      }));
+            return {
+              ...item,
+              type: normalizedType,
+              displayLabel:
+                item.highlight?.display_name ||
+                item.highlight?.title ||
+                item.highlight?.name ||
+                item.display_name ||
+                item.title ||
+                item.name,
+              secondaryLabel:
+                item.highlight?.artist_name ||
+                item.artist_name ||
+                item.artist?.name ||
+                item.owner?.name,
+              cover:
+                item.cover_url ||
+                item.thumbnail ||
+                item.image_url ||
+                item.avatar_url ||
+                item.thumbnail_m ||
+                item.image,
+            };
+          })
+          .filter(Boolean);
 
-      setResults(normalized);
+        setResults(normalized);
+      } else {
+        const res = await searchEntities({ q: trimmed, limit: 8, page: 1 });
+        const payload = res?.data?.data ?? res?.data ?? {};
+        const items = payload?.items ?? payload;
+        const songs = Array.isArray(items?.songs) ? items.songs : [];
+        const artists = Array.isArray(items?.artists) ? items.artists : [];
+        const albums = Array.isArray(items?.albums) ? items.albums : [];
+
+        const merged = [
+          ...songs.map((item) => ({ ...item, type: "song" })),
+          ...artists.map((item) => ({ ...item, type: "artist" })),
+          ...albums.map((item) => ({ ...item, type: "album" })),
+        ];
+
+        const normalized = merged.map((item) => ({
+          ...item,
+          displayLabel:
+            item.highlight?.display_name ||
+            item.highlight?.title ||
+            item.highlight?.name ||
+            item.highlight?.keyword ||
+            item.display_name ||
+            item.title ||
+            item.name ||
+            item.keyword,
+          secondaryLabel:
+            item.highlight?.artist_name ||
+            item.artist_name ||
+            item.artist?.name,
+          cover:
+            item.cover_url ||
+            item.thumbnail ||
+            item.image_url ||
+            item.thumbnail_m ||
+            item.image,
+        }));
+
+        setResults(normalized);
+      }
     } catch (err) {
       console.error("Search suggestions error", err);
       setResults([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAdmin]);
 
 useEffect(() => {
   if (!hasFocus) return; // 🔥 CHẶN TỰ MỞ KHI CHƯA CLICK
@@ -198,10 +249,15 @@ const handleSearch = useCallback(
           console.error("Lưu lịch sử tìm kiếm thất bại", err);
         }
       }
-    navigate(`/search?q=${encodeURIComponent(value)}`);
+    if (isAdmin) {
+        setOpen(true);
+        await fetchSuggestions(value);
+        return;
+      }
+      navigate(`/search?q=${encodeURIComponent(value)}`);
       setOpen(false);
     },
-    [navigate, user?.id]
+    [fetchSuggestions, isAdmin, navigate, user?.id]
   );
 
   const handleSubmit = (e) => {
@@ -233,6 +289,22 @@ const handleResultNavigate = async (item) => {
     } catch (err) {
       console.error("Lưu lịch sử tìm kiếm thất bại", err);
     }
+  }
+
+  if (isAdmin) {
+    const label = nameToSave || "";
+    if (item.type === "artist") {
+      navigate(
+        `/admin/users?role=ARTIST&keyword=${encodeURIComponent(label)}`
+      );
+    } else if (item.type === "album") {
+      navigate(`/admin/albums?keyword=${encodeURIComponent(label)}`);
+    } else if (item.type === "song") {
+      navigate(`/admin/songs?keyword=${encodeURIComponent(label)}`);
+    }
+    setOpen(false);
+    setKeyword("");
+    return;
   }
 
   if (item.type === "artist") {
@@ -302,7 +374,11 @@ const handleResultNavigate = async (item) => {
   setOpen(true);
 }}
 
-          placeholder="Tìm kiếm bài hát, nghệ sĩ, lời bài hát..."
+          placeholder={
+            isAdmin
+              ? "Tìm kiếm nghệ sĩ, bài hát, album..."
+              : "Tìm kiếm bài hát, nghệ sĩ, lời bài hát..."
+          }
           className="w-full rounded-full border border-[#2a2a2a] bg-[#1f1f1f] py-2.5 pl-12 pr-4 text-sm text-white placeholder:text-white/50 shadow-[0_14px_40px_rgba(0,0,0,0.35)] outline-none transition focus:border-[#1db954] focus:bg-[#232323]"
         />
       </form>
@@ -388,7 +464,7 @@ const handleResultNavigate = async (item) => {
                       <span className="rounded-full bg-[#2a2a2a] px-2 py-1 text-white/70">
                         {item.type}
                       </span>
-                      {item.type === "song" && (
+                      {item.type === "song" && !isAdmin && (
                         <button
                           type="button"
                           onClick={() => handlePlaySong(item)}

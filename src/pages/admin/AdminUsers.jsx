@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { FiRefreshCw, FiShield, FiUserX } from "react-icons/fi";
 import { listUsers, toggleUserActive, updateUserRole } from "../../api/admin.api";
 
 const ROLE_OPTIONS = ["USER", "ARTIST", "ADMIN"];
+const ROLE_FILTERS = ["ALL", ...ROLE_OPTIONS];
 
 export default function AdminUsers() {
+  const location = useLocation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
   const [errorMessage, setErrorMessage] = useState("");
 
   const loadUsers = async () => {
@@ -33,15 +37,23 @@ export default function AdminUsers() {
     loadUsers();
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setKeyword(params.get("keyword") || "");
+    setRoleFilter((params.get("role") || "ALL").toUpperCase());
+  }, [location.search]);
+
   const filteredUsers = useMemo(() => {
     const normalized = keyword.trim().toLowerCase();
-    if (!normalized) return users;
-    return users.filter((user) =>
-      [user.email, user.display_name, user.name]
+    return users.filter((user) => {
+      const matchesRole = roleFilter === "ALL" ? true : user.role === roleFilter;
+      if (!matchesRole) return false;
+      if (!normalized) return true;
+      return [user.email, user.display_name, user.name, `${user.id}`]
         .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(normalized))
-    );
-  }, [keyword, users]);
+        .some((value) => value.toLowerCase().includes(normalized));
+    });
+  }, [keyword, roleFilter, users]);
 
   const handleToggleActive = async (user) => {
     try {
@@ -92,12 +104,25 @@ export default function AdminUsers() {
       </div>
 
       <div className="rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <input
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
-          placeholder="Tìm theo email hoặc tên hiển thị..."
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
-        />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <input
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            placeholder="Tìm theo email, tên hiển thị hoặc ID..."
+            className="w-full flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+          />
+          <select
+            value={roleFilter}
+            onChange={(event) => setRoleFilter(event.target.value)}
+            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/70 sm:w-48"
+          >
+            {ROLE_FILTERS.map((role) => (
+              <option key={role} value={role} className="text-black">
+                {role === "ALL" ? "Tất cả vai trò" : role}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {errorMessage && (

@@ -60,7 +60,7 @@ export default function Home() {
       const ids = recRes?.data?.data || [];
 
       const songResults = await Promise.all(
-        ids.slice(0, 9).map(async (id) => {
+        ids.slice(0, 10).map(async (id) => {
           try {
             const res = await getSongById(id);
             const raw = res?.data?.data;
@@ -198,56 +198,6 @@ export default function Home() {
      ======================= */
   return (
       <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:space-y-14 sm:px-8">
-      {/* <div className="rounded-3xl border border-[#242424] bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.4)] sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">
-              Dành cho bạn
-            </p>
-            <h1 className="mt-1 text-2xl font-bold text-white sm:text-3xl">
-              {greeting}
-            </h1>
-          </div>
-          <button
-            onClick={loadHome}
-            className="rounded-full border border-white/10 bg-[#1f1f1f] px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-[#2a2a2a]"
-          >
-            Làm mới
-          </button>
-        </div>
-
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {quickPicks.map((song) => (
-            <button
-              key={song.id}
-              type="button"
-              onClick={() => playSong(song, songs)}
-              className="group flex items-center gap-3 overflow-hidden rounded-xl border border-[#242424] bg-[#181818] pr-4 text-left transition hover:bg-[#242424]"
-            >
-              <div className="relative h-16 w-16 shrink-0 overflow-hidden">
-                <img
-                  src={song.cover_url}
-                  alt={song.title}
-                  className="h-full w-full object-cover"
-                />
-                <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1db954] text-black shadow-lg shadow-[#1db954]/40">
-                    ▶
-                  </span>
-                </span>
-              </div>
-              <div className="min-w-0">
-                <div className="truncate text-sm font-semibold text-white">
-                  {song.title}
-                </div>
-                <div className="truncate text-xs text-white/60">
-                  {song.artist_name}
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div> */}
       {/* ===== SONG RECOMMEND ===== */}
       <Section
         title="Dành cho bạn"

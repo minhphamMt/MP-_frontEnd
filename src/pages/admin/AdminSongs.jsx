@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { FiCheckCircle, FiRefreshCw, FiSlash } from "react-icons/fi";
 import { approveSong, blockSong } from "../../api/admin.api";
 import { getSongs } from "../../api/song.api";
@@ -24,9 +25,11 @@ const statusBadge = (status) => {
 };
 
 export default function AdminSongs() {
+  const location = useLocation();
   const [songs, setSongs] = useState([]);
   const [statusFilter, setStatusFilter] = useState("pending");
   const [loading, setLoading] = useState(true);
+  const [keyword, setKeyword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   const loadSongs = async () => {
@@ -57,6 +60,11 @@ export default function AdminSongs() {
     loadSongs();
   }, [statusFilter]);
 
+   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setKeyword(params.get("keyword") || "");
+  }, [location.search]);
+
   const handleApprove = async (song) => {
     try {
       const res = await approveSong(song.id);
@@ -85,7 +93,15 @@ export default function AdminSongs() {
     }
   };
 
-  const visibleSongs = useMemo(() => songs, [songs]);
+  const visibleSongs = useMemo(() => {
+    const normalized = keyword.trim().toLowerCase();
+    if (!normalized) return songs;
+    return songs.filter((song) =>
+      [song.title, song.artist_name, song.album_title, `${song.id}`]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(normalized))
+    );
+  }, [keyword, songs]);
 
   return (
     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
@@ -99,6 +115,12 @@ export default function AdminSongs() {
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">
+           <input
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            placeholder="Tìm theo bài hát, nghệ sĩ, album..."
+            className="w-full rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition placeholder:text-white/40 focus:border-white/30 focus:outline-none sm:w-64"
+          />
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}

@@ -1,4 +1,4 @@
-import { FiGrid, FiSearch, FiTag, FiUsers } from "react-icons/fi";
+import { FiDisc, FiGrid, FiTag, FiUsers } from "react-icons/fi";
 import { BsMusicNoteList } from "react-icons/bs";
 import SidebarItem from "./SidebarItem";
 import SidebarSection from "./SidebarSection";
@@ -13,8 +13,8 @@ export default function AdminSidebar() {
         icon={BsMusicNoteList}
         label="Duyệt bài hát"
       />
+      <SidebarItem to="/admin/albums" icon={FiDisc} label="Album" />
       <SidebarItem to="/admin/genres" icon={FiTag} label="Thể loại" />
-      <SidebarItem to="/admin/search" icon={FiSearch} label="Tìm kiếm" />
     </SidebarSection>
   );
 }
