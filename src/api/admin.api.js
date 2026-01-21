@@ -28,7 +28,7 @@ export const toggleUserActive = (id, payload) =>
 export const updateUserRole = (id, payload) =>
   api.patch(`/admin/users/${id}/role`, payload);
 
-export const listUsers = (params = {}) => api.get("/admin/users", { params });
+export const listUsers = (params = {}) => api.get("/users", { params });
 
 export const updateUser = (id, payload) =>
   api.patch(`/admin/users/${id}`, payload);
