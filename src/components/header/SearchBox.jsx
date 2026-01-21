@@ -106,9 +106,16 @@ useEffect(() => {
        if (isAdmin) {
         const res = await searchAdmin({ q: trimmed, limit: 8, page: 1 });
         const payload = res?.data?.data ?? res?.data ?? {};
-        const items = Array.isArray(payload)
-          ? payload
-          : payload.items || payload.results || [];
+        const itemsSource =
+          payload.items || payload.results || payload.data || payload;
+        const items = Array.isArray(itemsSource)
+          ? itemsSource
+          : [
+              ...(itemsSource?.songs ?? []),
+              ...(itemsSource?.artists ?? []),
+              ...(itemsSource?.albums ?? []),
+              ...(itemsSource?.users ?? []),
+            ];
 
         const normalized = items
           .map((item) => {
@@ -117,9 +124,10 @@ useEffect(() => {
             if (!type && item.role === "ARTIST") type = "artist";
             if (!type && item.album_title) type = "song";
             if (!type && item.title && item.artist_name) type = "album";
+            if (!type && item.display_name && item.email) type = "user";
             if (!type && item.display_name) type = "artist";
             const normalizedType = (type || "").toLowerCase();
-            if (!["artist", "song", "album"].includes(normalizedType)) {
+           if (!["artist", "song", "album", "user"].includes(normalizedType)) {
               return null;
             }
 
@@ -132,12 +140,15 @@ useEffect(() => {
                 item.highlight?.name ||
                 item.display_name ||
                 item.title ||
-                item.name,
+                item.name ||
+                item.email,
               secondaryLabel:
                 item.highlight?.artist_name ||
                 item.artist_name ||
                 item.artist?.name ||
-                item.owner?.name,
+                item.owner?.name ||
+                item.email ||
+                item.role,
               cover:
                 item.cover_url ||
                 item.thumbnail ||
@@ -301,7 +312,8 @@ const handleResultNavigate = async (item) => {
       navigate(`/admin/albums?keyword=${encodeURIComponent(label)}`);
     } else if (item.type === "song") {
       navigate(`/admin/songs?keyword=${encodeURIComponent(label)}`);
-    }
+    }} else if (item.type === "user") {
+      navigate(`/admin/users?keyword=${encodeURIComponent(label)}`);
     setOpen(false);
     setKeyword("");
     return;
@@ -354,6 +366,7 @@ const handleResultNavigate = async (item) => {
   const resultIcon = (type) => {
     if (type === "artist") return <FiUser className="text-white/70" />;
     if (type === "album") return <FiDisc className="text-white/70" />;
+    if (type === "user") return <FiUser className="text-white/70" />;
     return <FiMusic className="text-white/70" />;
   };
 

@@ -8,12 +8,14 @@ import {
 } from "../../api/admin.api";
 
 const ROLE_OPTIONS = ["USER", "ARTIST", "ADMIN"];
+const ROLE_FILTERS = ["ALL", ...ROLE_OPTIONS];
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
   const [editingUser, setEditingUser] = useState(null);
   const [editPayload, setEditPayload] = useState({
     display_name: "",

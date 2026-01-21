@@ -20,9 +20,16 @@ export default function AdminSearch() {
         limit: 20,
       });
       const payload = res?.data?.data ?? res?.data ?? [];
-      const list = Array.isArray(payload)
-        ? payload
-        : payload.items || payload.results || payload.data || [];
+      const itemsSource =
+        payload.items || payload.results || payload.data || payload;
+      const list = Array.isArray(itemsSource)
+        ? itemsSource
+        : [
+            ...(itemsSource?.songs ?? []),
+            ...(itemsSource?.artists ?? []),
+            ...(itemsSource?.albums ?? []),
+            ...(itemsSource?.users ?? []),
+          ];
       setResults(list);
       setErrorMessage("");
     } catch (error) {

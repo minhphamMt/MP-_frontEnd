@@ -36,6 +36,7 @@ import AdminUsers from "../pages/admin/AdminUsers";
 import AdminSongs from "../pages/admin/AdminSongs";
 import AdminGenres from "../pages/admin/AdminGenres";
 import AdminAlbums from "../pages/admin/AdminAlbums";
+import AdminSearch from "../pages/admin/AdminSearch";
 
 export default function AppRoutes() {
   return (
@@ -104,6 +105,7 @@ export default function AppRoutes() {
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/search" element={<AdminSearch />} />
           <Route path="/admin/songs" element={<AdminSongManagement />} />
           <Route path="/admin/songs/review" element={<AdminSongs />} />
           <Route path="/admin/albums" element={<AdminAlbums />} />
