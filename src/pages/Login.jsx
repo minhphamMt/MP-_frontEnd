@@ -6,9 +6,9 @@ import useAuthStore from "../store/auth.store";
 import { signInWithGoogle } from "../utils/firebase";
 
 const formVariants = {
-  initial: { opacity: 0, y: 18 },
+  initial: { opacity: 0, y: 14 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -18 },
+  exit: { opacity: 0, y: -14 },
 };
 
 const glowVariants = {
@@ -125,7 +125,7 @@ export default function Login({ initialMode = "login" }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0b12] px-4 py-12 text-white">
+    <div className="flex min-h-screen items-center justify-center bg-[#0b0b12] px-4 py-12 text-white">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-center">
         <motion.div
           className="relative w-full overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.03] shadow-[0_35px_120px_rgba(0,0,0,0.6)]"
@@ -138,7 +138,7 @@ export default function Login({ initialMode = "login" }) {
           <div className="pointer-events-none absolute -bottom-24 right-6 h-72 w-72 rounded-full bg-emerald-400/25 blur-[120px]" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
-          <div className="grid gap-10 p-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+          <div className="grid gap-10 p-10 lg:grid-cols-[minmax(0,1.15fr)_420px] lg:items-center">
             <div className="relative z-10 space-y-8">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-500 text-lg font-semibold text-[#0c0914] shadow-lg shadow-green-400/30">
@@ -196,18 +196,26 @@ export default function Login({ initialMode = "login" }) {
               </div>
             </div>
 
-             <div className="relative z-10 min-h-[560px]">
-              <AnimatePresence mode="wait">
+             <motion.div
+              className="relative z-10 min-h-[560px] lg:w-[420px]"
+              layout
+              transition={{ type: "spring", stiffness: 260, damping: 28 }}
+            >
+              <AnimatePresence mode="wait" initial={false}>
                 {mode === "login" ? (
                   <motion.form
                     key="login"
-                    className="space-y-5 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
+                    className="w-full space-y-5 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
                     onSubmit={handleLogin}
                     variants={formVariants}
                     initial="initial"
                     animate="animate"
                     exit="exit"
-                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    layout
+                    transition={{
+                      opacity: { duration: 0.25, ease: "easeOut" },
+                      y: { duration: 0.25, ease: "easeOut" },
+                    }}
                   >
                     <div>
                       <h2 className="text-2xl font-semibold">Đăng nhập</h2>
@@ -258,7 +266,7 @@ export default function Login({ initialMode = "login" }) {
                       {loading ? "Đang đăng nhập..." : "Đăng nhập"}
                     </button>
 
-<div className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-white/40">
+                    <div className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-white/40">
                       <span className="h-px flex-1 bg-white/10" />
                       hoặc
                       <span className="h-px flex-1 bg-white/10" />
@@ -288,13 +296,17 @@ export default function Login({ initialMode = "login" }) {
                 ) : (
                   <motion.form
                     key="register"
-                    className="space-y-5 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
+                    className="w-full space-y-5 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
                     onSubmit={handleRegister}
                     variants={formVariants}
                     initial="initial"
                     animate="animate"
                     exit="exit"
-                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    layout
+                    transition={{
+                      opacity: { duration: 0.25, ease: "easeOut" },
+                      y: { duration: 0.25, ease: "easeOut" },
+                    }}
                   >
                     <div>
                       <h2 className="text-2xl font-semibold">Tạo tài khoản</h2>
@@ -374,7 +386,7 @@ export default function Login({ initialMode = "login" }) {
                       {loading ? "Đang đăng ký..." : "Đăng ký"}
                     </button>
 
-<div className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-white/40">
+                    <div className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-white/40">
                       <span className="h-px flex-1 bg-white/10" />
                       hoặc
                       <span className="h-px flex-1 bg-white/10" />
@@ -403,7 +415,7 @@ export default function Login({ initialMode = "login" }) {
                   </motion.form>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
       </div>
