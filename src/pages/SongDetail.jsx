@@ -1,21 +1,29 @@
 import { useCallback, useEffect, useState } from "react";
-import { FiClock, FiDisc, FiMusic, FiUser } from "react-icons/fi";
+import { FiClock, FiDisc, FiHeart, FiMusic, FiPlus, FiUser } from "react-icons/fi";
 import { useParams } from "react-router-dom";
 import { getSongById } from "../api/song.api";
-import usePlayerStore from "../store/player.store";
+import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import {
   fetchPlayableSong,
   formatDuration,
   toPlayableSong,
 } from "../utils/song";
 import { resolveAssetUrl } from "../utils/asset";
+import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 
 export default function SongDetail() {
   const { id } = useParams();
   const [song, setSong] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const { playSong, currentSong, isPlaying } = usePlayerStore();
+  const {
+    playSong,
+    currentSong,
+    isPlaying,
+    togglePlay,
+    likedSongIds,
+    toggleLike,
+  } = usePlayerStore();
 
   const loadSong = useCallback(async () => {
     setLoading(true);
@@ -37,6 +45,11 @@ export default function SongDetail() {
 
   const handlePlay = async () => {
     if (!song) return;
+
+    if (normalizeSongId(currentSong) === normalizeSongId(song)) {
+      togglePlay();
+      return;
+    }
 
     const playable = song.audio_url
       ? song
@@ -68,7 +81,9 @@ export default function SongDetail() {
     );
   }
 
-  const isActive = currentSong?.id === song.id;
+  const songId = normalizeSongId(song);
+  const isActive = normalizeSongId(currentSong) === songId;
+  const isLiked = songId && likedSongIds.includes(songId);
 
   return (
     <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
@@ -140,11 +155,30 @@ export default function SongDetail() {
                 {isActive && isPlaying ? "⏸ Tạm dừng" : "▶ Phát ngay"}
               </button>
 
+              <AddToPlaylistButton
+                song={song}
+                variant="text"
+                triggerLabel={
+                  <span className="flex items-center gap-2 font-semibold">
+                    <FiPlus />
+                    <span>Thêm vào thư viện</span>
+                  </span>
+                }
+                triggerClassName="rounded-full border border-white/15 bg-white/5 px-6 py-2 text-sm text-white/80 transition hover:bg-white/10"
+              />
               <button
-                className="rounded-full border border-white/15 bg-white/5 px-6 py-2 text-sm text-white/80 transition
-                           hover:bg-white/10"
+                type="button"
+                onClick={() => {
+                  if (songId) toggleLike(songId);
+                }}
+                className={`inline-flex items-center gap-2 rounded-full border px-6 py-2 text-sm font-semibold transition ${
+                  isLiked
+                    ? "border-rose-400/60 bg-rose-500/20 text-rose-100"
+                    : "border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+                }`}
               >
-                + Thêm vào thư viện
+                <FiHeart className={isLiked ? "text-rose-300" : ""} />
+                {isLiked ? "Đã thích" : "Yêu thích"}
               </button>
             </div>
           </div>

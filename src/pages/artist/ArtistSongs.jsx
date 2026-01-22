@@ -4,7 +4,6 @@ import { FiEdit2, FiPlus, FiSearch, FiTrash2 } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
 import { getAlbums } from "../../api/album.api";
 import { deleteSong, getArtistSongs } from "../../api/song.api";
-import { formatDuration } from "../../utils/song";
 import { getMyArtistProfile } from "../../api/artist.api";
 
 export default function ArtistSongs() {
@@ -191,27 +190,21 @@ const filteredSongs = useMemo(() => {
       )}
 
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1.4fr_1fr_0.7fr_0.7fr_0.8fr] gap-4 border-b border-white/10 bg-white/5 px-6 py-4 text-xs uppercase tracking-[0.2em] text-white/50">
+       <div className="hidden grid-cols-[1.6fr_0.9fr_0.9fr] gap-4 border-b border-white/10 bg-white/5 px-6 py-4 text-xs uppercase tracking-[0.2em] text-white/50 sm:grid">
           <span>Bài hát</span>
-          <span>Album</span>
-          <span>Thời lượng</span>
           <span>Trạng thái</span>
-          <span>Hành động</span>
+          <span className="text-right">Hành động</span>
         </div>
         <div className="divide-y divide-white/5">
           {filteredSongs.map((song) => (
             <div
               key={`${song.id ?? song.title}-${song.album_id ?? "single"}`}
-              className="grid grid-cols-1 gap-3 px-6 py-4 text-sm text-white/80 sm:grid-cols-[1.4fr_1fr_0.7fr_0.7fr_0.8fr]"
+              className="flex flex-col gap-3 px-6 py-4 text-sm text-white/80 sm:grid sm:grid-cols-[1.6fr_0.9fr_0.9fr] sm:items-center"
             >
               <div>
                 <p className="font-semibold text-white">{song.title}</p>
                 <p className="text-xs text-white/50">ID #{song.id}</p>
               </div>
-              <span className="text-white/70">{song.album_title}</span>
-              <span className="text-white/70">
-                {song.duration ? formatDuration(song.duration) : "--:--"}
-              </span>
               <span
                 className={`w-fit rounded-full border px-3 py-1 text-xs ${
                   statusStyles[song.status] ||
@@ -220,7 +213,7 @@ const filteredSongs = useMemo(() => {
               >
                 {song.status || "Chưa xác định"}
               </span>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                 <button
                   type="button"
                   onClick={() => navigate(`/artist/songs/${song.id}/edit`)}

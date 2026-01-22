@@ -281,7 +281,7 @@ export default function History() {
                       />
                       <button
                         onClick={() => handlePlaySong(item)}
-                        className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
+                        className="absolute inset-0 flex items-center justify-center bg-emerald-500/80 text-white opacity-0 transition group-hover:opacity-100"
                       >
                         <span className="text-white text-sm">
                           {isPlayingCurrent && isPlaying ? "⏸" : "▶"}

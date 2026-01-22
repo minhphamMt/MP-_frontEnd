@@ -230,7 +230,7 @@ export default function Trash() {
             </div>
 
             <div
-              className={`grid grid-cols-1 gap-3 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/40 ${gridClass}`}
+              className={`hidden grid-cols-1 gap-3 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/40 sm:grid ${gridClass}`}
             >
               {section.columns.map((column, index) => (
                 <span
@@ -256,17 +256,26 @@ export default function Trash() {
                 items.map((item) => (
                   <div
                     key={item.id}
-                    className={`grid grid-cols-1 items-center gap-3 px-4 py-4 text-sm text-white/80 ${gridClass}`}
+                     className={`flex flex-col gap-4 px-4 py-4 text-sm text-white/80 sm:grid sm:items-center ${gridClass}`}
                   >
                     {section.renderCells(item).map((cell, index, cells) => (
                       <div
                         key={`${item.id}-${index}`}
-                        className={index === cells.length - 1 ? "text-right" : ""}
+                       className={`flex flex-col gap-1 ${
+                          index === cells.length - 1 ? "sm:text-right" : ""
+                        }`}
                       >
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 sm:hidden">
+                          {section.columns[index]}
+                        </span>
                         {cell}
                       </div>
                     ))}
-                    <div className="flex justify-end gap-2">
+                     <div className="flex flex-col gap-2 sm:items-end">
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 sm:hidden">
+                        {section.columns[section.columns.length - 1]}
+                      </span>
+                      <div className="flex flex-wrap gap-2 sm:justify-end">
                       <button
                         onClick={() => handleRestore(section.key, item)}
                         className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-200 transition hover:bg-emerald-400/20"
@@ -279,6 +288,7 @@ export default function Trash() {
                       >
                         <FiTrash2 /> Xoá vĩnh viễn
                       </button>
+                       </div>
                     </div>
                   </div>
                 ))}
