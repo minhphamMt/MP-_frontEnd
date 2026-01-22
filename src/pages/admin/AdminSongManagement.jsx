@@ -5,7 +5,9 @@ import {
   listAdminSongs,
   listGenres,
   updateAdminSong,
+  listUsers,
 } from "../../api/admin.api";
+import { getAlbums } from "../../api/album.api";
 import { resolveAssetUrl } from "../../utils/asset";
 
 const STATUS_OPTIONS = [
@@ -35,6 +37,8 @@ export default function AdminSongManagement() {
   const location = useLocation();
   const [songs, setSongs] = useState([]);
   const [genres, setGenres] = useState([]);
+  const [artists, setArtists] = useState([]);
+  const [albums, setAlbums] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
@@ -47,7 +51,6 @@ export default function AdminSongManagement() {
     album_id: "",
     status: "",
     release_date: "",
-    zing_song_id: "",
     genres: [],
   });
 
@@ -89,8 +92,38 @@ export default function AdminSongManagement() {
     }
   };
 
+  const loadArtists = async () => {
+    try {
+      const res = await listUsers({ role: "ARTIST", limit: 200 });
+      const payload = res?.data?.data ?? res?.data ?? [];
+      const list = Array.isArray(payload)
+        ? payload
+        : payload.items || payload.users || [];
+      setArtists(list);
+    } catch (error) {
+      console.error("Load artists failed", error);
+      setArtists([]);
+    }
+  };
+
+  const loadAlbums = async () => {
+    try {
+      const res = await getAlbums({ page: 1, limit: 200 });
+      const payload = res?.data?.data ?? res?.data ?? [];
+      const list = Array.isArray(payload)
+        ? payload
+        : payload.items || payload.albums || [];
+      setAlbums(list);
+    } catch (error) {
+      console.error("Load albums failed", error);
+      setAlbums([]);
+    }
+  };
+
   useEffect(() => {
     loadGenres();
+    loadArtists();
+    loadAlbums();
   }, []);
 
   useEffect(() => {
@@ -106,13 +139,12 @@ export default function AdminSongManagement() {
     setEditingSong(song);
     setEditPayload({
       title: song?.title || "",
-      artist_id: song?.artist_id || "",
-      album_id: song?.album_id || "",
+      artist_id: song?.artist_id ? `${song.artist_id}` : "",
+      album_id: song?.album_id ? `${song.album_id}` : "",
       status: song?.status || "",
       release_date: song?.release_date
         ? new Date(song.release_date).toISOString().slice(0, 10)
         : "",
-      zing_song_id: song?.zing_song_id || "",
       genres: normalizeGenreValue(song?.genres),
     });
   };
@@ -138,7 +170,6 @@ export default function AdminSongManagement() {
         album_id: editPayload.album_id || null,
         status: editPayload.status || undefined,
         release_date: editPayload.release_date || null,
-        zing_song_id: editPayload.zing_song_id || null,
         genres: editPayload.genres,
       });
       setEditingSong(null);
@@ -150,6 +181,45 @@ export default function AdminSongManagement() {
   };
 
   const filteredSongs = useMemo(() => songs, [songs]);
+  const artistOptions = useMemo(() => {
+    const mapped = artists.map((artist) => ({
+      id: `${artist.id}`,
+      label: `${artist.id} - ${
+        artist.display_name || artist.name || artist.email || "Nghệ sĩ"
+      }`,
+    }));
+    if (
+      editPayload.artist_id &&
+      !mapped.some((item) => item.id === editPayload.artist_id)
+    ) {
+      mapped.unshift({
+        id: editPayload.artist_id,
+        label: `${editPayload.artist_id} - Nghệ sĩ hiện tại`,
+      });
+    }
+    return mapped;
+  }, [artists, editPayload.artist_id]);
+
+  const albumOptions = useMemo(() => {
+    const mapped = albums.map((album) => ({
+      id: `${album.id}`,
+      label: `${album.id} - ${album.title || "Album"}${
+        album.artist?.name || album.artist_name
+          ? ` · ${album.artist?.name || album.artist_name}`
+          : ""
+      }`,
+    }));
+    if (
+      editPayload.album_id &&
+      !mapped.some((item) => item.id === editPayload.album_id)
+    ) {
+      mapped.unshift({
+        id: editPayload.album_id,
+        label: `${editPayload.album_id} - Album hiện tại`,
+      });
+    }
+    return mapped;
+  }, [albums, editPayload.album_id]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -278,7 +348,7 @@ export default function AdminSongManagement() {
 
       {editingSong && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-3xl rounded-3xl border border-white/10 bg-[#181818] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)]">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Chỉnh sửa bài hát</h2>
               <button
@@ -289,7 +359,7 @@ export default function AdminSongManagement() {
               </button>
             </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="block text-sm text-white/70">
                 Tên bài hát
                 <input
@@ -331,7 +401,7 @@ export default function AdminSongManagement() {
               </label>
               <label className="block text-sm text-white/70">
                 Artist ID
-                <input
+                <select
                   value={editPayload.artist_id}
                   onChange={(event) =>
                     setEditPayload((prev) => ({
@@ -339,12 +409,21 @@ export default function AdminSongManagement() {
                       artist_id: event.target.value,
                     }))
                   }
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
-                />
+                   className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white"
+                >
+                  <option value="" className="text-black">
+                    Chọn nghệ sĩ
+                  </option>
+                  {artistOptions.map((artist) => (
+                    <option key={artist.id} value={artist.id} className="text-black">
+                      {artist.label}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label className="block text-sm text-white/70">
                 Album ID
-                <input
+                 <select
                   value={editPayload.album_id}
                   onChange={(event) =>
                     setEditPayload((prev) => ({
@@ -352,8 +431,17 @@ export default function AdminSongManagement() {
                       album_id: event.target.value,
                     }))
                   }
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
-                />
+                 className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white"
+                >
+                  <option value="" className="text-black">
+                    Chọn album
+                  </option>
+                  {albumOptions.map((album) => (
+                    <option key={album.id} value={album.id} className="text-black">
+                      {album.label}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label className="block text-sm text-white/70">
                 Ngày phát hành
@@ -364,19 +452,6 @@ export default function AdminSongManagement() {
                     setEditPayload((prev) => ({
                       ...prev,
                       release_date: event.target.value,
-                    }))
-                  }
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
-                />
-              </label>
-              <label className="block text-sm text-white/70">
-                Zing Song ID
-                <input
-                  value={editPayload.zing_song_id}
-                  onChange={(event) =>
-                    setEditPayload((prev) => ({
-                      ...prev,
-                      zing_song_id: event.target.value,
                     }))
                   }
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"

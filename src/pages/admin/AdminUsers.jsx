@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { FiEdit2, FiRefreshCw, FiShield, FiUserX, FiX } from "react-icons/fi";
+import {
+  FiCamera,
+  FiEdit2,
+  FiMail,
+  FiRefreshCw,
+  FiShield,
+  FiUser,
+  FiUserX,
+  FiX,
+} from "react-icons/fi";
 import {
   listUsers,
   toggleUserActive,
@@ -31,8 +40,11 @@ export default function AdminUsers() {
   const [editingUser, setEditingUser] = useState(null);
   const [editPayload, setEditPayload] = useState({
     display_name: "",
+    email: "",
+    avatar_url: "",
     password: "",
   });
+  const [avatarFile, setAvatarFile] = useState(null);
 
   const loadUsers = async () => {
     try {
@@ -134,28 +146,70 @@ export default function AdminUsers() {
     setEditingUser(user);
     setEditPayload({
       display_name: user.display_name || user.name || "",
+      email: user.email || "",
+      avatar_url: user.avatar_url || user.avatar || "",
       password: "",
     });
+     setAvatarFile(null);
   };
 
   const handleUpdateUser = async () => {
     if (!editingUser) return;
     try {
-      const res = await updateUser(editingUser.id, {
+      let payload = {
         display_name: editPayload.display_name || undefined,
+        email: editPayload.email || undefined,
+        avatar_url: editPayload.avatar_url || undefined,
         password: editPayload.password || undefined,
-      });
+       };
+
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append("avatar", avatarFile);
+        Object.entries(payload).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            formData.append(key, value);
+          }
+        });
+        payload = formData;
+      }
+
+      const res = await updateUser(editingUser.id, payload);
       const updated = res?.data?.user ?? res?.data?.data ?? res?.data ?? null;
       setUsers((prev) =>
         prev.map((item) => (item.id === editingUser.id ? updated : item))
       );
       setEditingUser(null);
-      setEditPayload({ display_name: "", password: "" });
+      setEditPayload({
+        display_name: "",
+        email: "",
+        avatar_url: "",
+        password: "",
+      });
+      setAvatarFile(null);
     } catch (error) {
       console.error("Update user failed", error);
       alert("Không thể cập nhật thông tin người dùng.");
     }
   };
+
+  const avatarPreview = useMemo(() => {
+    if (avatarFile) {
+      return URL.createObjectURL(avatarFile);
+    }
+    if (editPayload.avatar_url) {
+      return resolveAssetUrl(editPayload.avatar_url);
+    }
+    if (editingUser && getUserAvatar(editingUser)) {
+      return resolveAssetUrl(getUserAvatar(editingUser));
+    }
+    return null;
+  }, [avatarFile, editPayload.avatar_url, editingUser]);
+
+  useEffect(() => {
+    if (!avatarFile || !avatarPreview) return undefined;
+    return () => URL.revokeObjectURL(avatarPreview);
+  }, [avatarFile, avatarPreview]);
 
   return (
     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
@@ -294,9 +348,14 @@ export default function AdminUsers() {
       </div>
        {editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#181818] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)]">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Cập nhật người dùng</h2>
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+                  Hồ sơ người dùng
+                </p>
+                <h2 className="mt-2 text-xl font-semibold">Chỉnh sửa người dùng</h2>
+              </div>
               <button
                 onClick={() => setEditingUser(null)}
                 className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition hover:bg-white/10"
@@ -304,35 +363,100 @@ export default function AdminUsers() {
                 <FiX />
               </button>
             </div>
-            <div className="mt-4 space-y-4">
-              <label className="block text-sm text-white/70">
-                Tên hiển thị
-                <input
-                  value={editPayload.display_name}
-                  onChange={(event) =>
-                    setEditPayload((prev) => ({
-                      ...prev,
-                      display_name: event.target.value,
-                    }))
-                  }
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
-                />
-              </label>
-              <label className="block text-sm text-white/70">
-                Mật khẩu mới
-                <input
-                  type="password"
-                  value={editPayload.password}
-                  onChange={(event) =>
-                    setEditPayload((prev) => ({
-                      ...prev,
-                      password: event.target.value,
-                    }))
-                  }
-                  placeholder="Để trống nếu không đổi"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
-                />
-              </label>
+             <div className="mt-6 grid gap-6 lg:grid-cols-[0.7fr_1fr]">
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                <p className="text-sm font-semibold text-white">Ảnh đại diện</p>
+                <div className="mt-4 flex flex-col items-center gap-4 text-center">
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt={editPayload.display_name || "Avatar"}
+                      className="h-28 w-28 rounded-full object-cover shadow-lg"
+                    />
+                  ) : (
+                    <div className="flex h-28 w-28 items-center justify-center rounded-full bg-white/10 text-2xl font-semibold text-white/60">
+                      {getInitials(editPayload.display_name || "U")}
+                    </div>
+                  )}
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/70 transition hover:border-white/30 hover:bg-white/10">
+                    <FiCamera />
+                    Tải ảnh mới
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(event) =>
+                        setAvatarFile(event.target.files?.[0] || null)
+                      }
+                    />
+                  </label>
+                  <div className="w-full">
+                    <label className="text-xs text-white/50">Hoặc dán link ảnh</label>
+                    <input
+                      value={editPayload.avatar_url}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          avatar_url: event.target.value,
+                        }))
+                      }
+                      placeholder="https://..."
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-xs text-white/80 outline-none transition focus:border-white/30"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                <p className="text-sm font-semibold text-white">Thông tin cá nhân</p>
+                <div className="mt-4 space-y-4">
+                  <label className="block text-sm text-white/70">
+                    <span className="inline-flex items-center gap-2">
+                      <FiUser /> Tên hiển thị
+                    </span>
+                    <input
+                      value={editPayload.display_name}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          display_name: event.target.value,
+                        }))
+                      }
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                    />
+                  </label>
+                  <label className="block text-sm text-white/70">
+                    <span className="inline-flex items-center gap-2">
+                      <FiMail /> Email
+                    </span>
+                    <input
+                      value={editPayload.email}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          email: event.target.value,
+                        }))
+                      }
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                    />
+                  </label>
+                  <label className="block text-sm text-white/70">
+                    Mật khẩu mới
+                    <input
+                      type="password"
+                      value={editPayload.password}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          password: event.target.value,
+                        }))
+                      }
+                      placeholder="Để trống nếu không đổi"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button
