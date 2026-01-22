@@ -150,29 +150,45 @@ export default function AdminUsers() {
       avatar_url: user.avatar_url || user.avatar || "",
       password: "",
     });
-     setAvatarFile(null);
+    setAvatarFile(null);
+  };
+
+  const handleAvatarFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setAvatarFile(null);
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      alert("Vui lòng chọn tệp hình ảnh hợp lệ.");
+      event.target.value = "";
+      setAvatarFile(null);
+      return;
+    }
+
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setEditPayload((prev) => ({
+          ...prev,
+          avatar_url: reader.result,
+        }));
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleUpdateUser = async () => {
     if (!editingUser) return;
     try {
-      let payload = {
+      const payload = {
         display_name: editPayload.display_name || undefined,
         email: editPayload.email || undefined,
         avatar_url: editPayload.avatar_url || undefined,
         password: editPayload.password || undefined,
        };
-
-      if (avatarFile) {
-        const formData = new FormData();
-        formData.append("avatar", avatarFile);
-        Object.entries(payload).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== "") {
-            formData.append(key, value);
-          }
-        });
-        payload = formData;
-      }
 
       const res = await updateUser(editingUser.id, payload);
       const updated = res?.data?.user ?? res?.data?.data ?? res?.data ?? null;
@@ -385,21 +401,20 @@ export default function AdminUsers() {
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(event) =>
-                        setAvatarFile(event.target.files?.[0] || null)
-                      }
+                      onChange={handleAvatarFileChange}
                     />
                   </label>
                   <div className="w-full">
                     <label className="text-xs text-white/50">Hoặc dán link ảnh</label>
                     <input
                       value={editPayload.avatar_url}
-                      onChange={(event) =>
+                      onChange={(event) => {
+                        setAvatarFile(null);
                         setEditPayload((prev) => ({
                           ...prev,
                           avatar_url: event.target.value,
-                        }))
-                      }
+                        }));
+                      }}
                       placeholder="https://..."
                       className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-xs text-white/80 outline-none transition focus:border-white/30"
                     />
