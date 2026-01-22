@@ -40,6 +40,7 @@ import AdminSearch from "../pages/admin/AdminSearch";
 import AdminArtistForm from "../pages/admin/AdminArtistForm";
 import AdminArtistList from "../pages/admin/AdminArtistList";
 import AdminUserForm from "../pages/admin/AdminUserForm";
+import Trash from "../pages/Trash";
 
 export default function AppRoutes() {
   return (
@@ -98,6 +99,7 @@ export default function AppRoutes() {
           <Route path="/artist/songs" element={<ArtistSongs />} />
           <Route path="/artist/songs/new" element={<ArtistSongForm />} />
           <Route path="/artist/songs/:id/edit" element={<ArtistSongForm />} />
+          <Route path="/artist/trash" element={<Trash />} />
         </Route>
       </Route>
       
@@ -119,6 +121,7 @@ export default function AppRoutes() {
           <Route path="/admin/albums" element={<AdminAlbums />} />
           <Route path="/admin/albums" element={<AdminAlbums />} />
           <Route path="/admin/genres" element={<AdminGenres />} />
+          <Route path="/admin/trash" element={<Trash />} />
         </Route>
       </Route>
 

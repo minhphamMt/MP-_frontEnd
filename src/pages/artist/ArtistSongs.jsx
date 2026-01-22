@@ -108,7 +108,9 @@ const filteredSongs = useMemo(() => {
 
   const handleDelete = async (songId) => {
     if (!songId) return;
-    const confirmed = window.confirm("Bạn chắc chắn muốn xoá bài hát này?");
+    const confirmed = window.confirm(
+      "Bạn chắc chắn muốn xoá mềm bài hát này? Bài hát sẽ nằm trong thùng rác."
+    );
     if (!confirmed) return;
 
     try {
@@ -235,7 +237,7 @@ const filteredSongs = useMemo(() => {
                   className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-200 transition hover:border-rose-400/70 hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <FiTrash2 />
-                  Xoá
+                  Xoá mềm
                 </button>
               </div>
             </div>

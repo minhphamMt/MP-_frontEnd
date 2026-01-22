@@ -167,14 +167,16 @@ export default function AdminAlbums() {
   }, [coverFile, coverPreview]);
 
   const handleDelete = async (albumId) => {
-    const confirmed = window.confirm("Bạn có chắc muốn xoá album này?");
+    const confirmed = window.confirm(
+      "Bạn có chắc muốn xoá mềm album này? Album sẽ nằm trong thùng rác."
+    );
     if (!confirmed) return;
     try {
       await deleteAlbum(albumId);
       await loadAlbums();
     } catch (error) {
       console.error("Delete album failed", error);
-      alert("Không thể xoá album.");
+      alert("Không thể xoá mềm album.");
     }
   };
 

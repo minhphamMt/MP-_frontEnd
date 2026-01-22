@@ -63,7 +63,7 @@ export default function AdminGenres() {
 
   const handleDelete = async (genre) => {
     const confirmed = window.confirm(
-      `Bạn có chắc muốn xoá thể loại "${genre.name}"?`
+      `Bạn có chắc muốn xoá mềm thể loại "${genre.name}"? Thể loại sẽ nằm trong thùng rác.`
     );
     if (!confirmed) return;
     try {
@@ -71,7 +71,7 @@ export default function AdminGenres() {
       loadGenres();
     } catch (error) {
       console.error("Delete genre failed", error);
-      alert("Không thể xoá thể loại.");
+      alert("Không thể xoá mềm thể loại.");
     }
   };
 
@@ -163,7 +163,7 @@ export default function AdminGenres() {
                   onClick={() => handleDelete(genre)}
                   className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition hover:bg-rose-500/20"
                 >
-                  <FiTrash2 /> Xoá
+                  <FiTrash2 /> Xoá mềm
                 </button>
               </div>
             ))}

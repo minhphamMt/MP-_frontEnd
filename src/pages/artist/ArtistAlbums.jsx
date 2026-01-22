@@ -71,7 +71,9 @@ export default function ArtistAlbums() {
 
   const handleDelete = async (albumId) => {
     if (!albumId) return;
-    const confirmed = window.confirm("Bạn chắc chắn muốn xoá album này?");
+    const confirmed = window.confirm(
+      "Bạn chắc chắn muốn xoá mềm album này? Album sẽ nằm trong thùng rác."
+    );
     if (!confirmed) return;
 
     try {

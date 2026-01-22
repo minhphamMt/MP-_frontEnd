@@ -95,7 +95,7 @@ const coverUrl = resolveAssetUrl(album?.cover_url || album?.cover);
             className="inline-flex items-center gap-2 rounded-full border border-rose-400/30 bg-rose-500/10 px-4 py-2 text-sm text-rose-200 transition hover:border-rose-300/50 hover:bg-rose-500/20"
           >
             <FiTrash2 />
-            Xoá
+            Xoá mềm
           </button>
         </div>
       </div>

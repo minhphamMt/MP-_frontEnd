@@ -1,4 +1,4 @@
-import { FiDisc, FiGrid, FiMusic, FiPlusCircle, FiUser } from "react-icons/fi";
+import { FiDisc, FiGrid, FiMusic, FiPlusCircle, FiTrash2, FiUser } from "react-icons/fi";
 import SidebarItem from "./SidebarItem";
 import SidebarSection from "./SidebarSection";
 
@@ -14,6 +14,7 @@ export default function ArtistSidebar() {
       /> */}
       <SidebarItem to="/artist/songs" icon={FiMusic} label="Bài hát" />
       <SidebarItem to="/artist/profile" icon={FiUser} label="Hồ sơ" />
+      <SidebarItem to="/artist/trash" icon={FiTrash2} label="Thùng rác" />
     </SidebarSection>
   );
 }

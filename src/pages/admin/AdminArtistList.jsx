@@ -62,16 +62,16 @@ export default function AdminArtistList() {
 
   const handleDelete = async (artist) => {
     const confirmed = window.confirm(
-      `Bạn có chắc muốn xoá nghệ sĩ "${artist.name}"?`
+      `Bạn có chắc muốn xoá mềm nghệ sĩ "${artist.name}"? Nghệ sĩ sẽ nằm trong thùng rác.`
     );
     if (!confirmed) return;
     try {
       await deleteArtist(artist.id);
       await loadArtists();
-      setToast({ title: "Thành công", message: "Đã xoá nghệ sĩ." });
+      setToast({ title: "Thành công", message: "Đã xoá mềm nghệ sĩ." });
     } catch (error) {
       console.error("Delete artist failed", error);
-      setToast({ title: "Lỗi", message: "Không thể xoá nghệ sĩ." });
+      setToast({ title: "Lỗi", message: "Không thể xoá mềm nghệ sĩ." });
     }
   };
 
@@ -176,7 +176,7 @@ export default function AdminArtistList() {
                     onClick={() => handleDelete(artist)}
                     className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition hover:bg-rose-500/20"
                   >
-                    <FiTrash2 /> Xoá
+                    <FiTrash2 /> Xoá mềm
                   </button>
                 </div>
               </div>
