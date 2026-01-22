@@ -26,6 +26,7 @@ export default function AdminDashboard() {
       try {
         setLoading(true);
         const res = await getAdminOverview({ limit: 5 });
+        console.log(">>cehck res : ", res)
         const payload = res?.data?.data ?? res?.data ?? {};
         const resolvedOverview =
           payload.overview ?? payload.data?.overview ?? payload ?? null;
@@ -50,6 +51,7 @@ export default function AdminDashboard() {
 
   const songStatus = useMemo(() => {
     const stats = overview?.songsByStatus || {};
+    // console.log("check start: ",overview)
     return [
       { label: "Chờ duyệt", value: stats.pending ?? 0, tone: "text-amber-300" },
       {

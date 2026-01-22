@@ -60,7 +60,7 @@ export default function Home() {
       const ids = recRes?.data?.data || [];
 
       const songResults = await Promise.all(
-        ids.slice(0, 10).map(async (id) => {
+        ids.slice(0, 9).map(async (id) => {
           try {
             const res = await getSongById(id);
             const raw = res?.data?.data;

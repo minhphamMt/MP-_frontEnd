@@ -10,10 +10,10 @@ export const restoreArtist = (id) => api.patch(`/artists/${id}/restore`);
 
 export const restoreGenre = (id) => api.patch(`/admin/genres/${id}/restore`);
 
-export const hardDeleteSong = (id) => api.delete(`/trash/songs/${id}`);
+export const hardDeleteSong = (id) => api.delete(`/songs/${id}`);
 
-export const hardDeleteAlbum = (id) => api.delete(`/trash/albums/${id}`);
+export const hardDeleteAlbum = (id) => api.delete(`/albums/${id}`);
 
-export const hardDeleteArtist = (id) => api.delete(`/trash/artists/${id}`);
+export const hardDeleteArtist = (id) => api.delete(`/artists/${id}`);
 
 export const hardDeleteGenre = (id) => api.delete(`/admin/genres/${id}`);
