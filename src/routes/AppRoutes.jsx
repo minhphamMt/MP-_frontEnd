@@ -39,6 +39,7 @@ import AdminAlbums from "../pages/admin/AdminAlbums";
 import AdminSearch from "../pages/admin/AdminSearch";
 import AdminArtistForm from "../pages/admin/AdminArtistForm";
 import AdminArtistList from "../pages/admin/AdminArtistList";
+import AdminUserForm from "../pages/admin/AdminUserForm";
 
 export default function AppRoutes() {
   return (
@@ -107,6 +108,8 @@ export default function AppRoutes() {
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
+           <Route path="/admin/users/new" element={<AdminUserForm />} />
+          <Route path="/admin/users/:id/edit" element={<AdminUserForm />} />
           <Route path="/admin/artists" element={<AdminArtistList />} />
           <Route path="/admin/artists/new" element={<AdminArtistForm />} />
           <Route path="/admin/artists/:id/edit" element={<AdminArtistForm />} />

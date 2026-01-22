@@ -399,7 +399,7 @@ export default function AdminSongManagement() {
                   </option>
                 </select>
               </label>
-              <label className="block text-sm text-white/70">
+              {/* <label className="block text-sm text-white/70">
                 Artist ID
                 <select
                   value={editPayload.artist_id}
@@ -420,8 +420,8 @@ export default function AdminSongManagement() {
                     </option>
                   ))}
                 </select>
-              </label>
-              <label className="block text-sm text-white/70">
+              </label> */}
+              {/* <label className="block text-sm text-white/70">
                 Album ID
                  <select
                   value={editPayload.album_id}
@@ -442,7 +442,7 @@ export default function AdminSongManagement() {
                     </option>
                   ))}
                 </select>
-              </label>
+              </label> */}
               <label className="block text-sm text-white/70">
                 Ngày phát hành
                 <input

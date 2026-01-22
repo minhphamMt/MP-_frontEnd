@@ -23,15 +23,25 @@ export const blockSong = (id, payload) =>
   api.patch(`/admin/songs/${id}/block`, payload);
 
 export const toggleUserActive = (id, payload) =>
-  api.patch(`/admin/users/${id}/active`, payload);
+  api.patch(`/users/${id}/active`, payload);
 
 export const updateUserRole = (id, payload) =>
-  api.patch(`/admin/users/${id}/role`, payload);
+  api.patch(`/users/${id}/role`, payload);
 
 export const listUsers = (params = {}) => api.get("/users", { params });
 
-export const updateUser = (id, payload) =>
-  api.patch(`/admin/users/${id}`, payload);
+export const getUserById = (id) => api.get(`/users/${id}`);
+
+export const createUser = (payload) => api.post("/users", payload);
+
+export const updateUser = (id, payload) => api.put(`/users/${id}`, payload);
+
+export const deleteUser = (id) => api.delete(`/users/${id}`);
+
+export const uploadUserAvatarByAdmin = (id, payload) =>
+  api.post(`/users/${id}/avatar`, payload, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 
 export const listAdminSongs = (params = {}) =>
   api.get("/admin/songs", { params });
