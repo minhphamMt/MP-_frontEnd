@@ -213,17 +213,18 @@ export default function AdminSearch() {
     const label =
       item.display_name || item.displayLabel || item.name || item.title || "";
     const targetId = item.id ?? item._id ?? "";
+    const encodedLabel = encodeURIComponent(label);
     if (item.type === "artist") {
-      navigate(
-        `/admin/users?role=ARTIST&keyword=${encodeURIComponent(label)}${
-          targetId ? `&targetId=${targetId}` : ""
-        }`
-      );
+      if (targetId) {
+        navigate(`/admin/artists/${targetId}/edit`);
+        return;
+      }
+      navigate(`/admin/artists?keyword=${encodedLabel}`);
       return;
     }
     if (item.type === "album") {
       navigate(
-        `/admin/albums?keyword=${encodeURIComponent(label)}${
+        `/admin/albums?keyword=${encodedLabel}${
           targetId ? `&targetId=${targetId}` : ""
         }`
       );
@@ -231,18 +232,18 @@ export default function AdminSearch() {
     }
     if (item.type === "song") {
       navigate(
-        `/admin/songs?keyword=${encodeURIComponent(label)}${
+         `/admin/songs?keyword=${encodedLabel}${
           targetId ? `&targetId=${targetId}` : ""
         }`
       );
       return;
     }
     if (item.type === "user") {
-      navigate(
-        `/admin/users?keyword=${encodeURIComponent(label)}${
-          targetId ? `&targetId=${targetId}` : ""
-        }`
-      );
+      if (targetId) {
+        navigate(`/admin/users/${targetId}/edit`);
+        return;
+      }
+      navigate(`/admin/users?keyword=${encodedLabel}`);
     }
   };
 

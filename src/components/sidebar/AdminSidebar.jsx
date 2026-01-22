@@ -13,6 +13,7 @@ export default function AdminSidebar() {
         to="/admin/songs"
         icon={BsMusicNoteList}
         label="Quản lý bài hát"
+        end
       />
       <SidebarItem
         to="/admin/songs/review"

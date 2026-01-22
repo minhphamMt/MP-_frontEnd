@@ -21,9 +21,9 @@ export default function ArtistAlbumTile({
   onView,
 }) {
 const songCount =
-  album?.song_count ?? album?.track_count ?? album?.songs?.length ?? 0;
+    album?.song_count ?? album?.track_count ?? album?.songs?.length ?? 0;
 
-const coverUrl = resolveAssetUrl(album?.cover_url);
+const coverUrl = resolveAssetUrl(album?.cover_url || album?.cover);
 
 
   return (
@@ -33,7 +33,7 @@ const coverUrl = resolveAssetUrl(album?.cover_url);
           <img
             src={coverUrl}
             alt={album?.title || "Album"}
-            className="h-44 w-full object-cover sm:h-52"
+            className="h-44 w-full bg-black/40 object-contain sm:h-52"
             loading="lazy"
           />
         ) : (

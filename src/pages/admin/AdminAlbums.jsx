@@ -313,7 +313,7 @@ export default function AdminAlbums() {
                     <img
                       src={coverPreview}
                       alt={editPayload.title || "Album cover"}
-                      className="h-56 w-full rounded-2xl object-cover shadow-lg"
+                      className="h-56 w-full rounded-2xl bg-black/40 object-contain shadow-lg"
                     />
                   ) : (
                     <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">

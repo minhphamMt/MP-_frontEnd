@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
 
-export default function SidebarItem({ to, icon: Icon, label }) {
+export default function SidebarItem({ to, icon: Icon, label, end = false }) {
   return (
     <NavLink
       to={to}
+      end={end}
       className={({ isActive }) =>
         [
           "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200",

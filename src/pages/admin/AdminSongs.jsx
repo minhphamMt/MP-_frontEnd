@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { FiCheckCircle, FiRefreshCw, FiSlash } from "react-icons/fi";
 import { approveSong, blockSong } from "../../api/admin.api";
 import { getSongs } from "../../api/song.api";
+import { resolveAssetUrl } from "../../utils/asset";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "Tất cả" },
@@ -27,10 +28,16 @@ const statusBadge = (status) => {
 export default function AdminSongs() {
   const location = useLocation();
   const [songs, setSongs] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("pending");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const getSongCover = (song) =>
+    song?.cover_url ||
+    song?.cover ||
+    song?.thumbnail ||
+    song?.image ||
+    song?.album_cover;
 
   const loadSongs = async () => {
     try {
@@ -171,17 +178,30 @@ export default function AdminSongs() {
                 key={song.id}
                 className="grid grid-cols-[1.5fr_1fr_0.6fr_0.9fr] items-center gap-2 px-4 py-3 text-sm text-white/80"
               >
-                <div>
-                  <p className="font-semibold text-white">{song.title}</p>
-                  <p className="text-xs text-white/50">
-                    {song.album_title || "Single"}
-                  </p>
+                <div className="flex items-center gap-3">
+                  {getSongCover(song) ? (
+                    <img
+                      src={resolveAssetUrl(getSongCover(song))}
+                      alt={song.title}
+                      className="h-12 w-12 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/10 text-[10px] text-white/60">
+                      No image
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-white">{song.title}</p>
+                    <p className="text-xs text-white/50">
+                      {song.album_title || "Single"}
+                    </p>
+                  </div>
                 </div>
                 <span>{song.artist_name || "-"}</span>
                 <span className={`text-xs font-semibold ${statusBadge(song.status)}`}>
                   {song.status || "-"}
                 </span>
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-3">
                   {song.status !== "approved" && (
                     <button
                       onClick={() => handleApprove(song)}
