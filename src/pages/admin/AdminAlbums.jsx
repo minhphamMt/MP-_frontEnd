@@ -36,7 +36,13 @@ export default function AdminAlbums() {
   const loadAlbums = async () => {
     try {
       setLoading(true);
-      const res = await getAlbums({ page: 1, limit: 100, sort: "release_date" });
+      const trimmedKeyword = keyword.trim();
+      const res = await getAlbums({
+        page: 1,
+        limit: 100,
+        sort: "release_date",
+        ...(trimmedKeyword ? { keyword: trimmedKeyword, q: trimmedKeyword } : {}),
+      });
       const payload = res?.data?.data ?? res?.data ?? [];
       const list = Array.isArray(payload)
         ? payload
@@ -54,7 +60,7 @@ export default function AdminAlbums() {
 
   useEffect(() => {
     loadAlbums();
-  }, []);
+  }, [keyword]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);

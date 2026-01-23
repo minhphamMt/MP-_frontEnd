@@ -42,10 +42,12 @@ export default function AdminSongs() {
   const loadSongs = async () => {
     try {
       setLoading(true);
+      const trimmedKeyword = keyword.trim();
       const params = {
         page: 1,
         limit: 50,
         ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+        ...(trimmedKeyword ? { keyword: trimmedKeyword, q: trimmedKeyword } : {}),
       };
       const res = await getSongs(params);
       const payload = res?.data?.data ?? res?.data ?? [];
@@ -65,7 +67,7 @@ export default function AdminSongs() {
 
   useEffect(() => {
     loadSongs();
-  }, [statusFilter]);
+  }, [statusFilter, keyword]);
 
    useEffect(() => {
     const params = new URLSearchParams(location.search);

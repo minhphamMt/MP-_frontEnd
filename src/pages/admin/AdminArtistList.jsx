@@ -17,7 +17,12 @@ export default function AdminArtistList() {
   const loadArtists = async () => {
     try {
       setLoading(true);
-      const res = await getArtists({ page: 1, limit: 100 });
+      const trimmedKeyword = keyword.trim();
+      const res = await getArtists({
+        page: 1,
+        limit: 100,
+        ...(trimmedKeyword ? { keyword: trimmedKeyword, q: trimmedKeyword } : {}),
+      });
       const payload = res?.data?.data ?? res?.data ?? [];
       const list = Array.isArray(payload)
         ? payload
@@ -35,7 +40,12 @@ export default function AdminArtistList() {
 
   useEffect(() => {
     loadArtists();
-  }, []);
+  }, [keyword]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setKeyword(params.get("keyword") || "");
+  }, [location.search]);
 
   useEffect(() => {
     const pendingToast = location.state?.toast;
