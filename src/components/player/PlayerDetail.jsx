@@ -201,9 +201,9 @@ export default function PlayerDetail({ isOpen, onClose }) {
       ? "translate-y-0 opacity-100"
       : "translate-y-full opacity-0";
 
-       const detailPanel = (
+      const detailPanel = (
     <div
-      className={`flex h-full flex-col justify-between gap-6 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)] ring-1 ring-white/5 backdrop-blur-xl sm:p-8 lg:justify-start ${songSlideClass}`}
+      className={`flex min-h-0 flex-col gap-6 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)] ring-1 ring-white/5 backdrop-blur-xl sm:p-8 ${songSlideClass} overflow-y-auto pr-1 lg:overflow-visible lg:pr-0`}
     >
       {/* Album + like */}
       <div className="flex flex-col items-center gap-5">
@@ -372,19 +372,24 @@ export default function PlayerDetail({ isOpen, onClose }) {
         }}
       />
 
-      {/* BG IMAGE */}
-      <div
-        className="absolute inset-0 opacity-40 blur-3xl"
-        style={{
-          backgroundImage: `url(${cover})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#0b0b0b]/85 to-black" />
+      {/* BG IMAGE (isolated layer) */}
+<div className="absolute inset-0 -z-10 overflow-hidden">
+  <div
+    className="absolute inset-[-20%] opacity-40 blur-3xl"
+    style={{
+      backgroundImage: `url(${cover})`,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+    }}
+  />
+  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#0b0b0b]/85 to-black" />
+</div>
+
 
       {/* CONTENT */}
-      <div className="relative z-10 mx-auto flex min-h-[100dvh] w-[min(1320px,94vw)] flex-col justify-start pb-6 pt-5 sm:justify-center sm:pb-10 sm:pt-8">
+<div className="relative z-10 h-full w-full">
+  <div className="mx-auto flex h-full w-full max-w-[1320px] flex-col px-3 pt-4 sm:px-6 sm:pt-8">
+
         {/* Top bar */}
         <div className="flex items-center justify-between">
           <button
@@ -462,7 +467,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
         </div>
          {/* Mobile/tablet swipe layout */}
-        <div className="mt-5 flex flex-1 flex-col min-h-0 lg:hidden">
+        <div className="mt-5 flex flex-1 min-h-0 flex-col lg:hidden">
           <div className="mb-4 flex items-center justify-center gap-2 text-xs text-white/60">
             {[
               { id: "lyrics", label: "Lời bài hát" },
@@ -505,10 +510,20 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 scrollRafRef.current = null;
               });
             }}
-            className="flex flex-1 min-h-0 w-full snap-x snap-mandatory gap-6 overflow-x-auto pb-6 scrollbar-hidden"
+            className="
+    flex
+   flex-1 min-h-0
+    w-full
+    snap-x snap-mandatory
+    gap-0
+    overflow-x-auto
+   overflow-y-hidden
+    pb-6
+    scrollbar-hidden
+  "
           >
-            <div className="w-full min-w-full snap-center">
-              <div className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl">
+            <div className="flex min-h-0 w-full min-w-[100%] snap-center">
+              <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl">
                 <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
                   Lời bài hát
                 </div>
@@ -521,12 +536,12 @@ export default function PlayerDetail({ isOpen, onClose }) {
               </div>
             </div>
 
-            <div className="w-full min-w-full snap-center">
+           <div className="flex min-h-0 w-full min-w-[100%] snap-center">
               {detailPanel}
             </div>
 
-            <div className="w-full min-w-full snap-center">
-              <div className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl">
+           <div className="flex min-h-0 w-full min-w-[100%] snap-center">
+              <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl">
                 <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
                   Danh sách phát
                 </div>
@@ -540,6 +555,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

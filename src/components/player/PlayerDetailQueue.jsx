@@ -72,7 +72,7 @@ export default function PlayerDetailQueue({ queue, currentIndex, playAt }) {
   return (
     <div className="mt-5 flex-1 min-h-0 space-y-7 overflow-y-auto pr-1">
       <div>
-        <div className="mt-5 flex-1 space-y-7 overflow-y-auto pr-1">
+        <div className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
           Đã phát
         </div>
 
