@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { FiEdit2, FiRefreshCw, FiSearch, FiX } from "react-icons/fi";
+import { FiEdit2, FiRefreshCw, FiSearch, FiTrash2, FiX } from "react-icons/fi";
 import {
   listAdminSongs,
   listGenres,
@@ -9,6 +9,8 @@ import {
 } from "../../api/admin.api";
 import { getAlbums } from "../../api/album.api";
 import { resolveAssetUrl } from "../../utils/asset";
+import { deleteSong } from "../../api/song.api";
+import useAuthStore from "../../store/auth.store";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tất cả" },
@@ -45,6 +47,8 @@ export default function AdminSongManagement() {
   const [errorMessage, setErrorMessage] = useState("");
   const [editingSong, setEditingSong] = useState(null);
   const [autoOpenedId, setAutoOpenedId] = useState(null);
+  const [coverFile, setCoverFile] = useState(null);
+  const role = useAuthStore((state) => state.role);
   const [editPayload, setEditPayload] = useState({
     title: "",
     artist_id: "",
@@ -52,6 +56,7 @@ export default function AdminSongManagement() {
     status: "",
     release_date: "",
     genres: [],
+    cover_url: "",
   });
 
   const loadGenres = async () => {
@@ -146,7 +151,9 @@ export default function AdminSongManagement() {
         ? new Date(song.release_date).toISOString().slice(0, 10)
         : "",
       genres: normalizeGenreValue(song?.genres),
+      cover_url: getSongCover(song) || "",
     });
+    setCoverFile(null);
   };
 
   const handleToggleGenre = (name) => {
@@ -164,19 +171,50 @@ export default function AdminSongManagement() {
   const handleUpdate = async () => {
     if (!editingSong) return;
     try {
-      await updateAdminSong(editingSong.id, {
+       let payload = {
         title: editPayload.title || undefined,
         artist_id: editPayload.artist_id || null,
         album_id: editPayload.album_id || null,
         status: editPayload.status || undefined,
         release_date: editPayload.release_date || null,
         genres: editPayload.genres,
-      });
+      cover_url: editPayload.cover_url || null,
+      };
+
+      if (coverFile) {
+        const formData = new FormData();
+        formData.append("cover", coverFile);
+        Object.entries(payload).forEach(([key, value]) => {
+          if (value !== null && value !== undefined && value !== "") {
+            formData.append(key, value);
+          }
+        });
+        payload = formData;
+      }
+
+      await updateAdminSong(editingSong.id, payload);
       setEditingSong(null);
+      setCoverFile(null);
       await loadSongs();
     } catch (error) {
       console.error("Update song failed", error);
       alert("Không thể cập nhật bài hát.");
+    }
+  };
+
+  const handleSoftDelete = async () => {
+    if (!editingSong) return;
+    const confirmed = window.confirm(
+      `Bạn có chắc muốn xoá mềm bài hát "${editingSong.title}"?`
+    );
+    if (!confirmed) return;
+    try {
+      await deleteSong(editingSong.id);
+      setEditingSong(null);
+      await loadSongs();
+    } catch (error) {
+      console.error("Soft delete song failed", error);
+      alert("Không thể xoá mềm bài hát.");
     }
   };
 
@@ -220,6 +258,24 @@ export default function AdminSongManagement() {
     }
     return mapped;
   }, [albums, editPayload.album_id]);
+
+  const coverPreview = useMemo(() => {
+    if (coverFile) {
+      return URL.createObjectURL(coverFile);
+    }
+    if (editPayload.cover_url) {
+      return resolveAssetUrl(editPayload.cover_url);
+    }
+    if (editingSong && getSongCover(editingSong)) {
+      return resolveAssetUrl(getSongCover(editingSong));
+    }
+    return null;
+  }, [coverFile, editPayload.cover_url, editingSong]);
+
+  useEffect(() => {
+    if (!coverFile || !coverPreview) return undefined;
+    return () => URL.revokeObjectURL(coverPreview);
+  }, [coverFile, coverPreview]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -348,7 +404,7 @@ export default function AdminSongManagement() {
 
       {editingSong && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Chỉnh sửa bài hát</h2>
               <button
@@ -359,46 +415,83 @@ export default function AdminSongManagement() {
               </button>
             </div>
 
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm text-white/70">
-                Tên bài hát
-                <input
-                  value={editPayload.title}
-                  onChange={(event) =>
-                    setEditPayload((prev) => ({
-                      ...prev,
-                      title: event.target.value,
-                    }))
-                  }
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
-                />
-              </label>
-              <label className="block text-sm text-white/70">
-                Trạng thái
-                <select
-                  value={editPayload.status}
-                  onChange={(event) =>
-                    setEditPayload((prev) => ({
-                      ...prev,
-                      status: event.target.value,
-                    }))
-                  }
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white"
-                >
-                  <option value="" className="text-black">
-                    Không đổi
-                  </option>
-                  <option value="pending" className="text-black">
-                    pending
-                  </option>
-                  <option value="approved" className="text-black">
-                    approved
-                  </option>
-                  <option value="rejected" className="text-black">
-                    rejected
-                  </option>
-                </select>
-              </label>
+            <div className="mt-4 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                <p className="text-sm font-semibold text-white">Ảnh đại diện</p>
+                <div className="mt-4 flex flex-col gap-4">
+                  {coverPreview ? (
+                    <img
+                      src={coverPreview}
+                      alt={editPayload.title || "Song cover"}
+                      className="h-56 w-full rounded-2xl bg-black/40 object-contain shadow-lg"
+                    />
+                  ) : (
+                    <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
+                      Chưa có ảnh bài hát
+                    </div>
+                  )}
+                  <input
+                    value={editPayload.cover_url}
+                    onChange={(event) =>
+                      setEditPayload((prev) => ({
+                        ...prev,
+                        cover_url: event.target.value,
+                      }))
+                    }
+                    placeholder="Cover URL (nếu không upload)"
+                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) =>
+                      setCoverFile(event.target.files?.[0] || null)
+                    }
+                    className="rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-sm text-white/70 sm:col-span-2">
+                  Tên bài hát
+                  <input
+                    value={editPayload.title}
+                    onChange={(event) =>
+                      setEditPayload((prev) => ({
+                        ...prev,
+                        title: event.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                  />
+                </label>
+                <label className="block text-sm text-white/70">
+                  Trạng thái
+                  <select
+                    value={editPayload.status}
+                    onChange={(event) =>
+                      setEditPayload((prev) => ({
+                        ...prev,
+                        status: event.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white"
+                  >
+                    <option value="" className="text-black">
+                      Không đổi
+                    </option>
+                    <option value="pending" className="text-black">
+                      pending
+                    </option>
+                    <option value="approved" className="text-black">
+                      approved
+                    </option>
+                    <option value="rejected" className="text-black">
+                      rejected
+                    </option>
+                  </select>
+                </label>
               {/* <label className="block text-sm text-white/70">
                 Artist ID
                 <select
@@ -457,6 +550,7 @@ export default function AdminSongManagement() {
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
                 />
               </label>
+              </div>
             </div>
 
             <div className="mt-6">
@@ -482,7 +576,15 @@ export default function AdminSongManagement() {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              {role === "ADMIN" && (
+                <button
+                  onClick={handleSoftDelete}
+                  className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200 transition hover:bg-rose-500/20"
+                >
+                  <FiTrash2 /> Xoá mềm
+                </button>
+              )}
               <button
                 onClick={() => setEditingSong(null)}
                 className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10"

@@ -1,7 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
-import { FiEdit2, FiPlus, FiRefreshCw, FiTrash2, FiUser } from "react-icons/fi";
+import {
+  FiCamera,
+  FiEdit2,
+  FiPlus,
+  FiRefreshCw,
+  FiTrash2,
+  FiUser,
+  FiX,
+} from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
-import { deleteUser, listUsers } from "../../api/admin.api";
+import {
+  deleteUser,
+  getUserById,
+  listUsers,
+  updateUser,
+  uploadUserAvatarByAdmin,
+} from "../../api/admin.api";
 import Toast from "../../components/common/Toast";
 import { resolveAssetUrl } from "../../utils/asset";
 
@@ -15,14 +29,34 @@ const getUserAvatar = (user) =>
   user?.profile_image ||
   user?.profile_photo;
 
+const ROLE_OPTIONS = ["USER", "ARTIST", "ADMIN"];
+
+const normalizePayload = (payload) =>
+  Object.fromEntries(
+    Object.entries(payload).map(([key, value]) => [
+      key,
+      value === "" ? undefined : value,
+    ])
+  );
+
 export default function AdminUsers() {
   const navigate = useNavigate();
   const location = useLocation();
   const [users, setUsers] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [toast, setToast] = useState({ title: "", message: "" });
+  const [editingUser, setEditingUser] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [editPayload, setEditPayload] = useState({
+    display_name: "",
+    email: "",
+    role: "USER",
+    is_active: true,
+    avatar_url: "",
+  });
 
   const loadUsers = async () => {
     try {
@@ -79,6 +113,83 @@ export default function AdminUsers() {
     }
   };
 
+  const handleEdit = async (user) => {
+    try {
+      setSaving(true);
+      const res = await getUserById(user.id);
+      const payload = res?.data?.data ?? res?.data ?? user;
+      setEditingUser(payload);
+      setEditPayload({
+        display_name: payload.display_name || payload.name || "",
+        email: payload.email || "",
+        role: payload.role || "USER",
+        is_active: Boolean(payload.is_active),
+        avatar_url: getUserAvatar(payload) || "",
+      });
+      setAvatarFile(null);
+    } catch (error) {
+      console.error("Load user detail failed", error);
+      setToast({ title: "Lỗi", message: "Không thể tải người dùng." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const avatarPreview = useMemo(() => {
+    if (avatarFile) {
+      return URL.createObjectURL(avatarFile);
+    }
+    if (editPayload.avatar_url) {
+      return resolveAssetUrl(editPayload.avatar_url);
+    }
+    if (editingUser && getUserAvatar(editingUser)) {
+      return resolveAssetUrl(getUserAvatar(editingUser));
+    }
+    return null;
+  }, [avatarFile, editPayload.avatar_url, editingUser]);
+
+  useEffect(() => {
+    if (!avatarFile || !avatarPreview) return undefined;
+    return () => URL.revokeObjectURL(avatarPreview);
+  }, [avatarFile, avatarPreview]);
+
+  const handleUpdate = async () => {
+    if (!editingUser) return;
+    if (!editPayload.display_name.trim()) {
+      setToast({ title: "Thiếu dữ liệu", message: "Vui lòng nhập tên hiển thị." });
+      return;
+    }
+    if (!editPayload.email.trim()) {
+      setToast({ title: "Thiếu dữ liệu", message: "Vui lòng nhập email." });
+      return;
+    }
+    try {
+      setSaving(true);
+      const payload = normalizePayload({
+        display_name: editPayload.display_name,
+        email: editPayload.email,
+        role: editPayload.role,
+        is_active: editPayload.is_active ? 1 : 0,
+        avatar_url: avatarFile ? undefined : editPayload.avatar_url,
+      });
+      await updateUser(editingUser.id, payload);
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append("avatar", avatarFile);
+        await uploadUserAvatarByAdmin(editingUser.id, formData);
+      }
+      await loadUsers();
+      setEditingUser(null);
+      setAvatarFile(null);
+      setToast({ title: "Thành công", message: "Đã cập nhật người dùng." });
+    } catch (error) {
+      console.error("Update user failed", error);
+      setToast({ title: "Lỗi", message: "Không thể cập nhật người dùng." });
+    } finally {
+      setSaving(false);
+    }
+  };
+  
   return (
     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -179,7 +290,7 @@ export default function AdminUsers() {
                 </span>
                 <div className="flex items-center justify-end gap-2">
                   <button
-                    onClick={() => navigate(`/admin/users/${user.id}/edit`)}
+                    onClick={() => handleEdit(user)}
                     className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition hover:bg-white/10"
                   >
                     <FiEdit2 /> Sửa
@@ -201,6 +312,158 @@ export default function AdminUsers() {
         message={toast.message}
         onClose={() => setToast({ title: "", message: "" })}
       />
+    {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+                  Quản lý người dùng
+                </p>
+                <h2 className="mt-2 text-xl font-semibold">
+                  Chỉnh sửa người dùng
+                </h2>
+              </div>
+              <button
+                onClick={() => setEditingUser(null)}
+                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition hover:bg-white/10"
+              >
+                <FiX />
+              </button>
+            </div>
+
+            <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                <p className="text-sm font-semibold text-white">Ảnh đại diện</p>
+                <div className="mt-4 flex flex-col gap-4">
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt={editPayload.display_name || "User avatar"}
+                      className="h-56 w-full rounded-2xl object-cover shadow-lg"
+                    />
+                  ) : (
+                    <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
+                      Chưa có ảnh đại diện
+                    </div>
+                  )}
+                  <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 transition hover:bg-white/10">
+                    <FiCamera /> Tải avatar mới
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(event) =>
+                        setAvatarFile(event.target.files?.[0] || null)
+                      }
+                    />
+                  </label>
+                  <input
+                    value={editPayload.avatar_url}
+                    onChange={(event) => {
+                      setAvatarFile(null);
+                      setEditPayload((prev) => ({
+                        ...prev,
+                        avatar_url: event.target.value,
+                      }));
+                    }}
+                    placeholder="Avatar URL (nếu không upload)"
+                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                  />
+                  <div className="space-y-2 text-sm text-white/70">
+                    <p>
+                      <span className="text-white/60">ID:</span>{" "}
+                      <span className="text-white">{editingUser.id}</span>
+                    </p>
+                    <p>
+                      <span className="text-white/60">Email:</span>{" "}
+                      <span className="text-white">{editingUser.email || "-"}</span>
+                    </p>
+                    <p>
+                      <span className="text-white/60">Vai trò:</span>{" "}
+                      <span className="text-white">{editingUser.role || "-"}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                <p className="text-sm font-semibold text-white">Cập nhật người dùng</p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <input
+                    value={editPayload.display_name}
+                    onChange={(event) =>
+                      setEditPayload((prev) => ({
+                        ...prev,
+                        display_name: event.target.value,
+                      }))
+                    }
+                    placeholder="Tên hiển thị"
+                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                  />
+                  <input
+                    value={editPayload.email}
+                    onChange={(event) =>
+                      setEditPayload((prev) => ({
+                        ...prev,
+                        email: event.target.value,
+                      }))
+                    }
+                    placeholder="Email"
+                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                  />
+                  <select
+                    value={editPayload.role}
+                    onChange={(event) =>
+                      setEditPayload((prev) => ({
+                        ...prev,
+                        role: event.target.value,
+                      }))
+                    }
+                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                  >
+                    {ROLE_OPTIONS.map((roleOption) => (
+                      <option key={roleOption} value={roleOption} className="text-black">
+                        {roleOption}
+                      </option>
+                    ))}
+                  </select>
+                  <label className="flex items-center gap-3 text-sm text-white/70 sm:col-span-2">
+                    <input
+                      type="checkbox"
+                      checked={editPayload.is_active}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          is_active: event.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 rounded border-white/20 bg-white/10 text-emerald-400 focus:ring-emerald-400"
+                    />
+                    Kích hoạt tài khoản
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setEditingUser(null)}
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10"
+              >
+                Huỷ
+              </button>
+              <button
+                onClick={handleUpdate}
+                disabled={saving}
+                className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-400/30 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {saving ? "Đang lưu..." : "Lưu thay đổi"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

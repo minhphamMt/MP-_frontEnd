@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { FiHeart } from "react-icons/fi";
+import { FiCalendar, FiHeart } from "react-icons/fi";
 import { getAlbumById } from "../api/album.api";
 import useAlbumLikeStore, {
   normalizeAlbumId,
@@ -8,6 +8,8 @@ import useAlbumLikeStore, {
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 import { resolveAssetUrl } from "../utils/asset";
+import useAuthStore from "../store/auth.store";
+import { formatDateDisplay } from "../utils/date";
 
 const formatTime = (s = 0) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -23,6 +25,8 @@ export default function AlbumDetail() {
     likedSongIds,
     toggleLike,
   } = usePlayerStore();
+  const role = useAuthStore((state) => state.role);
+  const canPlay = role !== "ARTIST" && role !== "ADMIN";
   const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
   const toggleAlbumLike = useAlbumLikeStore((s) => s.toggleAlbumLike);
 
@@ -102,7 +106,12 @@ export default function AlbumDetail() {
   const artistInfoItems = [
     { label: "Nghệ danh", value: artistMeta?.alias },
     { label: "Tên thật", value: artistMeta?.realname },
-    { label: "Ngày sinh", value: artistMeta?.birthday },
+    {
+      label: "Ngày sinh",
+      value: artistMeta?.birthday
+        ? formatDateDisplay(artistMeta?.birthday)
+        : null,
+    },
     { label: "Quốc gia", value: artistMeta?.national },
   ].filter((item) => item.value);
 
@@ -148,18 +157,28 @@ export default function AlbumDetail() {
               <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">
                 Tổng thời lượng: {formatTime(totalDuration)}
               </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1">
+                <FiCalendar className="text-cyan-200" />
+                {formatDateDisplay(album.release_date)}
+              </span>
             </div>
 
             {songs.length > 0 && (
               <div className="flex flex-wrap gap-3 pt-2">
-                <button
-                  onClick={() => playSong(songs[0], songs)}
-                  className="rounded-full bg-gradient-to-r from-green-400 to-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900
+               {canPlay ? (
+                  <button
+                    onClick={() => playSong(songs[0], songs)}
+                    className="rounded-full bg-gradient-to-r from-green-400 to-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900
                              shadow-lg shadow-green-400/30 transition
                              hover:brightness-110 hover:scale-[1.05] active:scale-[0.97]"
                 >
-                  ▶ Phát tất cả
-                </button>
+                    ▶ Phát tất cả
+                  </button>
+                ) : (
+                  <div className="rounded-full border border-white/15 bg-white/5 px-6 py-2 text-sm text-white/60">
+                    Chỉ xem thông tin
+                  </div>
+                )}
 
                   <button
                   onClick={() => toggleAlbumLike(albumId)}
@@ -230,11 +249,13 @@ export default function AlbumDetail() {
               return (
                 <div
                   key={song.id}
-                  onClick={() => playSong(song, songs)}
-                  className={`grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 cursor-pointer transition sm:grid-cols-[60px_1fr_140px_100px] sm:gap-3 sm:px-5 ${
+                  onClick={canPlay ? () => playSong(song, songs) : undefined}
+                  className={`grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 transition sm:grid-cols-[60px_1fr_140px_100px] sm:gap-3 sm:px-5 ${
                     isActive
                       ? "bg-gradient-to-r from-white/10 via-white/5 to-transparent"
-                      : "hover:bg-white/5"
+                      : canPlay
+                        ? "hover:bg-white/5 cursor-pointer"
+                        : "cursor-default"
                   }`}
                 >
                   {/* INDEX */}

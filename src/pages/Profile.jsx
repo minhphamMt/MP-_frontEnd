@@ -35,6 +35,16 @@ export default function Profile() {
   const [loadingPassword, setLoadingPassword] = useState(false);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [toast, setToast] = useState({ title: "", message: "" });
+  const isGoogleAccount = useMemo(() => {
+    const provider =
+      authUser?.provider ||
+      authUser?.auth_provider ||
+      authUser?.login_provider;
+    return (
+      String(provider || "").toLowerCase() === "google" ||
+      Boolean(authUser?.firebase_uid || authUser?.google_id)
+    );
+  }, [authUser]);
 
   useEffect(() => {
     if (authUser) {
@@ -69,6 +79,12 @@ export default function Profile() {
 
   const hasProfileChanges = useMemo(() => {
     if (!authUser) return false;
+    if (isGoogleAccount) {
+      return (
+        profile.display_name !== (authUser.display_name || "") ||
+        profile.avatar_url !== (authUser.avatar_url || "")
+      );
+    }
     return (
       profile.display_name !== (authUser.display_name || "") ||
       profile.email !== (authUser.email || "") ||
@@ -143,11 +159,12 @@ export default function Profile() {
 
     setLoadingProfile(true);
     try {
-      const res = await updateUserProfile({
+      const payload = {
         display_name: profile.display_name,
-        email: profile.email,
         avatar_url: profile.avatar_url,
-      });
+      ...(isGoogleAccount ? {} : { email: profile.email }),
+      };
+      const res = await updateUserProfile(payload);
       const updated = res.data?.data || res.data;
       if (updated) {
         updateUser(updated);
@@ -288,18 +305,32 @@ export default function Profile() {
                 />
               </label>
 
-              <label className="space-y-2 text-sm text-white/70">
-                <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                  <FiMail className="text-emerald-300" /> Email
-                </span>
-                <input
-                  value={profile.email}
-                  onChange={handleProfileChange("email")}
-                  type="email"
-                  placeholder="you@email.com"
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400/60 focus:bg-white/10"
-                />
-              </label>
+              {!isGoogleAccount ? (
+                <label className="space-y-2 text-sm text-white/70">
+                  <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
+                    <FiMail className="text-emerald-300" /> Email
+                  </span>
+                  <input
+                    value={profile.email}
+                    onChange={handleProfileChange("email")}
+                    type="email"
+                    placeholder="you@email.com"
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400/60 focus:bg-white/10"
+                  />
+                </label>
+              ) : (
+                <div className="space-y-2 text-sm text-white/70">
+                  <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
+                    <FiMail className="text-emerald-300" /> Email
+                  </span>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60">
+                    {profile.email || "Chưa có email"}
+                  </div>
+                  <p className="text-xs text-white/45">
+                    Tài khoản Google không thể thay đổi email.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* <label className="space-y-2 text-sm text-white/70">
@@ -356,72 +387,74 @@ export default function Profile() {
           </div>
         </form>
 
-        <form
-          onSubmit={submitPassword}
-          className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.55)] backdrop-blur"
-        >
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.18),transparent_45%)]" />
-          <div className="relative space-y-6">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-                Bảo mật
-              </p>
-              <h2 className="mt-2 text-xl font-bold text-white">
-                Đổi mật khẩu
-              </h2>
+         {!isGoogleAccount && (
+          <form
+            onSubmit={submitPassword}
+            className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.55)] backdrop-blur"
+          >
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.18),transparent_45%)]" />
+            <div className="relative space-y-6">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+                  Bảo mật
+                </p>
+                <h2 className="mt-2 text-xl font-bold text-white">
+                  Đổi mật khẩu
+                </h2>
+              </div>
+
+              <label className="space-y-2 text-sm text-white/70">
+                <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
+                  <FiKey className="text-cyan-300" /> Mật khẩu hiện tại
+                </span>
+                <input
+                  type="password"
+                  value={passwords.oldPassword}
+                  onChange={handlePasswordChange("oldPassword")}
+                  placeholder="••••••••"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400/60 focus:bg-white/10"
+                />
+              </label>
+
+              <label className="space-y-2 text-sm text-white/70">
+                <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
+                  <FiKey className="text-emerald-300" /> Mật khẩu mới
+                </span>
+                <input
+                  type="password"
+                  value={passwords.newPassword}
+                  onChange={handlePasswordChange("newPassword")}
+                  placeholder="Tối thiểu 6 ký tự"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400/60 focus:bg-white/10"
+                />
+              </label>
+
+              <label className="space-y-2 text-sm text-white/70">
+                <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
+                  <FiKey className="text-violet-300" /> Xác nhận mật khẩu mới
+                </span>
+                <input
+                  type="password"
+                  value={passwords.confirmPassword}
+                  onChange={handlePasswordChange("confirmPassword")}
+                  placeholder="Nhập lại mật khẩu mới"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-violet-400/60 focus:bg-white/10"
+                />
+              </label>
+
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white/60">
+                Gợi ý: Hãy dùng mật khẩu mạnh kết hợp chữ hoa, chữ thường và ký tự đặc biệt.
+              </div>
+              <button
+                type="submit"
+                disabled={loadingPassword}
+                className="w-full rounded-full bg-gradient-to-r from-violet-400 to-fuchsia-400 px-6 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-violet-400/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loadingPassword ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
+              </button>
             </div>
-
-            <label className="space-y-2 text-sm text-white/70">
-              <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                <FiKey className="text-cyan-300" /> Mật khẩu hiện tại
-              </span>
-              <input
-                type="password"
-                value={passwords.oldPassword}
-                onChange={handlePasswordChange("oldPassword")}
-                placeholder="••••••••"
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400/60 focus:bg-white/10"
-              />
-            </label>
-
-            <label className="space-y-2 text-sm text-white/70">
-              <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                <FiKey className="text-emerald-300" /> Mật khẩu mới
-              </span>
-              <input
-                type="password"
-                value={passwords.newPassword}
-                onChange={handlePasswordChange("newPassword")}
-                placeholder="Tối thiểu 6 ký tự"
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400/60 focus:bg-white/10"
-              />
-            </label>
-
-            <label className="space-y-2 text-sm text-white/70">
-              <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                <FiKey className="text-violet-300" /> Xác nhận mật khẩu mới
-              </span>
-              <input
-                type="password"
-                value={passwords.confirmPassword}
-                onChange={handlePasswordChange("confirmPassword")}
-                placeholder="Nhập lại mật khẩu mới"
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-violet-400/60 focus:bg-white/10"
-              />
-            </label>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white/60">
-              Gợi ý: Hãy dùng mật khẩu mạnh kết hợp chữ hoa, chữ thường và ký tự đặc biệt.
-            </div>
-            <button
-              type="submit"
-              disabled={loadingPassword}
-              className="w-full rounded-full bg-gradient-to-r from-violet-400 to-fuchsia-400 px-6 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-violet-400/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loadingPassword ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
-            </button>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
     </div>
   );

@@ -82,7 +82,7 @@ export default function PlayerDetailLyrics({
   };
 
   return (
-    <div className="mt-5 flex min-h-[320px] flex-1 flex-col">
+    <div className="mt-4 flex min-h-[320px] flex-1 flex-col overflow-hidden">
       {lyricsState.loading && (
         <p className="text-sm text-white/60">Đang tải lời bài hát...</p>
       )}
@@ -100,23 +100,43 @@ export default function PlayerDetailLyrics({
         lyricsState.items.length > 0 && (
           <div
             ref={lyricsContainerRef}
-            className="mt-1 flex-1 space-y-3 overflow-y-auto pr-2 text-sm leading-relaxed text-white/70 scrollbar-hidden"
+            className="
+              mt-2 flex-1 space-y-2 overflow-y-auto pr-2
+              text-sm sm:text-base
+              leading-relaxed
+              scrollbar-hidden
+            "
           >
             {lyricsState.items.map((item, index) => {
               const isLineActive = index === lyricIndex;
+
               return (
                 <button
                   key={item.id || index}
                   type="button"
                   data-lyric-index={index}
                   onClick={() => handleLyricClick(item)}
-                  className={`block w-full text-left transition ${
-                    isLineActive
-                      ? "text-base font-semibold text-white"
-                      : "text-white/60 hover:text-white/80"
-                  }`}
+                  className={`
+                    group block w-full rounded-2xl px-3 py-2 text-left transition
+                    ${
+                      isLineActive
+                        ? "bg-white/10 text-white ring-1 ring-white/10"
+                        : "text-white/60 hover:bg-white/5 hover:text-white/85"
+                    }
+                  `}
                 >
-                  {item.text}
+                  <span
+                    className={`
+                      block transition
+                      ${
+                        isLineActive
+                          ? "text-base sm:text-lg font-semibold"
+                          : "text-sm sm:text-base"
+                      }
+                    `}
+                  >
+                    {item.text}
+                  </span>
                 </button>
               );
             })}

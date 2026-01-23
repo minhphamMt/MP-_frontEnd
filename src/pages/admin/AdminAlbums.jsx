@@ -9,6 +9,7 @@ import {
 } from "../../api/album.api";
 import ArtistAlbumTile from "../../components/artist/ArtistAlbumTile";
 import { resolveAssetUrl } from "../../utils/asset";
+import { formatDateDisplay } from "../../utils/date";
 
 const formatDateInput = (value) => {
   if (!value) return "";
@@ -100,6 +101,9 @@ export default function AdminAlbums() {
       alert("Không thể tải chi tiết album.");
     }
   };
+
+  const getSongCover = (song) =>
+    song?.cover_url || song?.cover || song?.thumbnail || song?.image;
 
    const handleEdit = async (album) => {
     try {
@@ -253,7 +257,7 @@ export default function AdminAlbums() {
 
       {selectedAlbum && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-[#181818] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)]">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#181818] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)]">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Chi tiết album</h2>
               <button
@@ -263,34 +267,96 @@ export default function AdminAlbums() {
                 <FiX />
               </button>
             </div>
-            <div className="mt-4 space-y-3 text-sm text-white/70">
-              <p>
-                <span className="text-white/60">Tên album:</span>{" "}
-                <span className="text-white">{selectedAlbum.title}</span>
-              </p>
-              <p>
-                <span className="text-white/60">Nghệ sĩ:</span>{" "}
-                <span className="text-white">
-                  {selectedAlbum.artist?.name || selectedAlbum.artist_name || "-"}
-                </span>
-              </p>
-              <p>
-                <span className="text-white/60">Ngày phát hành:</span>{" "}
-                <span className="text-white">
-                  {selectedAlbum.release_date || "Chưa cập nhật"}
-                </span>
-              </p>
-              {selectedAlbum.songs?.length > 0 && (
-                <div>
-                  <p className="text-white/60">Danh sách bài hát:</p>
-                  <ul className="mt-2 space-y-1 text-white/80">
-                    {selectedAlbum.songs.map((song) => (
-                      <li key={song.id}>• {song.title}</li>
-                    ))}
-                  </ul>
+            <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                <p className="text-sm font-semibold text-white">
+                  Ảnh album
+                </p>
+                <div className="mt-4">
+                  {selectedAlbum.cover_url || selectedAlbum.cover ? (
+                    <img
+                      src={resolveAssetUrl(
+                        selectedAlbum.cover_url || selectedAlbum.cover
+                      )}
+                      alt={selectedAlbum.title}
+                      className="h-60 w-full rounded-2xl bg-black/40 object-contain shadow-lg"
+                    />
+                  ) : (
+                    <div className="flex h-60 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
+                      Chưa có ảnh album
+                    </div>
+                  )}
                 </div>
-              )}
+               </div>
+
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-5 text-sm text-white/70">
+                <p className="text-sm font-semibold text-white">Thông tin</p>
+                <div className="mt-4 space-y-3">
+                  <p>
+                    <span className="text-white/60">Tên album:</span>{" "}
+                    <span className="text-white">{selectedAlbum.title}</span>
+                  </p>
+                  <p>
+                    <span className="text-white/60">Nghệ sĩ:</span>{" "}
+                    <span className="text-white">
+                      {selectedAlbum.artist?.name ||
+                        selectedAlbum.artist_name ||
+                        "-"}
+                    </span>
+                  </p>
+                  <p>
+                    <span className="text-white/60">Ngày phát hành:</span>{" "}
+                    <span className="text-white">
+                      {formatDateDisplay(selectedAlbum.release_date)}
+                    </span>
+                  </p>
+                </div>
+              </div>
             </div>
+            {selectedAlbum.songs?.length > 0 && (
+              <div className="mt-6">
+                <p className="text-sm font-semibold text-white">
+                  Danh sách bài hát
+                </p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {selectedAlbum.songs.map((song) => (
+                    <div
+                      key={song.id}
+                      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-white/80"
+                    >
+                      <div className="h-12 w-12 overflow-hidden rounded-xl bg-black/40">
+                        {getSongCover(song) || selectedAlbum.cover_url ? (
+                          <img
+                            src={resolveAssetUrl(
+                              getSongCover(song) ||
+                                selectedAlbum.cover_url ||
+                                selectedAlbum.cover
+                            )}
+                            alt={song.title}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-[10px] text-white/50">
+                            No image
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-white">
+                          {song.title}
+                        </p>
+                        <p className="truncate text-xs text-white/50">
+                          {song.artist_name ||
+                            selectedAlbum.artist?.name ||
+                            selectedAlbum.artist_name ||
+                            "-"}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -346,7 +412,7 @@ export default function AdminAlbums() {
                     <p>
                       <span className="text-white/60">Ngày phát hành:</span>{" "}
                       <span className="text-white">
-                        {editingAlbum.release_date || "Chưa cập nhật"}
+                        {formatDateDisplay(editingAlbum.release_date)}
                       </span>
                     </p>
                     {editingAlbum.songs?.length > 0 && (

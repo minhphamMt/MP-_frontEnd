@@ -3,12 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import Header from "../components/header/Header";
 import PlayerBar from "../components/player/PlayerBar";
 import Sidebar from "../components/sidebar/Sidebar";
+import useAuthStore from "../store/auth.store";
 
 export default function MainLayout() {
   const mainRef = useRef(null);
   const backgroundRef = useRef(null);
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const role = useAuthStore((state) => state.role);
+  const shouldShowPlayer = role !== "ARTIST" && role !== "ADMIN";
 
   useEffect(() => {
     const mainEl = mainRef.current;
@@ -97,7 +100,7 @@ export default function MainLayout() {
         </main>
       </div>
 
-      <PlayerBar />
+      {shouldShowPlayer && <PlayerBar />}
     </div>
   );
 }

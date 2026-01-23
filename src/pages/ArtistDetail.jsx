@@ -6,6 +6,7 @@ import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import FollowArtistButton from "../components/artist/FollowArtistButton";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 import { resolveAssetUrl } from "../utils/asset";
+import { formatDateDisplay } from "../utils/date";
 
 const formatTime = (s = 0) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -109,7 +110,10 @@ const renderBioHtml = (bio = "") => {
   const artistInfoItems = [
     { label: "Nghệ danh", value: artist?.alias },
     { label: "Tên thật", value: artist?.realname },
-    { label: "Ngày sinh", value: artist?.birthday },
+    {
+      label: "Ngày sinh",
+      value: artist?.birthday ? formatDateDisplay(artist?.birthday) : null,
+    },
     { label: "Quốc gia", value: artist?.national },
   ].filter((item) => item.value);
 
