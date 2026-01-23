@@ -82,7 +82,7 @@ export default function PlayerDetailLyrics({
   };
 
   return (
-    <div className="mt-4 flex min-h-[320px] flex-1 flex-col overflow-hidden">
+    <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden">
       {lyricsState.loading && (
         <p className="text-sm text-white/60">Đang tải lời bài hát...</p>
       )}
@@ -101,7 +101,7 @@ export default function PlayerDetailLyrics({
           <div
             ref={lyricsContainerRef}
             className="
-              mt-2 flex-1 space-y-2 overflow-y-auto pr-2
+              mt-3 flex-1 space-y-2 overflow-y-auto pr-2
               text-sm sm:text-base
               leading-relaxed
               scrollbar-hidden
@@ -120,7 +120,7 @@ export default function PlayerDetailLyrics({
                     group block w-full rounded-2xl px-3 py-2 text-left transition
                     ${
                       isLineActive
-                        ? "bg-white/10 text-white ring-1 ring-white/10"
+                        ? "bg-white/15 text-white ring-1 ring-white/20 shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
                         : "text-white/60 hover:bg-white/5 hover:text-white/85"
                     }
                   `}
