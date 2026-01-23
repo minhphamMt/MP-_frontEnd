@@ -9,6 +9,7 @@
 body {
   @apply bg-slate-950 text-white;
   scrollbar-gutter: stable;
+  /* zoom: 0.92; */
 }
 
 .player-slider {

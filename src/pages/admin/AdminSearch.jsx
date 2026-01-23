@@ -212,7 +212,16 @@ export default function AdminSearch() {
     if (!item) return;
     const label =
       item.display_name || item.displayLabel || item.name || item.title || "";
-    const targetId = item.id ?? item._id ?? "";
+    const targetId =
+      item.id ??
+      item._id ??
+      item.song_id ??
+      item.songId ??
+      item.album_id ??
+      item.albumId ??
+      item.user_id ??
+      item.userId ??
+      "";
     const encodedLabel = encodeURIComponent(label);
     if (item.type === "artist") {
       if (targetId) {

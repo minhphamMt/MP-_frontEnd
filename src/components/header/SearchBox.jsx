@@ -330,7 +330,16 @@ const handleResultNavigate = async (item) => {
 
   if (isAdmin) {
     const label = nameToSave || "";
-    const targetId = item.id ?? item._id ?? "";
+    const targetId =
+      item.id ??
+      item._id ??
+      item.song_id ??
+      item.songId ??
+      item.album_id ??
+      item.albumId ??
+      item.user_id ??
+      item.userId ??
+      "";
     if (item.type === "artist") {
       navigate(
         `/admin/users?role=ARTIST&keyword=${encodeURIComponent(label)}`
