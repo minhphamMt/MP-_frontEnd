@@ -83,7 +83,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
-   useEffect(() => {
+  useEffect(() => {
     if (!mounted || !isOpen) return;
     if (typeof window === "undefined") return;
     const mq = window.matchMedia("(max-width: 1023px)");
@@ -186,24 +186,24 @@ export default function PlayerDetail({ isOpen, onClose }) {
   if (!mounted || !currentSong) return null;
 
   const cover = resolveAssetUrl(
-    currentSong.cover || currentSong.cover_url || currentSong.image
+    currentSong.cover || currentSong.cover_url || currentSong.image,
   );
 
   const animateClass =
     phase === "enter"
       ? "player-detail-anim-in"
       : phase === "exit"
-      ? "player-detail-anim-out"
-      : "";
+        ? "player-detail-anim-out"
+        : "";
 
   const stableClass =
     phase === "open" || phase === "enter"
       ? "translate-y-0 opacity-100"
       : "translate-y-full opacity-0";
 
-      const detailPanel = (
+  const detailPanel = (
     <div
-      className={`flex min-h-0 flex-col gap-6 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)] ring-1 ring-white/5 backdrop-blur-xl sm:p-8 ${songSlideClass} overflow-y-auto pr-1 lg:overflow-visible lg:pr-0`}
+     className={`flex w-full min-h-0 flex-1 flex-col gap-6 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)] ring-1 ring-white/5 backdrop-blur-xl sm:p-8 ${songSlideClass} overflow-y-auto pr-1 lg:overflow-visible lg:pr-0`}
     >
       {/* Album + like */}
       <div className="flex flex-col items-center gap-5">
@@ -256,24 +256,30 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
       {/* Seek */}
       <div className="space-y-2">
-        <input
-          type="range"
-          min={0}
-          max={total || 0}
-          step={0.1}
-          value={Math.min(displayedTime, total || 0)}
-          onMouseDown={onSeekStart}
-          onTouchStart={onSeekStart}
-          onChange={onSeekChange}
-          onMouseUp={onSeekCommit}
-          onTouchEnd={onSeekCommit}
-          className="h-2 w-full cursor-pointer accent-[#1db954]"
-        />
-        <div className="flex items-center justify-between text-[11px] text-white/60 sm:text-xs">
-          <span>{formatTime(displayedTime)}</span>
-          <span>{formatTime(total)}</span>
-        </div>
-      </div>
+  {/* Seek bar */}
+  <div className="px-4 sm:px-6">
+    <input
+      type="range"
+      min={0}
+      max={total || 0}
+      step={0.1}
+      value={Math.min(displayedTime, total || 0)}
+      onMouseDown={onSeekStart}
+      onTouchStart={onSeekStart}
+      onChange={onSeekChange}
+      onMouseUp={onSeekCommit}
+      onTouchEnd={onSeekCommit}
+      className="h-2 w-full cursor-pointer accent-[#1db954]"
+    />
+  </div>
+
+  {/* Time */}
+  <div className="flex items-center justify-between px-4 sm:px-6 text-[11px] text-white/60 sm:text-xs">
+    <span>{formatTime(displayedTime)}</span>
+    <span>{formatTime(total)}</span>
+  </div>
+</div>
+
 
       {/* Controls */}
       <div className="flex items-center justify-center gap-5 text-xl sm:text-2xl">
@@ -373,74 +379,119 @@ export default function PlayerDetail({ isOpen, onClose }) {
       />
 
       {/* BG IMAGE (isolated layer) */}
-<div className="absolute inset-0 -z-10 overflow-hidden">
-  <div
-    className="absolute inset-[-20%] opacity-40 blur-3xl"
-    style={{
-      backgroundImage: `url(${cover})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-    }}
-  />
-  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#0b0b0b]/85 to-black" />
-</div>
-
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div
+          className="absolute inset-[-20%] opacity-40 blur-3xl"
+          style={{
+            backgroundImage: `url(${cover})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#0b0b0b]/85 to-black" />
+      </div>
 
       {/* CONTENT */}
-<div className="relative z-10 h-full w-full">
-  <div className="mx-auto flex h-full w-full max-w-[1320px] flex-col px-3 pt-4 sm:px-6 sm:pt-8">
+      <div className="relative z-10 h-full w-full">
+        <div className="mx-auto flex h-full w-full max-w-[1320px] flex-col px-3 pt-4 sm:px-6 sm:pt-8">
+          {/* Top bar */}
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/90 ring-1 ring-white/10 transition hover:bg-white/15 sm:hidden"
+              aria-label="Đóng chi tiết"
+            >
+              <FiChevronDown />
+            </button>
 
-        {/* Top bar */}
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/90 ring-1 ring-white/10 transition hover:bg-white/15 sm:hidden"
-            aria-label="Đóng chi tiết"
-          >
-            <FiChevronDown />
-          </button>
+            <button
+              onClick={onClose}
+              className="hidden h-10 w-10 items-center justify-center rounded-full bg-white/10 text-lg ring-1 ring-white/10 transition hover:bg-white/20 sm:flex"
+              aria-label="Đóng"
+            >
+              ✕
+            </button>
+          </div>
 
-          <button
-            onClick={onClose}
-            className="hidden h-10 w-10 items-center justify-center rounded-full bg-white/10 text-lg ring-1 ring-white/10 transition hover:bg-white/20 sm:flex"
-            aria-label="Đóng"
-          >
-            ✕
-          </button>
-        </div>
+          {/* Title */}
+          <div className="mt-5 flex flex-col items-center gap-1 text-center sm:mt-7">
+            <h2 className="text-xl font-semibold tracking-tight sm:text-3xl">
+              {currentSong.title}
+            </h2>
+            <p className="text-xs text-white/60 sm:text-sm">
+              {currentSong.artist?.name || currentSong.artist_name || "Unknown"}
+            </p>
+          </div>
 
-        {/* Title */}
-        <div className="mt-5 flex flex-col items-center gap-1 text-center sm:mt-7">
-          <h2 className="text-xl font-semibold tracking-tight sm:text-3xl">
-            {currentSong.title}
-          </h2>
-          <p className="text-xs text-white/60 sm:text-sm">
-            {currentSong.artist?.name || currentSong.artist_name || "Unknown"}
-          </p>
-        </div>
+          {/* Main grid */}
+          {/* Desktop layout */}
+          <div className="mt-6 hidden gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px]">
+            {detailPanel}
 
-        {/* Main grid */}
-         {/* Desktop layout */}
-        <div className="mt-6 hidden gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px]">
-          {detailPanel}
+            {/* RIGHT */}
+            <div className="flex h-[520px] flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-4 ring-1 ring-white/5 backdrop-blur-xl sm:h-[600px] sm:p-6">
+              {/* Tabs */}
+              <div className="flex items-center gap-2 rounded-full bg-white/5 p-1 ring-1 ring-white/10">
+                {[
+                  { id: "queue", label: "Danh sách phát" },
+                  { id: "lyrics", label: "Lời bài hát" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold transition sm:text-sm ${
+                      activeTab === tab.id
+                        ? "bg-white text-black shadow-sm"
+                        : "text-white/70 hover:text-white"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
 
-          {/* RIGHT */}
-          <div className="flex h-[520px] flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-4 ring-1 ring-white/5 backdrop-blur-xl sm:h-[600px] sm:p-6">
-            {/* Tabs */}
-            <div className="flex items-center gap-2 rounded-full bg-white/5 p-1 ring-1 ring-white/10">
+              {activeTab === "queue" && (
+                <PlayerDetailQueue
+                  queue={queue}
+                  currentIndex={currentIndex}
+                  playAt={playAt}
+                />
+              )}
+
+              {activeTab === "lyrics" && (
+                <PlayerDetailLyrics
+                  currentSong={currentSong}
+                  displayedTime={displayedTime}
+                  isActive={activeTab === "lyrics"}
+                  onSeek={doSeek}
+                />
+              )}
+            </div>
+          </div>
+          {/* Mobile/tablet swipe layout */}
+          <div className="mt-5 flex flex-1 min-h-0 flex-col lg:hidden">
+            <div className="mb-4 flex items-center justify-center gap-2 text-xs text-white/60">
               {[
-                { id: "queue", label: "Danh sách phát" },
                 { id: "lyrics", label: "Lời bài hát" },
-              ].map((tab) => (
+                { id: "now", label: "Đang phát" },
+                { id: "queue", label: "Danh sách phát" },
+              ].map((tab, index) => (
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold transition sm:text-sm ${
-                    activeTab === tab.id
-                      ? "bg-white text-black shadow-sm"
-                      : "text-white/70 hover:text-white"
+                  onClick={() => {
+                    const el = carouselRef.current;
+                    if (!el) return;
+                    const width = el.clientWidth;
+                    el.scrollTo({ left: width * index, behavior: "smooth" });
+                    setMobileTab(tab.id);
+                  }}
+                  className={`rounded-full px-3 py-1 ring-1 transition ${
+                    mobileTab === tab.id
+                      ? "bg-white/15 text-white/90 ring-white/20"
+                      : "bg-white/5 text-white/60 ring-white/10 hover:text-white/80"
                   }`}
                 >
                   {tab.label}
@@ -448,69 +499,22 @@ export default function PlayerDetail({ isOpen, onClose }) {
               ))}
             </div>
 
-            {activeTab === "queue" && (
-              <PlayerDetailQueue
-                queue={queue}
-                currentIndex={currentIndex}
-                playAt={playAt}
-              />
-            )}
-
-            {activeTab === "lyrics" && (
-              <PlayerDetailLyrics
-                currentSong={currentSong}
-                displayedTime={displayedTime}
-                isActive={activeTab === "lyrics"}
-                onSeek={doSeek}
-              />
-            )}
-          </div>
-        </div>
-         {/* Mobile/tablet swipe layout */}
-        <div className="mt-5 flex flex-1 min-h-0 flex-col lg:hidden">
-          <div className="mb-4 flex items-center justify-center gap-2 text-xs text-white/60">
-            {[
-              { id: "lyrics", label: "Lời bài hát" },
-              { id: "now", label: "Đang phát" },
-              { id: "queue", label: "Danh sách phát" },
-            ].map((tab, index) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => {
+            <div
+              ref={carouselRef}
+              onScroll={() => {
+                if (scrollRafRef.current) return;
+                scrollRafRef.current = requestAnimationFrame(() => {
                   const el = carouselRef.current;
                   if (!el) return;
-                  const width = el.clientWidth;
-                  el.scrollTo({ left: width * index, behavior: "smooth" });
-                  setMobileTab(tab.id);
-                }}
-                className={`rounded-full px-3 py-1 ring-1 transition ${
-                  mobileTab === tab.id
-                    ? "bg-white/15 text-white/90 ring-white/20"
-                    : "bg-white/5 text-white/60 ring-white/10 hover:text-white/80"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div
-            ref={carouselRef}
-            onScroll={() => {
-              if (scrollRafRef.current) return;
-              scrollRafRef.current = requestAnimationFrame(() => {
-                const el = carouselRef.current;
-                if (!el) return;
-                const width = el.clientWidth || 1;
-                const index = Math.round(el.scrollLeft / width);
-                const next =
-                  index === 0 ? "lyrics" : index === 1 ? "now" : "queue";
-                setMobileTab(next);
-                scrollRafRef.current = null;
-              });
-            }}
-            className="
+                  const width = el.clientWidth || 1;
+                  const index = Math.round(el.scrollLeft / width);
+                  const next =
+                    index === 0 ? "lyrics" : index === 1 ? "now" : "queue";
+                  setMobileTab(next);
+                  scrollRafRef.current = null;
+                });
+              }}
+              className="
     flex
    flex-1 min-h-0
     w-full
@@ -521,41 +525,41 @@ export default function PlayerDetail({ isOpen, onClose }) {
     pb-6
     scrollbar-hidden
   "
-          >
-            <div className="flex min-h-0 w-full min-w-[100%] snap-center">
-              <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl">
-                <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
-                  Lời bài hát
+            >
+              <div className="flex min-h-0 w-full min-w-[100%] snap-center">
+                <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl">
+                  <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+                    Lời bài hát
+                  </div>
+                  <PlayerDetailLyrics
+                    currentSong={currentSong}
+                    displayedTime={displayedTime}
+                    isActive
+                    onSeek={doSeek}
+                  />
                 </div>
-                <PlayerDetailLyrics
-                  currentSong={currentSong}
-                  displayedTime={displayedTime}
-                  isActive
-                  onSeek={doSeek}
-                />
               </div>
-            </div>
 
-           <div className="flex min-h-0 w-full min-w-[100%] snap-center">
-              {detailPanel}
-            </div>
+              <div className="flex min-h-0 w-full min-w-[100%] snap-center">
+                {detailPanel}
+              </div>
 
-           <div className="flex min-h-0 w-full min-w-[100%] snap-center">
-              <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl">
-                <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
-                  Danh sách phát
+              <div className="flex min-h-0 w-full min-w-[100%] snap-center">
+                <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl">
+                  <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+                    Danh sách phát
+                  </div>
+                  <PlayerDetailQueue
+                    queue={queue}
+                    currentIndex={currentIndex}
+                    playAt={playAt}
+                  />
                 </div>
-                <PlayerDetailQueue
-                  queue={queue}
-                  currentIndex={currentIndex}
-                  playAt={playAt}
-                />
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
     </div>
   );
 }
