@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FaPause,
   FaPlay,
@@ -10,9 +10,10 @@ import {
   FaVolumeXmark,
 } from "react-icons/fa6";
 import { FiChevronDown, FiHeart } from "react-icons/fi";
-import { getSongLyrics } from "../../api/song.api";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
+import PlayerDetailLyrics from "./PlayerDetailLyrics";
+import PlayerDetailQueue from "./PlayerDetailQueue";
 
 /* ================= utils ================= */
 const formatTime = (sec = 0) => {
@@ -53,13 +54,6 @@ export default function PlayerDetail({ isOpen, onClose }) {
   } = usePlayerStore();
 
   const [activeTab, setActiveTab] = useState("queue");
-  const [lyricsState, setLyricsState] = useState({
-    items: [],
-    loading: false,
-    error: null,
-  });
-  const lyricsContainerRef = useRef(null);
-  const lastLyricIndexRef = useRef(-1);
 
   /* ================= animation ================= */
   const [mounted, setMounted] = useState(false);
@@ -140,7 +134,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     if (!isSeeking) setSeekValue(displayedTime);
   }, [displayedTime, isSeeking]);
 
-  const doSeek = (t) => {
+ const doSeek = (t) => {
     const time = Math.max(0, Math.min(total, Number(t) || 0));
     seek?.(time);
   };
@@ -164,79 +158,6 @@ export default function PlayerDetail({ isOpen, onClose }) {
     }
     setVolume(next);
   };
-
-  /* ================= upcoming ================= */
-  const upcoming = useMemo(() => {
-    const list = queue || [];
-    const next = list.slice(currentIndex + 1, currentIndex + 4);
-    if (next.length) return next;
-    return list.filter((_, i) => i !== currentIndex).slice(0, 3);
-  }, [queue, currentIndex]);
-
-   useEffect(() => {
-    const songId = normalizeSongId(currentSong);
-    if (!songId) {
-      setLyricsState({ items: [], loading: false, error: null });
-      return;
-    }
-
-    setLyricsState((prev) => ({ ...prev, loading: true, error: null }));
-    getSongLyrics(songId)
-      .then((res) => {
-        const payload = res?.data?.data ?? res?.data ?? {};
-        const items = payload?.items ?? payload ?? [];
-        setLyricsState({
-          items: Array.isArray(items) ? items : [],
-          loading: false,
-          error: null,
-        });
-      })
-      .catch(() => {
-        setLyricsState({
-          items: [],
-          loading: false,
-          error: "Không thể tải lời bài hát",
-        });
-      });
-  }, [currentSong]);
-
-  const lyricIndex = useMemo(() => {
-    if (!lyricsState.items.length) return -1;
-    const ms = Math.floor(displayedTime * 1000);
-    for (let i = 0; i < lyricsState.items.length; i += 1) {
-      const item = lyricsState.items[i];
-      const start = Number(item?.start_time ?? item?.startTime ?? 0);
-      const end = Number(item?.end_time ?? item?.endTime ?? 0);
-      const nextItem = lyricsState.items[i + 1];
-      const nextStart = Number(
-        nextItem?.start_time ?? nextItem?.startTime ?? Number.POSITIVE_INFINITY
-      );
-
-      if (ms >= start && (end ? ms <= end : ms < nextStart)) {
-        return i;
-      }
-    }
-    return -1;
-  }, [displayedTime, lyricsState.items]);
-
-  useEffect(() => {
-    if (activeTab !== "lyrics") return;
-    if (lyricIndex < 0 || lastLyricIndexRef.current === lyricIndex) return;
-    const container = lyricsContainerRef.current;
-    const line = container?.querySelector(
-      `[data-lyric-index="${lyricIndex}"]`
-    );
-    if (line) {
-      line.scrollIntoView({ behavior: "smooth", block: "center" });
-      lastLyricIndexRef.current = lyricIndex;
-    }
-  }, [lyricIndex, activeTab]);
-
-  const played = useMemo(() => {
-    const list = queue || [];
-    if (currentIndex <= 0) return [];
-    return list.slice(Math.max(0, currentIndex - 3), currentIndex);
-  }, [queue, currentIndex]);
 
   if (!mounted || !currentSong) return null;
 
@@ -297,9 +218,9 @@ export default function PlayerDetail({ isOpen, onClose }) {
           >
             <FiChevronDown />
           </button>
-          <div className="flex-1 px-3 text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-white/70 sm:text-sm">
+          {/* <div className="flex-1 px-3 text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-white/70 sm:text-sm">
             Đang phát
-          </div>
+          </div> */}
           <button
             onClick={onClose}
             className="hidden h-10 w-10 items-center justify-center rounded-full bg-white/10 text-lg transition hover:bg-white/20 sm:flex"
@@ -436,10 +357,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 onChange={(e) => handleVolumeChange(e.target.value)}
                 className="h-2 w-40 accent-[#1db954]"
               />
-            </div>
+             </div>
           </div>
           {/* RIGHT */}
-          <div className="flex flex-col rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6">
+           <div className="flex h-[520px] flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-5 sm:h-[600px] sm:p-6">
             <div className="flex items-center gap-2 rounded-full bg-white/5 p-1">
               {[
                 { id: "queue", label: "Danh sách phát" },
@@ -461,139 +382,20 @@ export default function PlayerDetail({ isOpen, onClose }) {
             </div>
 
             {activeTab === "queue" && (
-              <div className="mt-5 space-y-6">
-                <div>
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
-                    Đã phát
-                  </div>
-                  {played.length ? (
-                    <div className="space-y-3">
-                      {played.map((song, idx) => {
-                        const sCover = resolveAssetUrl(
-                          song.cover || song.cover_url || song.image
-                        );
-                        const realIndex = queue.findIndex((q) => q === song);
-                        return (
-                          <button
-                            key={song.id || idx}
-                            type="button"
-                            onClick={() => playAt(realIndex)}
-                            className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/5 px-3 py-2 text-left transition hover:border-white/20"
-                          >
-                            <div className="h-12 w-12 overflow-hidden rounded-xl bg-white/5">
-                              {sCover && (
-                                <img
-                                  src={sCover}
-                                  alt={song.title}
-                                  className="h-full w-full object-cover"
-                                />
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <div className="text-sm font-semibold line-clamp-1">
-                                {song.title}
-                              </div>
-                              <div className="text-xs text-white/60 line-clamp-1">
-                                {song.artist?.name || song.artist_name || ""}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-white/50">Chưa có bài trước đó</p>
-                  )}
-                </div>
-
-                <div>
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
-                    Tiếp theo
-                  </div>
-                  {upcoming.length ? (
-                    <div className="space-y-3">
-                      {upcoming.map((song, idx) => {
-                        const sCover = resolveAssetUrl(
-                          song.cover || song.cover_url || song.image
-                        );
-                        const realIndex = queue.findIndex((q) => q === song);
-                        return (
-                          <button
-                            key={song.id || idx}
-                            type="button"
-                            onClick={() => playAt(realIndex)}
-                            className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/5 px-3 py-2 text-left transition hover:border-white/20"
-                          >
-                            <div className="h-12 w-12 overflow-hidden rounded-xl bg-white/5">
-                              {sCover && (
-                                <img
-                                  src={sCover}
-                                  alt={song.title}
-                                  className="h-full w-full object-cover"
-                                />
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <div className="text-sm font-semibold line-clamp-1">
-                                {song.title}
-                              </div>
-                              <div className="text-xs text-white/60 line-clamp-1">
-                                {song.artist?.name || song.artist_name || ""}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-white/50">Chưa có bài tiếp theo</p>
-                  )}
-                </div>
-              </div>
+              <PlayerDetailQueue
+                queue={queue}
+                currentIndex={currentIndex}
+                playAt={playAt}
+              />
             )}
 
             {activeTab === "lyrics" && (
-              <div className="mt-5 flex min-h-[320px] flex-1 flex-col">
-                {lyricsState.loading && (
-                  <p className="text-sm text-white/60">Đang tải lời bài hát...</p>
-                )}
-                {lyricsState.error && (
-                  <p className="text-sm text-red-300">{lyricsState.error}</p>
-                )}
-                {!lyricsState.loading &&
-                  !lyricsState.error &&
-                  lyricsState.items.length === 0 && (
-                    <p className="text-sm text-white/50">
-                      Bài hát chưa có lời.
-                    </p>
-                  )}
-
-                {!lyricsState.loading &&
-                  !lyricsState.error &&
-                  lyricsState.items.length > 0 && (
-                    <div
-                      ref={lyricsContainerRef}
-                      className="mt-1 flex-1 space-y-3 overflow-y-auto pr-2 text-sm leading-relaxed text-white/70"
-                    >
-                      {lyricsState.items.map((item, index) => {
-                        const isActive = index === lyricIndex;
-                        return (
-                          <p
-                            key={item.id || index}
-                            data-lyric-index={index}
-                            className={`transition ${
-                              isActive
-                                ? "text-base font-semibold text-white"
-                                : "text-white/60"
-                            }`}
-                          >
-                            {item.text}
-                          </p>
-                        );
-                      })}
-                    </div>
-                  )}
-              </div>
+              <PlayerDetailLyrics
+                currentSong={currentSong}
+                displayedTime={displayedTime}
+                isActive={activeTab === "lyrics"}
+                onSeek={doSeek}
+              />
             )}
           </div>
         </div>
