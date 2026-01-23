@@ -10,6 +10,7 @@ import {
   FaVolumeXmark,
 } from "react-icons/fa6";
 import { FiChevronDown, FiHeart } from "react-icons/fi";
+import { getSongLyrics } from "../../api/song.api";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
 
@@ -50,6 +51,15 @@ export default function PlayerDetail({ isOpen, onClose }) {
     likedSongIds,
     toggleLike,
   } = usePlayerStore();
+
+  const [activeTab, setActiveTab] = useState("queue");
+  const [lyricsState, setLyricsState] = useState({
+    items: [],
+    loading: false,
+    error: null,
+  });
+  const lyricsContainerRef = useRef(null);
+  const lastLyricIndexRef = useRef(-1);
 
   /* ================= animation ================= */
   const [mounted, setMounted] = useState(false);
@@ -163,6 +173,65 @@ export default function PlayerDetail({ isOpen, onClose }) {
     return list.filter((_, i) => i !== currentIndex).slice(0, 3);
   }, [queue, currentIndex]);
 
+   useEffect(() => {
+    const songId = normalizeSongId(currentSong);
+    if (!songId) {
+      setLyricsState({ items: [], loading: false, error: null });
+      return;
+    }
+
+    setLyricsState((prev) => ({ ...prev, loading: true, error: null }));
+    getSongLyrics(songId)
+      .then((res) => {
+        const payload = res?.data?.data ?? res?.data ?? {};
+        const items = payload?.items ?? payload ?? [];
+        setLyricsState({
+          items: Array.isArray(items) ? items : [],
+          loading: false,
+          error: null,
+        });
+      })
+      .catch(() => {
+        setLyricsState({
+          items: [],
+          loading: false,
+          error: "Không thể tải lời bài hát",
+        });
+      });
+  }, [currentSong]);
+
+  const lyricIndex = useMemo(() => {
+    if (!lyricsState.items.length) return -1;
+    const ms = Math.floor(displayedTime * 1000);
+    for (let i = 0; i < lyricsState.items.length; i += 1) {
+      const item = lyricsState.items[i];
+      const start = Number(item?.start_time ?? item?.startTime ?? 0);
+      const end = Number(item?.end_time ?? item?.endTime ?? 0);
+      const nextItem = lyricsState.items[i + 1];
+      const nextStart = Number(
+        nextItem?.start_time ?? nextItem?.startTime ?? Number.POSITIVE_INFINITY
+      );
+
+      if (ms >= start && (end ? ms <= end : ms < nextStart)) {
+        return i;
+      }
+    }
+    return -1;
+  }, [displayedTime, lyricsState.items]);
+
+  useEffect(() => {
+    if (activeTab !== "lyrics") return;
+    if (lyricIndex < 0 || lastLyricIndexRef.current === lyricIndex) return;
+    const container = lyricsContainerRef.current;
+    const line = container?.querySelector(
+      `[data-lyric-index="${lyricIndex}"]`
+    );
+    if (line) {
+      line.scrollIntoView({ behavior: "smooth", block: "center" });
+      lastLyricIndexRef.current = lyricIndex;
+    }
+  }, [lyricIndex, activeTab]);
+
   const played = useMemo(() => {
     const list = queue || [];
     if (currentIndex <= 0) return [];
@@ -217,305 +286,141 @@ export default function PlayerDetail({ isOpen, onClose }) {
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#121212]/85 to-black" />
 
-      {/* CLOSE */}
-      <button
-        onClick={onClose}
-        className="absolute right-4 top-4 z-50 hidden h-9 w-9 items-center justify-center rounded-full bg-white/10 text-lg transition hover:bg-white/20 sm:right-8 sm:top-6 sm:flex sm:h-10 sm:w-10 sm:text-xl"
-      >
-        ✕
-      </button>
-
       {/* CONTENT */}
       <div className="relative z-10 mx-auto flex min-h-[100dvh] w-[min(1280px,94vw)] flex-col justify-center pb-6 pt-6 sm:min-h-[calc(100vh-120px)] sm:pb-10 sm:pt-8">
-        <div className="flex h-full flex-col gap-6 sm:hidden">
-          <div className="flex items-center justify-between text-lg">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/90"
-              aria-label="Đóng chi tiết"
-            >
-              <FiChevronDown />
-            </button>
-            <div className="flex-1 truncate px-3 text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-white/70">
-              {currentSong.title}
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                const songId = normalizeSongId(currentSong);
-                if (songId) toggleLike(songId);
-              }}
-              className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${
-                likedSongIds.includes(normalizeSongId(currentSong))
-                  ? "border-[#1db954] text-[#1db954] bg-[#1db954]/10"
-                  : "border-white/10 text-white/80 bg-white/5"
-              }`}
-              aria-label="Yêu thích"
-            >
-              <FiHeart />
-            </button>
+         <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/90 sm:hidden"
+            aria-label="Đóng chi tiết"
+          >
+            <FiChevronDown />
+          </button>
+          <div className="flex-1 px-3 text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-white/70 sm:text-sm">
+            Đang phát
           </div>
+          <button
+            onClick={onClose}
+            className="hidden h-10 w-10 items-center justify-center rounded-full bg-white/10 text-lg transition hover:bg-white/20 sm:flex"
+          >
+            ✕
+          </button>
+        </div>
 
-          <div className="flex flex-1 flex-col items-center justify-center gap-4">
-            <div className="h-60 w-60 overflow-hidden rounded-full border border-white/10 bg-white/5 shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
-              {cover && (
-                <img
-                  src={cover}
-                  alt={currentSong.title}
-                  className={`player-detail-disc h-full w-full object-cover ${
-                    isPlaying ? "is-playing" : ""
-                  }`}
-                />
-              )}
-            </div>
+          <div className="mt-6 flex flex-col items-center gap-3 text-center sm:mt-8">
+          <h2 className="text-2xl font-semibold sm:text-3xl">
+            {currentSong.title}
+          </h2>
+          <p className="text-sm text-white/70">
+            {currentSong.artist?.name || currentSong.artist_name || "Unknown"}
+          </p>
+        </div>
 
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-white">
-                {currentSong.title}
-              </h2>
-              <p className="mt-1 text-sm text-white/70">
-                {currentSong.artist?.name ||
-                  currentSong.artist_name ||
-                  "Unknown"}
-              </p>
-            </div>
-
-            <div className="h-px w-20 bg-white/10" />
-          </div>
-
-          <div className="space-y-3">
-            <input
-              type="range"
-              min={0}
-              max={total || 0}
-              step={0.1}
-              value={Math.min(displayedTime, total || 0)}
-              onMouseDown={onSeekStart}
-              onTouchStart={onSeekStart}
-              onChange={onSeekChange}
-              onMouseUp={onSeekCommit}
-              onTouchEnd={onSeekCommit}
-              className="h-2 w-full accent-[#1db954]"
-            />
-            <div className="flex items-center justify-between text-xs text-white/70">
-              <span>{formatTime(displayedTime)}</span>
-              <span>{formatTime(total)}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between text-xl">
-            <button
-              onClick={toggleShuffle}
-              className={`transition ${
-                shuffle ? "text-[#1db954]" : "text-white/60"
-              }`}
-            >
-              <FaShuffle />
-            </button>
-            <button onClick={playPrev} className="text-white/80">
-              <FaBackwardStep />
-            </button>
-            <button
-              onClick={togglePlay}
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-[#1db954] text-2xl text-black shadow-xl shadow-[#1db954]/40"
-            >
-              {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
-            </button>
-            <button onClick={playNext} className="text-white/80">
-              <FaForwardStep />
-            </button>
-            <button
-              onClick={toggleRepeatMode}
-              className={`relative transition ${
-                repeatMode !== "off" ? "text-[#1db954]" : "text-white/60"
-              }`}
-            >
-              <span className="relative inline-flex">
-                <FaRepeat />
-                {repeatMode === "one" && (
-                  <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
-                    1
-                  </span>
+           <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
+          {/* LEFT */}
+          <div
+            className={`flex flex-col gap-6 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_30px_80px_rgba(0,0,0,0.35)] sm:p-8 ${songSlideClass}`}
+          >
+            <div className="flex flex-col items-center gap-5">
+              <div className="h-56 w-56 overflow-hidden rounded-full bg-white/5 shadow-[0_25px_70px_rgba(0,0,0,0.55)] sm:h-72 sm:w-72">
+                {cover && (
+                  <img
+                    src={cover}
+                    alt={currentSong.title}
+                    className={`player-detail-disc h-full w-full object-cover ${
+                      isPlaying ? "is-playing" : ""
+                    }`}
+                  />
                 )}
-              </span>
-            </button>
-          </div>
-        </div>
-        <div
-          className={`hidden grid-cols-1 lg:grid-cols-[360px_520px_360px] gap-10 items-start sm:grid ${songSlideClass}`}
-        >
-          {/* PLAYED */}
-          <div className="hidden lg:block">
-            <div className="mb-4 text-sm tracking-widest opacity-60">
-              ĐÃ PHÁT
-            </div>
-            <div className="flex gap-6 justify-end">
-              {played.length ? (
-                played.map((s, idx) => {
-                  const sCover = resolveAssetUrl(
-                    s.cover || s.cover_url || s.image
-                  );
-                  const realIndex = queue.findIndex((q) => q === s);
-                  return (
-                    <div
-                      key={s.id || idx}
-                      className="w-[150px] cursor-pointer hover:scale-[1.04] transition"
-                      onClick={() => playAt(realIndex)}
-                    >
-                      <div className="w-[150px] h-[150px] rounded-xl overflow-hidden bg-white/5 shadow-lg">
-                        {sCover && (
-                          <img
-                            src={sCover}
-                            alt={s.title}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                      </div>
-                      <div className="mt-2 text-sm font-semibold line-clamp-2 text-right">
-                        {s.title}
-                      </div>
-                      <div className="text-xs opacity-70 line-clamp-1 text-right">
-                        {s.artist?.name || s.artist_name || ""}
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-sm opacity-50">Chưa có bài trước đó</div>
-              )}
-            </div>
-          </div>
+              </div>
 
-          {/* MAIN */}
-          <div className="flex flex-col items-center">
-            <div className="h-56 w-56 overflow-hidden rounded-full bg-white/5 shadow-[0_25px_70px_rgba(0,0,0,0.55)] sm:h-72 sm:w-72 lg:h-[360px] lg:w-[360px]">
-              {cover && (
-                <img
-                  src={cover}
-                  alt={currentSong.title}
-                  className={`player-detail-disc h-full w-full object-cover ${
-                    isPlaying ? "is-playing" : ""
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const songId = normalizeSongId(currentSong);
+                    if (songId) toggleLike(songId);
+                  }}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${
+                    likedSongIds.includes(normalizeSongId(currentSong))
+                      ? "border-[#1db954] text-[#1db954] bg-[#1db954]/10"
+                      : "border-white/10 text-white/80 bg-white/5"
                   }`}
-                />
-              )}
+                 aria-label="Yêu thích"
+                >
+                  <FiHeart />
+                </button>
+                <span className="text-sm text-white/60">
+                  {likedSongIds.includes(normalizeSongId(currentSong))
+                    ? "Đã thích"
+                    : "Thích"}
+                </span>
+              </div>
             </div>
 
-            <h2 className="mt-4 text-xl font-semibold text-center sm:mt-6 sm:text-3xl">
-              {currentSong.title}
-            </h2>
-            <p className="mt-1 text-xs opacity-70 text-center sm:text-sm">
-              {currentSong.artist?.name || currentSong.artist_name || "Unknown"}
-            </p>
-          </div>
-
-          {/* UPCOMING */}
-          <div className="hidden lg:block">
-            <div className="mb-4 text-sm tracking-widest opacity-60">
-              TIẾP THEO
+            <div className="space-y-2">
+              <input
+                type="range"
+                min={0}
+                max={total || 0}
+                step={0.1}
+                value={Math.min(displayedTime, total || 0)}
+                onMouseDown={onSeekStart}
+                onTouchStart={onSeekStart}
+                onChange={onSeekChange}
+                onMouseUp={onSeekCommit}
+                onTouchEnd={onSeekCommit}
+                className="h-2 w-full accent-[#1db954]"
+              />
+              <div className="flex items-center justify-between text-xs text-white/70">
+                <span>{formatTime(displayedTime)}</span>
+                <span>{formatTime(total)}</span>
+              </div>
             </div>
-            <div className="flex gap-6 justify-start">
-              {upcoming.map((s, idx) => {
-                const sCover = resolveAssetUrl(
-                  s.cover || s.cover_url || s.image
-                );
-                const realIndex = queue.findIndex((q) => q === s);
+        
 
-                return (
-                  <div
-                    key={s.id || idx}
-                    className="w-[150px] cursor-pointer hover:scale-[1.04] transition"
-                    onClick={() => playAt(realIndex)}
-                  >
-                    <div className="w-[150px] h-[150px] rounded-xl overflow-hidden bg-white/5 shadow-lg">
-                      {sCover && (
-                        <img
-                          src={sCover}
-                          alt={s.title}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                    </div>
-                    <div className="mt-2 text-sm font-semibold line-clamp-2">
-                      {s.title}
-                    </div>
-                    <div className="text-xs opacity-70 line-clamp-1">
-                      {s.artist?.name || s.artist_name || ""}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-        {/* CONTROLS */}
-        <div className="mt-6 hidden sm:block sm:mt-12">
-          {/* SEEK */}
-          <div className="flex items-center gap-4">
-            <span className="w-10 text-right text-xs opacity-70">
-              {formatTime(displayedTime)}
-            </span>
-
-            <input
-              type="range"
-              min={0}
-              max={total || 0}
-              step={0.1}
-              value={Math.min(displayedTime, total || 0)}
-              onMouseDown={onSeekStart}
-              onTouchStart={onSeekStart}
-              onChange={onSeekChange}
-              onMouseUp={onSeekCommit}
-              onTouchEnd={onSeekCommit}
-              className="flex-1 h-2 accent-[#1db954]"
-            />
-
-            <span className="w-10 text-xs opacity-70">{formatTime(total)}</span>
-          </div>
-
-          {/* BUTTONS */}
-          <div className="mt-6 relative flex flex-col items-center sm:mt-10 sm:ml-14 lg:flex-row">
-            <div className="flex items-center justify-center gap-6 sm:gap-8 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
+          <div className="flex items-center justify-center gap-5 text-xl sm:text-2xl">
               <button
                 onClick={toggleShuffle}
                 className={`transition ${
-                  shuffle ? "text-[#1db954]" : "opacity-70"
+                  shuffle ? "text-[#1db954]" : "text-white/60"
                 }`}
               >
                 <FaShuffle />
               </button>
 
-              <button onClick={playPrev}>
-                <FaBackwardStep size={20} />
+             <button onClick={playPrev} className="text-white/80">
+                <FaBackwardStep />
               </button>
-
               <button
                 onClick={togglePlay}
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1db954] text-black shadow-xl shadow-[#1db954]/40 hover:bg-[#1ed760] sm:h-14 sm:w-14"
+                className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1db954] text-2xl text-black shadow-xl shadow-[#1db954]/40"
               >
-                {isPlaying ? <FaPause /> : <FaPlay />}
+                {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
               </button>
 
-              <button onClick={playNext}>
-                <FaForwardStep size={20} />
+               <button onClick={playNext} className="text-white/80">
+                <FaForwardStep />
               </button>
-
               <button
                 onClick={toggleRepeatMode}
                 className={`relative transition ${
-                  repeatMode !== "off" ? "text-[#1db954]" : "opacity-70"
+                 repeatMode !== "off" ? "text-[#1db954]" : "text-white/60"
                 }`}
               >
-                <FaRepeat />
-                {repeatMode === "one" && (
-                  <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
-                    1
-                  </span>
-                )}
+                 <span className="relative inline-flex">
+                  <FaRepeat />
+                  {repeatMode === "one" && (
+                    <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
+                      1
+                    </span>
+                  )}
+                </span>
               </button>
             </div>
 
-            <div className="hidden items-center gap-2 sm:flex lg:absolute lg:right-0">
+            <div className="flex items-center justify-center gap-3">
               <button
                 onClick={toggleMute}
                 className="text-lg opacity-70 hover:opacity-100 transition"
@@ -529,9 +434,167 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 step={0.01}
                 value={muted ? 0 : volume}
                 onChange={(e) => handleVolumeChange(e.target.value)}
-                className="h-2 w-32 accent-[#1db954]"
+                className="h-2 w-40 accent-[#1db954]"
               />
             </div>
+          </div>
+          {/* RIGHT */}
+          <div className="flex flex-col rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6">
+            <div className="flex items-center gap-2 rounded-full bg-white/5 p-1">
+              {[
+                { id: "queue", label: "Danh sách phát" },
+                { id: "lyrics", label: "Lời bài hát" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold transition sm:text-sm ${
+                    activeTab === tab.id
+                      ? "bg-white text-black"
+                      : "text-white/70 hover:text-white"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {activeTab === "queue" && (
+              <div className="mt-5 space-y-6">
+                <div>
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+                    Đã phát
+                  </div>
+                  {played.length ? (
+                    <div className="space-y-3">
+                      {played.map((song, idx) => {
+                        const sCover = resolveAssetUrl(
+                          song.cover || song.cover_url || song.image
+                        );
+                        const realIndex = queue.findIndex((q) => q === song);
+                        return (
+                          <button
+                            key={song.id || idx}
+                            type="button"
+                            onClick={() => playAt(realIndex)}
+                            className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/5 px-3 py-2 text-left transition hover:border-white/20"
+                          >
+                            <div className="h-12 w-12 overflow-hidden rounded-xl bg-white/5">
+                              {sCover && (
+                                <img
+                                  src={sCover}
+                                  alt={song.title}
+                                  className="h-full w-full object-cover"
+                                />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold line-clamp-1">
+                                {song.title}
+                              </div>
+                              <div className="text-xs text-white/60 line-clamp-1">
+                                {song.artist?.name || song.artist_name || ""}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-white/50">Chưa có bài trước đó</p>
+                  )}
+                </div>
+
+                <div>
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+                    Tiếp theo
+                  </div>
+                  {upcoming.length ? (
+                    <div className="space-y-3">
+                      {upcoming.map((song, idx) => {
+                        const sCover = resolveAssetUrl(
+                          song.cover || song.cover_url || song.image
+                        );
+                        const realIndex = queue.findIndex((q) => q === song);
+                        return (
+                          <button
+                            key={song.id || idx}
+                            type="button"
+                            onClick={() => playAt(realIndex)}
+                            className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/5 px-3 py-2 text-left transition hover:border-white/20"
+                          >
+                            <div className="h-12 w-12 overflow-hidden rounded-xl bg-white/5">
+                              {sCover && (
+                                <img
+                                  src={sCover}
+                                  alt={song.title}
+                                  className="h-full w-full object-cover"
+                                />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold line-clamp-1">
+                                {song.title}
+                              </div>
+                              <div className="text-xs text-white/60 line-clamp-1">
+                                {song.artist?.name || song.artist_name || ""}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-white/50">Chưa có bài tiếp theo</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "lyrics" && (
+              <div className="mt-5 flex min-h-[320px] flex-1 flex-col">
+                {lyricsState.loading && (
+                  <p className="text-sm text-white/60">Đang tải lời bài hát...</p>
+                )}
+                {lyricsState.error && (
+                  <p className="text-sm text-red-300">{lyricsState.error}</p>
+                )}
+                {!lyricsState.loading &&
+                  !lyricsState.error &&
+                  lyricsState.items.length === 0 && (
+                    <p className="text-sm text-white/50">
+                      Bài hát chưa có lời.
+                    </p>
+                  )}
+
+                {!lyricsState.loading &&
+                  !lyricsState.error &&
+                  lyricsState.items.length > 0 && (
+                    <div
+                      ref={lyricsContainerRef}
+                      className="mt-1 flex-1 space-y-3 overflow-y-auto pr-2 text-sm leading-relaxed text-white/70"
+                    >
+                      {lyricsState.items.map((item, index) => {
+                        const isActive = index === lyricIndex;
+                        return (
+                          <p
+                            key={item.id || index}
+                            data-lyric-index={index}
+                            className={`transition ${
+                              isActive
+                                ? "text-base font-semibold text-white"
+                                : "text-white/60"
+                            }`}
+                          >
+                            {item.text}
+                          </p>
+                        );
+                      })}
+                    </div>
+                  )}
+              </div>
+            )}
           </div>
         </div>
       </div>

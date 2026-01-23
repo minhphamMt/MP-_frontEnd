@@ -21,6 +21,8 @@ export const uploadSongAudio = (id, payload) =>
   api.post(`/songs/${id}/audio`, payload, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+export const getSongLyrics = (id, params = {}) =>
+  api.get(`/songs/${id}/lyrics`, { params });
 export const recordSongPlay = (id, duration) =>
   api.post(`/songs/${id}/play`, { duration });
 export const getLikedSongs = () =>
