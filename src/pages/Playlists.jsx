@@ -20,7 +20,7 @@ import { getSongById } from "../api/song.api";
 import ArtistFollowSection from "../components/playlists/ArtistFollowSection";
 import LikedSongsSection from "../components/playlists/LikedSongsSection";
 import AlbumCard from "../components/album/AlbumCard";
-import PlaylistCard from "../components/playlists/PlaylistCard";
+import PlaylistGrid from "../components/playlists/PlaylistGrid";
 import Toast from "../components/common/Toast";
 import { resolveAssetUrl } from "../utils/asset";
 const getData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
@@ -528,18 +528,12 @@ setToastTitle("Thành công");
             Đang tải playlist...
           </div>
         ) : playlists.length ? (
-          <div
-            ref={playlistListRef}
-            className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
-          >
-            {visiblePlaylists.map((playlist) => (
-              <PlaylistCard
-                key={playlist.id || playlist.title}
-                playlist={playlist}
-                onOpen={(pl) => pl?.id && navigate(`/playlists/${pl.id}`)}
-                variant="library"
-              />
-            ))}
+           <div ref={playlistListRef}>
+            <PlaylistGrid
+              playlists={visiblePlaylists}
+              onOpen={(pl) => pl?.id && navigate(`/playlists/${pl.id}`)}
+              variant="library"
+            />
           </div>
         ) : (
           <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">

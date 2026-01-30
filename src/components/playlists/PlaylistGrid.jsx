@@ -17,7 +17,7 @@ export default function PlaylistGrid({
         isRowLayout
            ? "flex gap-4 overflow-x-auto pb-2 sm:gap-5 scrollbar-hidden"
           : isLibrary
-            ? "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+            ? "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
             : "grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 sm:gap-5"
       }
     >

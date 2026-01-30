@@ -240,6 +240,24 @@ export default function PlayerDetail({ isOpen, onClose }) {
     currentSong.cover || currentSong.cover_url || currentSong.image
   );
 
+  const likeButton = (
+    <button
+      type="button"
+      onClick={() => {
+        const songId = normalizeSongId(currentSong);
+        if (songId) toggleLike(songId);
+      }}
+      className={`flex h-10 w-10 items-center justify-center rounded-full border ring-1 ring-white/5 transition active:scale-95 ${
+        likedSongIds.includes(normalizeSongId(currentSong))
+          ? "border-[#1db954] text-[#1db954] bg-[#1db954]/10"
+          : "border-white/10 text-white/80 bg-white/5 hover:bg-white/10"
+      }`}
+      aria-label="Yêu thích"
+    >
+      <FiHeart />
+    </button>
+  );
+
   const animateClass =
     phase === "enter"
       ? "player-detail-anim-in"
@@ -259,166 +277,156 @@ export default function PlayerDetail({ isOpen, onClose }) {
     >
       {/* ✅ ONLY THIS part scrolls (not the whole overlay) */}
       <div className="min-h-0 flex-1 overflow-y-auto pr-1 lg:pr-0">
-        {/* Album */}
-        <div className="flex flex-col items-center gap-5">
-        <div className="relative w-full">
-            <div className="relative hidden w-full items-center justify-center overflow-hidden rounded-3xl bg-black/30 shadow-[0_25px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/10 lg:flex lg:h-72 xl:h-80">
-              {cover && (
-                <img
-                  src={cover}
-                  alt={currentSong.title}
-                  className="h-full w-full object-contain"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/80" />
-            </div>
-
-            <div className="relative flex items-center justify-center lg:hidden">
-              <div className="h-52 w-52 overflow-hidden rounded-full bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.60)] ring-1 ring-white/10 sm:h-60 sm:w-60">
+        <div className="flex min-h-full flex-col justify-between gap-6">
+          {/* Album */}
+          <div className="flex flex-col items-center gap-5">
+            <div className="relative w-full">
+              <div className="relative hidden w-full items-center justify-center overflow-hidden rounded-3xl bg-black/30 shadow-[0_25px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/10 lg:flex lg:h-72 xl:h-80">
                 {cover && (
                   <img
                     src={cover}
                     alt={currentSong.title}
-                    className={`player-detail-disc h-full w-full object-cover ${
-                      isPlaying ? "is-playing" : ""
-                    }`}
+                   className="h-full w-full object-contain"
                   />
                 )}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/80" />
               </div>
 
-              {/* subtle glow */}
-              <div
-                className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-2xl opacity-40"
-                style={{
-                  background:
-                    "radial-gradient(circle, rgba(29,185,84,.35), transparent 60%)",
-                }}
+             <div className="relative flex items-center justify-center lg:hidden">
+                <div className="h-52 w-52 overflow-hidden rounded-full bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.60)] ring-1 ring-white/10 sm:h-60 sm:w-60">
+                  {cover && (
+                    <img
+                      src={cover}
+                      alt={currentSong.title}
+                      className={`player-detail-disc h-full w-full object-cover ${
+                        isPlaying ? "is-playing" : ""
+                      }`}
+                    />
+                  )}
+                </div>
+
+                {/* subtle glow */}
+                <div
+                  className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-2xl opacity-40"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(29,185,84,.35), transparent 60%)",
+                  }}
+                />
+              </div>
+        </div>
+
+        <div className="flex lg:hidden">{likeButton}</div>
+          </div>
+
+         {/* Seek */}
+          <div className="space-y-2">
+            {/* Seek bar */}
+            <div className="px-4 sm:px-6">
+              <input
+                type="range"
+                min={0}
+                max={total || 0}
+                step={0.1}
+                value={Math.min(displayedTime, total || 0)}
+                onMouseDown={onSeekStart}
+                onTouchStart={onSeekStart}
+                onChange={onSeekChange}
+                onMouseUp={onSeekCommit}
+                onTouchEnd={onSeekCommit}
+                className="h-2 w-full cursor-pointer accent-[#1db954]"
               />
             </div>
-          </div>
-        </div>
 
-        {/* Seek */}
-        <div className="space-y-2">
-          {/* Seek bar */}
-          <div className="px-4 sm:px-6">
-            <input
-              type="range"
-              min={0}
-              max={total || 0}
-              step={0.1}
-              value={Math.min(displayedTime, total || 0)}
-              onMouseDown={onSeekStart}
-              onTouchStart={onSeekStart}
-              onChange={onSeekChange}
-              onMouseUp={onSeekCommit}
-              onTouchEnd={onSeekCommit}
-              className="h-2 w-full cursor-pointer accent-[#1db954]"
-            />
-          </div>
-
-          {/* Time */}
-          <div className="flex items-center justify-between px-4 sm:px-6 text-[11px] text-white/60 sm:text-xs">
-            <span>{formatTime(displayedTime)}</span>
-            <span>{formatTime(total)}</span>
-          </div>
-        </div>
-
-        <div className="mt-2 flex flex-col items-center gap-4 lg:gap-6">
-          <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-6">
-            <button
-               type="button"
-              onClick={() => {
-                const songId = normalizeSongId(currentSong);
-                if (songId) toggleLike(songId);
-              }}
-              className={`flex h-10 w-10 items-center justify-center rounded-full border ring-1 ring-white/5 transition active:scale-95 ${
-                likedSongIds.includes(normalizeSongId(currentSong))
-                  ? "border-[#1db954] text-[#1db954] bg-[#1db954]/10"
-                  : "border-white/10 text-white/80 bg-white/5 hover:bg-white/10"
-              }`}
-              aria-label="Yêu thích"
-            >
-              <FiHeart />
-            </button>
-
-            {/* Controls */}
-            <div className="flex items-center justify-center gap-5 text-xl sm:text-2xl">
-              <button
-                onClick={toggleShuffle}
-                className={`transition hover:opacity-100 ${
-                  shuffle
-                    ? "text-[#1db954]"
-                    : "text-white/55 hover:text-white/80"
-                }`}
-                aria-label="Trộn"
-              >
-                <FaShuffle />
-              </button>
-
-              <button
-                onClick={playPrev}
-                className="text-white/75 transition hover:text-white"
-                aria-label="Bài trước"
-              >
-                <FaBackwardStep />
-              </button>
-
-              <button
-                onClick={togglePlay}
-                className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1db954] text-2xl text-black shadow-[0_0_45px_rgba(29,185,84,0.55)] transition active:scale-95 sm:h-16 sm:w-16"
-                aria-label="Phát/Tạm dừng"
-              >
-                {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
-              </button>
-
-              <button
-                onClick={playNext}
-                className="text-white/75 transition hover:text-white"
-                aria-label="Bài tiếp"
-              >
-                <FaForwardStep />
-              </button>
-
-              <button
-                onClick={toggleRepeatMode}
-                className={`relative transition hover:opacity-100 ${
-                  repeatMode !== "off"
-                    ? "text-[#1db954]"
-                    : "text-white/55 hover:text-white/80"
-                }`}
-                aria-label="Lặp"
-              >
-                <span className="relative inline-flex">
-                  <FaRepeat />
-                  {repeatMode === "one" && (
-                    <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
-                      1
-                    </span>
-                  )}
-                </span>
-              </button>
+        {/* Time */}
+            <div className="flex items-center justify-between px-4 sm:px-6 text-[11px] text-white/60 sm:text-xs">
+              <span>{formatTime(displayedTime)}</span>
+              <span>{formatTime(total)}</span>
             </div>
           </div>
 
-        {/* Volume */}
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={toggleMute}
-              className="text-lg opacity-70 transition hover:opacity-100"
-              aria-label="Tắt/Mở tiếng"
-            >
-              {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
-            </button>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={muted ? 0 : volume}
-              onChange={(e) => handleVolumeChange(e.target.value)}
-              className="h-2 w-32 cursor-pointer accent-[#1db954] sm:w-40"
-            />
+        <div className="mt-2 flex flex-col items-center gap-4 lg:gap-6">
+            <div className="flex w-full items-center justify-center gap-4 lg:justify-between lg:gap-6">
+              <div className="hidden lg:flex">{likeButton}</div>
+
+              {/* Controls */}
+              <div className="flex flex-1 items-center justify-center gap-5 text-xl sm:text-2xl">
+                <button
+                  onClick={toggleShuffle}
+                  className={`transition hover:opacity-100 ${
+                    shuffle
+                      ? "text-[#1db954]"
+                      : "text-white/55 hover:text-white/80"
+                  }`}
+                  aria-label="Trộn"
+                >
+                  <FaShuffle />
+                </button>
+
+                <button
+                  onClick={playPrev}
+                  className="text-white/75 transition hover:text-white"
+                  aria-label="Bài trước"
+                >
+                  <FaBackwardStep />
+                </button>
+
+                <button
+                  onClick={togglePlay}
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1db954] text-2xl text-black shadow-[0_0_45px_rgba(29,185,84,0.55)] transition active:scale-95 sm:h-16 sm:w-16"
+                  aria-label="Phát/Tạm dừng"
+                >
+                  {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
+                </button>
+
+                <button
+                  onClick={playNext}
+                  className="text-white/75 transition hover:text-white"
+                  aria-label="Bài tiếp"
+                >
+                  <FaForwardStep />
+                </button>
+
+                <button
+                  onClick={toggleRepeatMode}
+                  className={`relative transition hover:opacity-100 ${
+                    repeatMode !== "off"
+                      ? "text-[#1db954]"
+                      : "text-white/55 hover:text-white/80"
+                  }`}
+                  aria-label="Lặp"
+                >
+                  <span className="relative inline-flex">
+                    <FaRepeat />
+                    {repeatMode === "one" && (
+                      <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
+                        1
+                      </span>
+                    )}
+                  </span>
+                </button>
+              </div>
+
+              {/* Volume */}
+              <div className="hidden items-center justify-center gap-3 lg:flex">
+                <button
+                  onClick={toggleMute}
+                  className="text-lg opacity-70 transition hover:opacity-100"
+                  aria-label="Tắt/Mở tiếng"
+                >
+                  {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
+                </button>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={muted ? 0 : volume}
+                  onChange={(e) => handleVolumeChange(e.target.value)}
+                  className="h-2 w-32 cursor-pointer accent-[#1db954] sm:w-40"
+                />
+              </div>
+            </div>
           </div>
       </div>
       </div>
