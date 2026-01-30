@@ -120,8 +120,8 @@ export default function PlayerDetailLyrics({
                     group block w-full rounded-2xl px-3 py-2 text-left transition
                     ${
                       isLineActive
-                        ? "bg-white/15 text-white ring-1 ring-white/20 shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
-                        : "text-white/60 hover:bg-white/5 hover:text-white/85"
+                        ? "text-white"
+                        : "text-white/60 hover:text-white/85"
                     }
                   `}
                 >

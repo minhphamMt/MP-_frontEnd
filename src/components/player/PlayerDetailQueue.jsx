@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { resolveAssetUrl } from "../../utils/asset";
 
-export default function PlayerDetailQueue({ queue, currentIndex, playAt }) {
+function PlayerDetailQueue({ queue, currentIndex, playAt }) {
   const played = useMemo(() => {
     const list = queue || [];
     if (currentIndex <= 0) return [];
@@ -98,3 +98,4 @@ export default function PlayerDetailQueue({ queue, currentIndex, playAt }) {
     </div>
   );
 }
+export default memo(PlayerDetailQueue);
