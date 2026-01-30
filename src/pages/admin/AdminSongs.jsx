@@ -81,6 +81,7 @@ export default function AdminSongs() {
       setSongs((prev) =>
         prev.map((item) => (item.id === song.id ? updated : item))
       );
+      await loadSongs();
     } catch (error) {
       console.error("Approve song failed", error);
       alert("Không thể duyệt bài hát.");
@@ -96,6 +97,7 @@ export default function AdminSongs() {
       setSongs((prev) =>
         prev.map((item) => (item.id === song.id ? updated : item))
       );
+      await loadSongs();
     } catch (error) {
       console.error("Reject song failed", error);
       alert("Không thể từ chối bài hát.");

@@ -261,27 +261,37 @@ export default function PlayerDetail({ isOpen, onClose }) {
       <div className="min-h-0 flex-1 overflow-y-auto pr-1 lg:pr-0">
         {/* Album + like */}
         <div className="flex flex-col items-center gap-5">
-          <div className="relative">
-            <div className="h-44 w-44 overflow-hidden rounded-full bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.60)] ring-1 ring-white/10 sm:h-56 sm:w-56 lg:h-72 lg:w-72">
-              {cover && (
-                <img
-                  src={cover}
-                  alt={currentSong.title}
-                  className={`player-detail-disc h-full w-full object-cover ${
-                    isPlaying ? "is-playing" : ""
-                  }`}
-                />
-              )}
+         <div className="relative w-full">
+            <div className="relative hidden w-full overflow-hidden rounded-3xl bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/10 lg:block">
+              <div
+                className="h-56 w-full bg-cover bg-center"
+                style={{ backgroundImage: cover ? `url(${cover})` : "none" }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/80" />
             </div>
 
-            {/* subtle glow */}
-            <div
-              className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-2xl opacity-40"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(29,185,84,.35), transparent 60%)",
-              }}
-            />
+           <div className="relative lg:hidden">
+              <div className="h-44 w-44 overflow-hidden rounded-full bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.60)] ring-1 ring-white/10 sm:h-56 sm:w-56 lg:h-72 lg:w-72">
+                {cover && (
+                  <img
+                    src={cover}
+                    alt={currentSong.title}
+                    className={`player-detail-disc h-full w-full object-cover ${
+                      isPlaying ? "is-playing" : ""
+                    }`}
+                  />
+                )}
+              </div>
+
+              {/* subtle glow */}
+              <div
+                className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-2xl opacity-40"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(29,185,84,.35), transparent 60%)",
+                }}
+              />
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -334,81 +344,83 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="mt-2 flex items-center justify-center gap-5 text-xl sm:text-2xl">
-          <button
-            onClick={toggleShuffle}
-            className={`transition hover:opacity-100 ${
-              shuffle ? "text-[#1db954]" : "text-white/55 hover:text-white/80"
-            }`}
-            aria-label="Trộn"
-          >
-            <FaShuffle />
-          </button>
+        <div className="mt-2 flex flex-col items-center gap-4 lg:flex-row lg:justify-center lg:gap-6">
+          {/* Controls */}
+          <div className="flex items-center justify-center gap-5 text-xl sm:text-2xl">
+            <button
+              onClick={toggleShuffle}
+              className={`transition hover:opacity-100 ${
+                shuffle ? "text-[#1db954]" : "text-white/55 hover:text-white/80"
+              }`}
+              aria-label="Trộn"
+            >
+              <FaShuffle />
+            </button>
 
-          <button
-            onClick={playPrev}
-            className="text-white/75 transition hover:text-white"
-            aria-label="Bài trước"
-          >
-            <FaBackwardStep />
-          </button>
+            <button
+              onClick={playPrev}
+              className="text-white/75 transition hover:text-white"
+              aria-label="Bài trước"
+            >
+              <FaBackwardStep />
+            </button>
 
-          <button
-            onClick={togglePlay}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1db954] text-2xl text-black shadow-[0_0_45px_rgba(29,185,84,0.55)] transition active:scale-95 sm:h-16 sm:w-16"
-            aria-label="Phát/Tạm dừng"
-          >
-            {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
-          </button>
+            <button
+              onClick={togglePlay}
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1db954] text-2xl text-black shadow-[0_0_45px_rgba(29,185,84,0.55)] transition active:scale-95 sm:h-16 sm:w-16"
+              aria-label="Phát/Tạm dừng"
+            >
+              {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
+            </button>
 
-          <button
-            onClick={playNext}
-            className="text-white/75 transition hover:text-white"
-            aria-label="Bài tiếp"
-          >
-            <FaForwardStep />
-          </button>
+            <button
+              onClick={playNext}
+              className="text-white/75 transition hover:text-white"
+              aria-label="Bài tiếp"
+            >
+              <FaForwardStep />
+            </button>
 
-          <button
-            onClick={toggleRepeatMode}
-            className={`relative transition hover:opacity-100 ${
-              repeatMode !== "off"
-                ? "text-[#1db954]"
-                : "text-white/55 hover:text-white/80"
-            }`}
-            aria-label="Lặp"
-          >
-            <span className="relative inline-flex">
-              <FaRepeat />
-              {repeatMode === "one" && (
-                <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
-                  1
-                </span>
-              )}
-            </span>
-          </button>
-        </div>
+            <button
+              onClick={toggleRepeatMode}
+              className={`relative transition hover:opacity-100 ${
+                repeatMode !== "off"
+                  ? "text-[#1db954]"
+                  : "text-white/55 hover:text-white/80"
+              }`}
+              aria-label="Lặp"
+            >
+              <span className="relative inline-flex">
+                <FaRepeat />
+                {repeatMode === "one" && (
+                  <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
+                    1
+                  </span>
+                )}
+              </span>
+            </button>
+          </div>
 
         {/* Volume */}
-        <div className="mt-2 flex items-center justify-center gap-3">
-          <button
-            onClick={toggleMute}
-            className="text-lg opacity-70 transition hover:opacity-100"
-            aria-label="Tắt/Mở tiếng"
-          >
-            {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
-          </button>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={muted ? 0 : volume}
-            onChange={(e) => handleVolumeChange(e.target.value)}
-            className="h-2 w-40 cursor-pointer accent-[#1db954]"
-          />
-        </div>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={toggleMute}
+              className="text-lg opacity-70 transition hover:opacity-100"
+              aria-label="Tắt/Mở tiếng"
+            >
+              {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={muted ? 0 : volume}
+              onChange={(e) => handleVolumeChange(e.target.value)}
+              className="h-2 w-32 cursor-pointer accent-[#1db954] sm:w-40"
+            />
+          </div>
+      </div>
       </div>
     </div>
   );
@@ -450,7 +462,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       {/* CONTENT */}
       {/* ✅ h-full + min-h-0 để flex con không “lèm” */}
       <div className="relative z-10 h-full w-full overflow-hidden">
-        <div className="relative mx-auto flex h-full w-full min-h-0 max-w-[1320px] flex-col px-3 pt-4 sm:px-6 sm:pt-8 overflow-hidden">
+        <div className="relative mx-auto flex h-full w-full min-h-0 max-w-[1320px] flex-col px-3 pt-4 pb-6 sm:px-6 sm:pt-8 sm:pb-8 overflow-hidden">
           {/* Close button */}
           <button
             onClick={onClose}
@@ -485,7 +497,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* Main grid */}
           {/* Desktop layout */}
-          <div className="mt-6 hidden min-h-0 flex-1 gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] overflow-hidden">
+          <div className="mt-6 hidden min-h-0 flex-1 gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_450px] xl:grid-cols-[minmax(0,1fr)_420px] overflow-hidden">
             {detailPanel}
 
             {/* RIGHT */}
@@ -600,7 +612,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
                     <PlayerDetailLyrics
                       currentSong={currentSong}
                       displayedTime={displayedTime}
-                      isActive
+                      isActive={mobileTab === "lyrics"}
                       onSeek={doSeek}
                     />
                   </div>
