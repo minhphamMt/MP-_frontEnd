@@ -10,12 +10,12 @@ export default function PlayerDetailQueue({ queue, currentIndex, playAt }) {
 
   const upcoming = useMemo(() => {
     const list = queue || [];
-    const next = list.slice(currentIndex + 1, currentIndex + 4);
+    const next = list.slice(currentIndex + 1, currentIndex + 10);
     if (next.length) return next;
     return list.filter((_, i) => i !== currentIndex).slice(0, 3);
   }, [queue, currentIndex]);
 
-  const Item = ({ song, idx, label }) => {
+  const Item = ({ song, idx, label, isPlayed }) => {
     const sCover = resolveAssetUrl(song.cover || song.cover_url || song.image);
     const realIndex = queue.findIndex((q) => q === song);
     const isCurrent = realIndex === currentIndex;
@@ -33,6 +33,7 @@ export default function PlayerDetailQueue({ queue, currentIndex, playAt }) {
               ? "border-[#1db954]/60 bg-[#1db954]/10 shadow-[0_0_30px_rgba(29,185,84,0.2)]"
               : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
           }
+          ${isPlayed ? "opacity-45" : ""}
         `}
       >
         <div className="h-12 w-12 overflow-hidden rounded-xl bg-white/10 ring-1 ring-white/10">
@@ -71,21 +72,13 @@ export default function PlayerDetailQueue({ queue, currentIndex, playAt }) {
 
   return (
     <div className="mt-5 flex-1 min-h-0 space-y-7 overflow-y-auto pr-1">
-      <div>
-        <div className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
-          Đã phát
+      {played.length ? (
+        <div className="space-y-3">
+          {played.map((song, idx) => (
+            <Item key={song.id || idx} song={song} idx={idx} isPlayed />
+          ))}
         </div>
-
-        {played.length ? (
-          <div className="space-y-3">
-            {played.map((song, idx) => (
-              <Item key={song.id || idx} song={song} idx={idx} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-white/50">Chưa có bài trước đó</p>
-        )}
-      </div>
+) : null}
 
       <div>
         <div className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-white/60">

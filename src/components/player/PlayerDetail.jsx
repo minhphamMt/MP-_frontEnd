@@ -51,12 +51,15 @@ export default function PlayerDetail({ isOpen, onClose }) {
     toggleMute,
     likedSongIds,
     toggleLike,
+    appendRecommendationsToQueue,
+    recommendationLoading,
   } = usePlayerStore();
 
   const [activeTab, setActiveTab] = useState("queue");
   const [mobileTab, setMobileTab] = useState("now");
   const carouselRef = useRef(null);
   const scrollRafRef = useRef(null);
+  const lastRecommendationSeedRef = useRef(null);
 
   /* ================= animation ================= */
   const [mounted, setMounted] = useState(false);
@@ -83,6 +86,28 @@ export default function PlayerDetail({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
+  // ✅ Lock body scroll so overlay never scrolls the page behind
+  useEffect(() => {
+    if (!mounted) return;
+    if (typeof document === "undefined") return;
+
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+
+    if (isOpen) {
+      // avoid layout shift when scrollbar disappears
+      const scrollbarW =
+        window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      if (scrollbarW > 0) document.body.style.paddingRight = `${scrollbarW}px`;
+    }
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, [mounted, isOpen]);
+
   useEffect(() => {
     if (!mounted || !isOpen) return;
     if (typeof window === "undefined") return;
@@ -102,6 +127,32 @@ export default function PlayerDetail({ isOpen, onClose }) {
       }
     };
   }, []);
+
+  useEffect(() => {
+    const seedId = normalizeSongId(currentSong);
+    if (!seedId) return;
+    if (recommendationLoading) return;
+    if (queue.length > currentIndex + 1) return;
+    if (lastRecommendationSeedRef.current === seedId) return;
+
+    lastRecommendationSeedRef.current = seedId;
+    let active = true;
+    appendRecommendationsToQueue().then((appended) => {
+      if (!appended && active) {
+        lastRecommendationSeedRef.current = null;
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [
+    appendRecommendationsToQueue,
+    currentIndex,
+    currentSong,
+    queue.length,
+    recommendationLoading,
+  ]);
 
   const handleAnimEnd = () => {
     const p = phaseRef.current;
@@ -186,15 +237,15 @@ export default function PlayerDetail({ isOpen, onClose }) {
   if (!mounted || !currentSong) return null;
 
   const cover = resolveAssetUrl(
-    currentSong.cover || currentSong.cover_url || currentSong.image,
+    currentSong.cover || currentSong.cover_url || currentSong.image
   );
 
   const animateClass =
     phase === "enter"
       ? "player-detail-anim-in"
       : phase === "exit"
-        ? "player-detail-anim-out"
-        : "";
+      ? "player-detail-anim-out"
+      : "";
 
   const stableClass =
     phase === "open" || phase === "enter"
@@ -203,158 +254,161 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const detailPanel = (
     <div
-    className={`flex w-full min-h-0 flex-1 flex-col gap-6 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)] ring-1 ring-white/5 backdrop-blur-xl sm:p-8 ${songSlideClass} overflow-y-auto pr-1 lg:overflow-y-auto lg:pr-0`}
+      className={`flex w-full min-h-0 flex-1 flex-col gap-6 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)] ring-1 ring-white/5 backdrop-blur-xl sm:p-8 ${songSlideClass}
+      overflow-hidden`}
     >
-      {/* Album + like */}
-      <div className="flex flex-col items-center gap-5">
-        <div className="relative">
-          <div className="h-44 w-44 overflow-hidden rounded-full bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.60)] ring-1 ring-white/10 sm:h-56 sm:w-56 lg:h-72 lg:w-72">
-            {cover && (
-              <img
-                src={cover}
-                alt={currentSong.title}
-                className={`player-detail-disc h-full w-full object-cover ${
-                  isPlaying ? "is-playing" : ""
-                }`}
-              />
-            )}
+      {/* ✅ ONLY THIS part scrolls (not the whole overlay) */}
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1 lg:pr-0">
+        {/* Album + like */}
+        <div className="flex flex-col items-center gap-5">
+          <div className="relative">
+            <div className="h-44 w-44 overflow-hidden rounded-full bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.60)] ring-1 ring-white/10 sm:h-56 sm:w-56 lg:h-72 lg:w-72">
+              {cover && (
+                <img
+                  src={cover}
+                  alt={currentSong.title}
+                  className={`player-detail-disc h-full w-full object-cover ${
+                    isPlaying ? "is-playing" : ""
+                  }`}
+                />
+              )}
+            </div>
+
+            {/* subtle glow */}
+            <div
+              className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-2xl opacity-40"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(29,185,84,.35), transparent 60%)",
+              }}
+            />
           </div>
 
-          {/* subtle glow */}
-          <div
-            className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-2xl opacity-40"
-            style={{
-              background:
-                "radial-gradient(circle, rgba(29,185,84,.35), transparent 60%)",
-            }}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                const songId = normalizeSongId(currentSong);
+                if (songId) toggleLike(songId);
+              }}
+              className={`flex h-10 w-10 items-center justify-center rounded-full border ring-1 ring-white/5 transition active:scale-95 ${
+                likedSongIds.includes(normalizeSongId(currentSong))
+                  ? "border-[#1db954] text-[#1db954] bg-[#1db954]/10"
+                  : "border-white/10 text-white/80 bg-white/5 hover:bg-white/10"
+              }`}
+              aria-label="Yêu thích"
+            >
+              <FiHeart />
+            </button>
+            <span className="text-sm text-white/60">
+              {likedSongIds.includes(normalizeSongId(currentSong))
+                ? "Đã thích"
+                : "Thích"}
+            </span>
+          </div>
+        </div>
+
+        {/* Seek */}
+        <div className="space-y-2">
+          {/* Seek bar */}
+          <div className="px-4 sm:px-6">
+            <input
+              type="range"
+              min={0}
+              max={total || 0}
+              step={0.1}
+              value={Math.min(displayedTime, total || 0)}
+              onMouseDown={onSeekStart}
+              onTouchStart={onSeekStart}
+              onChange={onSeekChange}
+              onMouseUp={onSeekCommit}
+              onTouchEnd={onSeekCommit}
+              className="h-2 w-full cursor-pointer accent-[#1db954]"
+            />
+          </div>
+
+          {/* Time */}
+          <div className="flex items-center justify-between px-4 sm:px-6 text-[11px] text-white/60 sm:text-xs">
+            <span>{formatTime(displayedTime)}</span>
+            <span>{formatTime(total)}</span>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="mt-2 flex items-center justify-center gap-5 text-xl sm:text-2xl">
+          <button
+            onClick={toggleShuffle}
+            className={`transition hover:opacity-100 ${
+              shuffle ? "text-[#1db954]" : "text-white/55 hover:text-white/80"
+            }`}
+            aria-label="Trộn"
+          >
+            <FaShuffle />
+          </button>
+
+          <button
+            onClick={playPrev}
+            className="text-white/75 transition hover:text-white"
+            aria-label="Bài trước"
+          >
+            <FaBackwardStep />
+          </button>
+
+          <button
+            onClick={togglePlay}
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1db954] text-2xl text-black shadow-[0_0_45px_rgba(29,185,84,0.55)] transition active:scale-95 sm:h-16 sm:w-16"
+            aria-label="Phát/Tạm dừng"
+          >
+            {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
+          </button>
+
+          <button
+            onClick={playNext}
+            className="text-white/75 transition hover:text-white"
+            aria-label="Bài tiếp"
+          >
+            <FaForwardStep />
+          </button>
+
+          <button
+            onClick={toggleRepeatMode}
+            className={`relative transition hover:opacity-100 ${
+              repeatMode !== "off"
+                ? "text-[#1db954]"
+                : "text-white/55 hover:text-white/80"
+            }`}
+            aria-label="Lặp"
+          >
+            <span className="relative inline-flex">
+              <FaRepeat />
+              {repeatMode === "one" && (
+                <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
+                  1
+                </span>
+              )}
+            </span>
+          </button>
+        </div>
+
+        {/* Volume */}
+        <div className="mt-2 flex items-center justify-center gap-3">
+          <button
+            onClick={toggleMute}
+            className="text-lg opacity-70 transition hover:opacity-100"
+            aria-label="Tắt/Mở tiếng"
+          >
+            {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={muted ? 0 : volume}
+            onChange={(e) => handleVolumeChange(e.target.value)}
+            className="h-2 w-40 cursor-pointer accent-[#1db954]"
           />
         </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              const songId = normalizeSongId(currentSong);
-              if (songId) toggleLike(songId);
-            }}
-            className={`flex h-10 w-10 items-center justify-center rounded-full border ring-1 ring-white/5 transition active:scale-95 ${
-              likedSongIds.includes(normalizeSongId(currentSong))
-                ? "border-[#1db954] text-[#1db954] bg-[#1db954]/10"
-                : "border-white/10 text-white/80 bg-white/5 hover:bg-white/10"
-            }`}
-            aria-label="Yêu thích"
-          >
-            <FiHeart />
-          </button>
-          <span className="text-sm text-white/60">
-            {likedSongIds.includes(normalizeSongId(currentSong))
-              ? "Đã thích"
-              : "Thích"}
-          </span>
-        </div>
-      </div>
-
-      {/* Seek */}
-      <div className="space-y-2">
-  {/* Seek bar */}
-  <div className="px-4 sm:px-6">
-    <input
-      type="range"
-      min={0}
-      max={total || 0}
-      step={0.1}
-      value={Math.min(displayedTime, total || 0)}
-      onMouseDown={onSeekStart}
-      onTouchStart={onSeekStart}
-      onChange={onSeekChange}
-      onMouseUp={onSeekCommit}
-      onTouchEnd={onSeekCommit}
-      className="h-2 w-full cursor-pointer accent-[#1db954]"
-    />
-  </div>
-
-  {/* Time */}
-  <div className="flex items-center justify-between px-4 sm:px-6 text-[11px] text-white/60 sm:text-xs">
-    <span>{formatTime(displayedTime)}</span>
-    <span>{formatTime(total)}</span>
-  </div>
-</div>
-
-
-      {/* Controls */}
-      <div className="flex items-center justify-center gap-5 text-xl sm:text-2xl">
-        <button
-          onClick={toggleShuffle}
-          className={`transition hover:opacity-100 ${
-            shuffle ? "text-[#1db954]" : "text-white/55 hover:text-white/80"
-          }`}
-          aria-label="Trộn"
-        >
-          <FaShuffle />
-        </button>
-
-        <button
-          onClick={playPrev}
-          className="text-white/75 transition hover:text-white"
-          aria-label="Bài trước"
-        >
-          <FaBackwardStep />
-        </button>
-
-        <button
-          onClick={togglePlay}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1db954] text-2xl text-black shadow-[0_0_45px_rgba(29,185,84,0.55)] transition active:scale-95 sm:h-16 sm:w-16"
-          aria-label="Phát/Tạm dừng"
-        >
-          {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
-        </button>
-
-        <button
-          onClick={playNext}
-          className="text-white/75 transition hover:text-white"
-          aria-label="Bài tiếp"
-        >
-          <FaForwardStep />
-        </button>
-
-        <button
-          onClick={toggleRepeatMode}
-          className={`relative transition hover:opacity-100 ${
-            repeatMode !== "off"
-              ? "text-[#1db954]"
-              : "text-white/55 hover:text-white/80"
-          }`}
-          aria-label="Lặp"
-        >
-          <span className="relative inline-flex">
-            <FaRepeat />
-            {repeatMode === "one" && (
-              <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
-                1
-              </span>
-            )}
-          </span>
-        </button>
-      </div>
-
-      {/* Volume */}
-      <div className="flex items-center justify-center gap-3">
-        <button
-          onClick={toggleMute}
-          className="text-lg opacity-70 transition hover:opacity-100"
-          aria-label="Tắt/Mở tiếng"
-        >
-          {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
-        </button>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={muted ? 0 : volume}
-          onChange={(e) => handleVolumeChange(e.target.value)}
-          className="h-2 w-40 cursor-pointer accent-[#1db954]"
-        />
       </div>
     </div>
   );
@@ -362,10 +416,12 @@ export default function PlayerDetail({ isOpen, onClose }) {
   /* ================= render ================= */
   return (
     <div
-      className={`player-detail-shell fixed inset-0 z-[999] h-[100dvh] overflow-hidden text-white ${stableClass} ${animateClass}`}
+      className={`player-detail-shell fixed inset-0 z-[999] h-[100svh] max-h-[100svh]
+      overflow-hidden text-white ${stableClass} ${animateClass}`}
       style={{
         animationDuration: `${ANIM_MS}ms`,
         animationTimingFunction: ANIM_EASE,
+        paddingBottom: "env(safe-area-inset-bottom)", // ✅ iOS safe area
       }}
       onAnimationEnd={handleAnimEnd}
     >
@@ -392,27 +448,30 @@ export default function PlayerDetail({ isOpen, onClose }) {
       </div>
 
       {/* CONTENT */}
-      <div className="relative z-10 h-full w-full">
-        <div className="mx-auto flex h-full w-full min-h-0 max-w-[1320px] flex-col px-3 pt-4 sm:px-6 sm:pt-8">
-          {/* Top bar */}
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/90 ring-1 ring-white/10 transition hover:bg-white/15 sm:hidden"
-              aria-label="Đóng chi tiết"
-            >
-              <FiChevronDown />
-            </button>
-
-            <button
-              onClick={onClose}
-              className="hidden h-10 w-10 items-center justify-center rounded-full bg-white/10 text-lg ring-1 ring-white/10 transition hover:bg-white/20 sm:flex"
-              aria-label="Đóng"
-            >
-              ✕
-            </button>
-          </div>
+      {/* ✅ h-full + min-h-0 để flex con không “lèm” */}
+      <div className="relative z-10 h-full w-full overflow-hidden">
+        <div className="relative mx-auto flex h-full w-full min-h-0 max-w-[1320px] flex-col px-3 pt-4 sm:px-6 sm:pt-8 overflow-hidden">
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="
+              absolute
+              right-3 top-3
+              z-20
+              flex h-10 w-10 items-center justify-center
+              rounded-full
+              bg-white/10
+              text-white/90
+              ring-1 ring-white/10
+              backdrop-blur
+              transition
+              hover:bg-white/20
+              sm:right-6 sm:top-6
+            "
+            aria-label="Đóng"
+          >
+            ✕
+          </button>
 
           {/* Title */}
           <div className="mt-5 flex flex-col items-center gap-1 text-center sm:mt-7">
@@ -426,7 +485,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* Main grid */}
           {/* Desktop layout */}
-          <div className="mt-6 hidden min-h-0 flex-1 gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px]">
+          <div className="mt-6 hidden min-h-0 flex-1 gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] overflow-hidden">
             {detailPanel}
 
             {/* RIGHT */}
@@ -452,26 +511,30 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 ))}
               </div>
 
-              {activeTab === "queue" && (
-                <PlayerDetailQueue
-                  queue={queue}
-                  currentIndex={currentIndex}
-                  playAt={playAt}
-                />
-              )}
+              {/* ✅ only this area scrolls */}
+              <div className="min-h-0 flex-1 overflow-y-auto mt-4">
+                {activeTab === "queue" && (
+                  <PlayerDetailQueue
+                    queue={queue}
+                    currentIndex={currentIndex}
+                    playAt={playAt}
+                  />
+                )}
 
-              {activeTab === "lyrics" && (
-                <PlayerDetailLyrics
-                  currentSong={currentSong}
-                  displayedTime={displayedTime}
-                  isActive={activeTab === "lyrics"}
-                  onSeek={doSeek}
-                />
-              )}
+                {activeTab === "lyrics" && (
+                  <PlayerDetailLyrics
+                    currentSong={currentSong}
+                    displayedTime={displayedTime}
+                    isActive={activeTab === "lyrics"}
+                    onSeek={doSeek}
+                  />
+                )}
+              </div>
             </div>
           </div>
+
           {/* Mobile/tablet swipe layout */}
-          <div className="mt-5 flex flex-1 min-h-0 flex-col lg:hidden">
+          <div className="mt-5 flex flex-1 min-h-0 flex-col lg:hidden overflow-hidden">
             <div className="mb-4 flex items-center justify-center gap-2 text-xs text-white/60">
               {[
                 { id: "lyrics", label: "Lời bài hát" },
@@ -515,49 +578,62 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 });
               }}
               className="
-    flex
-   flex-1 min-h-0
-    w-full
-    snap-x snap-mandatory
-    gap-0
-    overflow-x-auto
-   overflow-y-hidden
-    pb-6
-    scrollbar-hidden
-  "
+                flex flex-1 min-h-0
+                w-full
+                snap-x snap-mandatory
+                gap-0
+                overflow-x-auto
+                overflow-y-hidden
+                pb-6
+                scrollbar-hidden
+              "
             >
-              <div className="flex min-h-0 w-full min-w-[100%] snap-center">
-                <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl">
+              {/* Lyrics slide */}
+              <div className="flex min-h-0 w-full min-w-[100%] snap-center overflow-hidden">
+                <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl overflow-hidden">
                   <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
                     Lời bài hát
                   </div>
-                  <PlayerDetailLyrics
-                    currentSong={currentSong}
-                    displayedTime={displayedTime}
-                    isActive
-                    onSeek={doSeek}
-                  />
+
+                  {/* ✅ only lyrics area scrolls */}
+                  <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
+                    <PlayerDetailLyrics
+                      currentSong={currentSong}
+                      displayedTime={displayedTime}
+                      isActive
+                      onSeek={doSeek}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="flex min-h-0 w-full min-w-[100%] snap-center">
+              {/* Now playing slide */}
+              <div className="flex min-h-0 w-full min-w-[100%] snap-center overflow-hidden">
                 {detailPanel}
               </div>
 
-              <div className="flex min-h-0 w-full min-w-[100%] snap-center">
-                <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl">
+              {/* Queue slide */}
+              <div className="flex min-h-0 w-full min-w-[100%] snap-center overflow-hidden">
+                <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl overflow-hidden">
                   <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
                     Danh sách phát
                   </div>
-                  <PlayerDetailQueue
-                    queue={queue}
-                    currentIndex={currentIndex}
-                    playAt={playAt}
-                  />
+
+                  {/* ✅ only queue area scrolls */}
+                  <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
+                    <PlayerDetailQueue
+                      queue={queue}
+                      currentIndex={currentIndex}
+                      playAt={playAt}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* ✅ optional extra safe bottom spacing */}
+          <div className="h-2" />
         </div>
       </div>
     </div>

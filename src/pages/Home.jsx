@@ -16,6 +16,7 @@ export default function Home() {
   const [newAlbums, setNewAlbums] = useState([]);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [recommendationLoading, setRecommendationLoading] = useState(false);
 
   const ranRef = useRef(false);
   const artistRailRef = useRef(null);
@@ -35,6 +36,75 @@ export default function Home() {
 
   const quickPicks = useMemo(() => songs.slice(0, 6), [songs]);
 
+  const fetchRecommendedSongs = useCallback(async (seedSongId) => {
+    if (!seedSongId) return [];
+
+    const recRes = await getRecommendations(seedSongId);
+    const items = recRes?.data?.data || recRes?.data || [];
+    const ids = items
+      .map((item) => item?.songId ?? item?.song_id ?? item?.id ?? item)
+      .filter(Boolean);
+
+    const songResults = await Promise.all(
+      ids.slice(0, 9).map(async (id) => {
+        try {
+          const res = await getSongById(id);
+          const raw = res?.data?.data;
+          if (!raw) return null;
+
+          return {
+            id: raw.id,
+            title: raw.title,
+            artist_name: raw.artist_name || raw.artist?.name || "",
+            duration: raw.duration,
+            cover_url: resolveAssetUrl(raw.cover_url),
+            album_id: raw.album?.id || raw.album_id,
+            album_title: raw.album?.title || raw.album_title,
+            audio_url: `${import.meta.env.VITE_API_BASE_URL}${raw.audio_path}`,
+          };
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    return songResults.filter(Boolean);
+  }, []);
+
+  const getLastPlayedSongId = useCallback(async () => {
+    try {
+      const historyRes = await getMyHistory({ limit: 1 });
+      const payload = historyRes?.data?.data ?? historyRes?.data ?? {};
+      const items = Array.isArray(payload)
+        ? payload
+        : payload?.items ?? historyRes?.data?.items ?? [];
+      return normalizeSongId(items?.[0]?.song || items?.[0]);
+    } catch (error) {
+      console.warn("Load last played song for recommendations failed", error);
+      return null;
+    }
+  }, []);
+
+  const loadRecommendations = useCallback(
+    async (seedSongId, { silent = false } = {}) => {
+      if (!seedSongId) {
+        setSongs([]);
+        return;
+      }
+
+      if (!silent) setRecommendationLoading(true);
+      try {
+        const recommended = await fetchRecommendedSongs(seedSongId);
+        setSongs(recommended);
+      } catch (error) {
+        console.error("Load recommendations error:", error);
+      } finally {
+        if (!silent) setRecommendationLoading(false);
+      }
+    },
+    [fetchRecommendedSongs]
+  );
+  
   /* =======================
      LOAD HOME (GIỮ NGUYÊN)
      ======================= */
@@ -48,60 +118,20 @@ export default function Home() {
     try {
       setLoading(true);
 
-      const artistRes = await getArtistCollections({ limit: 20 });
+      const [artistRes, albumRes] = await Promise.all([
+        getArtistCollections({ limit: 20 }),
+        getAlbums({
+          limit: 20,
+          sort: "release_date",
+          order: "desc",
+        }),
+      ]);
       setArtistAlbums(artistRes?.data?.data || []);
-
-      const albumRes = await getAlbums({
-        limit: 20,
-        sort: "release_date",
-        order: "desc",
-      });
       setNewAlbums(albumRes?.data?.data || []);
 
-      let seedSongId = normalizeSongId(currentSong);
-      if (!seedSongId) {
-        try {
-          const historyRes = await getMyHistory({ limit: 1 });
-          const payload = historyRes?.data?.data ?? historyRes?.data ?? {};
-          const items = Array.isArray(payload)
-            ? payload
-            : payload?.items ?? historyRes?.data?.items ?? [];
-          seedSongId = normalizeSongId(items?.[0]?.song || items?.[0]);
-        } catch (error) {
-          console.warn("Load last played song for recommendations failed", error);
-        }
-      }
-
-      const recRes = seedSongId ? await getRecommendations(seedSongId) : null;
-      const items = recRes?.data?.data || recRes?.data || [];
-      const ids = items
-        .map((item) => item?.songId ?? item?.song_id ?? item?.id ?? item)
-        .filter(Boolean);
-
-      const songResults = await Promise.all(
-        ids.slice(0, 9).map(async (id) => {
-          try {
-            const res = await getSongById(id);
-            const raw = res?.data?.data;
-            if (!raw) return null;
-
-            return {
-              id: raw.id,
-              title: raw.title,
-              artist_name: raw.artist_name || raw.artist?.name || "",
-              duration: raw.duration,
-              cover_url: resolveAssetUrl(raw.cover_url),
-              album_id: raw.album?.id || raw.album_id,
-              album_title: raw.album?.title || raw.album_title,
-              audio_url: `${import.meta.env.VITE_API_BASE_URL}${raw.audio_path}`,
-            };
-          } catch {
-            return null;
-          }
-        })
-      );
-
-      setSongs(songResults.filter(Boolean));
+      const seedSongId =
+      (await getLastPlayedSongId()) || normalizeSongId(currentSong);
+      await loadRecommendations(seedSongId, { silent: true });
     } catch (err) {
       console.error("Load home error:", err);
     } finally {
@@ -223,10 +253,23 @@ export default function Home() {
         subtitle="Gợi ý bài hát"
         action={
           <button
-            onClick={loadHome}
-            className="rounded-full border border-white/10 bg-[#1f1f1f] px-3 py-1.5 text-[12px] font-semibold text-white/80 transition hover:bg-[#2a2a2a] sm:px-4 sm:py-2 sm:text-[13px]"
+           onClick={async () => {
+              if (!songs.length) {
+                const seedSongId =
+                  (await getLastPlayedSongId()) || normalizeSongId(currentSong);
+                await loadRecommendations(seedSongId);
+                return;
+              }
+
+              const randomSong =
+                songs[Math.floor(Math.random() * songs.length)];
+              const seedSongId = normalizeSongId(randomSong);
+              await loadRecommendations(seedSongId);
+            }}
+            disabled={recommendationLoading}
+            className="rounded-full border border-white/10 bg-[#1f1f1f] px-3 py-1.5 text-[12px] font-semibold text-white/80 transition hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-2 sm:text-[13px]"
           >
-            Làm mới
+           {recommendationLoading ? "Đang làm mới..." : "Làm mới"}
           </button>
         }
       >

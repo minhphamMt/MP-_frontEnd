@@ -108,6 +108,10 @@ const usePlayerStore = create((set, get) => ({
       hasRecordedPlay: false,
       shuffleHistory: [],
     });
+
+    if (updatedQueue.length <= 1) {
+      get().appendRecommendationsToQueue();
+    }
   },
 
   pause: () => {
