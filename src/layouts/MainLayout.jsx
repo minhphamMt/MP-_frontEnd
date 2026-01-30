@@ -74,7 +74,7 @@ export default function MainLayout() {
 
         <main
           ref={mainRef}
-          className="scrollbar-muted relative flex-1 overflow-y-auto bg-[#121212] px-4 py-4 sm:px-6 sm:py-6"
+          className="scrollbar-page relative flex-1 overflow-y-auto bg-[#121212] px-4 py-4 sm:px-6 sm:py-6"
         >
           <div
             ref={backgroundRef}

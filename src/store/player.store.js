@@ -2,6 +2,7 @@ import { create } from "zustand";
 import api from "../api/axios";
 import { getMyHistory } from "../api/history.api";
 import { getLikedSongs } from "../api/like.api";
+import { getRecommendations } from "../api/recommendation.api";
 import { getSongById, recordSongPlay } from "../api/song.api";
 import { fetchPlayableSong, toPlayableSong } from "../utils/song";
 
@@ -61,6 +62,7 @@ const usePlayerStore = create((set, get) => ({
   muted: false,
 
   likedSongIds: [],
+  recommendationLoading: false,
 
   /* ===== INTERNAL ===== */
   audio,
@@ -142,7 +144,7 @@ const usePlayerStore = create((set, get) => ({
     get().playSong(song, queue);
   },
 
-  playNext: () => {
+  playNext: async () => {
     const { queue, currentIndex, repeatMode, shuffle, shuffleHistory } = get();
     if (!queue.length) return;
 
@@ -161,7 +163,17 @@ const usePlayerStore = create((set, get) => ({
 
     if (nextIndex >= queue.length) {
       if (repeatMode === "all") nextIndex = 0;
-      else return;
+      else {
+        const appended = await get().appendRecommendationsToQueue();
+        if (!appended) return;
+        const updatedState = get();
+        if (updatedState.queue.length <= updatedState.currentIndex + 1) return;
+        get().playSong(
+          updatedState.queue[updatedState.currentIndex + 1],
+          updatedState.queue
+        );
+        return;
+      }
     }
 
     get().playSong(queue[nextIndex], queue);
@@ -240,6 +252,55 @@ const usePlayerStore = create((set, get) => ({
       isPlaying: false,
     }),
 
+    appendRecommendationsToQueue: async () => {
+    const { recommendationLoading, currentSong, queue } = get();
+    if (recommendationLoading) return false;
+
+    const seedSongId = normalizeSongId(currentSong);
+    if (!seedSongId) return false;
+
+    set({ recommendationLoading: true });
+    try {
+      const res = await getRecommendations(seedSongId);
+      const items = res?.data?.data ?? res?.data ?? [];
+      const ids = items
+        .map((item) => item?.songId ?? item?.song_id ?? item?.id ?? item)
+        .filter(Boolean);
+      if (!ids.length) return false;
+
+      const existingIds = new Set(
+        queue.map((song) => normalizeSongId(song)).filter(Boolean)
+      );
+
+      const detailResults = await Promise.all(
+        ids.map(async (songId) => {
+          if (existingIds.has(String(songId))) return null;
+          try {
+            const songRes = await getSongById(songId);
+            const payload = songRes?.data?.data ?? songRes?.data ?? songRes;
+            return toPlayableSong(payload);
+          } catch (error) {
+            console.error("Load recommended song failed", error);
+            return null;
+          }
+        })
+      );
+
+      const newSongs = detailResults.filter(Boolean);
+      if (!newSongs.length) return false;
+
+      set((state) => ({
+        queue: [...state.queue, ...newSongs],
+      }));
+      return true;
+    } catch (error) {
+      console.error("Load recommendations for queue failed", error);
+      return false;
+    } finally {
+      set({ recommendationLoading: false });
+    }
+  },
+  
   /* =====================
      HISTORY
   ===================== */

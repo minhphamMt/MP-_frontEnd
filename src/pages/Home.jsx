@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getAlbums } from "../api/album.api";
+import { getMyHistory } from "../api/history.api";
 import { getArtistCollections } from "../api/artist.api";
 import { getRecommendations } from "../api/recommendation.api";
 import { getSongById } from "../api/song.api";
@@ -7,7 +8,7 @@ import AlbumCard from "../components/album/AlbumCard";
 import ArtistAlbumCard from "../components/album/ArtistAlbumCard";
 import Section from "../components/section/Section";
 import SongCard from "../components/song/SongCard";
-import usePlayerStore from "../store/player.store";
+import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { resolveAssetUrl } from "../utils/asset";
 
 export default function Home() {
@@ -23,7 +24,8 @@ export default function Home() {
   const newAlbumTimerRef = useRef(null);
   const artistResumeRef = useRef(null);
   const newAlbumResumeRef = useRef(null);
-   const playSong = usePlayerStore((state) => state.playSong);
+  const playSong = usePlayerStore((state) => state.playSong);
+  const currentSong = usePlayerStore((state) => state.currentSong);
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return "Chào buổi sáng";
@@ -56,8 +58,25 @@ export default function Home() {
       });
       setNewAlbums(albumRes?.data?.data || []);
 
-      const recRes = await getRecommendations();
-      const ids = recRes?.data?.data || [];
+      let seedSongId = normalizeSongId(currentSong);
+      if (!seedSongId) {
+        try {
+          const historyRes = await getMyHistory({ limit: 1 });
+          const payload = historyRes?.data?.data ?? historyRes?.data ?? {};
+          const items = Array.isArray(payload)
+            ? payload
+            : payload?.items ?? historyRes?.data?.items ?? [];
+          seedSongId = normalizeSongId(items?.[0]?.song || items?.[0]);
+        } catch (error) {
+          console.warn("Load last played song for recommendations failed", error);
+        }
+      }
+
+      const recRes = seedSongId ? await getRecommendations(seedSongId) : null;
+      const items = recRes?.data?.data || recRes?.data || [];
+      const ids = items
+        .map((item) => item?.songId ?? item?.song_id ?? item?.id ?? item)
+        .filter(Boolean);
 
       const songResults = await Promise.all(
         ids.slice(0, 9).map(async (id) => {

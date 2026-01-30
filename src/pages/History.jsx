@@ -3,7 +3,7 @@ import { getMyHistory } from "../api/history.api";
 import { getSongById } from "../api/song.api";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { fetchPlayableSong } from "../utils/song";
-import { FiHeart, FiMusic } from "react-icons/fi";
+import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import { resolveAssetUrl } from "../utils/asset";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 
@@ -281,10 +281,14 @@ export default function History() {
                       />
                       <button
                         onClick={() => handlePlaySong(item)}
-                        className="absolute inset-0 flex items-center justify-center bg-emerald-500/80 text-white opacity-0 transition group-hover:opacity-100"
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
                       >
-                        <span className="text-white text-sm">
-                          {isPlayingCurrent && isPlaying ? "⏸" : "▶"}
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1db954] text-black shadow-[0_8px_16px_rgba(29,185,84,0.35)]">
+                          {isPlayingCurrent && isPlaying ? (
+                            <FiPause className="text-sm" />
+                          ) : (
+                            <FiPlay className="ml-0.5 text-sm" />
+                          )}
                         </span>
                       </button>
                     </div>

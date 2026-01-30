@@ -1,3 +1,3 @@
 import api from "./axios";
 
-export const getRecommendations = () => api.get("/recommendations");
+export const getRecommendations = (songId) => api.get(`/recommend/${songId}`);

@@ -48,6 +48,7 @@ export default function AdminSongManagement() {
   const [editingSong, setEditingSong] = useState(null);
   const [autoOpenedId, setAutoOpenedId] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
+  const [showAllGenres, setShowAllGenres] = useState(false);
   const role = useAuthStore((state) => state.role);
   const [editPayload, setEditPayload] = useState({
     title: "",
@@ -142,6 +143,7 @@ export default function AdminSongManagement() {
 
   const handleEdit = (song) => {
     setEditingSong(song);
+    setShowAllGenres(false);
     setEditPayload({
       title: song?.title || "",
       artist_id: song?.artist_id ? `${song.artist_id}` : "",
@@ -258,6 +260,20 @@ export default function AdminSongManagement() {
     }
     return mapped;
   }, [albums, editPayload.album_id]);
+
+  const { visibleGenres, canToggleGenres } = useMemo(() => {
+    const maxVisibleGenres = 8;
+    if (showAllGenres) {
+      return { visibleGenres: genres, canToggleGenres: genres.length > maxVisibleGenres };
+    }
+    const activeSet = new Set(editPayload.genres);
+    const activeGenres = genres.filter((genre) => activeSet.has(genre.name));
+    const inactiveGenres = genres.filter((genre) => !activeSet.has(genre.name));
+    return {
+      visibleGenres: [...activeGenres, ...inactiveGenres].slice(0, maxVisibleGenres),
+      canToggleGenres: genres.length > maxVisibleGenres,
+    };
+  }, [editPayload.genres, genres, showAllGenres]);
 
   const coverPreview = useMemo(() => {
     if (coverFile) {
@@ -556,7 +572,7 @@ export default function AdminSongManagement() {
             <div className="mt-6">
               <p className="text-sm text-white/70">Thể loại</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {genres.map((genre) => {
+                {visibleGenres.map((genre) => {
                   const isActive = editPayload.genres.includes(genre.name);
                   return (
                     <button
@@ -574,6 +590,17 @@ export default function AdminSongManagement() {
                   );
                 })}
               </div>
+              {canToggleGenres && (
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllGenres((prev) => !prev)}
+                    className="text-xs font-semibold text-white/70 transition hover:text-white"
+                  >
+                    {showAllGenres ? "Thu gọn" : "Xem thêm"}
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="mt-6 flex flex-wrap justify-end gap-3">

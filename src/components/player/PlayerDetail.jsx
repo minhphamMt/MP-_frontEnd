@@ -203,7 +203,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const detailPanel = (
     <div
-     className={`flex w-full min-h-0 flex-1 flex-col gap-6 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)] ring-1 ring-white/5 backdrop-blur-xl sm:p-8 ${songSlideClass} overflow-y-auto pr-1 lg:overflow-visible lg:pr-0`}
+    className={`flex w-full min-h-0 flex-1 flex-col gap-6 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)] ring-1 ring-white/5 backdrop-blur-xl sm:p-8 ${songSlideClass} overflow-y-auto pr-1 lg:overflow-y-auto lg:pr-0`}
     >
       {/* Album + like */}
       <div className="flex flex-col items-center gap-5">
@@ -393,7 +393,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
       {/* CONTENT */}
       <div className="relative z-10 h-full w-full">
-        <div className="mx-auto flex h-full w-full max-w-[1320px] flex-col px-3 pt-4 sm:px-6 sm:pt-8">
+        <div className="mx-auto flex h-full w-full min-h-0 max-w-[1320px] flex-col px-3 pt-4 sm:px-6 sm:pt-8">
           {/* Top bar */}
           <div className="flex items-center justify-between">
             <button
@@ -426,11 +426,11 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* Main grid */}
           {/* Desktop layout */}
-          <div className="mt-6 hidden gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px]">
+          <div className="mt-6 hidden min-h-0 flex-1 gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px]">
             {detailPanel}
 
             {/* RIGHT */}
-            <div className="flex h-[520px] flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-4 ring-1 ring-white/5 backdrop-blur-xl sm:h-[600px] sm:p-6">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-4 ring-1 ring-white/5 backdrop-blur-xl sm:p-6">
               {/* Tabs */}
               <div className="flex items-center gap-2 rounded-full bg-white/5 p-1 ring-1 ring-white/10">
                 {[

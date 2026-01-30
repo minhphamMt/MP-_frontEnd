@@ -85,11 +85,18 @@ export default function PlaylistDetail() {
   }, [id]);
   // ========== Load recommendations (nhận excludeIds để luôn lọc đúng) ==========
   const loadRecommendations = useCallback(
-    async (excludeSongIds = []) => {
+    async (seedSongId, excludeSongIds = []) => {
       try {
         setRecommendationLoading(true);
-        const res = await getRecommendations();
-        const ids = res?.data?.data || [];
+        if (!seedSongId) {
+          setRecommendedSongs([]);
+          return;
+        }
+        const res = await getRecommendations(seedSongId);
+        const items = res?.data?.data || res?.data || [];
+        const ids = items
+          .map((item) => item?.songId ?? item?.song_id ?? item?.id ?? item)
+          .filter(Boolean);
         const excludeSet = new Set(
           (excludeSongIds || []).map(String).filter(Boolean)
         );
@@ -138,16 +145,17 @@ export default function PlaylistDetail() {
       setLoading(true);
       const pl = await hydratePlaylist(); // ✅ chờ playlist về
       if (!mounted) return;
-      // lấy exclude ids từ playlist vừa load (chắc chắn đúng timing)
       const excludeIds = (pl?.songs || [])
         .map((s) => getSongKey(s))
         .filter(Boolean);
-      await loadRecommendations(excludeIds);
+      const seedId =
+        normalizeSongId(currentSong) || getSongKey(pl?.songs?.[0]);
+      await loadRecommendations(seedId, excludeIds);
     })();
     return () => {
       mounted = false;
     };
-  }, [id, hydratePlaylist, loadRecommendations]);
+  }, [id, hydratePlaylist, loadRecommendations, currentSong]);
   // ========== Play song ==========
   const handlePlaySong = async (song, queue = playlistSongs) => {
     const playable = (await fetchPlayableSong(song, getSongById)) || song;
@@ -311,7 +319,12 @@ export default function PlaylistDetail() {
         songs={recommendedSongs}
         loading={recommendationLoading}
         saving={saving}
-        onRefresh={() => loadRecommendations(playlistSongIds)} // ✅ refresh vẫn lọc đúng
+        onRefresh={() =>
+          loadRecommendations(
+            normalizeSongId(currentSong) || getSongKey(playlistSongs?.[0]),
+            playlistSongIds
+          )
+        } // ✅ refresh vẫn lọc đúng
         onPlay={(song) => handlePlaySong(song, recommendedSongs)}
         onAdd={handleAddSuggestedSong}
       />
