@@ -271,167 +271,179 @@ export default function PlayerDetail({ isOpen, onClose }) {
       : "translate-y-full opacity-0";
 
   const detailPanel = (
-    <div
-      className={`flex w-full min-h-0 flex-1 flex-col justify-between gap-4 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)] ring-1 ring-white/5 backdrop-blur-xl sm:p-8 lg:gap-6 lg:justify-start ${songSlideClass}
-      overflow-hidden`}
-    >
-      {/* ✅ ONLY THIS part scrolls (not the whole overlay) */}
-      <div className="min-h-0 flex-1 overflow-y-auto pr-1 lg:pr-0">
-        <div className="flex min-h-full flex-col justify-between gap-6">
-          {/* Album */}
-          <div className="flex flex-col items-center gap-5">
-            <div className="relative w-full">
-              <div className="relative hidden w-full items-center justify-center overflow-hidden rounded-3xl bg-black/30 shadow-[0_25px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/10 lg:flex lg:h-72 xl:h-80">
-                {cover && (
-                  <img
-                    src={cover}
-                    alt={currentSong.title}
-                   className="h-full w-full object-contain"
-                  />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/80" />
-              </div>
-
-             <div className="relative flex items-center justify-center lg:hidden">
-                <div className="h-52 w-52 overflow-hidden rounded-full bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.60)] ring-1 ring-white/10 sm:h-60 sm:w-60">
-                  {cover && (
-                    <img
-                      src={cover}
-                      alt={currentSong.title}
-                      className={`player-detail-disc h-full w-full object-cover ${
-                        isPlaying ? "is-playing" : ""
-                      }`}
-                    />
-                  )}
-                </div>
-
-                {/* subtle glow */}
-                <div
-                  className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-2xl opacity-40"
-                  style={{
-                    background:
-                      "radial-gradient(circle, rgba(29,185,84,.35), transparent 60%)",
-                  }}
-                />
-              </div>
+  <div
+    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)] ring-1 ring-white/5 backdrop-blur-xl sm:p-6 ${songSlideClass}`}
+  >
+    {/* ✅ KHÔNG SCROLL ở panel này để không mất controls */}
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* ================== ALBUM (auto scale) ================== */}
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        {/* Desktop/Laptop/Tablet landscape: ảnh chữ nhật */}
+        <div
+          className="
+            relative hidden w-full overflow-hidden rounded-3xl bg-black/30 shadow-[0_25px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/10
+            sm:flex
+          "
+          style={{
+            // ✅ tự co theo màn hình: không chiếm hết làm mất controls
+            height: "clamp(180px, 42vh, 340px)",
+          }}
+        >
+          {cover && (
+            <img
+              src={cover}
+              alt={currentSong.title}
+              className="h-full w-full object-contain"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/80" />
         </div>
 
-        <div className="flex lg:hidden">{likeButton}</div>
-          </div>
-
-         {/* Seek */}
-          <div className="space-y-2">
-            {/* Seek bar */}
-            <div className="px-4 sm:px-6">
-              <input
-                type="range"
-                min={0}
-                max={total || 0}
-                step={0.1}
-                value={Math.min(displayedTime, total || 0)}
-                onMouseDown={onSeekStart}
-                onTouchStart={onSeekStart}
-                onChange={onSeekChange}
-                onMouseUp={onSeekCommit}
-                onTouchEnd={onSeekCommit}
-                className="h-2 w-full cursor-pointer accent-[#1db954]"
+        {/* Phone: đĩa tròn */}
+        <div className="relative flex items-center justify-center sm:hidden">
+          <div
+            className="overflow-hidden rounded-full bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.60)] ring-1 ring-white/10"
+            style={{
+              // ✅ co theo màn hình điện thoại để không lẹm
+              width: "clamp(160px, 46vw, 240px)",
+              height: "clamp(160px, 46vw, 240px)",
+            }}
+          >
+            {cover && (
+              <img
+                src={cover}
+                alt={currentSong.title}
+                className={`player-detail-disc h-full w-full object-cover ${
+                  isPlaying ? "is-playing" : ""
+                }`}
               />
-            </div>
-
-        {/* Time */}
-            <div className="flex items-center justify-between px-4 sm:px-6 text-[11px] text-white/60 sm:text-xs">
-              <span>{formatTime(displayedTime)}</span>
-              <span>{formatTime(total)}</span>
-            </div>
+            )}
           </div>
 
-        <div className="mt-2 flex flex-col items-center gap-4 lg:gap-6">
-            <div className="flex w-full items-center justify-center gap-4 lg:justify-between lg:gap-6">
-              <div className="hidden lg:flex">{likeButton}</div>
-
-              {/* Controls */}
-              <div className="flex flex-1 items-center justify-center gap-5 text-xl sm:text-2xl">
-                <button
-                  onClick={toggleShuffle}
-                  className={`transition hover:opacity-100 ${
-                    shuffle
-                      ? "text-[#1db954]"
-                      : "text-white/55 hover:text-white/80"
-                  }`}
-                  aria-label="Trộn"
-                >
-                  <FaShuffle />
-                </button>
-
-                <button
-                  onClick={playPrev}
-                  className="text-white/75 transition hover:text-white"
-                  aria-label="Bài trước"
-                >
-                  <FaBackwardStep />
-                </button>
-
-                <button
-                  onClick={togglePlay}
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1db954] text-2xl text-black shadow-[0_0_45px_rgba(29,185,84,0.55)] transition active:scale-95 sm:h-16 sm:w-16"
-                  aria-label="Phát/Tạm dừng"
-                >
-                  {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
-                </button>
-
-                <button
-                  onClick={playNext}
-                  className="text-white/75 transition hover:text-white"
-                  aria-label="Bài tiếp"
-                >
-                  <FaForwardStep />
-                </button>
-
-                <button
-                  onClick={toggleRepeatMode}
-                  className={`relative transition hover:opacity-100 ${
-                    repeatMode !== "off"
-                      ? "text-[#1db954]"
-                      : "text-white/55 hover:text-white/80"
-                  }`}
-                  aria-label="Lặp"
-                >
-                  <span className="relative inline-flex">
-                    <FaRepeat />
-                    {repeatMode === "one" && (
-                      <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
-                        1
-                      </span>
-                    )}
-                  </span>
-                </button>
-              </div>
-
-              {/* Volume */}
-              <div className="hidden items-center justify-center gap-3 lg:flex">
-                <button
-                  onClick={toggleMute}
-                  className="text-lg opacity-70 transition hover:opacity-100"
-                  aria-label="Tắt/Mở tiếng"
-                >
-                  {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
-                </button>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={muted ? 0 : volume}
-                  onChange={(e) => handleVolumeChange(e.target.value)}
-                  className="h-2 w-32 cursor-pointer accent-[#1db954] sm:w-40"
-                />
-              </div>
-            </div>
-          </div>
+          {/* subtle glow */}
+          <div
+            className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-2xl opacity-40"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(29,185,84,.35), transparent 60%)",
+            }}
+          />
+        </div>
       </div>
+
+      {/* ================== SEEK ================== */}
+      <div className="mt-4 space-y-2">
+        <div className="px-1 sm:px-2">
+          <input
+            type="range"
+            min={0}
+            max={total || 0}
+            step={0.1}
+            value={Math.min(displayedTime, total || 0)}
+            onMouseDown={onSeekStart}
+            onTouchStart={onSeekStart}
+            onChange={onSeekChange}
+            onMouseUp={onSeekCommit}
+            onTouchEnd={onSeekCommit}
+            className="h-2 w-full cursor-pointer accent-[#1db954]"
+          />
+        </div>
+
+        <div className="flex items-center justify-between px-1 sm:px-2 text-[11px] text-white/60 sm:text-xs">
+          <span>{formatTime(displayedTime)}</span>
+          <span>{formatTime(total)}</span>
+        </div>
+      </div>
+
+      {/* ================== CONTROLS BAR (always visible) ================== */}
+      <div className="mt-4 flex items-center justify-between gap-3">
+        {/* Like: luôn bên trái */}
+        <div className="flex w-[56px] shrink-0 items-center justify-start">
+          {likeButton}
+        </div>
+
+        {/* Controls: luôn center */}
+        <div className="flex flex-1 items-center justify-center gap-4 text-xl sm:gap-5 sm:text-2xl">
+          <button
+            onClick={toggleShuffle}
+            className={`transition ${
+              shuffle ? "text-[#1db954]" : "text-white/55 hover:text-white/85"
+            }`}
+            aria-label="Trộn"
+          >
+            <FaShuffle />
+          </button>
+
+          <button
+            onClick={playPrev}
+            className="text-white/75 transition hover:text-white"
+            aria-label="Bài trước"
+          >
+            <FaBackwardStep />
+          </button>
+
+          <button
+            onClick={togglePlay}
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1db954] text-2xl text-black shadow-[0_0_45px_rgba(29,185,84,0.55)] transition active:scale-95 sm:h-16 sm:w-16"
+            aria-label="Phát/Tạm dừng"
+          >
+            {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
+          </button>
+
+          <button
+            onClick={playNext}
+            className="text-white/75 transition hover:text-white"
+            aria-label="Bài tiếp"
+          >
+            <FaForwardStep />
+          </button>
+
+          <button
+            onClick={toggleRepeatMode}
+            className={`relative transition ${
+              repeatMode !== "off"
+                ? "text-[#1db954]"
+                : "text-white/55 hover:text-white/85"
+            }`}
+            aria-label="Lặp"
+          >
+            <span className="relative inline-flex">
+              <FaRepeat />
+              {repeatMode === "one" && (
+                <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
+                  1
+                </span>
+              )}
+            </span>
+          </button>
+        </div>
+
+        {/* Volume: ẩn trên phone, hiện từ tablet (md) trở lên.
+            => đảm bảo phone không bị lẹm, laptop nhỏ vẫn có đủ. */}
+        <div className="hidden w-[220px] shrink-0 items-center justify-end gap-3 md:flex">
+          <button
+            onClick={toggleMute}
+            className="text-lg opacity-70 transition hover:opacity-100"
+            aria-label="Tắt/Mở tiếng"
+          >
+            {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={muted ? 0 : volume}
+            onChange={(e) => handleVolumeChange(e.target.value)}
+            className="h-2 w-32 cursor-pointer accent-[#1db954]"
+          />
+        </div>
       </div>
     </div>
-  );
+  </div>
+);
+
+
 
   /* ================= render ================= */
   return (
