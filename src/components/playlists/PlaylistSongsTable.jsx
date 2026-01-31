@@ -27,8 +27,8 @@ export default function PlaylistSongsTable({
       </div>
 
       <div className="mt-4 overflow-x-auto scrollbar-muted">
-        <div className="min-w-0 sm:min-w-[640px]">
-          <div className="hidden grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.35em] text-white/50 sm:grid">
+        <div className="min-w-0 lg:min-w-[640px]">
+          <div className="hidden grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.35em] text-white/50 lg:grid">
             <span />
             <span>Bài hát</span>
             <span>Album</span>
@@ -51,13 +51,13 @@ export default function PlaylistSongsTable({
               return (
                 <div
                   key={song.id || index}
-                  className={`group grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 text-sm transition sm:grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)] ${
+                  className={`group grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 text-sm transition lg:grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)] ${
                     isPlayingCurrent
                       ? "bg-gradient-to-r from-cyan-400/10 to-transparent"
                       : "hover:bg-white/5"
                   }`}
                 >
-                  <div className="hidden justify-center sm:flex">
+                  <div className="hidden justify-center lg:flex">
                     <FiMusic
                       className={`transition ${
                         isPlayingCurrent
@@ -102,11 +102,11 @@ export default function PlaylistSongsTable({
                     </div>
                   </div>
 
-                  <div className="hidden truncate text-xs text-white/70 sm:block">
+                  <div className="hidden truncate text-xs text-white/70 lg:block">
                     {song.album_title || song.album || "—"}
                   </div>
 
-                  <div className="hidden items-center justify-end gap-4 text-xs text-white/70 sm:flex">
+                  <div className="hidden items-center justify-end gap-4 text-xs text-white/70 lg:flex">
                     <button
                       onClick={() => songId && onToggleLike?.(songId)}
                       className={`flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 ${
@@ -125,7 +125,7 @@ export default function PlaylistSongsTable({
                     </button>
                     <span className="tabular-nums">{song.duration}</span>
                   </div>
-                  <div className="flex items-center justify-end gap-2 sm:hidden">
+                   <div className="flex items-center justify-end gap-2 lg:hidden">
                     <button
                       onClick={() => songId && onToggleLike?.(songId)}
                       className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200 ${

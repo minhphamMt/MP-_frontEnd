@@ -227,13 +227,13 @@ export default function AlbumDetail() {
         </div>
       )}
       {/* ===== SONG LIST ===== */}
-        <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)] scrollbar-muted sm:overflow-x-auto">
-       <div className="min-w-0 sm:min-w-[640px]">
-          <div className="px-4 pt-4 text-sm font-semibold text-white sm:hidden">
+         <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)] scrollbar-muted lg:overflow-x-auto">
+       <div className="min-w-0 lg:min-w-[640px]">
+          <div className="px-4 pt-4 text-sm font-semibold text-white lg:hidden">
             Danh sách bài hát
           </div>
           {/* TABLE HEADER */}
-          <div className="hidden grid-cols-[60px_1fr_140px_100px] items-center bg-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-white/60 sm:grid sm:px-5">
+          <div className="hidden grid-cols-[60px_1fr_140px_100px] items-center bg-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-white/60 lg:grid lg:px-5">
             <span className="text-center">#</span>
             <span>Bài hát</span>
             <span className="text-center">Hành động</span>
@@ -250,7 +250,7 @@ export default function AlbumDetail() {
                 <div
                   key={song.id}
                   onClick={canPlay ? () => playSong(song, songs) : undefined}
-                  className={`grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 transition sm:grid-cols-[60px_1fr_140px_100px] sm:gap-3 sm:px-5 ${
+                  className={`grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 transition lg:grid-cols-[60px_1fr_140px_100px] lg:gap-3 lg:px-5 ${
                     isActive
                       ? "bg-gradient-to-r from-white/10 via-white/5 to-transparent"
                       : canPlay
@@ -259,7 +259,7 @@ export default function AlbumDetail() {
                   }`}
                 >
                   {/* INDEX */}
-                  <div className="hidden text-center text-sm font-semibold text-white/70 sm:block">
+                  <div className="hidden text-center text-sm font-semibold text-white/70 lg:block">
                     {index + 1}
                   </div>
 
@@ -289,13 +289,13 @@ export default function AlbumDetail() {
                       >
                         {song.title}
                       </div>
-                       <div className="hidden truncate text-xs text-white/60 sm:block">
+                        <div className="hidden truncate text-xs text-white/60 lg:block">
                         {song.artist_name}
                       </div>
                     </div>
                   </div>
                   {/* ACTIONS */}
-                  <div className="flex items-center justify-end gap-2 sm:justify-center">
+                  <div className="flex items-center justify-end gap-2 lg:justify-center">
                     <AddToPlaylistButton
                       song={song}
                      triggerClassName="h-8 w-8 !border-white/20 !bg-white/10 hover:!bg-white/20 sm:h-9 sm:w-9"
@@ -317,7 +317,7 @@ export default function AlbumDetail() {
                   </div>
 
                   {/* DURATION */}
-                 <div className="hidden text-right text-sm text-white/60 sm:block">
+                 <div className="hidden text-right text-sm text-white/60 lg:block">
                     {formatTime(song.duration)}
                   </div>
                 </div>

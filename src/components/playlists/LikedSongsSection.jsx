@@ -45,12 +45,12 @@ export default function LikedSongsSection({
 
       {/* TABLE */}
         <div className="mt-4 overflow-x-auto scrollbar-muted">
-        <div className="min-w-0 sm:min-w-[640px]">
+        <div className="min-w-0 lg:min-w-[640px]">
           {/* TABLE HEADER */}
           <div
             className="hidden grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)]
       border-b border-white/10 px-4 py-3 text-[11px]
-      uppercase tracking-[0.35em] text-white/50 sm:grid"
+      uppercase tracking-[0.35em] text-white/50 lg:grid"
         >
             <span />
             <span>Bài hát</span>
@@ -74,7 +74,7 @@ export default function LikedSongsSection({
               return (
                 <div
                   key={song.id || index}
-                  className={`group grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 text-sm transition sm:grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)]
+                  className={`group grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 text-sm transition lg:grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)]
                 ${
                   isPlayingCurrent
                     ? "bg-gradient-to-r from-cyan-400/10 to-transparent"
@@ -82,7 +82,7 @@ export default function LikedSongsSection({
                 }`}
                >
                   {/* ICON 🎵 */}
-                  <div className="hidden justify-center sm:flex">
+                  <div className="hidden justify-center lg:flex">
                     <FiMusic
                       className={`transition ${
                         isPlayingCurrent
@@ -131,12 +131,12 @@ export default function LikedSongsSection({
                 </div>
 
                   {/* ALBUM */}
-                   <div className="hidden truncate text-xs text-white/70 sm:block">
+                   <div className="hidden truncate text-xs text-white/70 lg:block">
                     {song.album_title || song.album || "—"}
                   </div>
 
                   {/* ACTIONS */}
-                  <div className="hidden items-center justify-end gap-4 text-xs text-white/70 sm:flex">
+                  <div className="hidden items-center justify-end gap-4 text-xs text-white/70 lg:flex">
                     <AddToPlaylistButton
                       song={song}
                       triggerClassName="h-9 w-9 !border-white/20 !bg-white/5 hover:!bg-white/15"
@@ -158,7 +158,7 @@ export default function LikedSongsSection({
                       {song.duration || "--:--"}
                     </span>
                   </div>
-                   <div className="flex shrink-0 items-center justify-end gap-2 sm:hidden">
+                   <div className="flex shrink-0 items-center justify-end gap-2 lg:hidden">
                     <AddToPlaylistButton
                       song={song}
                       triggerClassName="h-8 w-8 !border-white/20 !bg-white/5 hover:!bg-white/15"
