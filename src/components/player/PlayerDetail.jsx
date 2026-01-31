@@ -272,12 +272,12 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const detailPanel = (
   <div
-    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)] ring-1 ring-white/5 backdrop-blur-xl sm:p-6 ${songSlideClass}`}
+    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_30px_90px_rgba(0,0,0,0.45)] ring-1 ring-white/5 backdrop-blur-xl sm:p-6 ${songSlideClass}`}
   >
     {/* ✅ KHÔNG SCROLL ở panel này để không mất controls */}
     <div className="flex min-h-0 flex-1 flex-col">
       {/* ================== ALBUM (auto scale) ================== */}
-      <div className="flex min-h-0 flex-1 items-center justify-center">
+      <div className="flex min-h-0 items-center justify-center py-1 sm:flex-1 sm:py-0">
         {/* Desktop/Laptop/Tablet landscape: ảnh chữ nhật */}
         <div
           className="
@@ -286,7 +286,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           "
           style={{
             // ✅ tự co theo màn hình: không chiếm hết làm mất controls
-            height: "clamp(180px, 42vh, 340px)",
+            height: "clamp(180px, 38vh, 320px)",
           }}
         >
           {cover && (
@@ -305,8 +305,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
             className="overflow-hidden rounded-full bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.60)] ring-1 ring-white/10"
             style={{
               // ✅ co theo màn hình điện thoại để không lẹm
-              width: "clamp(160px, 46vw, 240px)",
-              height: "clamp(160px, 46vw, 240px)",
+              width: "clamp(160px, 52vw, 240px)",
+              height: "clamp(160px, 52vw, 240px)",
             }}
           >
             {cover && (
@@ -332,7 +332,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       </div>
 
       {/* ================== SEEK ================== */}
-      <div className="mt-4 space-y-2">
+      <div className="mt-3 space-y-2 sm:mt-4">
         <div className="px-1 sm:px-2">
           <input
             type="range"
@@ -356,14 +356,14 @@ export default function PlayerDetail({ isOpen, onClose }) {
       </div>
 
       {/* ================== CONTROLS BAR (always visible) ================== */}
-      <div className="mt-4 flex items-center justify-between gap-3">
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:mt-4">
         {/* Like: luôn bên trái */}
-        <div className="flex w-[56px] shrink-0 items-center justify-start">
+        <div className="flex items-center justify-start">
           {likeButton}
         </div>
 
         {/* Controls: luôn center */}
-        <div className="flex flex-1 items-center justify-center gap-4 text-xl sm:gap-5 sm:text-2xl">
+        <div className="flex items-center justify-center gap-4 text-xl sm:gap-5 sm:text-2xl">
           <button
             onClick={toggleShuffle}
             className={`transition ${
@@ -420,7 +420,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
         {/* Volume: ẩn trên phone, hiện từ tablet (md) trở lên.
             => đảm bảo phone không bị lẹm, laptop nhỏ vẫn có đủ. */}
-        <div className="hidden w-[220px] shrink-0 items-center justify-end gap-3 md:flex">
+        <div className="hidden items-center justify-end gap-3 md:flex">
           <button
             onClick={toggleMute}
             className="text-lg opacity-70 transition hover:opacity-100"
@@ -482,7 +482,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       {/* CONTENT */}
       {/* ✅ h-full + min-h-0 để flex con không “lèm” */}
       <div className="relative z-10 h-full w-full overflow-hidden">
-        <div className="relative mx-auto flex h-full w-full min-h-0 max-w-[1320px] flex-col px-3 pt-4 pb-6 sm:px-6 sm:pt-8 sm:pb-8 overflow-hidden">
+        <div className="relative mx-auto flex h-full w-full min-h-0 max-w-[1240px] flex-col px-3 pt-3 pb-4 sm:px-6 sm:pt-7 sm:pb-7 overflow-hidden">
           {/* Close button */}
           <button
             onClick={onClose}
@@ -506,7 +506,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </button>
 
           {/* Title */}
-          <div className="mt-5 flex flex-col items-center gap-1 text-center sm:mt-7">
+          <div className="mt-4 flex flex-col items-center gap-1 text-center sm:mt-6">
             <h2 className="text-xl font-semibold tracking-tight sm:text-3xl">
               {currentSong.title}
             </h2>
@@ -517,7 +517,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* Main grid */}
           {/* Desktop layout */}
-          <div className="mt-6 hidden min-h-0 flex-1 gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_450px] xl:grid-cols-[minmax(0,1fr)_420px] overflow-hidden">
+          <div className="mt-5 hidden min-h-0 flex-1 gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_400px] overflow-hidden">
             {detailPanel}
 
             {/* RIGHT */}
