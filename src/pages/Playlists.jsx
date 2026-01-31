@@ -450,7 +450,7 @@ setToastTitle("Thành công");
       </div>
 
       {/* ARTISTS */}
-      <section className="space-y-4 px-2 sm:px-0">
+      <section className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-white">Nghệ sĩ theo dõi</h2>
           {showAllArtists && (
@@ -467,7 +467,7 @@ setToastTitle("Thành công");
           artists={visibleArtists}
           containerRef={artistListRef}
           cardVariant="library"
-          gridClassName="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6"
+          gridClassName="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
         />
       </section>
       {/* LIKED ALBUMS */}

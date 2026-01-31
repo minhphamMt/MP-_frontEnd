@@ -273,7 +273,7 @@ export default function Home() {
           </button>
         }
       >
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-3">
+         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
           {songs.map((song) => (
             <SongCard key={song.id} song={song} queue={songs} />
           ))}
