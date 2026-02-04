@@ -51,24 +51,28 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
     <div
       data-card
       onClick={() => navigate(`/artist/${artist.artist_id}`)}
-      className={`group relative w-full overflow-hidden transition-all duration-300 active:scale-[0.98] ${
-        isLibrary
+      className={`group relative w-full overflow-hidden transition-all duration-300 active:scale-[0.98] ${isLibrary
           ? "rounded-lg border border-transparent bg-[#181818] p-4 hover:bg-[#242424]"
           : "rounded-xl border border-white/10 bg-[#181818] hover:bg-[#242424]"
-      } ${isRail ? "p-3" : "p-3 sm:p-4"}`}
+        } ${isRail ? "p-3" : "p-3 sm:p-4"}`}
     >
       {/* COVER */}
-       <div
-        className={`relative w-full overflow-hidden ${
-          isLibrary ? "aspect-square rounded-full" : "rounded-xl"
-        }`}
+      <div
+        className={`relative w-full overflow-hidden ${isLibrary
+            ? "aspect-square rounded-lg ring-1 ring-white/10"
+            : "aspect-square rounded-xl"
+          }`}
       >
         <img
           src={resolveAssetUrl(artist.cover_url)}
           alt={artist.artist_name}
-          className={`object-cover transition-transform duration-500 group-hover:scale-[1.05] ${
-            isLibrary ? "h-full w-full rounded-full" : "h-32 w-full rounded-xl"
-          } ${isRail ? "sm:h-36" : "sm:h-44 lg:h-52"}`}
+          className="
+    absolute inset-0
+    h-full w-full
+    object-cover
+    transition-transform duration-500
+    group-hover:scale-[1.05]
+  "
         />
 
         {!isLibrary && (
@@ -96,8 +100,7 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
               bg-[#1db954]
               text-lg text-black
               shadow-lg shadow-[#1db954]/40
-              transition-transform duration-300 group-hover:scale-110 ${
-                isRail ? "h-10 w-10 text-base" : "sm:h-12 sm:w-12 sm:text-xl"
+              transition-transform duration-300 group-hover:scale-110 ${isRail ? "h-10 w-10 text-base" : "sm:h-12 sm:w-12 sm:text-xl"
               }`}
           >
             <FiPlay />
@@ -107,9 +110,8 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
 
       {/* INFO */}
       <div
-        className={`relative mt-3 space-y-1 ${
-          isRail ? "text-left" : "sm:mt-4"
-        }`}
+        className={`relative mt-3 space-y-1 ${isRail ? "text-left" : "sm:mt-4"
+          }`}
       >
         <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/50">
           <FiUsers className="text-[#1db954]" />

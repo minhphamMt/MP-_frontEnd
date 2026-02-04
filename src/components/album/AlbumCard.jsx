@@ -59,10 +59,11 @@ export default function AlbumCard({ album, variant = "rail" }) {
 
       {/* COVER */}
          <div
-        className={`relative w-full overflow-hidden ${
-           isLibrary ? "aspect-square rounded-md" : "rounded-xl"
-        }`}
-      >
+  className={`relative w-full overflow-hidden aspect-square ${
+    isLibrary ? "rounded-md" : "rounded-xl"
+  }`}
+>
+
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -80,12 +81,17 @@ export default function AlbumCard({ album, variant = "rail" }) {
           <FiHeart />
         </button>
         <img
-          src={resolveAssetUrl(album.cover_url)}
-          alt={album.title}
-          className={`object-cover transition-transform duration-500 group-hover:scale-[1.05]
-          ${isLibrary ? "h-full w-full rounded-md" : "h-40 w-full rounded-xl"}
-          ${isRail ? "sm:h-44 lg:h-52" : "sm:h-48 lg:h-56"}`}
-        />
+  src={resolveAssetUrl(album.cover_url)}
+  alt={album.title}
+  className={`
+    absolute inset-0
+    h-full w-full
+    object-cover
+    transition-transform duration-500
+    group-hover:scale-[1.05]
+  `}
+/>
+
 
         {/* overlay gradient */}
         {!isLibrary && (
