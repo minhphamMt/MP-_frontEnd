@@ -85,6 +85,22 @@ export default function Home() {
     }
   }, []);
 
+  const getRandomHistorySongId = useCallback(async (limit = 20) => {
+    try {
+      const historyRes = await getMyHistory({ limit });
+      const payload = historyRes?.data?.data ?? historyRes?.data ?? {};
+      const items = Array.isArray(payload)
+        ? payload
+        : payload?.items ?? historyRes?.data?.items ?? [];
+      if (!items.length) return null;
+      const randomItem = items[Math.floor(Math.random() * items.length)];
+      return normalizeSongId(randomItem?.song || randomItem);
+    } catch (error) {
+      console.warn("Load random history song for recommendations failed", error);
+      return null;
+    }
+  }, []);
+
   const loadRecommendations = useCallback(
     async (seedSongId, { silent = false } = {}) => {
       if (!seedSongId) {
@@ -253,17 +269,11 @@ export default function Home() {
         subtitle="Gợi ý bài hát"
         action={
           <button
-           onClick={async () => {
-              if (!songs.length) {
-                const seedSongId =
-                  (await getLastPlayedSongId()) || normalizeSongId(currentSong);
-                await loadRecommendations(seedSongId);
-                return;
-              }
-
-              const randomSong =
-                songs[Math.floor(Math.random() * songs.length)];
-              const seedSongId = normalizeSongId(randomSong);
+            onClick={async () => {
+              const seedSongId =
+                (await getRandomHistorySongId()) ||
+                (await getLastPlayedSongId()) ||
+                normalizeSongId(currentSong);
               await loadRecommendations(seedSongId);
             }}
             disabled={recommendationLoading}
