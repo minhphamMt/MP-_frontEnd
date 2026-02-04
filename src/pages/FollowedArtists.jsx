@@ -49,7 +49,7 @@ export default function FollowedArtists() {
             Thư viện
           </p>
 
-             <h1 className="text-xl font-semibold text-white sm:text-3xl">
+            <h1 className="text-xl font-semibold text-white sm:text-3xl">
             Nghệ sĩ theo dõi
           </h1>
 
@@ -75,7 +75,7 @@ export default function FollowedArtists() {
           <ArtistFollowSection
             artists={followedArtists}
             cardVariant="library"
-            gridClassName="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6"
+           gridClassName="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
           />
         ) : (
           <div className="rounded-lg bg-[#181818] p-6 text-center text-sm text-white/60">

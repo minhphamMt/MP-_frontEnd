@@ -34,7 +34,7 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
 
       const songs = songList.map((s) => ({
         id: s.id,
-title: s.title,
+        title: s.title,
         artist_name: artistData?.name || artist.artist_name,
         duration: s.duration,
         cover_url: s.cover_url,
@@ -53,21 +53,21 @@ title: s.title,
       onClick={() => navigate(`/artist/${artist.artist_id}`)}
       className={`group relative w-full overflow-hidden transition-all duration-300 active:scale-[0.98] ${
         isLibrary
-          ? "rounded-lg border border-transparent bg-[#181818] hover:bg-[#242424]"
+          ? "rounded-lg border border-transparent bg-[#181818] p-4 hover:bg-[#242424]"
           : "rounded-xl border border-white/10 bg-[#181818] hover:bg-[#242424]"
       } ${isRail ? "p-3" : "p-3 sm:p-4"}`}
     >
       {/* COVER */}
        <div
         className={`relative w-full overflow-hidden ${
-          isLibrary ? "rounded-full" : "rounded-xl"
+          isLibrary ? "aspect-square rounded-full" : "rounded-xl"
         }`}
       >
         <img
           src={resolveAssetUrl(artist.cover_url)}
           alt={artist.artist_name}
-          className={`h-32 w-full object-cover transition-transform duration-500 group-hover:scale-[1.05] ${
-            isLibrary ? "rounded-full" : "rounded-xl"
+          className={`object-cover transition-transform duration-500 group-hover:scale-[1.05] ${
+            isLibrary ? "h-full w-full rounded-full" : "h-32 w-full rounded-xl"
           } ${isRail ? "sm:h-36" : "sm:h-44 lg:h-52"}`}
         />
 
@@ -106,7 +106,7 @@ title: s.title,
       </div>
 
       {/* INFO */}
-       <div
+      <div
         className={`relative mt-3 space-y-1 ${
           isRail ? "text-left" : "sm:mt-4"
         }`}
@@ -116,14 +116,14 @@ title: s.title,
           Nghệ sĩ
         </div>
 
-         <h3 className="truncate text-sm font-semibold text-white sm:text-base">
+        <h3 className="truncate text-sm font-semibold text-white sm:text-base">
           {artist.artist_name}
         </h3>
 
         <div className="flex items-center justify-between gap-2 text-xs text-white/70">
           <div className="flex items-center gap-1">
             <FiMusic className="shrink-0 text-white/60" />
-             <span>{songCount} bài hát</span>
+            <span>{songCount} bài hát</span>
           </div>
           {!isLibrary && (
             <FollowArtistButton

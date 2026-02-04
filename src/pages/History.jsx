@@ -339,7 +339,7 @@ export default function History() {
                     {formatRelativeTime(item.listened_at)}
                   </div>
 
-                  <div className="flex items-center justify-end gap-2 xl:hidden">
+                  <div className="grid w-[150px] grid-cols-[repeat(2,32px)_minmax(80px,1fr)] items-center justify-items-end gap-2 text-right xl:hidden">
                     <AddToPlaylistButton
                       song={item}
                       triggerClassName="h-8 w-8 !border-white/20 !bg-white/5 hover:!bg-white/15"
@@ -359,7 +359,7 @@ export default function History() {
                     >
                       <FiHeart className="text-[14px]" />
                     </button>
-                    <span className="text-[11px] text-white/60">
+                    <span className="truncate text-[11px] text-white/60">
                       {formatRelativeTime(item.listened_at)}
                     </span>
                   </div>
