@@ -10,6 +10,7 @@ import {
 import ArtistAlbumTile from "../../components/artist/ArtistAlbumTile";
 import { resolveAssetUrl } from "../../utils/asset";
 import { formatDateDisplay } from "../../utils/date";
+import OptimizedImage from "../../components/common/OptimizedImage";
 
 const formatDateInput = (value) => {
   if (!value) return "";
@@ -274,7 +275,7 @@ export default function AdminAlbums() {
                 </p>
                 <div className="mt-4">
                   {selectedAlbum.cover_url || selectedAlbum.cover ? (
-                    <img
+                    <OptimizedImage
                       src={resolveAssetUrl(
                         selectedAlbum.cover_url || selectedAlbum.cover
                       )}
@@ -326,7 +327,7 @@ export default function AdminAlbums() {
                     >
                       <div className="h-12 w-12 overflow-hidden rounded-xl bg-black/40">
                         {getSongCover(song) || selectedAlbum.cover_url ? (
-                          <img
+                          <OptimizedImage
                             src={resolveAssetUrl(
                               getSongCover(song) ||
                                 selectedAlbum.cover_url ||
@@ -384,7 +385,7 @@ export default function AdminAlbums() {
                 <p className="text-sm font-semibold text-white">Thông tin chi tiết</p>
                 <div className="mt-4 flex flex-col gap-4">
                   {coverPreview ? (
-                    <img
+                    <OptimizedImage
                       src={coverPreview}
                       alt={editPayload.title || "Album cover"}
                       className="h-56 w-full rounded-2xl bg-black/40 object-contain shadow-lg"

@@ -18,6 +18,7 @@ import {
 } from "../../api/admin.api";
 import Toast from "../../components/common/Toast";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../../components/common/OptimizedImage";
 
 const getUserAvatar = (user) =>
   user?.avatar_url ||
@@ -259,7 +260,7 @@ export default function AdminUsers() {
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 overflow-hidden rounded-full bg-white/10">
                     {getUserAvatar(user) ? (
-                      <img
+                      <OptimizedImage
                         src={resolveAssetUrl(getUserAvatar(user))}
                         alt={user.display_name || user.name || "User"}
                         className="h-full w-full object-cover"
@@ -337,7 +338,7 @@ export default function AdminUsers() {
                 <p className="text-sm font-semibold text-white">Ảnh đại diện</p>
                 <div className="mt-4 flex flex-col gap-4">
                   {avatarPreview ? (
-                    <img
+                    <OptimizedImage
                       src={avatarPreview}
                       alt={editPayload.display_name || "User avatar"}
                       className="h-56 w-full rounded-2xl object-cover shadow-lg"

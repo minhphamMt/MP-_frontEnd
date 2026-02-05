@@ -1,4 +1,5 @@
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 
 export default function PlaylistSuggestions({
   songs = [],
@@ -62,7 +63,7 @@ export default function PlaylistSuggestions({
             {/* LEFT */}
             <div className="flex min-w-0 items-center gap-3">
               <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
-                <img
+                <OptimizedImage
                   src={resolveAssetUrl(song.cover_url)}
                   alt={song.title}
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-110"

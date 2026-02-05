@@ -13,6 +13,7 @@ import { deleteArtist, getArtistById, getArtists, updateArtist } from "../../api
 import Toast from "../../components/common/Toast";
 import { resolveAssetUrl } from "../../utils/asset";
 import { formatDateDisplay } from "../../utils/date";
+import OptimizedImage from "../../components/common/OptimizedImage";
 
 const formatDateInput = (value) => {
   if (!value) return "";
@@ -269,7 +270,7 @@ export default function AdminArtistList() {
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 overflow-hidden rounded-full bg-white/10">
                     {artist.avatar_url ? (
-                      <img
+                      <OptimizedImage
                         src={resolveAssetUrl(artist.avatar_url)}
                         alt={artist.name}
                         className="h-full w-full object-cover"
@@ -342,7 +343,7 @@ export default function AdminArtistList() {
                 </p>
                 <div className="mt-4 flex flex-col gap-4">
                   {avatarPreview ? (
-                    <img
+                    <OptimizedImage
                       src={avatarPreview}
                       alt={editPayload.name || "Artist avatar"}
                       className="h-56 w-full rounded-2xl object-cover shadow-lg"

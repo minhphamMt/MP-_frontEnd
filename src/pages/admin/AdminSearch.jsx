@@ -3,6 +3,7 @@ import { FiSearch } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { searchAdmin } from "../../api/admin.api";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../../components/common/OptimizedImage";
 
 const SEARCH_TABS = [
   "All",
@@ -345,7 +346,7 @@ export default function AdminSearch() {
                 >
                   <div className="space-y-4">
                     {topResult.imageUrl ? (
-                      <img
+                      <OptimizedImage
                         src={resolveAssetUrl(topResult.imageUrl)}
                         alt={topResult.displayLabel}
                         className={`h-28 w-28 object-cover ${
@@ -404,7 +405,7 @@ export default function AdminSearch() {
                       className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition hover:bg-white/5"
                     >
                       {song.imageUrl ? (
-                        <img
+                        <OptimizedImage
                           src={resolveAssetUrl(song.imageUrl)}
                           alt={song.displayLabel}
                           className="h-10 w-10 rounded-lg object-cover"
@@ -448,7 +449,7 @@ export default function AdminSearch() {
               >
                  <div className="space-y-3">
                   {artist.imageUrl ? (
-                    <img
+                    <OptimizedImage
                       src={resolveAssetUrl(artist.imageUrl)}
                       alt={artist.displayLabel}
                       className="h-24 w-24 rounded-full object-cover"
@@ -486,7 +487,7 @@ export default function AdminSearch() {
               >
                 <div className="space-y-3">
                   {album.imageUrl ? (
-                    <img
+                    <OptimizedImage
                       src={resolveAssetUrl(album.imageUrl)}
                       alt={album.displayLabel}
                       className="h-24 w-24 rounded-xl object-cover"
@@ -523,7 +524,7 @@ export default function AdminSearch() {
                 className="flex items-center gap-4 rounded-2xl border border-white/5 bg-[#181818] px-4 py-3 text-left transition hover:bg-[#202020]"
               >
                 {user.imageUrl ? (
-                  <img
+                  <OptimizedImage
                     src={resolveAssetUrl(user.imageUrl)}
                     alt={user.displayLabel}
                     className="h-12 w-12 rounded-full object-cover"

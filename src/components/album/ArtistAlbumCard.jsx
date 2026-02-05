@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import usePlayerStore from "../../store/player.store";
 import FollowArtistButton from "../artist/FollowArtistButton";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 
 export default function ArtistAlbumCard({ artist, variant = "grid" }) {
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
             : "aspect-square rounded-xl"
           }`}
       >
-        <img
+        <OptimizedImage
           src={resolveAssetUrl(artist.cover_url)}
           alt={artist.artist_name}
           className="

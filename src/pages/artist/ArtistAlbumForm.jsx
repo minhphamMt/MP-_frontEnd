@@ -7,6 +7,7 @@ import {
   updateAlbum,
 } from "../../api/album.api";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../../components/common/OptimizedImage";
 
 const emptyForm = {
   title: "",
@@ -221,7 +222,7 @@ export default function ArtistAlbumForm() {
             <h2 className="text-lg font-semibold text-white">Xem trước</h2>
             <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#181818]">
               {coverPreview ? (
-                <img
+                <OptimizedImage
                   src={coverPreview}
                   alt="Ảnh bìa"
                   className="h-56 w-full object-cover"

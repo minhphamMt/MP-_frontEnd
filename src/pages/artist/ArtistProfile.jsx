@@ -8,6 +8,7 @@ import {
   uploadArtistAvatar,
 } from "../../api/artist.api";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../../components/common/OptimizedImage";
 
 const emptyForm = {
   name: "",
@@ -338,7 +339,7 @@ export default function ArtistProfile() {
           <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
             <div className="relative h-44 w-full overflow-hidden">
               {coverPreview ? (
-                <img
+                <OptimizedImage
                   src={coverPreview}
                   alt="Cover preview"
                   className="h-full w-full object-cover"

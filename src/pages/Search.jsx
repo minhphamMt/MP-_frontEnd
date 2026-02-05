@@ -8,6 +8,7 @@ import { filterPlayableSongs } from "../utils/song";
 import { saveSearchHistory } from "../api/search.api";
 import useAuthStore from "../store/auth.store";
 import { resolveAssetUrl } from "../utils/asset";
+import OptimizedImage from "../components/common/OptimizedImage";
 
 const normalizeArtist = (artist) => ({
   ...artist,
@@ -198,7 +199,7 @@ export default function Search() {
                   {topResult ? (
                     <div className="space-y-4">
                       {topResult.image ? (
-                        <img
+                        <OptimizedImage
                           src={resolveAssetUrl(topResult.image)}
                           alt={topResult.title}
                           className={`h-28 w-28 object-cover ${

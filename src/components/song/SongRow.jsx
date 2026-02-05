@@ -3,6 +3,7 @@ import { FiPlay, FiPause } from "react-icons/fi";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { formatDuration } from "../../utils/song";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 
 export default function SongRow({ song, queue }) {
   const {
@@ -40,7 +41,7 @@ export default function SongRow({ song, queue }) {
 
       {/* Cover */}
       <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg">
-        <img
+        <OptimizedImage
           src={resolveAssetUrl(song.cover_url)}
           alt={song.title}
           className="h-full w-full object-cover transition duration-300 group-hover:scale-110"

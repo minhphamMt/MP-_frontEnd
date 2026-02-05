@@ -9,6 +9,7 @@ import {
 } from "../../api/admin.api";
 import Toast from "../../components/common/Toast";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../../components/common/OptimizedImage";
 
 const ROLE_OPTIONS = ["USER", "ARTIST", "ADMIN"];
 const emptyUserPayload = {
@@ -200,7 +201,7 @@ export default function AdminUserForm() {
                   </p>
                   <div className="mt-4 flex flex-col gap-4">
                     {avatarPreview ? (
-                      <img
+                      <OptimizedImage
                         src={avatarPreview}
                         alt={formValues.display_name || "User avatar"}
                         className="h-56 w-full rounded-2xl object-cover shadow-lg"

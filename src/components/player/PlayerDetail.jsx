@@ -14,6 +14,7 @@ import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
 import PlayerDetailLyrics from "./PlayerDetailLyrics";
 import PlayerDetailQueue from "./PlayerDetailQueue";
+import OptimizedImage from "../common/OptimizedImage";
 
 /* ================= utils ================= */
 const formatTime = (sec = 0) => {
@@ -290,7 +291,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           }}
         >
           {cover && (
-            <img
+            <OptimizedImage
               src={cover}
               alt={currentSong.title}
               className="h-full w-full object-contain"
@@ -310,7 +311,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             }}
           >
             {cover && (
-              <img
+              <OptimizedImage
                 src={cover}
                 alt={currentSong.title}
                 className={`player-detail-disc h-full w-full object-cover ${

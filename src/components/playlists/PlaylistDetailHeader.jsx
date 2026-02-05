@@ -1,5 +1,6 @@
 import { FiEdit2, FiPlay, FiShuffle, FiTrash2 } from "react-icons/fi";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 
 export default function PlaylistDetailHeader({
   playlist,
@@ -22,7 +23,7 @@ export default function PlaylistDetailHeader({
          <div className="flex flex-wrap items-center gap-4 sm:gap-5">
           <div className="relative h-24 w-24 overflow-hidden rounded-2xl shadow-xl shadow-black/40 sm:h-32 sm:w-32">
             {cover ? (
-              <img
+              <OptimizedImage
                 src={cover}
                 alt={playlist?.title}
                 className="h-full w-full object-cover transition duration-500 hover:scale-105"

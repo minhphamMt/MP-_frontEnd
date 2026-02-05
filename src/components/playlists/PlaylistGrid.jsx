@@ -1,6 +1,7 @@
 import { FiMusic } from "react-icons/fi";
 import { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 
 export default function PlaylistGrid({
   playlists = [],
@@ -43,7 +44,7 @@ export default function PlaylistGrid({
               }`}
             >
               {cover ? (
-                <img
+                <OptimizedImage
                   src={cover}
                   alt={pl.title}
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-105"

@@ -14,6 +14,7 @@ import {
 import { getSongById } from "../api/song.api";
 import usePlayerStore from "../store/player.store";
 import Section from "../components/section/Section";
+import OptimizedImage from "../components/common/OptimizedImage";
 
 const CHART_WIDTH = 820;
 const CHART_HEIGHT = 240;
@@ -399,7 +400,7 @@ const xStep =
 
       <div className="flex min-w-0 items-center gap-3">
         <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md border border-white/5 bg-[#242424]">
-          <img
+          <OptimizedImage
             src={getSongCover(song)}
             alt={song.title}
             className="h-full w-full object-cover"
@@ -619,7 +620,7 @@ const xStep =
                               style={{ backgroundColor: point.line.color.main }}
                             />
                             <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#242424]">
-                              <img
+                              <OptimizedImage
                                 src={getSongCover(point.line.song)}
                                 alt={point.line.song?.title}
                                 className="h-full w-full object-cover"
@@ -680,7 +681,7 @@ const xStep =
                   className="group flex items-center gap-3 rounded-xl border border-white/5 bg-[#242424] px-3 py-2 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#2a2a2a] hover:shadow-lg hover:shadow-black/30"
                 >
                   <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/10 bg-[#1f1f1f]">
-                    <img
+                    <OptimizedImage
                       src={getSongCover(item.song)}
                       alt={item.song?.title}
                       className="h-full w-full object-cover"
@@ -764,7 +765,7 @@ const xStep =
                         </div>
 
                          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/5 bg-[#242424] shadow-md shadow-black/25 transition group-hover/item:ring-2 group-hover/item:ring-emerald-400/60 group-hover/item:ring-offset-2 group-hover/item:ring-offset-[#121212]">
-                          <img
+                          <OptimizedImage
                             src={getSongCover(song)}
                             alt={song.title}
                             className="h-full w-full object-cover"

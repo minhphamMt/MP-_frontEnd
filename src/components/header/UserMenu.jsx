@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiChevronRight, FiLogOut, FiUser } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ export default function UserMenu() {
         aria-haspopup="menu"
       >
         {user?.avatar_url ? (
-          <img
+          <OptimizedImage
             src={resolveAvatarUrl(user.avatar_url)}
             alt={displayName}
             className="h-full w-full object-cover"

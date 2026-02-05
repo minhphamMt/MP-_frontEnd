@@ -16,6 +16,7 @@ import { useState } from "react";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import PlayerDetail from "./PlayerDetail";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 
 const formatTime = (t = 0) =>
   `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
@@ -78,7 +79,7 @@ export default function PlayerBar() {
         >
           {/* Cover */}
           <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md bg-white/10">
-            <img
+            <OptimizedImage
               src={resolveAssetUrl(currentSong.cover_url)}
               alt=""
               className="h-full w-full object-cover"
@@ -154,7 +155,7 @@ export default function PlayerBar() {
           {/* LEFT */}
           <div className="flex w-1/3 items-center gap-3 min-w-0">
             <div className="h-14 w-14 overflow-hidden rounded-xl bg-white/10">
-              <img
+              <OptimizedImage
                 src={resolveAssetUrl(currentSong.cover_url)}
                 alt=""
                 className="h-full w-full object-cover"

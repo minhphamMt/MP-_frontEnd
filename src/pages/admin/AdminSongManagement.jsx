@@ -11,6 +11,7 @@ import { getAlbums } from "../../api/album.api";
 import { resolveAssetUrl } from "../../utils/asset";
 import { deleteSong } from "../../api/song.api";
 import useAuthStore from "../../store/auth.store";
+import OptimizedImage from "../../components/common/OptimizedImage";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tất cả" },
@@ -384,7 +385,7 @@ export default function AdminSongManagement() {
               >
                  <div className="flex items-center gap-3">
                   {getSongCover(song) ? (
-                    <img
+                    <OptimizedImage
                       src={resolveAssetUrl(getSongCover(song))}
                       alt={song.title}
                       className="h-12 w-12 rounded-lg object-cover"
@@ -436,7 +437,7 @@ export default function AdminSongManagement() {
                 <p className="text-sm font-semibold text-white">Ảnh đại diện</p>
                 <div className="mt-4 flex flex-col gap-4">
                   {coverPreview ? (
-                    <img
+                    <OptimizedImage
                       src={coverPreview}
                       alt={editPayload.title || "Song cover"}
                       className="h-56 w-full rounded-2xl bg-black/40 object-contain shadow-lg"

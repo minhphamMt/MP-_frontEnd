@@ -15,6 +15,7 @@ import {
 } from "../api/user.api";
 import useAuthStore from "../store/auth.store";
 import { resolveAssetUrl } from "../utils/asset";
+import OptimizedImage from "../components/common/OptimizedImage";
 
 const emptyProfile = {
   display_name: "",
@@ -241,7 +242,7 @@ export default function Profile() {
           <div className="flex items-center gap-4">
             <div className="relative h-16 w-16 overflow-hidden rounded-full border border-white/10 bg-white/10">
               {profile.avatar_url ? (
-                <img
+                <OptimizedImage
                   src={resolveAssetUrl(profile.avatar_url)}
                   alt={profile.display_name || "User avatar"}
                   className="h-full w-full object-cover"

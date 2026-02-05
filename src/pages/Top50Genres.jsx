@@ -4,6 +4,7 @@ import { FiChevronRight } from "react-icons/fi";
 import { getTop50ByGenres } from "../api/chart.api";
 import { filterPlayableSongs } from "../utils/song";
 import { resolveAssetUrl } from "../utils/asset";
+import OptimizedImage from "../components/common/OptimizedImage";
 
 /* ================= utils ================= */
 const normalizeTopGenres = (payload) => {
@@ -84,7 +85,7 @@ export default function Top50Genres() {
 
               <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
                 {cover ? (
-                  <img
+                  <OptimizedImage
                     src={cover}
                     alt={genre?.name}
                     className="h-full w-full object-cover transition duration-300 group-hover:scale-105"

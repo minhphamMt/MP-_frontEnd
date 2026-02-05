@@ -22,6 +22,7 @@ import AlbumCard from "../components/album/AlbumCard";
 import PlaylistGrid from "../components/playlists/PlaylistGrid";
 import Toast from "../components/common/Toast";
 import { resolveAssetUrl } from "../utils/asset";
+import OptimizedImage from "../components/common/OptimizedImage";
 const getData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
 const extractSongsFromResponse = (payload) => {
   const sources = [
@@ -406,7 +407,7 @@ setToastTitle("Thành công");
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-[#282828] text-lg font-bold text-white">
             {user?.avatar_url ? (
-              <img
+              <OptimizedImage
                 src={resolveAssetUrl(user.avatar_url)}
                 alt={user.display_name}
                 className="h-full w-full object-cover"

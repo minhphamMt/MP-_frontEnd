@@ -5,6 +5,7 @@ import { formatDuration, fetchPlayableSong } from "../../utils/song";
 import { getSongById } from "../../api/song.api";
 import { resolveAssetUrl } from "../../utils/asset";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
+import OptimizedImage from "../common/OptimizedImage";
 
 export default function SongTable({
   title,
@@ -148,7 +149,7 @@ export default function SongTable({
                   {/* Song info */}
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md sm:h-12 sm:w-12">
-                        <img
+                        <OptimizedImage
                         src={resolveAssetUrl(song.cover_url)}
                         alt={song.title}
                         className="h-full w-full object-cover"

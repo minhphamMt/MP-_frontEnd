@@ -10,6 +10,7 @@ import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 import { resolveAssetUrl } from "../utils/asset";
 import useAuthStore from "../store/auth.store";
 import { formatDateDisplay } from "../utils/date";
+import OptimizedImage from "../components/common/OptimizedImage";
 
 const formatTime = (s = 0) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -126,7 +127,7 @@ export default function AlbumDetail() {
           {/* COVER */}
            <div className="mx-auto w-full max-w-[260px] lg:mx-0">
             <div className="relative overflow-hidden rounded-2xl shadow-xl shadow-black/40">
-              <img
+              <OptimizedImage
                 src={resolveAssetUrl(album.cover_url)}
                 alt={album.title}
                 className="aspect-square h-full w-full object-cover object-center transition duration-500 hover:scale-105"
@@ -266,7 +267,7 @@ export default function AlbumDetail() {
                   {/* SONG */}
                   <div className="flex min-w-0 items-center gap-3">
                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/30 sm:h-12 sm:w-12">
-                      <img
+                      <OptimizedImage
                         src={resolveAssetUrl(song.cover_url)}
                         alt={song.title}
                         className="h-full w-full object-cover"

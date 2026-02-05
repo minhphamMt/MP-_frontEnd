@@ -1,5 +1,6 @@
 import { FiList, FiMusic } from "react-icons/fi";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 
 export default function PlaylistCard({ playlist, onOpen, variant = "grid" }) {
   const cover = resolveAssetUrl(playlist?.songs?.[0]?.cover_url);
@@ -23,7 +24,7 @@ export default function PlaylistCard({ playlist, onOpen, variant = "grid" }) {
         }`}
       >
         {cover ? (
-          <img
+          <OptimizedImage
             src={cover}
             alt={playlist?.title || playlist?.name || "Playlist"}
             className={`h-36 w-full object-cover transition-transform duration-500 group-hover:scale-[1.05] sm:h-44 lg:h-52 ${

@@ -8,6 +8,7 @@ import {
 } from "../../api/artist.api";
 import Toast from "../../components/common/Toast";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../../components/common/OptimizedImage";
 
 const emptyArtistPayload = {
   name: "",
@@ -196,7 +197,7 @@ export default function AdminArtistForm() {
                   </p>
                   <div className="mt-4 flex flex-col gap-4">
                     {avatarPreview ? (
-                      <img
+                      <OptimizedImage
                         src={avatarPreview}
                         alt={formValues.name || "Artist avatar"}
                         className="h-56 w-full rounded-2xl object-cover shadow-lg"

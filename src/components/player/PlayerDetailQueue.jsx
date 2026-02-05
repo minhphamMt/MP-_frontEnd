@@ -1,5 +1,6 @@
 import { memo, useMemo } from "react";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 
 function PlayerDetailQueue({ queue, currentIndex, playAt }) {
   const played = useMemo(() => {
@@ -38,7 +39,7 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
       >
         <div className="h-12 w-12 overflow-hidden rounded-xl bg-white/10 ring-1 ring-white/10">
           {sCover && (
-            <img
+            <OptimizedImage
               src={sCover}
               alt={song.title}
               className="h-full w-full object-cover"

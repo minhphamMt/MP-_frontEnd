@@ -10,6 +10,7 @@ import { saveSearchHistory } from "../../api/search.api";
 import useAuthStore from "../../store/auth.store";
 import { createPortal } from "react-dom";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 
 export default function SearchBox() {
   const location = useLocation();
@@ -502,7 +503,7 @@ const handleResultNavigate = async (item) => {
                     >
                       <div className="relative h-12 w-12 overflow-hidden rounded-lg border border-white/10 bg-[#2a2a2a]">
                         {item.cover ? (
-                          <img
+                          <OptimizedImage
                             src={resolveAssetUrl(item.cover)}
                             alt={item.displayLabel || item.name}
                             className="h-full w-full object-cover"

@@ -4,6 +4,7 @@ import { FiCheckCircle, FiRefreshCw, FiSlash } from "react-icons/fi";
 import { approveSong, blockSong } from "../../api/admin.api";
 import { getSongs } from "../../api/song.api";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../../components/common/OptimizedImage";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "Tất cả" },
@@ -184,7 +185,7 @@ export default function AdminSongs() {
               >
                 <div className="flex items-center gap-3">
                   {getSongCover(song) ? (
-                    <img
+                    <OptimizedImage
                       src={resolveAssetUrl(getSongCover(song))}
                       alt={song.title}
                       className="h-12 w-12 rounded-lg object-cover"

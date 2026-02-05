@@ -1,6 +1,7 @@
 import { normalizeSongId } from "../../store/player.store";
 import { FiHeart, FiPause, FiPlay, FiTrash2, FiMusic } from "react-icons/fi";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 export default function PlaylistSongsTable({
   songs = [],
   currentSong,
@@ -69,7 +70,7 @@ export default function PlaylistSongsTable({
 
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md">
-                      <img
+                      <OptimizedImage
                         src={resolveAssetUrl(song.cover_url)}
                         alt={song.title}
                         className="h-full w-full object-cover"

@@ -2,6 +2,7 @@ import { FiHeart, FiPause, FiPlay, FiRadio } from "react-icons/fi";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 
 export default function SongCard({ song, queue }) {
   const {
@@ -48,7 +49,7 @@ export default function SongCard({ song, queue }) {
           onClick={handlePlay}
           className="relative shrink-0 overflow-hidden rounded-xl"
         >
-          <img
+          <OptimizedImage
             src={resolveAssetUrl(song.cover_url)}
             alt={song.title}
              className="h-14 w-14 rounded-xl object-cover transition duration-300 group-hover:scale-110 sm:h-16 sm:w-16"

@@ -6,6 +6,7 @@ import { fetchPlayableSong } from "../utils/song";
 import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import { resolveAssetUrl } from "../utils/asset";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
+import OptimizedImage from "../components/common/OptimizedImage";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const DEFAULT_LIMIT = 20;
@@ -274,7 +275,7 @@ export default function History() {
                   </div>
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md">
-                      <img
+                      <OptimizedImage
                         src={resolveAssetUrl(item.cover_url)}
                         alt=""
                         className="h-full w-full object-cover"

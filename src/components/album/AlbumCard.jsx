@@ -6,6 +6,7 @@ import useAlbumLikeStore, {
 } from "../../store/album-like.store";
 import usePlayerStore from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 
 export default function AlbumCard({ album, variant = "rail" }) {
   const navigate = useNavigate();
@@ -80,7 +81,7 @@ export default function AlbumCard({ album, variant = "rail" }) {
         >
           <FiHeart />
         </button>
-        <img
+        <OptimizedImage
   src={resolveAssetUrl(album.cover_url)}
   alt={album.title}
   className={`

@@ -6,6 +6,7 @@ import {
   FiTrash2,
 } from "react-icons/fi";
 import { resolveAssetUrl } from "../../utils/asset";
+import OptimizedImage from "../common/OptimizedImage";
 
 const formatReleaseDate = (value) => {
   if (!value) return "Chưa cập nhật";
@@ -30,7 +31,7 @@ const coverUrl = resolveAssetUrl(album?.cover_url || album?.cover);
     <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#181818]/80 shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition hover:-translate-y-1 hover:border-white/20 hover:bg-[#202020]">
       <div className="relative">
         {coverUrl ? (
-          <img
+          <OptimizedImage
             src={coverUrl}
             alt={album?.title || "Album"}
             className="h-44 w-full bg-black/40 object-contain sm:h-52"
