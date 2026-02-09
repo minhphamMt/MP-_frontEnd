@@ -5,6 +5,7 @@ import useAuthStore from "../../store/auth.store";
 import { getAlbums } from "../../api/album.api";
 import { deleteSong, getArtistSongs } from "../../api/song.api";
 import { getMyArtistProfile } from "../../api/artist.api";
+import { resolveAssetUrl } from "../../utils/asset";
 
 export default function ArtistSongs() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export default function ArtistSongs() {
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-   useEffect(() => {
+  useEffect(() => {
     const loadArtistProfile = async () => {
       if (artistProfile?.id || user?.artist_id) return;
       try {
@@ -55,7 +56,7 @@ export default function ArtistSongs() {
   }, [artistId]);
 
   const loadSongs = useCallback(async () => {
-  try {
+    try {
       setLoading(true);
       const res = await getArtistSongs(artistId);
       const payload = res?.data?.data || res?.data || {};
@@ -69,41 +70,41 @@ export default function ArtistSongs() {
     }
   }, [artistId]);
 
-useEffect(() => {
-  loadAlbums();
-  loadSongs();
-}, [loadAlbums, loadSongs]);
+  useEffect(() => {
+    loadAlbums();
+    loadSongs();
+  }, [loadAlbums, loadSongs]);
 
-const albumMap = useMemo(() => {
-  return albums.reduce((acc, album) => {
-    acc[album.id] = album;
-    return acc;
-  }, {});
-}, [albums]);
+  const albumMap = useMemo(() => {
+    return albums.reduce((acc, album) => {
+      acc[album.id] = album;
+      return acc;
+    }, {});
+  }, [albums]);
 
-const filteredSongs = useMemo(() => {
-  const normalized = songs.map((song) => {
-    const songId = song.id ?? song.song_id ?? song.songId;
-    return {
-      ...song,
-      id: songId,
-      album_title:
-        song.album_title ||
-        song.album?.title ||
-        albumMap[song.album_id]?.title ||
-        "Single",
-    };
-  });
+  const filteredSongs = useMemo(() => {
+    const normalized = songs.map((song) => {
+      const songId = song.id ?? song.song_id ?? song.songId;
+      return {
+        ...song,
+        id: songId,
+        album_title:
+          song.album_title ||
+          song.album?.title ||
+          albumMap[song.album_id]?.title ||
+          "Single",
+      };
+    });
 
-  return normalized.filter((song) => {
-    const matchesKeyword = keyword
-      ? (song.title || "").toLowerCase().includes(keyword.toLowerCase())
-      : true;
-    const matchesStatus =
-      statusFilter === "all" ? true : song.status === statusFilter;
-    return matchesKeyword && matchesStatus;
-  });
-}, [albumMap, keyword, songs, statusFilter]);
+    return normalized.filter((song) => {
+      const matchesKeyword = keyword
+        ? (song.title || "").toLowerCase().includes(keyword.toLowerCase())
+        : true;
+      const matchesStatus =
+        statusFilter === "all" ? true : song.status === statusFilter;
+      return matchesKeyword && matchesStatus;
+    });
+  }, [albumMap, keyword, songs, statusFilter]);
 
   const handleDelete = async (songId) => {
     if (!songId) return;
@@ -124,6 +125,8 @@ const filteredSongs = useMemo(() => {
     approved: "border-emerald-400/30 bg-emerald-500/10 text-emerald-200",
     pending: "border-amber-400/30 bg-amber-500/10 text-amber-200",
     draft: "border-slate-400/30 bg-slate-500/10 text-slate-200",
+    rejected: "border-rose-400/30 bg-rose-500/10 text-rose-200",
+    blocked: "border-rose-400/30 bg-rose-500/10 text-rose-200",
   };
 
   return (
@@ -170,6 +173,7 @@ const filteredSongs = useMemo(() => {
             <option value="approved">Công khai</option>
             <option value="pending">Chờ duyệt</option>
             <option value="draft">Nháp</option>
+            <option value="rejected">Từ chối</option>
           </select>
           <span className="text-sm text-white/50">
             {filteredSongs.length} bài hát
@@ -190,7 +194,7 @@ const filteredSongs = useMemo(() => {
       )}
 
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-       <div className="hidden grid-cols-[1.6fr_0.9fr_0.9fr] gap-4 border-b border-white/10 bg-white/5 px-6 py-4 text-xs uppercase tracking-[0.2em] text-white/50 sm:grid">
+        <div className="hidden grid-cols-[2.2fr_1fr_1fr] gap-4 border-b border-white/10 bg-white/5 px-6 py-4 text-xs uppercase tracking-[0.2em] text-white/50 sm:grid">
           <span>Bài hát</span>
           <span>Trạng thái</span>
           <span className="text-right">Hành động</span>
@@ -199,11 +203,35 @@ const filteredSongs = useMemo(() => {
           {filteredSongs.map((song) => (
             <div
               key={`${song.id ?? song.title}-${song.album_id ?? "single"}`}
-              className="flex flex-col gap-3 px-6 py-4 text-sm text-white/80 sm:grid sm:grid-cols-[1.6fr_0.9fr_0.9fr] sm:items-center"
+              className="flex flex-col gap-4 px-6 py-4 text-sm text-white/80 sm:grid sm:grid-cols-[2.2fr_1fr_1fr] sm:items-center"
             >
-              <div>
-                <p className="font-semibold text-white">{song.title}</p>
-                <p className="text-xs text-white/50">ID #{song.id}</p>
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                  {song.cover_url ? (
+                    <img
+                      src={resolveAssetUrl(song.cover_url)}
+                      alt={song.title}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-[10px] text-white/40">
+                      No cover
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="font-semibold text-white">{song.title}</p>
+                  <p className="text-xs text-white/50">ID #{song.id}</p>
+                  {song.album_title && (
+                    <p className="text-xs text-white/50">{song.album_title}</p>
+                  )}
+                  {song.status === "rejected" && song.reject_reason && (
+                    <p className="mt-1 text-xs text-rose-200/90">
+                      Lý do từ chối: {song.reject_reason}
+                    </p>
+                  )}
+                </div>
               </div>
               <span
                 className={`w-fit rounded-full border px-3 py-1 text-xs ${
