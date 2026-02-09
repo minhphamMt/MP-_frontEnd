@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 
 const Login = lazy(() => import("../pages/Login"));
+const ArtistAuth = lazy(() => import("../pages/ArtistAuth"));
+const ArtistRequest = lazy(() => import("../pages/ArtistRequest"));
 const Forbidden = lazy(() => import("../pages/Forbidden"));
 const MainLayout = lazy(() => import("../layouts/MainLayout"));
 const Home = lazy(() => import("../pages/Home"));
@@ -39,6 +41,9 @@ const AdminAlbums = lazy(() => import("../pages/admin/AdminAlbums"));
 const AdminSearch = lazy(() => import("../pages/admin/AdminSearch"));
 const AdminArtistForm = lazy(() => import("../pages/admin/AdminArtistForm"));
 const AdminArtistList = lazy(() => import("../pages/admin/AdminArtistList"));
+const AdminArtistRequests = lazy(() =>
+  import("../pages/admin/AdminArtistRequests")
+);
 const AdminUserForm = lazy(() => import("../pages/admin/AdminUserForm"));
 const Trash = lazy(() => import("../pages/Trash"));
 
@@ -55,6 +60,7 @@ export default function AppRoutes() {
         {/* ===== PUBLIC ===== */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Login initialMode="register" />} />
+        <Route path="/artist-auth" element={<ArtistAuth />} />
         <Route path="/403" element={<Forbidden />} />
 
         {/* ===== USER / APP ===== */}
@@ -124,6 +130,10 @@ export default function AppRoutes() {
             <Route path="/admin/artists" element={<AdminArtistList />} />
             <Route path="/admin/artists/new" element={<AdminArtistForm />} />
             <Route path="/admin/artists/:id/edit" element={<AdminArtistForm />} />
+            <Route
+              path="/admin/artist-requests"
+              element={<AdminArtistRequests />}
+            />
             <Route path="/admin/search" element={<AdminSearch />} />
             <Route path="/admin/songs" element={<AdminSongManagement />} />
             <Route path="/admin/songs/review" element={<AdminSongs />} />
@@ -132,6 +142,10 @@ export default function AppRoutes() {
             <Route path="/admin/genres" element={<AdminGenres />} />
             <Route path="/admin/trash" element={<Trash />} />
           </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={["USER", "ARTIST"]} />}>
+          <Route path="/artist-request" element={<ArtistRequest />} />
         </Route>
 
         {/* ===== FALLBACK ===== */}

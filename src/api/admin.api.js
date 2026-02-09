@@ -48,3 +48,15 @@ export const listAdminSongs = (params = {}) =>
 
 export const updateAdminSong = (id, payload) =>
   api.put(`/admin/songs/${id}`, payload);
+
+export const listArtistRequests = (params = {}) =>
+  api.get("/admin/artist-requests", { params });
+
+export const reviewArtistRequest = (id, payload) =>
+  api.patch(`/admin/artist-requests/${id}/review`, payload);
+
+export const approveArtistRequest = (id) =>
+  api.patch(`/admin/artist-requests/${id}/approve`);
+
+export const rejectArtistRequest = (id, payload) =>
+  api.patch(`/admin/artist-requests/${id}/reject`, payload);

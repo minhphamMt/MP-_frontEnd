@@ -10,6 +10,11 @@ export default function AdminSidebar() {
       <SidebarItem to="/admin/users" icon={FiUsers} label="Người dùng" />
       <SidebarItem to="/admin/artists" icon={FiUser} label="Nghệ sĩ" />
       <SidebarItem
+        to="/admin/artist-requests"
+        icon={FiUser}
+        label="Duyệt yêu cầu nghệ sĩ"
+      />
+      <SidebarItem
         to="/admin/songs"
         icon={BsMusicNoteList}
         label="Quản lý bài hát"

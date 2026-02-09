@@ -1,9 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
-import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/auth.store";
-import { signInWithGoogle } from "../utils/firebase";
 
 const formVariants = {
   initial: { opacity: 0, y: 14 },
@@ -17,14 +15,25 @@ const glowVariants = {
 };
 
 const modes = [
-  { key: "login", label: "Đăng nhập" },
-  { key: "register", label: "Đăng ký" },
+  { key: "login", label: "Đăng nhập nghệ sĩ" },
+  { key: "register", label: "Đăng ký nghệ sĩ" },
 ];
 
-export default function Login({ initialMode = "login" }) {
+const rejectNonArtistLogin = (role) => role === "ADMIN" || !role;
+
+export default function ArtistAuth() {
   const navigate = useNavigate();
-  const { login, register, firebaseLogin, loading } = useAuthStore();
-  const [mode, setMode] = useState(initialMode);
+  const {
+    loginArtist,
+    registerArtist,
+    loading,
+    logout,
+    setAuthContext,
+    isAuthenticated,
+    role,
+    authContext,
+  } = useAuthStore();
+  const [mode, setMode] = useState("login");
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -37,18 +46,25 @@ export default function Login({ initialMode = "login" }) {
   const [registerError, setRegisterError] = useState("");
 
   useEffect(() => {
-    setMode(initialMode);
-  }, [initialMode]);
+    if (!isAuthenticated) return;
+    if (role === "ARTIST") {
+      setAuthContext("default");
+      navigate("/artist/dashboard", { replace: true });
+      return;
+    }
+    if (authContext === "artist_request") {
+      navigate("/artist-request", { replace: true });
+    }
+  }, [isAuthenticated, role, authContext, navigate, setAuthContext]);
 
   const helpText = useMemo(() => {
     return mode === "login"
-      ? "Đăng nhập để tiếp tục khám phá kho nhạc cá nhân hoá."
-      : "Tạo tài khoản miễn phí và bắt đầu hành trình âm nhạc của bạn.";
+      ? "Đăng nhập tài khoản nghệ sĩ để gửi yêu cầu xét duyệt."
+      : "Tạo tài khoản nghệ sĩ mới để bắt đầu đăng ký.";
   }, [mode]);
 
   const handleNavigate = (nextMode) => {
     setMode(nextMode);
-    navigate(nextMode === "login" ? "/login" : "/register");
   };
 
   const handleLogin = async (event) => {
@@ -56,42 +72,30 @@ export default function Login({ initialMode = "login" }) {
     setLoginError("");
 
     try {
-      const user = await login({ email: loginEmail, password: loginPassword });
+      const user = await loginArtist({
+        email: loginEmail,
+        password: loginPassword,
+      });
 
-      if (user.role === "ADMIN") return navigate("/admin", { replace: true });
-      if (user.role === "ARTIST")
+      if (rejectNonArtistLogin(user.role)) {
+        setLoginError(
+          "Tài khoản này không thể đăng nhập vào cổng nghệ sĩ."
+        );
+        logout();
+        return;
+      }
+
+      if (user.role === "ARTIST") {
+        setAuthContext("default");
         return navigate("/artist/dashboard", { replace: true });
-      return navigate("/", { replace: true });
+      }
+      return navigate("/artist-request", { replace: true });
     } catch (err) {
       const msg =
         err?.response?.data?.message ||
         err?.message ||
         "Đăng nhập thất bại, thử lại nhé.";
       setLoginError(msg);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    setLoginError("");
-    setRegisterError("");
-    try {
-      const { idToken } = await signInWithGoogle();
-      const user = await firebaseLogin({ idToken });
-
-      if (user.role === "ADMIN") return navigate("/admin", { replace: true });
-      if (user.role === "ARTIST")
-        return navigate("/artist/dashboard", { replace: true });
-      return navigate("/", { replace: true });
-    } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Đăng nhập Google thất bại, thử lại nhé.";
-      if (mode === "register") {
-        setRegisterError(msg);
-      } else {
-        setLoginError(msg);
-      }
     }
   };
 
@@ -105,16 +109,25 @@ export default function Login({ initialMode = "login" }) {
     }
 
     try {
-      const user = await register({
+      const user = await registerArtist({
         email: registerEmail,
         password: registerPassword,
         display_name: displayName,
       });
 
-      if (user.role === "ADMIN") return navigate("/admin", { replace: true });
-      if (user.role === "ARTIST")
+      if (rejectNonArtistLogin(user.role)) {
+        setRegisterError(
+          "Tài khoản này không thể đăng ký qua cổng nghệ sĩ."
+        );
+        logout();
+        return;
+      }
+
+      if (user.role === "ARTIST") {
+        setAuthContext("default");
         return navigate("/artist/dashboard", { replace: true });
-      return navigate("/", { replace: true });
+      }
+      return navigate("/artist-request", { replace: true });
     } catch (err) {
       const msg =
         err?.response?.data?.message ||
@@ -122,10 +135,6 @@ export default function Login({ initialMode = "login" }) {
         "Đăng ký thất bại, thử lại nhé.";
       setRegisterError(msg);
     }
-  };
-
-  const handleArtistPortal = () => {
-    navigate("/artist-auth");
   };
 
   return (
@@ -138,22 +147,22 @@ export default function Login({ initialMode = "login" }) {
           variants={glowVariants}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <div className="pointer-events-none absolute -left-32 top-8 h-64 w-64 rounded-full bg-green-400/20 blur-[120px]" />
-          <div className="pointer-events-none absolute -bottom-24 right-6 h-72 w-72 rounded-full bg-emerald-400/25 blur-[120px]" />
+          <div className="pointer-events-none absolute -left-32 top-8 h-64 w-64 rounded-full bg-indigo-400/20 blur-[120px]" />
+          <div className="pointer-events-none absolute -bottom-24 right-6 h-72 w-72 rounded-full bg-sky-400/25 blur-[120px]" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
           <div className="grid gap-10 p-10 lg:grid-cols-[minmax(0,1.15fr)_420px] lg:items-center">
             <div className="relative z-10 space-y-8">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-500 text-lg font-semibold text-[#0c0914] shadow-lg shadow-green-400/30">
-                  ♪
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-sky-500 text-lg font-semibold text-[#0c0914] shadow-lg shadow-sky-400/30">
+                  ★
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.32em] text-white/60">
-                    Music Platform
+                    Artist Portal
                   </p>
                   <h1 className="text-3xl font-semibold">
-                    Chào mừng bạn đến với MP
+                    Đăng ký trở thành nghệ sĩ
                   </h1>
                 </div>
               </div>
@@ -168,13 +177,17 @@ export default function Login({ initialMode = "login" }) {
                     key={item.key}
                     type="button"
                     onClick={() => handleNavigate(item.key)}
-                    className="relative px-6 py-2 text-sm font-medium"
+                    className="relative px-4 py-2 text-xs font-medium"
                   >
                     {mode === item.key && (
                       <motion.span
-                        layoutId="auth-pill"
+                        layoutId="artist-auth-pill"
                         className="absolute inset-0 rounded-full bg-white/15"
-                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 380,
+                          damping: 30,
+                        }}
                       />
                     )}
                     <span
@@ -191,16 +204,25 @@ export default function Login({ initialMode = "login" }) {
               </div>
 
               <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6">
-                <h2 className="text-lg font-semibold">Quyền lợi thành viên</h2>
+                <h2 className="text-lg font-semibold">
+                  Quy trình xét duyệt nghệ sĩ
+                </h2>
                 <ul className="space-y-3 text-sm text-white/70">
-                  <li>• Gợi ý playlist thông minh theo thói quen nghe.</li>
-                  <li>• Lưu lịch sử, đồng bộ thiết bị và nghe liên tục.</li>
-                  <li>• Theo dõi nghệ sĩ, album và xu hướng hot nhất.</li>
+                  <li>• Hoàn thiện hồ sơ nghệ sĩ và gửi thông tin xác thực.</li>
+                  <li>• Đội ngũ MP sẽ kiểm tra và phản hồi trong 24-48h.</li>
+                  <li>• Khi được duyệt, bạn sẽ truy cập bảng điều khiển nghệ sĩ.</li>
                 </ul>
               </div>
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="inline-flex items-center gap-2 text-sm text-white/60 transition hover:text-white"
+              >
+                ← Quay lại đăng nhập người dùng
+              </button>
             </div>
 
-             <motion.div
+            <motion.div
               className="relative z-10 min-h-[560px] lg:w-[420px]"
               layout
               transition={{ type: "spring", stiffness: 260, damping: 28 }}
@@ -222,19 +244,21 @@ export default function Login({ initialMode = "login" }) {
                     }}
                   >
                     <div>
-                      <h2 className="text-2xl font-semibold">Đăng nhập</h2>
+                      <h2 className="text-2xl font-semibold">
+                        Đăng nhập nghệ sĩ
+                      </h2>
                       <p className="mt-1 text-sm text-white/60">
-                        Nhập thông tin để tiếp tục nghe nhạc.
+                        Sử dụng tài khoản nghệ sĩ để gửi yêu cầu xét duyệt.
                       </p>
                     </div>
 
                     <label className="block space-y-2 text-sm">
                       <span className="text-white/70">Email</span>
                       <input
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/40"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400/40"
                         value={loginEmail}
                         onChange={(event) => setLoginEmail(event.target.value)}
-                        placeholder="email@example.com"
+                        placeholder="email@artist.com"
                         type="email"
                         autoComplete="email"
                         required
@@ -244,7 +268,7 @@ export default function Login({ initialMode = "login" }) {
                     <label className="block space-y-2 text-sm">
                       <span className="text-white/70">Mật khẩu</span>
                       <input
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/40"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400/40"
                         value={loginPassword}
                         onChange={(event) =>
                           setLoginPassword(event.target.value)
@@ -265,43 +289,9 @@ export default function Login({ initialMode = "login" }) {
                     <button
                       disabled={loading}
                       type="submit"
-                      className="w-full rounded-xl bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-green-500/25 transition hover:-translate-y-[1px] hover:shadow-green-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-xl bg-gradient-to-r from-sky-400 via-indigo-400 to-sky-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-sky-500/25 transition hover:-translate-y-[1px] hover:shadow-sky-500/40 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-                    </button>
-
-                    <div className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-white/40">
-                      <span className="h-px flex-1 bg-white/10" />
-                      hoặc
-                      <span className="h-px flex-1 bg-white/10" />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleGoogleLogin}
-                      disabled={loading}
-                      className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <FcGoogle className="text-lg" />
-                      Đăng nhập với Google
-                    </button>
-
-                    <p className="text-center text-xs text-white/50">
-                      Chưa có tài khoản?{" "}
-                      <button
-                        type="button"
-                        onClick={() => handleNavigate("register")}
-                        className="text-green-300 transition hover:text-green-200"
-                      >
-                        Đăng ký ngay
-                      </button>
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleArtistPortal}
-                      className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
-                    >
-                      Đăng ký trở thành nghệ sĩ
                     </button>
                   </motion.form>
                 ) : (
@@ -320,19 +310,21 @@ export default function Login({ initialMode = "login" }) {
                     }}
                   >
                     <div>
-                      <h2 className="text-2xl font-semibold">Tạo tài khoản</h2>
+                      <h2 className="text-2xl font-semibold">
+                        Tạo tài khoản nghệ sĩ
+                      </h2>
                       <p className="mt-1 text-sm text-white/60">
-                        Đăng ký để lưu playlist và theo dõi nghệ sĩ.
+                        Bắt đầu hành trình nghệ sĩ cùng MP.
                       </p>
                     </div>
 
                     <label className="block space-y-2 text-sm">
                       <span className="text-white/70">Tên hiển thị</span>
                       <input
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
                         value={displayName}
                         onChange={(event) => setDisplayName(event.target.value)}
-                        placeholder="Nhập tên bạn muốn hiển thị"
+                        placeholder="Tên nghệ sĩ"
                         type="text"
                         autoComplete="name"
                         required
@@ -342,10 +334,10 @@ export default function Login({ initialMode = "login" }) {
                     <label className="block space-y-2 text-sm">
                       <span className="text-white/70">Email</span>
                       <input
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
                         value={registerEmail}
                         onChange={(event) => setRegisterEmail(event.target.value)}
-                        placeholder="email@example.com"
+                        placeholder="email@artist.com"
                         type="email"
                         autoComplete="email"
                         required
@@ -356,7 +348,7 @@ export default function Login({ initialMode = "login" }) {
                       <label className="block space-y-2 text-sm">
                         <span className="text-white/70">Mật khẩu</span>
                         <input
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
                           value={registerPassword}
                           onChange={(event) =>
                             setRegisterPassword(event.target.value)
@@ -370,7 +362,7 @@ export default function Login({ initialMode = "login" }) {
                       <label className="block space-y-2 text-sm">
                         <span className="text-white/70">Nhập lại</span>
                         <input
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
                           value={confirmPassword}
                           onChange={(event) =>
                             setConfirmPassword(event.target.value)
@@ -392,43 +384,9 @@ export default function Login({ initialMode = "login" }) {
                     <button
                       disabled={loading}
                       type="submit"
-                      className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-xl bg-gradient-to-r from-indigo-400 via-sky-400 to-indigo-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-indigo-500/25 transition hover:-translate-y-[1px] hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {loading ? "Đang đăng ký..." : "Đăng ký"}
-                    </button>
-
-                    <div className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-white/40">
-                      <span className="h-px flex-1 bg-white/10" />
-                      hoặc
-                      <span className="h-px flex-1 bg-white/10" />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleGoogleLogin}
-                      disabled={loading}
-                      className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <FcGoogle className="text-lg" />
-                      Đăng nhập với Google
-                    </button>
-                    
-                    <p className="text-center text-xs text-white/50">
-                      Đã có tài khoản?{" "}
-                      <button
-                        type="button"
-                        onClick={() => handleNavigate("login")}
-                        className="text-green-300 transition hover:text-green-200"
-                      >
-                        Quay lại đăng nhập
-                      </button>
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleArtistPortal}
-                      className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
-                    >
-                      Đăng ký trở thành nghệ sĩ
                     </button>
                   </motion.form>
                 )}
