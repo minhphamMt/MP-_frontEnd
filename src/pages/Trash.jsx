@@ -34,18 +34,16 @@ export default function Trash() {
         key: "songs",
         title: "Bài hát",
         description: "Những bài hát đã bị xoá mềm.",
-        columns: ["Bài hát", "Nghệ sĩ/Album", "Ngày xoá", "Hành động"],
+        columns: ["Bài hát", "Nghệ sĩ", "Ngày xoá", "Hành động"],
         renderCells: (song) => [
           <>
             <p className="text-white">{song.title}</p>
             <p className="text-xs text-white/50">
               {song.artist_name || "Chưa có nghệ sĩ"}
-              {song.album_title ? ` • ${song.album_title}` : ""}
             </p>
           </>,
           <span className="text-xs text-white/60">
             {song.artist_name || "-"}
-            {song.album_title ? ` • ${song.album_title}` : ""}
           </span>,
           <span className="text-xs text-white/60">
             {formatDateTime(song.deleted_at)}
