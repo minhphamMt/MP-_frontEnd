@@ -174,23 +174,30 @@ export default function AdminSongManagement() {
   const handleUpdate = async () => {
     if (!editingSong) return;
     try {
-       let payload = {
+      let payload = {
         title: editPayload.title || undefined,
         artist_id: editPayload.artist_id || null,
         album_id: editPayload.album_id || null,
         status: editPayload.status || undefined,
         release_date: editPayload.release_date || null,
         genres: editPayload.genres,
-      cover_url: editPayload.cover_url || null,
+        cover_url: editPayload.cover_url || null,
       };
 
       if (coverFile) {
         const formData = new FormData();
         formData.append("cover", coverFile);
         Object.entries(payload).forEach(([key, value]) => {
-          if (value !== null && value !== undefined && value !== "") {
-            formData.append(key, value);
+          if (value === null || value === undefined || value === "") {
+            return;
           }
+          if (Array.isArray(value)) {
+            value.filter(Boolean).forEach((item) => {
+              formData.append(key, item);
+            });
+            return;
+          }
+          formData.append(key, value);
         });
         payload = formData;
       }
@@ -360,10 +367,10 @@ export default function AdminSongManagement() {
       )}
 
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1.4fr_0.8fr_0.6fr_0.7fr] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50">
+        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 sm:grid-cols-[1.4fr_0.8fr_0.6fr_0.7fr]">
           <span>Bài hát</span>
-          <span>Nghệ sĩ</span>
-          <span>Thể loại</span>
+          <span className="hidden sm:block">Nghệ sĩ</span>
+          <span className="hidden sm:block">Thể loại</span>
           <span className="text-right">Hành động</span>
         </div>
         <div className="divide-y divide-white/5">
@@ -381,9 +388,9 @@ export default function AdminSongManagement() {
             filteredSongs.map((song) => (
               <div
                 key={song.id}
-                className="grid grid-cols-[1.4fr_0.8fr_0.6fr_0.7fr] items-center gap-2 px-4 py-3 text-sm text-white/80"
+                className="grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 text-sm text-white/80 sm:grid-cols-[1.4fr_0.8fr_0.6fr_0.7fr]"
               >
-                 <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   {getSongCover(song) ? (
                     <OptimizedImage
                       src={resolveAssetUrl(getSongCover(song))}
@@ -402,16 +409,18 @@ export default function AdminSongManagement() {
                     </p>
                   </div>
                 </div>
-                <span>{song.artist_name || "-"}</span>
-                <span className="text-xs text-white/60">
+                <span className="hidden sm:block">{song.artist_name || "-"}</span>
+                <span className="hidden text-xs text-white/60 sm:block">
                   {normalizeGenreValue(song.genres).join(", ") || "-"}
                 </span>
                 <div className="flex justify-end">
                   <button
                     onClick={() => handleEdit(song)}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs text-white/80 transition hover:border-white/30 hover:bg-white/10"
+                    aria-label="Chỉnh sửa"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 transition hover:border-white/30 hover:bg-white/10 sm:px-4"
                   >
-                    <FiEdit2 /> Chỉnh sửa
+                    <FiEdit2 />
+                    <span className="hidden sm:inline">Chỉnh sửa</span>
                   </button>
                 </div>
               </div>
@@ -420,7 +429,7 @@ export default function AdminSongManagement() {
       </div>
 
       {editingSong && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-10 md:pl-64">
           <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Chỉnh sửa bài hát</h2>

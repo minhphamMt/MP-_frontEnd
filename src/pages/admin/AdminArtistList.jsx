@@ -245,9 +245,9 @@ export default function AdminArtistList() {
       )}
 
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1.4fr_0.8fr_0.6fr] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50">
+        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 sm:grid-cols-[1.4fr_0.8fr_0.6fr]">
           <span>Nghệ sĩ</span>
-          <span>Thông tin</span>
+          <span className="hidden sm:block">Thông tin</span>
           <span className="text-right">Hành động</span>
         </div>
         <div className="divide-y divide-white/5">
@@ -265,7 +265,7 @@ export default function AdminArtistList() {
             filteredArtists.map((artist) => (
               <div
                 key={artist.id}
-                className="grid grid-cols-[1.4fr_0.8fr_0.6fr] gap-4 px-4 py-4 text-sm text-white/80"
+                className="grid grid-cols-[1fr_auto] gap-4 px-4 py-4 text-sm text-white/80 sm:grid-cols-[1.4fr_0.8fr_0.6fr]"
               >
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 overflow-hidden rounded-full bg-white/10">
@@ -288,22 +288,26 @@ export default function AdminArtistList() {
                     </p>
                   </div>
                 </div>
-                <div className="text-xs text-white/60">
+                <div className="hidden text-xs text-white/60 sm:block">
                   <p>Mã: {artist.zing_artist_id || "-"}</p>
                   <p>Quốc gia: {artist.national || "-"}</p>
                 </div>
                 <div className="flex items-center justify-end gap-2">
                   <button
                     onClick={() => handleEdit(artist)}
+                    aria-label="Sửa"
                     className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition hover:bg-white/10"
                   >
-                    <FiEdit2 /> Sửa
+                    <FiEdit2 />
+                    <span className="hidden sm:inline">Sửa</span>
                   </button>
                   <button
                     onClick={() => handleDelete(artist)}
+                    aria-label="Xoá mềm"
                     className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition hover:bg-rose-500/20"
                   >
-                    <FiTrash2 /> Xoá mềm
+                    <FiTrash2 />
+                    <span className="hidden sm:inline">Xoá mềm</span>
                   </button>
                 </div>
               </div>
@@ -317,7 +321,7 @@ export default function AdminArtistList() {
         onClose={() => setToast({ title: "", message: "" })}
       />
        {editingArtist && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-10 md:pl-64">
           <div className="flex w-full max-w-4xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
             <div className="flex items-center justify-between">
               <div>
