@@ -314,8 +314,8 @@ export default function AdminUsers() {
         onClose={() => setToast({ title: "", message: "" })}
       />
     {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-10">
+          <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -333,121 +333,123 @@ export default function AdminUsers() {
               </button>
             </div>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <p className="text-sm font-semibold text-white">Ảnh đại diện</p>
-                <div className="mt-4 flex flex-col gap-4">
-                  {avatarPreview ? (
-                    <OptimizedImage
-                      src={avatarPreview}
-                      alt={editPayload.display_name || "User avatar"}
-                      className="h-56 w-full rounded-2xl object-cover shadow-lg"
-                    />
-                  ) : (
-                    <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
-                      Chưa có ảnh đại diện
-                    </div>
-                  )}
-                  <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 transition hover:bg-white/10">
-                    <FiCamera /> Tải avatar mới
+            <div className="mt-6 flex-1 overflow-y-auto pr-1 sm:pr-2">
+              <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                  <p className="text-sm font-semibold text-white">Ảnh đại diện</p>
+                  <div className="mt-4 flex flex-col gap-4">
+                    {avatarPreview ? (
+                      <OptimizedImage
+                        src={avatarPreview}
+                        alt={editPayload.display_name || "User avatar"}
+                        className="h-56 w-full rounded-2xl object-cover shadow-lg"
+                      />
+                    ) : (
+                      <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
+                        Chưa có ảnh đại diện
+                      </div>
+                    )}
+                    <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 transition hover:bg-white/10">
+                      <FiCamera /> Tải avatar mới
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(event) =>
+                          setAvatarFile(event.target.files?.[0] || null)
+                        }
+                      />
+                    </label>
                     <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(event) =>
-                        setAvatarFile(event.target.files?.[0] || null)
-                      }
+                      value={editPayload.avatar_url}
+                      onChange={(event) => {
+                        setAvatarFile(null);
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          avatar_url: event.target.value,
+                        }));
+                      }}
+                      placeholder="Avatar URL (nếu không upload)"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
                     />
-                  </label>
-                  <input
-                    value={editPayload.avatar_url}
-                    onChange={(event) => {
-                      setAvatarFile(null);
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        avatar_url: event.target.value,
-                      }));
-                    }}
-                    placeholder="Avatar URL (nếu không upload)"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
-                  />
-                  <div className="space-y-2 text-sm text-white/70">
-                    <p>
-                      <span className="text-white/60">ID:</span>{" "}
-                      <span className="text-white">{editingUser.id}</span>
-                    </p>
-                    <p>
-                      <span className="text-white/60">Email:</span>{" "}
-                      <span className="text-white">{editingUser.email || "-"}</span>
-                    </p>
-                    <p>
-                      <span className="text-white/60">Vai trò:</span>{" "}
-                      <span className="text-white">{editingUser.role || "-"}</span>
-                    </p>
+                    <div className="space-y-2 text-sm text-white/70">
+                      <p>
+                        <span className="text-white/60">ID:</span>{" "}
+                        <span className="text-white">{editingUser.id}</span>
+                      </p>
+                      <p>
+                        <span className="text-white/60">Email:</span>{" "}
+                        <span className="text-white">{editingUser.email || "-"}</span>
+                      </p>
+                      <p>
+                        <span className="text-white/60">Vai trò:</span>{" "}
+                        <span className="text-white">{editingUser.role || "-"}</span>
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <p className="text-sm font-semibold text-white">Cập nhật người dùng</p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <input
-                    value={editPayload.display_name}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        display_name: event.target.value,
-                      }))
-                    }
-                    placeholder="Tên hiển thị"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
-                  />
-                  <input
-                    value={editPayload.email}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        email: event.target.value,
-                      }))
-                    }
-                    placeholder="Email"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
-                  />
-                  <select
-                    value={editPayload.role}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        role: event.target.value,
-                      }))
-                    }
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
-                  >
-                    {ROLE_OPTIONS.map((roleOption) => (
-                      <option key={roleOption} value={roleOption} className="text-black">
-                        {roleOption}
-                      </option>
-                    ))}
-                  </select>
-                  <label className="flex items-center gap-3 text-sm text-white/70 sm:col-span-2">
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                  <p className="text-sm font-semibold text-white">Cập nhật người dùng</p>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <input
-                      type="checkbox"
-                      checked={editPayload.is_active}
+                      value={editPayload.display_name}
                       onChange={(event) =>
                         setEditPayload((prev) => ({
                           ...prev,
-                          is_active: event.target.checked,
+                          display_name: event.target.value,
                         }))
                       }
-                      className="h-4 w-4 rounded border-white/20 bg-white/10 text-emerald-400 focus:ring-emerald-400"
+                      placeholder="Tên hiển thị"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
                     />
-                    Kích hoạt tài khoản
-                  </label>
+                    <input
+                      value={editPayload.email}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          email: event.target.value,
+                        }))
+                      }
+                      placeholder="Email"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                    />
+                    <select
+                      value={editPayload.role}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          role: event.target.value,
+                        }))
+                      }
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                    >
+                      {ROLE_OPTIONS.map((roleOption) => (
+                        <option key={roleOption} value={roleOption} className="text-black">
+                          {roleOption}
+                        </option>
+                      ))}
+                    </select>
+                    <label className="flex items-center gap-3 text-sm text-white/70 sm:col-span-2">
+                      <input
+                        type="checkbox"
+                        checked={editPayload.is_active}
+                        onChange={(event) =>
+                          setEditPayload((prev) => ({
+                            ...prev,
+                            is_active: event.target.checked,
+                          }))
+                        }
+                        className="h-4 w-4 rounded border-white/20 bg-white/10 text-emerald-400 focus:ring-emerald-400"
+                      />
+                      Kích hoạt tài khoản
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 flex justify-end gap-3 border-t border-white/10 pt-4">
               <button
                 onClick={() => setEditingUser(null)}
                 className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10"

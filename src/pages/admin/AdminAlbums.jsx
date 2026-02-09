@@ -363,8 +363,8 @@ export default function AdminAlbums() {
       )}
 
       {editingAlbum && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-           <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-10">
+           <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -380,118 +380,120 @@ export default function AdminAlbums() {
               </button>
             </div>
 
-           <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <p className="text-sm font-semibold text-white">Thông tin chi tiết</p>
-                <div className="mt-4 flex flex-col gap-4">
-                  {coverPreview ? (
-                    <OptimizedImage
-                      src={coverPreview}
-                      alt={editPayload.title || "Album cover"}
-                      className="h-56 w-full rounded-2xl bg-black/40 object-contain shadow-lg"
-                    />
-                  ) : (
-                    <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
-                      Chưa có ảnh bìa
-                    </div>
-                  )}
-                  <div className="space-y-2 text-sm text-white/70">
-                    <p>
-                      <span className="text-white/60">Tên album:</span>{" "}
-                      <span className="text-white">
-                        {editingAlbum.title || "Chưa đặt tên"}
-                      </span>
-                    </p>
-                    <p>
-                      <span className="text-white/60">Nghệ sĩ:</span>{" "}
-                      <span className="text-white">
-                        {editingAlbum.artist?.name ||
-                          editingAlbum.artist_name ||
-                          "-"}
-                      </span>
-                    </p>
-                    <p>
-                      <span className="text-white/60">Ngày phát hành:</span>{" "}
-                      <span className="text-white">
-                        {formatDateDisplay(editingAlbum.release_date)}
-                      </span>
-                    </p>
-                    {editingAlbum.songs?.length > 0 && (
-                      <div>
-                        <p className="text-white/60">Danh sách bài hát:</p>
-                        <ul className="mt-2 space-y-1 text-white/80">
-                          {editingAlbum.songs.map((song) => (
-                            <li key={song.id}>• {song.title}</li>
-                          ))}
-                        </ul>
+           <div className="mt-6 flex-1 overflow-y-auto pr-1 sm:pr-2">
+              <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                  <p className="text-sm font-semibold text-white">Thông tin chi tiết</p>
+                  <div className="mt-4 flex flex-col gap-4">
+                    {coverPreview ? (
+                      <OptimizedImage
+                        src={coverPreview}
+                        alt={editPayload.title || "Album cover"}
+                        className="h-56 w-full rounded-2xl bg-black/40 object-contain shadow-lg"
+                      />
+                    ) : (
+                      <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
+                        Chưa có ảnh bìa
                       </div>
                     )}
+                    <div className="space-y-2 text-sm text-white/70">
+                      <p>
+                        <span className="text-white/60">Tên album:</span>{" "}
+                        <span className="text-white">
+                          {editingAlbum.title || "Chưa đặt tên"}
+                        </span>
+                      </p>
+                      <p>
+                        <span className="text-white/60">Nghệ sĩ:</span>{" "}
+                        <span className="text-white">
+                          {editingAlbum.artist?.name ||
+                            editingAlbum.artist_name ||
+                            "-"}
+                        </span>
+                      </p>
+                      <p>
+                        <span className="text-white/60">Ngày phát hành:</span>{" "}
+                        <span className="text-white">
+                          {formatDateDisplay(editingAlbum.release_date)}
+                        </span>
+                      </p>
+                      {editingAlbum.songs?.length > 0 && (
+                        <div>
+                          <p className="text-white/60">Danh sách bài hát:</p>
+                          <ul className="mt-2 space-y-1 text-white/80">
+                            {editingAlbum.songs.map((song) => (
+                              <li key={song.id}>• {song.title}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <p className="text-sm font-semibold text-white">Cập nhật album</p>
-                <div className="mt-4 space-y-4">
-                  <label className="block text-sm text-white/70">
-                    Tên album
-                    <input
-                      value={editPayload.title}
-                      onChange={(event) =>
-                        setEditPayload((prev) => ({
-                          ...prev,
-                          title: event.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
-                    />
-                  </label>
-                  <label className="block text-sm text-white/70">
-                    Ngày phát hành
-                    <input
-                      type="date"
-                      value={editPayload.release_date}
-                      onChange={(event) =>
-                        setEditPayload((prev) => ({
-                          ...prev,
-                          release_date: event.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
-                    />
-                  </label>
-                  <label className="block text-sm text-white/70">
-                    Ảnh bìa (URL)
-                    <input
-                      value={editPayload.cover_url}
-                      onChange={(event) =>
-                        setEditPayload((prev) => ({
-                          ...prev,
-                          cover_url: event.target.value,
-                        }))
-                      }
-                      placeholder="https://..."
-                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
-                    />
-                  </label>
-                  <div>
-                    <label className="text-xs text-white/50">
-                      Hoặc tải ảnh bìa (PNG/JPG)
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                  <p className="text-sm font-semibold text-white">Cập nhật album</p>
+                  <div className="mt-4 space-y-4">
+                    <label className="block text-sm text-white/70">
+                      Tên album
+                      <input
+                        value={editPayload.title}
+                        onChange={(event) =>
+                          setEditPayload((prev) => ({
+                            ...prev,
+                            title: event.target.value,
+                          }))
+                        }
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                      />
                     </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(event) =>
-                        setCoverFile(event.target.files?.[0] || null)
-                      }
-                      className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
-                    />
+                    <label className="block text-sm text-white/70">
+                      Ngày phát hành
+                      <input
+                        type="date"
+                        value={editPayload.release_date}
+                        onChange={(event) =>
+                          setEditPayload((prev) => ({
+                            ...prev,
+                            release_date: event.target.value,
+                          }))
+                        }
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                      />
+                    </label>
+                    <label className="block text-sm text-white/70">
+                      Ảnh bìa (URL)
+                      <input
+                        value={editPayload.cover_url}
+                        onChange={(event) =>
+                          setEditPayload((prev) => ({
+                            ...prev,
+                            cover_url: event.target.value,
+                          }))
+                        }
+                        placeholder="https://..."
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                      />
+                    </label>
+                    <div>
+                      <label className="text-xs text-white/50">
+                        Hoặc tải ảnh bìa (PNG/JPG)
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(event) =>
+                          setCoverFile(event.target.files?.[0] || null)
+                        }
+                        className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 flex justify-end gap-3 border-t border-white/10 pt-4">
               <button
                 onClick={() => setEditingAlbum(null)}
                 className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10"

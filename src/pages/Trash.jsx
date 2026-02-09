@@ -259,9 +259,7 @@ export default function Trash() {
                     {section.renderCells(item).map((cell, index, cells) => (
                       <div
                         key={`${item.id}-${index}`}
-                       className={`flex flex-col gap-1 ${
-                          index === cells.length - 1 ? "sm:text-right" : ""
-                        }`}
+                        className="flex flex-col gap-1"
                       >
                         <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 sm:hidden">
                           {section.columns[index]}

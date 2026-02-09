@@ -317,8 +317,8 @@ export default function AdminArtistList() {
         onClose={() => setToast({ title: "", message: "" })}
       />
        {editingArtist && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-10">
+          <div className="flex w-full max-w-4xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -336,170 +336,172 @@ export default function AdminArtistList() {
               </button>
             </div>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <p className="text-sm font-semibold text-white">
-                  Ảnh đại diện
-                </p>
-                <div className="mt-4 flex flex-col gap-4">
-                  {avatarPreview ? (
-                    <OptimizedImage
-                      src={avatarPreview}
-                      alt={editPayload.name || "Artist avatar"}
-                      className="h-56 w-full rounded-2xl object-cover shadow-lg"
-                    />
-                  ) : (
-                    <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
-                      Chưa có ảnh đại diện
-                    </div>
-                  )}
-                  <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 transition hover:bg-white/10">
-                    <FiCamera /> Tải avatar mới
+            <div className="mt-6 flex-1 overflow-y-auto pr-1 sm:pr-2">
+              <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                  <p className="text-sm font-semibold text-white">
+                    Ảnh đại diện
+                  </p>
+                  <div className="mt-4 flex flex-col gap-4">
+                    {avatarPreview ? (
+                      <OptimizedImage
+                        src={avatarPreview}
+                        alt={editPayload.name || "Artist avatar"}
+                        className="h-56 w-full rounded-2xl object-cover shadow-lg"
+                      />
+                    ) : (
+                      <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
+                        Chưa có ảnh đại diện
+                      </div>
+                    )}
+                    <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 transition hover:bg-white/10">
+                      <FiCamera /> Tải avatar mới
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(event) =>
+                          setAvatarFile(event.target.files?.[0] || null)
+                        }
+                      />
+                    </label>
                     <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(event) =>
-                        setAvatarFile(event.target.files?.[0] || null)
-                      }
+                      value={editPayload.avatar_url}
+                      onChange={(event) => {
+                        setAvatarFile(null);
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          avatar_url: event.target.value,
+                        }));
+                      }}
+                      placeholder="Avatar URL (nếu không upload)"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
                     />
-                  </label>
-                  <input
-                    value={editPayload.avatar_url}
-                    onChange={(event) => {
-                      setAvatarFile(null);
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        avatar_url: event.target.value,
-                      }));
-                    }}
-                    placeholder="Avatar URL (nếu không upload)"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
-                  />
-                  <div className="space-y-2 text-sm text-white/70">
-                    <p>
-                      <span className="text-white/60">Tên nghệ sĩ:</span>{" "}
-                      <span className="text-white">
-                        {editingArtist.name || "Chưa cập nhật"}
-                      </span>
-                    </p>
-                    <p>
-                      <span className="text-white/60">Ngày sinh:</span>{" "}
-                      <span className="text-white">
-                        {formatDateDisplay(editingArtist.birthday)}
-                      </span>
-                    </p>
+                    <div className="space-y-2 text-sm text-white/70">
+                      <p>
+                        <span className="text-white/60">Tên nghệ sĩ:</span>{" "}
+                        <span className="text-white">
+                          {editingArtist.name || "Chưa cập nhật"}
+                        </span>
+                      </p>
+                      <p>
+                        <span className="text-white/60">Ngày sinh:</span>{" "}
+                        <span className="text-white">
+                          {formatDateDisplay(editingArtist.birthday)}
+                        </span>
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <p className="text-sm font-semibold text-white">Cập nhật nghệ sĩ</p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <input
-                    value={editPayload.name}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        name: event.target.value,
-                      }))
-                    }
-                    placeholder="Tên nghệ sĩ"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
-                  />
-                  <input
-                    value={editPayload.alias}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        alias: event.target.value,
-                      }))
-                    }
-                    placeholder="Alias"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
-                  />
-                  <input
-                    value={editPayload.realname}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        realname: event.target.value,
-                      }))
-                    }
-                    placeholder="Tên thật"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
-                  />
-                  <input
-                    value={editPayload.national}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        national: event.target.value,
-                      }))
-                    }
-                    placeholder="Quốc gia"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
-                  />
-                  <input
-                    type="date"
-                    value={editPayload.birthday}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        birthday: event.target.value,
-                      }))
-                    }
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 focus:border-emerald-400/60 focus:outline-none"
-                  />
-                  <input
-                    value={editPayload.user_id}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        user_id: event.target.value,
-                      }))
-                    }
-                    placeholder="User ID liên kết (tuỳ chọn)"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
-                  />
-                  <input
-                    value={editPayload.cover_url}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        cover_url: event.target.value,
-                      }))
-                    }
-                    placeholder="Cover URL"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2"
-                  />
-                  <input
-                    value={editPayload.short_bio}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        short_bio: event.target.value,
-                      }))
-                    }
-                    placeholder="Tiểu sử ngắn"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2"
-                  />
-                  <textarea
-                    value={editPayload.bio}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        bio: event.target.value,
-                      }))
-                    }
-                    placeholder="Tiểu sử chi tiết"
-                    className="min-h-[140px] rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2"
-                  />
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                  <p className="text-sm font-semibold text-white">Cập nhật nghệ sĩ</p>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <input
+                      value={editPayload.name}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          name: event.target.value,
+                        }))
+                      }
+                      placeholder="Tên nghệ sĩ"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                    />
+                    <input
+                      value={editPayload.alias}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          alias: event.target.value,
+                        }))
+                      }
+                      placeholder="Alias"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                    />
+                    <input
+                      value={editPayload.realname}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          realname: event.target.value,
+                        }))
+                      }
+                      placeholder="Tên thật"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                    />
+                    <input
+                      value={editPayload.national}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          national: event.target.value,
+                        }))
+                      }
+                      placeholder="Quốc gia"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                    />
+                    <input
+                      type="date"
+                      value={editPayload.birthday}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          birthday: event.target.value,
+                        }))
+                      }
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 focus:border-emerald-400/60 focus:outline-none"
+                    />
+                    <input
+                      value={editPayload.user_id}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          user_id: event.target.value,
+                        }))
+                      }
+                      placeholder="User ID liên kết (tuỳ chọn)"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                    />
+                    <input
+                      value={editPayload.cover_url}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          cover_url: event.target.value,
+                        }))
+                      }
+                      placeholder="Cover URL"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2"
+                    />
+                    <input
+                      value={editPayload.short_bio}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          short_bio: event.target.value,
+                        }))
+                      }
+                      placeholder="Tiểu sử ngắn"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2"
+                    />
+                    <textarea
+                      value={editPayload.bio}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          bio: event.target.value,
+                        }))
+                      }
+                      placeholder="Tiểu sử chi tiết"
+                      className="min-h-[140px] rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 flex justify-end gap-3 border-t border-white/10 pt-4">
               <button
                 onClick={() => setEditingArtist(null)}
                 className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10"

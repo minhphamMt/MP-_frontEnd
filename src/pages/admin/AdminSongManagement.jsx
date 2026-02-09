@@ -420,8 +420,8 @@ export default function AdminSongManagement() {
       </div>
 
       {editingSong && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-10">
+          <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Chỉnh sửa bài hát</h2>
               <button
@@ -432,84 +432,85 @@ export default function AdminSongManagement() {
               </button>
             </div>
 
-            <div className="mt-4 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <p className="text-sm font-semibold text-white">Ảnh đại diện</p>
-                <div className="mt-4 flex flex-col gap-4">
-                  {coverPreview ? (
-                    <OptimizedImage
-                      src={coverPreview}
-                      alt={editPayload.title || "Song cover"}
-                      className="h-56 w-full rounded-2xl bg-black/40 object-contain shadow-lg"
+            <div className="mt-6 flex-1 overflow-y-auto pr-1 sm:pr-2">
+              <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                  <p className="text-sm font-semibold text-white">Ảnh đại diện</p>
+                  <div className="mt-4 flex flex-col gap-4">
+                    {coverPreview ? (
+                      <OptimizedImage
+                        src={coverPreview}
+                        alt={editPayload.title || "Song cover"}
+                        className="h-56 w-full rounded-2xl bg-black/40 object-contain shadow-lg"
+                      />
+                    ) : (
+                      <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
+                        Chưa có ảnh bài hát
+                      </div>
+                    )}
+                    <input
+                      value={editPayload.cover_url}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          cover_url: event.target.value,
+                        }))
+                      }
+                      placeholder="Cover URL (nếu không upload)"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
                     />
-                  ) : (
-                    <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
-                      Chưa có ảnh bài hát
-                    </div>
-                  )}
-                  <input
-                    value={editPayload.cover_url}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        cover_url: event.target.value,
-                      }))
-                    }
-                    placeholder="Cover URL (nếu không upload)"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
-                  />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) =>
-                      setCoverFile(event.target.files?.[0] || null)
-                    }
-                    className="rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
-                  />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(event) =>
+                        setCoverFile(event.target.files?.[0] || null)
+                      }
+                      className="rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm text-white/70 sm:col-span-2">
-                  Tên bài hát
-                  <input
-                    value={editPayload.title}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        title: event.target.value,
-                      }))
-                    }
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
-                  />
-                </label>
-                <label className="block text-sm text-white/70">
-                  Trạng thái
-                  <select
-                    value={editPayload.status}
-                    onChange={(event) =>
-                      setEditPayload((prev) => ({
-                        ...prev,
-                        status: event.target.value,
-                      }))
-                    }
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white"
-                  >
-                    <option value="" className="text-black">
-                      Không đổi
-                    </option>
-                    <option value="pending" className="text-black">
-                      pending
-                    </option>
-                    <option value="approved" className="text-black">
-                      approved
-                    </option>
-                    <option value="rejected" className="text-black">
-                      rejected
-                    </option>
-                  </select>
-                </label>
-              {/* <label className="block text-sm text-white/70">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block text-sm text-white/70 sm:col-span-2">
+                    Tên bài hát
+                    <input
+                      value={editPayload.title}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          title: event.target.value,
+                        }))
+                      }
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                    />
+                  </label>
+                  <label className="block text-sm text-white/70">
+                    Trạng thái
+                    <select
+                      value={editPayload.status}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          status: event.target.value,
+                        }))
+                      }
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white"
+                    >
+                      <option value="" className="text-black">
+                        Không đổi
+                      </option>
+                      <option value="pending" className="text-black">
+                        pending
+                      </option>
+                      <option value="approved" className="text-black">
+                        approved
+                      </option>
+                      <option value="rejected" className="text-black">
+                        rejected
+                      </option>
+                    </select>
+                  </label>
+                {/* <label className="block text-sm text-white/70">
                 Artist ID
                 <select
                   value={editPayload.artist_id}
@@ -531,7 +532,7 @@ export default function AdminSongManagement() {
                   ))}
                 </select>
               </label> */}
-              {/* <label className="block text-sm text-white/70">
+                {/* <label className="block text-sm text-white/70">
                 Album ID
                  <select
                   value={editPayload.album_id}
@@ -553,58 +554,59 @@ export default function AdminSongManagement() {
                   ))}
                 </select>
               </label> */}
-              <label className="block text-sm text-white/70">
-                Ngày phát hành
-                <input
-                  type="date"
-                  value={editPayload.release_date}
-                  onChange={(event) =>
-                    setEditPayload((prev) => ({
-                      ...prev,
-                      release_date: event.target.value,
-                    }))
-                  }
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
-                />
-              </label>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <p className="text-sm text-white/70">Thể loại</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {visibleGenres.map((genre) => {
-                  const isActive = editPayload.genres.includes(genre.name);
-                  return (
-                    <button
-                      key={genre.id}
-                      type="button"
-                      onClick={() => handleToggleGenre(genre.name)}
-                      className={`rounded-full border px-4 py-1 text-xs transition ${
-                        isActive
-                          ? "border-emerald-400/60 bg-emerald-400/20 text-emerald-100"
-                          : "border-white/10 bg-white/5 text-white/70 hover:border-white/30"
-                      }`}
-                    >
-                      {genre.name}
-                    </button>
-                  );
-                })}
-              </div>
-              {canToggleGenres && (
-                <div className="mt-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowAllGenres((prev) => !prev)}
-                    className="text-xs font-semibold text-white/70 transition hover:text-white"
-                  >
-                    {showAllGenres ? "Thu gọn" : "Xem thêm"}
-                  </button>
+                  <label className="block text-sm text-white/70">
+                    Ngày phát hành
+                    <input
+                      type="date"
+                      value={editPayload.release_date}
+                      onChange={(event) =>
+                        setEditPayload((prev) => ({
+                          ...prev,
+                          release_date: event.target.value,
+                        }))
+                      }
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                    />
+                  </label>
                 </div>
-              )}
+              </div>
+
+              <div className="mt-6">
+                <p className="text-sm text-white/70">Thể loại</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {visibleGenres.map((genre) => {
+                    const isActive = editPayload.genres.includes(genre.name);
+                    return (
+                      <button
+                        key={genre.id}
+                        type="button"
+                        onClick={() => handleToggleGenre(genre.name)}
+                        className={`rounded-full border px-4 py-1 text-xs transition ${
+                          isActive
+                            ? "border-emerald-400/60 bg-emerald-400/20 text-emerald-100"
+                            : "border-white/10 bg-white/5 text-white/70 hover:border-white/30"
+                        }`}
+                      >
+                        {genre.name}
+                      </button>
+                    );
+                  })}
+                </div>
+                {canToggleGenres && (
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowAllGenres((prev) => !prev)}
+                      className="text-xs font-semibold text-white/70 transition hover:text-white"
+                    >
+                      {showAllGenres ? "Thu gọn" : "Xem thêm"}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
+            <div className="mt-6 flex flex-wrap justify-end gap-3 border-t border-white/10 pt-4">
               {role === "ADMIN" && (
                 <button
                   onClick={handleSoftDelete}
