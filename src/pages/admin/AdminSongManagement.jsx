@@ -316,7 +316,7 @@ export default function AdminSongManagement() {
 
   return (
     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
             Quản trị
@@ -367,10 +367,10 @@ export default function AdminSongManagement() {
       )}
 
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 sm:grid-cols-[1.4fr_0.8fr_0.6fr_0.7fr]">
+        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.4fr_0.8fr_0.6fr_0.7fr]">
           <span>Bài hát</span>
-          <span className="hidden sm:block">Nghệ sĩ</span>
-          <span className="hidden sm:block">Thể loại</span>
+          <span className="hidden lg:block">Nghệ sĩ</span>
+          <span className="hidden lg:block">Thể loại</span>
           <span className="text-right">Hành động</span>
         </div>
         <div className="divide-y divide-white/5">
@@ -388,7 +388,7 @@ export default function AdminSongManagement() {
             filteredSongs.map((song) => (
               <div
                 key={song.id}
-                className="grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 text-sm text-white/80 sm:grid-cols-[1.4fr_0.8fr_0.6fr_0.7fr]"
+                className="grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 text-sm text-white/80 lg:grid-cols-[1.4fr_0.8fr_0.6fr_0.7fr]"
               >
                 <div className="flex items-center gap-3">
                   {getSongCover(song) ? (
@@ -409,8 +409,8 @@ export default function AdminSongManagement() {
                     </p>
                   </div>
                 </div>
-                <span className="hidden sm:block">{song.artist_name || "-"}</span>
-                <span className="hidden text-xs text-white/60 sm:block">
+                <span className="hidden lg:block">{song.artist_name || "-"}</span>
+                <span className="hidden text-xs text-white/60 lg:block">
                   {normalizeGenreValue(song.genres).join(", ") || "-"}
                 </span>
                 <div className="flex justify-end">
@@ -420,7 +420,7 @@ export default function AdminSongManagement() {
                     className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 transition hover:border-white/30 hover:bg-white/10 sm:px-4"
                   >
                     <FiEdit2 />
-                    <span className="hidden sm:inline">Chỉnh sửa</span>
+                    <span className="hidden lg:inline">Chỉnh sửa</span>
                   </button>
                 </div>
               </div>

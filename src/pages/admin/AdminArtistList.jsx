@@ -204,7 +204,7 @@ export default function AdminArtistList() {
 
   return (
     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
             Quản trị
@@ -245,9 +245,9 @@ export default function AdminArtistList() {
       )}
 
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 sm:grid-cols-[1.4fr_0.8fr_0.6fr]">
+        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.4fr_0.8fr_0.6fr]">
           <span>Nghệ sĩ</span>
-          <span className="hidden sm:block">Thông tin</span>
+          <span className="hidden lg:block">Thông tin</span>
           <span className="text-right">Hành động</span>
         </div>
         <div className="divide-y divide-white/5">
@@ -265,7 +265,7 @@ export default function AdminArtistList() {
             filteredArtists.map((artist) => (
               <div
                 key={artist.id}
-                className="grid grid-cols-[1fr_auto] gap-4 px-4 py-4 text-sm text-white/80 sm:grid-cols-[1.4fr_0.8fr_0.6fr]"
+                className="grid grid-cols-[1fr_auto] gap-4 px-4 py-4 text-sm text-white/80 lg:grid-cols-[1.4fr_0.8fr_0.6fr]"
               >
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 overflow-hidden rounded-full bg-white/10">
@@ -288,7 +288,7 @@ export default function AdminArtistList() {
                     </p>
                   </div>
                 </div>
-                <div className="hidden text-xs text-white/60 sm:block">
+                <div className="hidden text-xs text-white/60 lg:block">
                   <p>Mã: {artist.zing_artist_id || "-"}</p>
                   <p>Quốc gia: {artist.national || "-"}</p>
                 </div>
@@ -299,7 +299,7 @@ export default function AdminArtistList() {
                     className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition hover:bg-white/10"
                   >
                     <FiEdit2 />
-                    <span className="hidden sm:inline">Sửa</span>
+                    <span className="hidden lg:inline">Sửa</span>
                   </button>
                   <button
                     onClick={() => handleDelete(artist)}
@@ -307,7 +307,7 @@ export default function AdminArtistList() {
                     className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition hover:bg-rose-500/20"
                   >
                     <FiTrash2 />
-                    <span className="hidden sm:inline">Xoá mềm</span>
+                    <span className="hidden lg:inline">Xoá mềm</span>
                   </button>
                 </div>
               </div>

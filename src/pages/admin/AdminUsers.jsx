@@ -193,7 +193,7 @@ export default function AdminUsers() {
   
   return (
     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
             Quản trị
@@ -234,10 +234,10 @@ export default function AdminUsers() {
       )}
 
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 sm:grid-cols-[1.2fr_1fr_0.7fr_0.6fr]">
+        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.2fr_1fr_0.7fr_0.6fr]">
           <span>Người dùng</span>
-          <span className="hidden sm:block">Thông tin</span>
-          <span className="hidden sm:block">Trạng thái</span>
+          <span className="hidden lg:block">Thông tin</span>
+          <span className="hidden lg:block">Trạng thái</span>
           <span className="text-right">Hành động</span>
         </div>
         <div className="divide-y divide-white/5">
@@ -255,7 +255,7 @@ export default function AdminUsers() {
             filteredUsers.map((user) => (
               <div
                 key={user.id}
-                className="grid grid-cols-[1fr_auto] items-center gap-4 px-4 py-4 text-sm text-white/80 sm:grid-cols-[1.2fr_1fr_0.7fr_0.6fr]"
+                className="grid grid-cols-[1fr_auto] items-center gap-4 px-4 py-4 text-sm text-white/80 lg:grid-cols-[1.2fr_1fr_0.7fr_0.6fr]"
               >
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 overflow-hidden rounded-full bg-white/10">
@@ -278,12 +278,12 @@ export default function AdminUsers() {
                     <p className="text-xs text-white/50">ID: {user.id}</p>
                   </div>
                 </div>
-                <div className="hidden text-xs text-white/60 sm:block">
+                <div className="hidden text-xs text-white/60 lg:block">
                   <p>Email: {user.email || "-"}</p>
                   <p>Vai trò: {user.role || "-"}</p>
                 </div>
                 <span
-                  className={`hidden text-xs font-semibold sm:block ${
+                  className={`hidden text-xs font-semibold lg:block ${
                     user.is_active ? "text-emerald-300" : "text-rose-300"
                   }`}
                 >
@@ -296,7 +296,7 @@ export default function AdminUsers() {
                     className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition hover:bg-white/10"
                   >
                     <FiEdit2 />
-                    <span className="hidden sm:inline">Sửa</span>
+                    <span className="hidden lg:inline">Sửa</span>
                   </button>
                   <button
                     onClick={() => handleDelete(user)}
@@ -304,7 +304,7 @@ export default function AdminUsers() {
                     className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition hover:bg-rose-500/20"
                   >
                     <FiTrash2 />
-                    <span className="hidden sm:inline">Xoá</span>
+                    <span className="hidden lg:inline">Xoá</span>
                   </button>
                 </div>
               </div>

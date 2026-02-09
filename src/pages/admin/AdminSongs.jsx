@@ -117,7 +117,7 @@ export default function AdminSongs() {
 
   return (
     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
             Quản trị
@@ -160,10 +160,10 @@ export default function AdminSongs() {
       )}
 
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 sm:grid-cols-[1.5fr_1fr_0.6fr_0.9fr]">
+        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.5fr_1fr_0.6fr_0.9fr]">
           <span>Bài hát</span>
-          <span className="hidden sm:block">Nghệ sĩ</span>
-          <span className="hidden sm:block">Trạng thái</span>
+          <span className="hidden lg:block">Nghệ sĩ</span>
+          <span className="hidden lg:block">Trạng thái</span>
           <span className="text-right">Hành động</span>
         </div>
         <div className="divide-y divide-white/5">
@@ -181,7 +181,7 @@ export default function AdminSongs() {
             visibleSongs.map((song) => (
               <div
                 key={song.id}
-                className="grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 text-sm text-white/80 sm:grid-cols-[1.5fr_1fr_0.6fr_0.9fr]"
+                className="grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 text-sm text-white/80 lg:grid-cols-[1.5fr_1fr_0.6fr_0.9fr]"
               >
                 <div className="flex items-center gap-3">
                   {getSongCover(song) ? (
@@ -202,8 +202,8 @@ export default function AdminSongs() {
                     </p>
                   </div>
                 </div>
-                <span className="hidden sm:block">{song.artist_name || "-"}</span>
-                <span className={`hidden text-xs font-semibold sm:block ${statusBadge(song.status)}`}>
+                <span className="hidden lg:block">{song.artist_name || "-"}</span>
+                <span className={`hidden text-xs font-semibold lg:block ${statusBadge(song.status)}`}>
                   {song.status || "-"}
                 </span>
                 <div className="flex justify-end gap-3">
@@ -214,7 +214,7 @@ export default function AdminSongs() {
                       className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200 transition hover:bg-emerald-500/20"
                     >
                       <FiCheckCircle />
-                      <span className="hidden sm:inline">Duyệt</span>
+                      <span className="hidden lg:inline">Duyệt</span>
                     </button>
                   )}
                   {song.status !== "rejected" && (
@@ -224,7 +224,7 @@ export default function AdminSongs() {
                       className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition hover:bg-rose-500/20"
                     >
                       <FiSlash />
-                      <span className="hidden sm:inline">Từ chối</span>
+                      <span className="hidden lg:inline">Từ chối</span>
                     </button>
                   )}
                 </div>
