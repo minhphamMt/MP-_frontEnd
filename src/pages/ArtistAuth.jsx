@@ -28,6 +28,7 @@ export default function ArtistAuth() {
   const {
     loginArtist,
     registerArtist,
+    resendVerification,
     loading,
     logout,
     setAuthContext,
@@ -46,6 +47,7 @@ export default function ArtistAuth() {
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [registerError, setRegisterError] = useState("");
+  const [registerNotice, setRegisterNotice] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -112,6 +114,7 @@ export default function ArtistAuth() {
   const handleRegister = async (event) => {
     event.preventDefault();
     setRegisterError("");
+    setRegisterNotice("");
 
     if (registerPassword !== confirmPassword) {
       setRegisterError("Mật khẩu nhập lại chưa khớp.");
@@ -119,13 +122,23 @@ export default function ArtistAuth() {
     }
 
     try {
-      const user = await registerArtist({
+      const result = await registerArtist({
         email: registerEmail,
         password: registerPassword,
         display_name: displayName,
       });
 
-      if (!hasArtistIntent(user)) {
+      if (result?.requires_email_verification) {
+        setRegisterNotice(
+          result.message ||
+            "Vui lòng kiểm tra email để xác nhận tài khoản nghệ sĩ."
+        );
+        return navigate(
+          `/verify-email?email=${encodeURIComponent(registerEmail)}&intent=artist`
+        );
+      }
+
+      if (!hasArtistIntent(result)) {
         setRegisterError(
           "Tài khoản này chưa đăng ký yêu cầu trở thành nghệ sĩ."
         );
@@ -133,7 +146,7 @@ export default function ArtistAuth() {
         return;
       }
 
-      if (rejectNonArtistLogin(user.role)) {
+      if (rejectNonArtistLogin(result.role)) {
         setRegisterError(
           "Tài khoản này không thể đăng ký qua cổng nghệ sĩ."
         );
@@ -141,7 +154,7 @@ export default function ArtistAuth() {
         return;
       }
 
-      if (user.role === "ARTIST") {
+      if (result.role === "ARTIST") {
         setAuthContext("default");
         return navigate("/artist/dashboard", { replace: true });
       }
@@ -151,6 +164,25 @@ export default function ArtistAuth() {
         err?.response?.data?.message ||
         err?.message ||
         "Đăng ký thất bại, thử lại nhé.";
+      setRegisterError(msg);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!registerEmail) {
+      setRegisterError("Vui lòng nhập email để gửi lại xác thực.");
+      return;
+    }
+
+    setRegisterError("");
+    try {
+      const message = await resendVerification({ email: registerEmail });
+      setRegisterNotice(message || "Đã gửi lại email xác thực.");
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Không thể gửi lại email xác thực, vui lòng thử lại.";
       setRegisterError(msg);
     }
   };
@@ -393,6 +425,12 @@ export default function ArtistAuth() {
                       </label>
                     </div>
 
+                    {registerNotice && (
+                      <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                        {registerNotice}
+                      </div>
+                    )}
+
                     {registerError && (
                       <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
                         {registerError}
@@ -405,6 +443,15 @@ export default function ArtistAuth() {
                       className="w-full rounded-xl bg-gradient-to-r from-indigo-400 via-sky-400 to-indigo-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-indigo-500/25 transition hover:-translate-y-[1px] hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {loading ? "Đang đăng ký..." : "Đăng ký"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={loading}
+                      className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-medium text-white/85 transition hover:border-white/35 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Gửi lại email xác thực
                     </button>
                   </motion.form>
                 )}

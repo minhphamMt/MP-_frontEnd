@@ -4,6 +4,7 @@ import ProtectedRoute from "./ProtectedRoute";
 
 const Login = lazy(() => import("../pages/Login"));
 const ArtistAuth = lazy(() => import("../pages/ArtistAuth"));
+const VerifyEmail = lazy(() => import("../pages/VerifyEmail"));
 const ArtistRequest = lazy(() => import("../pages/ArtistRequest"));
 const Forbidden = lazy(() => import("../pages/Forbidden"));
 const MainLayout = lazy(() => import("../layouts/MainLayout"));
@@ -61,6 +62,7 @@ export default function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Login initialMode="register" />} />
         <Route path="/artist-auth" element={<ArtistAuth />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/403" element={<Forbidden />} />
 
         {/* ===== USER / APP ===== */}

@@ -6,6 +6,8 @@ import {
   firebaseLoginApi,
   artistLoginApi,
   artistRegisterApi,
+  verifyEmailApi,
+  resendVerificationApi,
 } from "../api/auth.api";
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
@@ -206,6 +208,17 @@ const useAuthStore = create((set, get) => ({
 
       const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
       const user = res.data?.user || res.data?.data?.user;
+      const requiresEmailVerification =
+        res.data?.requires_email_verification ||
+        res.data?.data?.requires_email_verification;
+
+      if (requiresEmailVerification) {
+        set({ loading: false, isAuthReady: true });
+        return {
+          requires_email_verification: true,
+          message: res.data?.message || res.data?.data?.message,
+        };
+      }
 
       if (!accessToken || !user) {
         throw new Error("Register response missing accessToken or user");
@@ -310,6 +323,17 @@ const useAuthStore = create((set, get) => ({
 
       const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
       const user = res.data?.user || res.data?.data?.user;
+      const requiresEmailVerification =
+        res.data?.requires_email_verification ||
+        res.data?.data?.requires_email_verification;
+
+      if (requiresEmailVerification) {
+        set({ loading: false, isAuthReady: true });
+        return {
+          requires_email_verification: true,
+          message: res.data?.message || res.data?.data?.message,
+        };
+      }
 
       if (!accessToken || !user) {
         throw new Error("Register response missing accessToken or user");
@@ -333,6 +357,42 @@ const useAuthStore = create((set, get) => ({
       set({ loading: false, isAuthReady: true });
       throw err;
     }
+  },
+
+  verifyEmailRegistration: async ({ token }) => {
+    set({ loading: true, isAuthReady: false });
+    try {
+      const res = await verifyEmailApi({ token });
+      const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
+      const user = res.data?.user || res.data?.data?.user;
+
+      if (!accessToken || !user) {
+        throw new Error("Verify email response missing accessToken or user");
+      }
+
+      const nextState = {
+        user,
+        accessToken,
+        role: user.role,
+        authContext: "default",
+        isAuthenticated: true,
+        loading: false,
+        isAuthReady: true,
+      };
+
+      set(nextState);
+      persistAuthState(nextState);
+
+      return user;
+    } catch (err) {
+      set({ loading: false, isAuthReady: true });
+      throw err;
+    }
+  },
+
+  resendVerification: async ({ email }) => {
+    const res = await resendVerificationApi({ email });
+    return res.data?.message || res.data?.data?.message;
   },
 
   /* ===== LOGOUT ===== */

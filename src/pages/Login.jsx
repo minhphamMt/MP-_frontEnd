@@ -39,7 +39,7 @@ const extractFirebaseErrorMessage = (err) => {
 
 export default function Login({ initialMode = "login" }) {
   const navigate = useNavigate();
-  const { login, register, firebaseLogin, loading } = useAuthStore();
+  const { login, register, firebaseLogin, resendVerification, loading } = useAuthStore();
   const [mode, setMode] = useState(initialMode);
 
   const [loginEmail, setLoginEmail] = useState("");
@@ -51,6 +51,7 @@ export default function Login({ initialMode = "login" }) {
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [registerError, setRegisterError] = useState("");
+  const [registerNotice, setRegisterNotice] = useState("");
 
   useEffect(() => {
     setMode(initialMode);
@@ -90,6 +91,7 @@ export default function Login({ initialMode = "login" }) {
   const handleGoogleLogin = async () => {
     setLoginError("");
     setRegisterError("");
+    setRegisterNotice("");
     try {
       const { idToken } = await signInWithGoogle();
       const user = await firebaseLogin({ idToken });
@@ -119,14 +121,24 @@ export default function Login({ initialMode = "login" }) {
     }
 
     try {
-      const user = await register({
+      const result = await register({
         email: registerEmail,
         password: registerPassword,
         display_name: displayName,
       });
 
-      if (user.role === "ADMIN") return navigate("/admin", { replace: true });
-      if (user.role === "ARTIST")
+      if (result?.requires_email_verification) {
+        setRegisterNotice(
+          result.message ||
+            "Vui lòng kiểm tra email để xác nhận tài khoản trước khi đăng nhập."
+        );
+        return navigate(
+          `/verify-email?email=${encodeURIComponent(registerEmail)}&intent=user`
+        );
+      }
+
+      if (result.role === "ADMIN") return navigate("/admin", { replace: true });
+      if (result.role === "ARTIST")
         return navigate("/artist/dashboard", { replace: true });
       return navigate("/", { replace: true });
     } catch (err) {
@@ -134,6 +146,25 @@ export default function Login({ initialMode = "login" }) {
         err?.response?.data?.message ||
         err?.message ||
         "Đăng ký thất bại, thử lại nhé.";
+      setRegisterError(msg);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!registerEmail) {
+      setRegisterError("Vui lòng nhập email để gửi lại xác thực.");
+      return;
+    }
+
+    setRegisterError("");
+    try {
+      const message = await resendVerification({ email: registerEmail });
+      setRegisterNotice(message || "Đã gửi lại email xác thực.");
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Không thể gửi lại email xác thực, vui lòng thử lại.";
       setRegisterError(msg);
     }
   };
@@ -399,6 +430,12 @@ export default function Login({ initialMode = "login" }) {
                       </label>
                     </div>
 
+                    {registerNotice && (
+                      <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                        {registerNotice}
+                      </div>
+                    )}
+
                     {registerError && (
                       <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
                         {registerError}
@@ -412,6 +449,15 @@ export default function Login({ initialMode = "login" }) {
                     >
                       {loading ? "Đang đăng ký..." : "Đăng ký"}
                     </button>
+
+                    {/* <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={loading}
+                      className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/85 transition hover:border-white/35 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Gửi lại email xác thực
+                    </button> */}
 
                     <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.28em] text-white/40">
                       <span className="h-px flex-1 bg-white/10" />
