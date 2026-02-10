@@ -76,6 +76,7 @@ export default function Login({ initialMode = "login" }) {
 
     if (isVerifiedFromQuery || isVerifiedFromReferrer) {
       setLoginNotice("Xác nhận email thành công. Bạn có thể đăng nhập ngay.");
+      localStorage.setItem("email_verification_completed_at", `${Date.now()}`);
 
       if (isVerifiedFromQuery) {
         const nextSearch = new URLSearchParams(searchParams);

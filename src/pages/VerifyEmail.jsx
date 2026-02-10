@@ -37,6 +37,10 @@ export default function VerifyEmail() {
     [intent]
   );
 
+  const navigateToLogin = () => {
+    navigate(`${redirectPath}?verified=1`, { replace: true });
+  };
+
   const handleVerify = async (token) => {
     const effectiveToken = token.trim();
     if (!effectiveToken) {
@@ -90,11 +94,26 @@ export default function VerifyEmail() {
 
     if (isVerifiedFromBackend) {
       const timeoutId = setTimeout(() => {
-        navigate(redirectPath, { replace: true });
+        navigateToLogin();
       }, 1000);
 
       return () => clearTimeout(timeoutId);
     }
+
+    const syncFromOtherTab = () => {
+      const completedAt = localStorage.getItem("email_verification_completed_at");
+      if (completedAt) {
+        navigateToLogin();
+      }
+    };
+
+    window.addEventListener("storage", syncFromOtherTab);
+    window.addEventListener("focus", syncFromOtherTab);
+
+    return () => {
+      window.removeEventListener("storage", syncFromOtherTab);
+      window.removeEventListener("focus", syncFromOtherTab);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialToken, isVerifiedFromBackend, redirectPath]);
 
@@ -103,7 +122,9 @@ export default function VerifyEmail() {
       <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)] sm:p-8">
         <h1 className="text-2xl font-semibold">Xác nhận email</h1>
         <p className="mt-2 text-sm text-white/60">
+
           Nếu chưa nhận được email xác nhận, bạn có thể yêu cầu gửi lại bên dưới.
+          Sau khi xác nhận trong email, tab này sẽ tự chuyển sang trang đăng nhập.
         </p>
 
         <div className="mt-6 space-y-4">
@@ -141,10 +162,10 @@ export default function VerifyEmail() {
 
           <button
             type="button"
-            onClick={() => navigate(redirectPath)}
+            onClick={navigateToLogin}
             className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-medium text-white/85 transition hover:border-white/35 hover:bg-white/10"
           >
-            Đi tới trang đăng nhập
+            Tôi đã xác nhận xong, chuyển tới đăng nhập
           </button>
         </div>
       </div>
