@@ -11,7 +11,7 @@ const statusStyles = {
 
 export default function ArtistRequest() {
   const navigate = useNavigate();
-  const { role, authContext, setAuthContext } = useAuthStore();
+  const { role, authContext, setAuthContext, logout } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [request, setRequest] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -90,20 +90,36 @@ export default function ArtistRequest() {
 
   const status = request?.status;
 
+  const handleLogout = () => {
+    logout();
+    setAuthContext("default");
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div className="min-h-screen bg-[#0b0b12] px-4 py-10 text-white">
       <div className="mx-auto w-full max-w-4xl space-y-8">
-        <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.35em] text-white/50">
-            Artist Request
-          </p>
-          <h1 className="text-3xl font-semibold">
-            Gửi yêu cầu trở thành nghệ sĩ
-          </h1>
-          <p className="text-sm text-white/70">
-            Vui lòng cung cấp đầy đủ thông tin để đội ngũ MP xác thực hồ sơ của
-            bạn.
-          </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.35em] text-white/50">
+              Artist Request
+            </p>
+            <h1 className="text-3xl font-semibold">
+              Gửi yêu cầu trở thành nghệ sĩ
+            </h1>
+            <p className="text-sm text-white/70">
+              Vui lòng cung cấp đầy đủ thông tin để đội ngũ MP xác thực hồ sơ của
+              bạn.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
+          >
+            Đăng xuất
+          </button>
         </div>
 
         {errorMessage && (

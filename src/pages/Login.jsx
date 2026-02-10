@@ -129,10 +129,10 @@ export default function Login({ initialMode = "login" }) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0b0b12] px-4 py-12 text-white">
+    <div className="flex min-h-dvh items-center justify-center bg-[#0b0b12] px-4 py-4 text-white sm:py-8 lg:h-dvh lg:overflow-hidden lg:py-6">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-center">
         <motion.div
-          className="relative w-full overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.03] shadow-[0_35px_120px_rgba(0,0,0,0.6)]"
+          className="relative w-full overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.03] shadow-[0_35px_120px_rgba(0,0,0,0.6)] lg:max-h-[calc(100dvh-3rem)]"
           initial="initial"
           animate="animate"
           variants={glowVariants}
@@ -142,8 +142,8 @@ export default function Login({ initialMode = "login" }) {
           <div className="pointer-events-none absolute -bottom-24 right-6 h-72 w-72 rounded-full bg-emerald-400/25 blur-[120px]" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
-          <div className="grid gap-10 p-10 lg:grid-cols-[minmax(0,1.15fr)_420px] lg:items-center">
-            <div className="relative z-10 space-y-8">
+          <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1.15fr)_420px] lg:items-center lg:gap-8 lg:p-8 xl:p-10">
+            <div className="relative z-10 space-y-6 lg:space-y-7">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-500 text-lg font-semibold text-[#0c0914] shadow-lg shadow-green-400/30">
                   ♪
@@ -190,7 +190,7 @@ export default function Login({ initialMode = "login" }) {
                 ))}
               </div>
 
-              <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6">
+              <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-5 lg:p-6">
                 <h2 className="text-lg font-semibold">Quyền lợi thành viên</h2>
                 <ul className="space-y-3 text-sm text-white/70">
                   <li>• Gợi ý playlist thông minh theo thói quen nghe.</li>
@@ -200,8 +200,8 @@ export default function Login({ initialMode = "login" }) {
               </div>
             </div>
 
-             <motion.div
-              className="relative z-10 min-h-[560px] lg:w-[420px]"
+            <motion.div
+              className="relative z-10 lg:w-[420px]"
               layout
               transition={{ type: "spring", stiffness: 260, damping: 28 }}
             >
@@ -209,7 +209,7 @@ export default function Login({ initialMode = "login" }) {
                 {mode === "login" ? (
                   <motion.form
                     key="login"
-                    className="w-full space-y-5 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
+                    className="w-full space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)] sm:space-y-5 sm:p-8"
                     onSubmit={handleLogin}
                     variants={formVariants}
                     initial="initial"
@@ -307,7 +307,7 @@ export default function Login({ initialMode = "login" }) {
                 ) : (
                   <motion.form
                     key="register"
-                    className="w-full space-y-5 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
+                    className="w-full space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)] sm:space-y-5 sm:p-8"
                     onSubmit={handleRegister}
                     variants={formVariants}
                     initial="initial"

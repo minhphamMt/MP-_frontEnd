@@ -295,7 +295,7 @@ export default function ArtistProfile() {
                 </div>
               </div>
 
-              <div>
+              {/* <div>
                 <label className="text-sm text-white/70">Ảnh bìa</label>
                 <input
                   name="cover_url"
@@ -304,7 +304,7 @@ export default function ArtistProfile() {
                   placeholder="https://..."
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
                 />
-              </div>
+              </div> */}
 
               <div>
                 <label className="text-sm text-white/70">
