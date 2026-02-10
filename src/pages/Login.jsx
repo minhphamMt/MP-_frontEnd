@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/auth.store";
-import { signInWithGoogle } from "../utils/firebase";
+import { signInWithGoogle, signOutFirebaseSession } from "../utils/firebase";
 
 const formVariants = {
   initial: { opacity: 0, y: 14 },
@@ -20,6 +20,22 @@ const modes = [
   { key: "login", label: "Đăng nhập" },
   { key: "register", label: "Đăng ký" },
 ];
+
+const extractFirebaseErrorMessage = (err) => {
+  const status = err?.response?.status;
+  const message = err?.response?.data?.message || err?.message;
+
+  if (
+    status === 409 ||
+    String(message || "")
+      .toLowerCase()
+      .includes("email already exists")
+  ) {
+    return "Email đã tồn tại trong hệ thống. Vui lòng đăng nhập bằng email/mật khẩu.";
+  }
+
+  return message || "Đăng nhập Google thất bại, thử lại nhé.";
+};
 
 export default function Login({ initialMode = "login" }) {
   const navigate = useNavigate();
@@ -83,10 +99,8 @@ export default function Login({ initialMode = "login" }) {
         return navigate("/artist/dashboard", { replace: true });
       return navigate("/", { replace: true });
     } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Đăng nhập Google thất bại, thử lại nhé.";
+      await signOutFirebaseSession();
+      const msg = extractFirebaseErrorMessage(err);
       if (mode === "register") {
         setRegisterError(msg);
       } else {

@@ -2,6 +2,7 @@ import { initializeApp, getApps } from "firebase/app";
 import {
   getAuth,
   GoogleAuthProvider,
+  signOut,
   signInWithPopup,
 } from "firebase/auth";
 import { firebaseLoginApi } from "../api/auth.api";
@@ -40,4 +41,8 @@ export async function signInWithGoogle() {
   const result = await signInWithPopup(auth, provider);
   const idToken = await result.user.getIdToken();
   return { user: result.user, idToken };
+}
+
+export async function signOutFirebaseSession() {
+  await signOut(auth);
 }
