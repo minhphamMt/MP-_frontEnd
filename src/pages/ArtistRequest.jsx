@@ -34,7 +34,9 @@ export default function ArtistRequest() {
         setLoading(true);
         const res = await getMyArtistRequest();
         const payload = res?.data?.data ?? res?.data ?? null;
-        setRequest(payload);
+        const normalized =
+          payload && (payload.id || payload.artist_name) ? payload : null;
+        setRequest(normalized);
       } catch (error) {
         console.error("Load artist request failed", error);
         setErrorMessage("Không thể tải yêu cầu nghệ sĩ.");
@@ -214,4 +216,3 @@ export default function ArtistRequest() {
     </div>
   );
 }
-

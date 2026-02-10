@@ -20,6 +20,8 @@ const modes = [
 ];
 
 const rejectNonArtistLogin = (role) => role === "ADMIN" || !role;
+const hasArtistIntent = (user) =>
+  user?.artist_register_intent === true || user?.artist_register_intent === 1;
 
 export default function ArtistAuth() {
   const navigate = useNavigate();
@@ -77,6 +79,14 @@ export default function ArtistAuth() {
         password: loginPassword,
       });
 
+      if (!hasArtistIntent(user)) {
+        setLoginError(
+          "Tài khoản này chưa đăng ký yêu cầu trở thành nghệ sĩ."
+        );
+        logout();
+        return;
+      }
+
       if (rejectNonArtistLogin(user.role)) {
         setLoginError(
           "Tài khoản này không thể đăng nhập vào cổng nghệ sĩ."
@@ -114,6 +124,14 @@ export default function ArtistAuth() {
         password: registerPassword,
         display_name: displayName,
       });
+
+      if (!hasArtistIntent(user)) {
+        setRegisterError(
+          "Tài khoản này chưa đăng ký yêu cầu trở thành nghệ sĩ."
+        );
+        logout();
+        return;
+      }
 
       if (rejectNonArtistLogin(user.role)) {
         setRegisterError(
