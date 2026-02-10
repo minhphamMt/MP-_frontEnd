@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import useAuthStore from "../store/auth.store";
 import { signInWithGoogle, signOutFirebaseSession } from "../utils/firebase";
 
@@ -39,6 +39,8 @@ const extractFirebaseErrorMessage = (err) => {
 
 export default function Login({ initialMode = "login" }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { login, register, firebaseLogin, resendVerification, loading } = useAuthStore();
   const [mode, setMode] = useState(initialMode);
 
@@ -52,6 +54,43 @@ export default function Login({ initialMode = "login" }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [registerError, setRegisterError] = useState("");
   const [registerNotice, setRegisterNotice] = useState("");
+  const [loginNotice, setLoginNotice] = useState("");
+
+  useEffect(() => {
+    if (mode !== "login") return;
+
+    const verifiedFlag = (searchParams.get("verified") || "").toLowerCase();
+    const successFlag = (searchParams.get("success") || "").toLowerCase();
+    const status = (searchParams.get("status") || "").toLowerCase();
+    const isVerifiedFromQuery =
+      verifiedFlag === "1" ||
+      verifiedFlag === "true" ||
+      successFlag === "1" ||
+      successFlag === "true" ||
+      status === "verified" ||
+      status === "success";
+
+    const isVerifiedFromReferrer =
+      typeof document !== "undefined" &&
+      document.referrer.includes("/api/auth/verify-email/confirm");
+
+    if (isVerifiedFromQuery || isVerifiedFromReferrer) {
+      setLoginNotice("Xác nhận email thành công. Bạn có thể đăng nhập ngay.");
+
+      if (isVerifiedFromQuery) {
+        const nextSearch = new URLSearchParams(searchParams);
+        ["verified", "success", "status"].forEach((key) => nextSearch.delete(key));
+        setSearchParams(nextSearch, { replace: true });
+      }
+
+      return;
+    }
+
+    if (location.state?.emailVerified) {
+      setLoginNotice("Xác nhận email thành công. Bạn có thể đăng nhập ngay.");
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.pathname, location.state, mode, navigate, searchParams, setSearchParams]);
 
   useEffect(() => {
     setMode(initialMode);
@@ -304,6 +343,12 @@ export default function Login({ initialMode = "login" }) {
                     {loginError && (
                       <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
                         {loginError}
+                      </div>
+                    )}
+
+                    {loginNotice && (
+                      <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                        {loginNotice}
                       </div>
                     )}
 

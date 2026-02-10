@@ -29,7 +29,7 @@ export default function VerifyEmail() {
     if (isVerifiedFromBackend) {
       return "Xác nhận email thành công. Đang chuyển đến trang đăng nhập...";
     }
-    return "Nếu chưa nhận được email xác nhận, bạn có thể yêu cầu gửi lại bên dưới.";
+    return "Sau khi nhấn liên kết trong email, hệ thống sẽ tự động chuyển bạn về trang đăng nhập.";
   });
 
   const redirectPath = useMemo(
@@ -103,7 +103,7 @@ export default function VerifyEmail() {
       <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)] sm:p-8">
         <h1 className="text-2xl font-semibold">Xác nhận email</h1>
         <p className="mt-2 text-sm text-white/60">
-          Chúng tôi đã xử lý xác nhận trực tiếp qua liên kết trong email.
+          Nếu chưa nhận được email xác nhận, bạn có thể yêu cầu gửi lại bên dưới.
         </p>
 
         <div className="mt-6 space-y-4">
