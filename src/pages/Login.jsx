@@ -41,7 +41,14 @@ export default function Login({ initialMode = "login" }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { login, register, firebaseLogin, resendVerification, loading } = useAuthStore();
+  const {
+    login,
+    register,
+    firebaseLogin,
+    resendVerification,
+    verifyEmailRegistration,
+    loading,
+  } = useAuthStore();
   const [mode, setMode] = useState(initialMode);
 
   const [loginEmail, setLoginEmail] = useState("");
@@ -54,6 +61,9 @@ export default function Login({ initialMode = "login" }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [registerError, setRegisterError] = useState("");
   const [registerNotice, setRegisterNotice] = useState("");
+  const [awaitingVerification, setAwaitingVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verificationError, setVerificationError] = useState("");
   const [loginNotice, setLoginNotice] = useState("");
 
   useEffect(() => {
@@ -168,13 +178,14 @@ export default function Login({ initialMode = "login" }) {
       });
 
       if (result?.requires_email_verification) {
+        setAwaitingVerification(true);
+        setVerificationCode("");
+        setVerificationError("");
         setRegisterNotice(
           result.message ||
-            "Vui lòng kiểm tra email để xác nhận tài khoản trước khi đăng nhập."
+            "Vui lòng nhập mã xác thực 6 số đã gửi về email để hoàn tất đăng ký."
         );
-        return navigate(
-          `/verify-email?email=${encodeURIComponent(registerEmail)}&intent=user`
-        );
+        return;
       }
 
       if (result.role === "ADMIN") return navigate("/admin", { replace: true });
@@ -206,6 +217,42 @@ export default function Login({ initialMode = "login" }) {
         err?.message ||
         "Không thể gửi lại email xác thực, vui lòng thử lại.";
       setRegisterError(msg);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!registerEmail) {
+      setVerificationError("Không tìm thấy email đăng ký để xác thực.");
+      return;
+    }
+
+    const sanitizedCode = verificationCode.trim();
+    if (!/^\d{6}$/.test(sanitizedCode)) {
+      setVerificationError("Mã xác thực phải gồm đúng 6 chữ số.");
+      return;
+    }
+
+    setVerificationError("");
+    setRegisterError("");
+
+    try {
+      const user = await verifyEmailRegistration({
+        email: registerEmail,
+        verification_code: sanitizedCode,
+        authContext: "default",
+      });
+
+      if (user.role === "ADMIN") return navigate("/admin", { replace: true });
+      if (user.role === "ARTIST") {
+        return navigate("/artist/dashboard", { replace: true });
+      }
+      return navigate("/", { replace: true });
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Không thể xác thực mã, vui lòng thử lại.";
+      setVerificationError(msg);
     }
   };
 
@@ -482,6 +529,51 @@ export default function Login({ initialMode = "login" }) {
                       </div>
                     )}
 
+                    {awaitingVerification && (
+                      <div className="space-y-3 rounded-xl border border-emerald-400/30 bg-emerald-500/5 p-4">
+                        <label className="block space-y-1.5 text-sm">
+                          <span className="text-white/70">Mã xác thực 6 số</span>
+                          <input
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm tracking-[0.35em] text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                            value={verificationCode}
+                            onChange={(event) =>
+                              setVerificationCode(
+                                event.target.value.replace(/\D/g, "").slice(0, 6)
+                              )
+                            }
+                            placeholder="123456"
+                            inputMode="numeric"
+                          />
+                        </label>
+
+                        {verificationError && (
+                          <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                            {verificationError}
+                          </div>
+                        )}
+
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <button
+                            type="button"
+                            onClick={handleVerifyCode}
+                            disabled={loading}
+                            className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {loading ? "Đang xác thực..." : "Xác thực mã"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleResendVerification}
+                            disabled={loading}
+                            className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/85 transition hover:border-white/35 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Gửi lại mã
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {registerError && (
                       <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
                         {registerError}
@@ -495,15 +587,6 @@ export default function Login({ initialMode = "login" }) {
                     >
                       {loading ? "Đang đăng ký..." : "Đăng ký"}
                     </button>
-
-                    {/* <button
-                      type="button"
-                      onClick={handleResendVerification}
-                      disabled={loading}
-                      className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/85 transition hover:border-white/35 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      Gửi lại email xác thực
-                    </button> */}
 
                     <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.28em] text-white/40">
                       <span className="h-px flex-1 bg-white/10" />

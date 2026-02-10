@@ -1,141 +1,108 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import useAuthStore from "../store/auth.store";
 
 export default function VerifyEmail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { verifyEmailRegistration, resendVerification, loading, logout } = useAuthStore();
+  const { verifyEmailRegistration, resendVerification, loading } = useAuthStore();
 
-  const initialToken = searchParams.get("token") || "";
-  const initialEmail = searchParams.get("email") || "";
   const intent = searchParams.get("intent") || "user";
-  const verificationStatus = (searchParams.get("status") || "").toLowerCase();
-  const successFlag = (searchParams.get("success") || "").toLowerCase();
-  const verifiedFlag = (searchParams.get("verified") || "").toLowerCase();
-
-  const isVerifiedFromBackend =
-    verificationStatus === "success" ||
-    verificationStatus === "verified" ||
-    successFlag === "1" ||
-    successFlag === "true" ||
-    verifiedFlag === "1" ||
-    verifiedFlag === "true";
-
-  const [email, setEmail] = useState(initialEmail);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState(() => {
-    if (initialToken) return "Đang xác nhận email của bạn...";
-    if (isVerifiedFromBackend) {
-      return "Xác nhận email thành công. Đang chuyển đến trang đăng nhập...";
-    }
-    return "Sau khi nhấn liên kết trong email, hệ thống sẽ tự động chuyển bạn về trang đăng nhập.";
-  });
-
   const redirectPath = useMemo(
-    () => (intent === "artist" ? "/artist-auth" : "/login"),
+    () => (intent === "artist" ? "/artist-request" : "/"),
     [intent]
   );
 
-  const navigateToLogin = () => {
-    navigate(`${redirectPath}?verified=1`, { replace: true });
-  };
+  const [email, setEmail] = useState(searchParams.get("email") || "");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState(
+    "Nhập mã xác thực 6 số được gửi qua email để hoàn tất đăng ký."
+  );
 
-  const handleVerify = async (token) => {
-    const effectiveToken = token.trim();
-    if (!effectiveToken) {
+  const handleVerify = async () => {
+    if (!email.trim()) {
+      setError("Vui lòng nhập email đăng ký.");
+      return;
+    }
+
+    const code = verificationCode.trim();
+    if (!/^\d{6}$/.test(code)) {
+      setError("Mã xác thực phải gồm đúng 6 chữ số.");
       return;
     }
 
     setError("");
-    setNotice("Đang xác nhận email của bạn...");
 
     try {
-      await verifyEmailRegistration({ token: effectiveToken });
-      logout();
-      setNotice("Xác nhận email thành công. Đang chuyển đến trang đăng nhập...");
+      await verifyEmailRegistration({
+        email: email.trim(),
+        verification_code: code,
+        authContext: intent === "artist" ? "artist_request" : "default",
+      });
+
+      setNotice("Xác nhận email thành công. Đang chuyển trang...");
       setTimeout(() => {
         navigate(redirectPath, { replace: true });
-      }, 900);
+      }, 500);
     } catch (err) {
       const msg =
         err?.response?.data?.message ||
         err?.message ||
-        "Không thể xác nhận email, vui lòng thử lại.";
-      setNotice("Vui lòng gửi lại email xác nhận để nhận liên kết mới.");
+        "Không thể xác nhận mã, vui lòng thử lại.";
       setError(msg);
     }
   };
 
   const handleResend = async () => {
     if (!email.trim()) {
-      setError("Vui lòng nhập email để gửi lại xác thực.");
+      setError("Vui lòng nhập email để gửi lại mã.");
       return;
     }
 
     setError("");
     try {
       const message = await resendVerification({ email: email.trim() });
-      setNotice(message || "Đã gửi lại email xác thực.");
+      setNotice(message || "Đã gửi lại mã xác thực qua email.");
     } catch (err) {
       const msg =
         err?.response?.data?.message ||
         err?.message ||
-        "Không thể gửi lại email xác thực, vui lòng thử lại.";
+        "Không thể gửi lại mã xác thực, vui lòng thử lại.";
       setError(msg);
     }
   };
-
-  useEffect(() => {
-    if (initialToken) {
-      handleVerify(initialToken);
-      return;
-    }
-
-    if (isVerifiedFromBackend) {
-      const timeoutId = setTimeout(() => {
-        navigateToLogin();
-      }, 1000);
-
-      return () => clearTimeout(timeoutId);
-    }
-
-    const syncFromOtherTab = () => {
-      const completedAt = localStorage.getItem("email_verification_completed_at");
-      if (completedAt) {
-        navigateToLogin();
-      }
-    };
-
-    window.addEventListener("storage", syncFromOtherTab);
-    window.addEventListener("focus", syncFromOtherTab);
-
-    return () => {
-      window.removeEventListener("storage", syncFromOtherTab);
-      window.removeEventListener("focus", syncFromOtherTab);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialToken, isVerifiedFromBackend, redirectPath]);
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-[#0b0b12] px-4 py-8 text-white">
       <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)] sm:p-8">
         <h1 className="text-2xl font-semibold">Xác nhận email</h1>
         <p className="mt-2 text-sm text-white/60">
-
-          Nếu chưa nhận được email xác nhận, bạn có thể yêu cầu gửi lại bên dưới.
-          Sau khi xác nhận trong email, tab này sẽ tự chuyển sang trang đăng nhập.
+          Hoàn tất xác thực ngay trên tab hiện tại. Không cần mở thêm tab mới.
         </p>
 
         <div className="mt-6 space-y-4">
           <label className="block space-y-2 text-sm">
-            <span className="text-white/70">Email nhận xác thực</span>
+            <span className="text-white/70">Email đăng ký</span>
             <input
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="email@example.com"
               type="email"
+            />
+          </label>
+
+          <label className="block space-y-2 text-sm">
+            <span className="text-white/70">Mã xác thực 6 số</span>
+            <input
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-white tracking-[0.35em] placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+              value={verificationCode}
+              onChange={(event) =>
+                setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))
+              }
+              placeholder="123456"
+              inputMode="numeric"
             />
           </label>
 
@@ -151,22 +118,25 @@ export default function VerifyEmail() {
             </div>
           )}
 
-          <button
-            type="button"
-            disabled={loading}
-            onClick={handleResend}
-            className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Đang xử lý..." : "Gửi lại email xác thực"}
-          </button>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleVerify}
+              className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? "Đang xác thực..." : "Xác thực mã"}
+            </button>
 
-          <button
-            type="button"
-            onClick={navigateToLogin}
-            className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-medium text-white/85 transition hover:border-white/35 hover:bg-white/10"
-          >
-            Tôi đã xác nhận xong, chuyển tới đăng nhập
-          </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleResend}
+              className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-medium text-white/85 transition hover:border-white/35 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Gửi lại mã
+            </button>
+          </div>
         </div>
       </div>
     </div>

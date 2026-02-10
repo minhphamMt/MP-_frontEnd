@@ -359,10 +359,10 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  verifyEmailRegistration: async ({ token }) => {
+  verifyEmailRegistration: async ({ email, verification_code, authContext = "default" }) => {
     set({ loading: true, isAuthReady: false });
     try {
-      const res = await verifyEmailApi({ token });
+      const res = await verifyEmailApi({ email, verification_code });
       const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
       const user = res.data?.user || res.data?.data?.user;
 
@@ -374,7 +374,7 @@ const useAuthStore = create((set, get) => ({
         user,
         accessToken,
         role: user.role,
-        authContext: "default",
+        authContext,
         isAuthenticated: true,
         loading: false,
         isAuthReady: true,
