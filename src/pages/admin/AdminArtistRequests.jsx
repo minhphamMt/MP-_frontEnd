@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { FiCheckCircle, FiRefreshCw, FiSlash } from "react-icons/fi";
+import {
+  FiCheckCircle,
+  FiChevronDown,
+  FiChevronUp,
+  FiExternalLink,
+  FiRefreshCw,
+  FiSlash,
+} from "react-icons/fi";
 import {
   approveArtistRequest,
   listArtistRequests,
@@ -26,12 +33,33 @@ const statusBadge = (status) => {
   }
 };
 
+const formatStatusText = (status) => {
+  switch (status) {
+    case "approved":
+      return "Đã duyệt";
+    case "pending":
+      return "Chờ duyệt";
+    case "rejected":
+      return "Từ chối";
+    default:
+      return status || "Không xác định";
+  }
+};
+
+const DetailItem = ({ label, children }) => (
+  <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+    <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">{label}</p>
+    <div className="mt-1 break-all text-sm text-white/85">{children || "Chưa cập nhật"}</div>
+  </div>
+);
+
 export default function AdminArtistRequests() {
   const [requests, setRequests] = useState([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [expandedRequestId, setExpandedRequestId] = useState(null);
 
   const loadRequests = async () => {
     try {
@@ -100,13 +128,13 @@ export default function AdminArtistRequests() {
   }, [keyword, requests]);
 
   return (
-    <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
+    <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
             Quản trị
           </p>
-          <h1 className="text-3xl font-extrabold text-white">
+          <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
             Duyệt yêu cầu nghệ sĩ
           </h1>
         </div>
@@ -148,12 +176,10 @@ export default function AdminArtistRequests() {
       )}
 
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.2fr_1fr_0.6fr_0.8fr]">
-          <span>Hồ sơ</span>
-          <span className="hidden lg:block">Email</span>
-          <span className="hidden lg:block">Trạng thái</span>
-          <span className="text-right">Hành động</span>
+        <div className="border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50">
+          Danh sách yêu cầu
         </div>
+
         <div className="divide-y divide-white/5">
           {loading && (
             <div className="px-4 py-6 text-sm text-white/60">
@@ -165,59 +191,122 @@ export default function AdminArtistRequests() {
               Không có yêu cầu phù hợp.
             </div>
           )}
+
           {!loading &&
-            visibleRequests.map((request) => (
-              <div
-                key={request.id}
-                className="grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 text-sm text-white/80 lg:grid-cols-[1.2fr_1fr_0.6fr_0.8fr]"
-              >
-                <div>
-                  <p className="font-semibold text-white">
-                    {request.artist_name}
-                  </p>
-                  <p className="text-xs text-white/50">
-                    {request.display_name || "Chưa cập nhật"}
-                  </p>
-                </div>
-                <p className="hidden text-xs text-white/60 lg:block">
-                  {request.email}
-                </p>
-                <p
-                  className={`hidden text-xs font-semibold capitalize lg:block ${statusBadge(
-                    request.status
-                  )}`}
-                >
-                  {request.status}
-                </p>
-                <div className="flex justify-end gap-2">
-                  {request.status === "pending" ? (
-                    <>
+            visibleRequests.map((request) => {
+              const isExpanded = expandedRequestId === request.id;
+
+              return (
+                <div key={request.id} className="px-3 py-3 sm:px-4">
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() =>
+                      setExpandedRequestId((current) =>
+                        current === request.id ? null : request.id
+                      )
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setExpandedRequestId((current) =>
+                          current === request.id ? null : request.id
+                        );
+                      }
+                    }}
+                    className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 transition hover:border-white/25 sm:px-4"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-xs font-semibold text-white/70">
+                          Yêu cầu #{request.id}
+                        </p>
+                        <span
+                          className={`rounded-full border border-white/10 px-2 py-1 text-[11px] font-semibold ${statusBadge(
+                            request.status
+                          )}`}
+                        >
+                          {formatStatusText(request.status)}
+                        </span>
+                      </div>
                       <button
-                        onClick={() => handleApprove(request)}
-                        className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-500/20"
+                        type="button"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-white/70"
                       >
-                        <FiCheckCircle /> Duyệt
+                        {isExpanded ? "Ẩn chi tiết" : "Xem chi tiết"}
+                        {isExpanded ? <FiChevronUp /> : <FiChevronDown />}
                       </button>
-                      <button
-                        onClick={() => handleReject(request)}
-                        className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-100 transition hover:bg-rose-500/20"
-                      >
-                        <FiSlash /> Từ chối
-                      </button>
-                    </>
-                  ) : (
-                    <span className="text-xs text-white/50">
-                      {request.status === "approved"
-                        ? "Đã duyệt"
-                        : "Đã xử lý"}
-                    </span>
-                  )}
+                    </div>
+
+                    <div
+                      className="flex flex-wrap gap-2"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {request.status === "pending" ? (
+                        <>
+                          <button
+                            onClick={() => handleApprove(request)}
+                            className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-500/20"
+                          >
+                            <FiCheckCircle /> Duyệt
+                          </button>
+                          <button
+                            onClick={() => handleReject(request)}
+                            className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-100 transition hover:bg-rose-500/20"
+                          >
+                            <FiSlash /> Từ chối
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-xs text-white/50">
+                          {request.status === "approved"
+                            ? "Yêu cầu đã được duyệt"
+                            : "Yêu cầu đã được xử lý"}
+                        </span>
+                      )}
+                    </div>
+
+                    {isExpanded && (
+                      <div className="grid gap-2 border-t border-white/10 pt-3 sm:grid-cols-2 lg:grid-cols-3">
+                        <DetailItem label="Tên nghệ sĩ">
+                          {request.artist_name}
+                        </DetailItem>
+                        <DetailItem label="Tên hiển thị">
+                          {request.display_name}
+                        </DetailItem>
+                        <DetailItem label="Email">{request.email}</DetailItem>
+                        <DetailItem label="Tiểu sử">{request.bio}</DetailItem>
+                        <DetailItem label="Ngày gửi">{request.created_at}</DetailItem>
+                        <DetailItem label="Mã người dùng">
+                          {request.user_id}
+                        </DetailItem>
+
+                        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 sm:col-span-2 lg:col-span-3">
+                          <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">
+                            Link chứng minh / link cá nhân
+                          </p>
+                          {request.proof_link ? (
+                            <a
+                              href={request.proof_link}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(event) => event.stopPropagation()}
+                              className="mt-1 inline-flex items-center gap-1 break-all text-sm text-cyan-300 hover:text-cyan-200"
+                            >
+                              {request.proof_link} <FiExternalLink className="shrink-0" />
+                            </a>
+                          ) : (
+                            <p className="mt-1 text-sm text-white/85">Chưa cập nhật</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
       </div>
     </div>
   );
 }
-
