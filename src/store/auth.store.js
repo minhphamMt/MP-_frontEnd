@@ -8,6 +8,8 @@ import {
   artistRegisterApi,
   verifyEmailApi,
   resendVerificationApi,
+  forgotPasswordApi,
+  resetPasswordApi,
 } from "../api/auth.api";
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
@@ -392,6 +394,20 @@ const useAuthStore = create((set, get) => ({
 
   resendVerification: async ({ email }) => {
     const res = await resendVerificationApi({ email });
+    return res.data?.message || res.data?.data?.message;
+  },
+
+  forgotPassword: async ({ email }) => {
+    const res = await forgotPasswordApi({ email });
+    return res.data?.message || res.data?.data?.message;
+  },
+
+  resetPassword: async ({ email, verification_code, new_password }) => {
+    const res = await resetPasswordApi({
+      email,
+      verification_code,
+      new_password,
+    });
     return res.data?.message || res.data?.data?.message;
   },
 

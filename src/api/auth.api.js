@@ -8,6 +8,10 @@ export const verifyEmailApi = (payload) => api.post("/auth/verify-email", payloa
 export const resendVerificationApi = (payload) =>
   api.post("/auth/resend-verification", payload);
 export const firebaseLoginApi = (payload) => api.post("/auth/firebase", payload);
+export const forgotPasswordApi = (payload) =>
+  api.post("/auth/forgot-password", payload);
+export const resetPasswordApi = (payload) =>
+  api.post("/auth/reset-password", payload);
 
 // refreshToken có thể nằm trong cookie, nếu backend bạn yêu cầu body refreshToken
 // thì sửa thành: api.post("/auth/refresh", { refreshToken })

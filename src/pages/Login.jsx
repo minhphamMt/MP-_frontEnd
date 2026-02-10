@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import useAuthStore from "../store/auth.store";
 import { signInWithGoogle, signOutFirebaseSession } from "../utils/firebase";
@@ -47,6 +48,8 @@ export default function Login({ initialMode = "login" }) {
     firebaseLogin,
     resendVerification,
     verifyEmailRegistration,
+    forgotPassword,
+    resetPassword,
     loading,
   } = useAuthStore();
   const [mode, setMode] = useState(initialMode);
@@ -65,6 +68,19 @@ export default function Login({ initialMode = "login" }) {
   const [verificationCode, setVerificationCode] = useState("");
   const [verificationError, setVerificationError] = useState("");
   const [loginNotice, setLoginNotice] = useState("");
+
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+
+  const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotCode, setForgotCode] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotMessage, setForgotMessage] = useState("");
+  const [forgotError, setForgotError] = useState("");
+  const [isResetStep, setIsResetStep] = useState(false);
 
   useEffect(() => {
     if (mode !== "login") return;
@@ -256,6 +272,101 @@ export default function Login({ initialMode = "login" }) {
     }
   };
 
+
+  const renderPasswordInput = ({
+    label,
+    value,
+    onChange,
+    placeholder = "••••••",
+    autoComplete,
+    showPassword,
+    toggleShowPassword,
+    inputClassName,
+  }) => (
+    <label className="block space-y-2 text-sm">
+      <span className="text-white/70">{label}</span>
+      <div className="relative">
+        <input
+          className={`${inputClassName} pr-12`}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          type={showPassword ? "text" : "password"}
+          autoComplete={autoComplete}
+          required
+        />
+        <button
+          type="button"
+          onClick={toggleShowPassword}
+          className="absolute inset-y-0 right-3 inline-flex items-center text-white/60 transition hover:text-white"
+          aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+        >
+          {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+        </button>
+      </div>
+    </label>
+  );
+
+  const handleForgotPasswordRequest = async () => {
+    if (!forgotEmail) {
+      setForgotError("Vui lòng nhập email để nhận mã xác thực.");
+      return;
+    }
+
+    setForgotError("");
+    try {
+      const message = await forgotPassword({ email: forgotEmail });
+      setForgotMessage(message || "Nếu email hợp lệ, hệ thống đã gửi mã đặt lại mật khẩu.");
+      setIsResetStep(true);
+    } catch (err) {
+      setForgotError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Không thể gửi mã đặt lại mật khẩu, vui lòng thử lại."
+      );
+    }
+  };
+
+  const handleConfirmResetPassword = async () => {
+    if (!forgotEmail || !forgotCode || !forgotNewPassword) {
+      setForgotError("Vui lòng nhập đầy đủ email, mã xác thực và mật khẩu mới.");
+      return;
+    }
+
+    if (!/^\d{6}$/.test(forgotCode.trim())) {
+      setForgotError("Mã xác thực phải gồm đúng 6 chữ số.");
+      return;
+    }
+
+    if (forgotNewPassword.length < 6) {
+      setForgotError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      return;
+    }
+
+    setForgotError("");
+    try {
+      const message = await resetPassword({
+        email: forgotEmail,
+        verification_code: forgotCode.trim(),
+        new_password: forgotNewPassword,
+      });
+
+      setForgotMessage(message || "Đặt lại mật khẩu thành công.");
+      setIsForgotPasswordMode(false);
+      setIsResetStep(false);
+      setLoginPassword("");
+      setLoginEmail(forgotEmail);
+      setForgotCode("");
+      setForgotNewPassword("");
+    } catch (err) {
+      setForgotError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Không thể đặt lại mật khẩu, vui lòng thử lại."
+      );
+    }
+  };
+
   const handleArtistPortal = () => {
     navigate("/artist-auth");
   };
@@ -373,20 +484,116 @@ export default function Login({ initialMode = "login" }) {
                       />
                     </label>
 
-                    <label className="block space-y-2 text-sm">
-                      <span className="text-white/70">Mật khẩu</span>
-                      <input
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/40"
-                        value={loginPassword}
-                        onChange={(event) =>
-                          setLoginPassword(event.target.value)
-                        }
-                        placeholder="••••••"
-                        type="password"
-                        autoComplete="current-password"
-                        required
-                      />
-                    </label>
+                    {renderPasswordInput({
+                      label: "Mật khẩu",
+                      value: loginPassword,
+                      onChange: (event) => setLoginPassword(event.target.value),
+                      autoComplete: "current-password",
+                      showPassword: showLoginPassword,
+                      toggleShowPassword: () =>
+                        setShowLoginPassword((prev) => !prev),
+                      inputClassName:
+                        "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/40",
+                    })}
+
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForgotEmail(loginEmail);
+                          setForgotError("");
+                          setForgotMessage("");
+                          setForgotCode("");
+                          setForgotNewPassword("");
+                          setIsResetStep(false);
+                          setIsForgotPasswordMode((prev) => !prev);
+                        }}
+                        className="text-xs text-green-300 transition hover:text-green-200"
+                      >
+                        {isForgotPasswordMode ? "Đóng quên mật khẩu" : "Quên mật khẩu?"}
+                      </button>
+                    </div>
+
+                    {isForgotPasswordMode && (
+                      <div className="space-y-3 rounded-xl border border-emerald-400/30 bg-emerald-500/5 p-4">
+                        <p className="text-sm text-white/80">
+                          Nhập email để nhận mã xác thực và đặt lại mật khẩu.
+                        </p>
+
+                        <label className="block space-y-1.5 text-sm">
+                          <span className="text-white/70">Email</span>
+                          <input
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                            value={forgotEmail}
+                            onChange={(event) => setForgotEmail(event.target.value)}
+                            placeholder="email@example.com"
+                            type="email"
+                          />
+                        </label>
+
+                        {!isResetStep ? (
+                          <button
+                            type="button"
+                            onClick={handleForgotPasswordRequest}
+                            disabled={loading}
+                            className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/85 transition hover:border-white/35 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Gửi mã xác thực
+                          </button>
+                        ) : (
+                          <>
+                            <label className="block space-y-1.5 text-sm">
+                              <span className="text-white/70">Mã xác thực 6 số</span>
+                              <input
+                                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm tracking-[0.35em] text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                                value={forgotCode}
+                                onChange={(event) =>
+                                  setForgotCode(
+                                    event.target.value.replace(/\D/g, "").slice(0, 6)
+                                  )
+                                }
+                                placeholder="123456"
+                                inputMode="numeric"
+                              />
+                            </label>
+
+                            {renderPasswordInput({
+                              label: "Mật khẩu mới",
+                              value: forgotNewPassword,
+                              onChange: (event) =>
+                                setForgotNewPassword(event.target.value),
+                              autoComplete: "new-password",
+                              showPassword: showResetPassword,
+                              toggleShowPassword: () =>
+                                setShowResetPassword((prev) => !prev),
+                              inputClassName:
+                                "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40",
+                            })}
+
+                            <button
+                              type="button"
+                              onClick={handleConfirmResetPassword}
+                              disabled={loading}
+                              className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              Xác nhận đặt lại mật khẩu
+                            </button>
+                          </>
+                        )}
+
+                        {forgotMessage && (
+                          <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                            {forgotMessage}
+                          </div>
+                        )}
+
+                        {forgotError && (
+                          <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                            {forgotError}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {loginError && (
                       <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
@@ -493,34 +700,28 @@ export default function Login({ initialMode = "login" }) {
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
-                      <label className="block space-y-1.5 text-sm">
-                        <span className="text-white/70">Mật khẩu</span>
-                        <input
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                          value={registerPassword}
-                          onChange={(event) =>
-                            setRegisterPassword(event.target.value)
-                          }
-                          placeholder="••••••"
-                          type="password"
-                          autoComplete="new-password"
-                          required
-                        />
-                      </label>
-                      <label className="block space-y-1.5 text-sm">
-                        <span className="text-white/70">Nhập lại</span>
-                        <input
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                          value={confirmPassword}
-                          onChange={(event) =>
-                            setConfirmPassword(event.target.value)
-                          }
-                          placeholder="••••••"
-                          type="password"
-                          autoComplete="new-password"
-                          required
-                        />
-                      </label>
+                      {renderPasswordInput({
+                        label: "Mật khẩu",
+                        value: registerPassword,
+                        onChange: (event) => setRegisterPassword(event.target.value),
+                        autoComplete: "new-password",
+                        showPassword: showRegisterPassword,
+                        toggleShowPassword: () =>
+                          setShowRegisterPassword((prev) => !prev),
+                        inputClassName:
+                          "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40",
+                      })}
+                      {renderPasswordInput({
+                        label: "Nhập lại",
+                        value: confirmPassword,
+                        onChange: (event) => setConfirmPassword(event.target.value),
+                        autoComplete: "new-password",
+                        showPassword: showConfirmPassword,
+                        toggleShowPassword: () =>
+                          setShowConfirmPassword((prev) => !prev),
+                        inputClassName:
+                          "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40",
+                      })}
                     </div>
 
                     {registerNotice && (
