@@ -328,7 +328,7 @@ export default function Login({ initialMode = "login" }) {
                   <li>• Gợi ý playlist thông minh theo thói quen nghe.</li>
                   <li>• Lưu lịch sử, đồng bộ thiết bị và nghe liên tục.</li>
                   <li>• Theo dõi nghệ sĩ, album và xu hướng hot nhất.</li>
-                </ul>
+                </ul> 
               </div>
             </div>
 

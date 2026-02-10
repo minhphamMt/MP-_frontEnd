@@ -2,12 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getAlbums } from "../api/album.api";
 import { getMyHistory } from "../api/history.api";
 import { getArtistCollections } from "../api/artist.api";
-import { getRecommendations } from "../api/recommendation.api";
+import {
+  getColdStartRecommendations,
+  getRecommendations,
+} from "../api/recommendation.api";
 import { getSongById } from "../api/song.api";
 import AlbumCard from "../components/album/AlbumCard";
 import ArtistAlbumCard from "../components/album/ArtistAlbumCard";
 import Section from "../components/section/Section";
 import SongCard from "../components/song/SongCard";
+import useAuthStore from "../store/auth.store";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { resolveAssetUrl } from "../utils/asset";
 
@@ -27,6 +31,7 @@ export default function Home() {
   const newAlbumResumeRef = useRef(null);
   const playSong = usePlayerStore((state) => state.playSong);
   const currentSong = usePlayerStore((state) => state.currentSong);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return "Chào buổi sáng";
@@ -37,9 +42,9 @@ export default function Home() {
   const quickPicks = useMemo(() => songs.slice(0, 6), [songs]);
 
   const fetchRecommendedSongs = useCallback(async (seedSongId) => {
-    if (!seedSongId) return [];
-
-    const recRes = await getRecommendations(seedSongId);
+    const recRes = seedSongId
+      ? await getRecommendations(seedSongId)
+      : await getColdStartRecommendations(9);
     const items = recRes?.data?.data || recRes?.data || [];
     const ids = items
       .map((item) => item?.songId ?? item?.song_id ?? item?.id ?? item)
@@ -72,6 +77,8 @@ export default function Home() {
   }, []);
 
   const getLastPlayedSongId = useCallback(async () => {
+    if (!isAuthenticated) return null;
+
     try {
       const historyRes = await getMyHistory({ limit: 1 });
       const payload = historyRes?.data?.data ?? historyRes?.data ?? {};
@@ -83,9 +90,11 @@ export default function Home() {
       console.warn("Load last played song for recommendations failed", error);
       return null;
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const getRandomHistorySongId = useCallback(async (limit = 20) => {
+    if (!isAuthenticated) return null;
+
     try {
       const historyRes = await getMyHistory({ limit });
       const payload = historyRes?.data?.data ?? historyRes?.data ?? {};
@@ -99,15 +108,10 @@ export default function Home() {
       console.warn("Load random history song for recommendations failed", error);
       return null;
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const loadRecommendations = useCallback(
     async (seedSongId, { silent = false } = {}) => {
-      if (!seedSongId) {
-        setSongs([]);
-        return;
-      }
-
       if (!silent) setRecommendationLoading(true);
       try {
         const recommended = await fetchRecommendedSongs(seedSongId);
@@ -145,8 +149,9 @@ export default function Home() {
       setArtistAlbums(artistRes?.data?.data || []);
       setNewAlbums(albumRes?.data?.data || []);
 
-      const seedSongId =
-      (await getLastPlayedSongId()) || normalizeSongId(currentSong);
+      const seedSongId = isAuthenticated
+        ? (await getLastPlayedSongId()) || normalizeSongId(currentSong)
+        : null;
       await loadRecommendations(seedSongId, { silent: true });
     } catch (err) {
       console.error("Load home error:", err);
