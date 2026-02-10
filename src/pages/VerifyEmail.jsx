@@ -10,14 +10,27 @@ export default function VerifyEmail() {
   const initialToken = searchParams.get("token") || "";
   const initialEmail = searchParams.get("email") || "";
   const intent = searchParams.get("intent") || "user";
+  const verificationStatus = (searchParams.get("status") || "").toLowerCase();
+  const successFlag = (searchParams.get("success") || "").toLowerCase();
+  const verifiedFlag = (searchParams.get("verified") || "").toLowerCase();
+
+  const isVerifiedFromBackend =
+    verificationStatus === "success" ||
+    verificationStatus === "verified" ||
+    successFlag === "1" ||
+    successFlag === "true" ||
+    verifiedFlag === "1" ||
+    verifiedFlag === "true";
 
   const [email, setEmail] = useState(initialEmail);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState(
-    initialToken
-      ? "Đang xác nhận email của bạn..."
-      : "Nếu chưa nhận được email xác nhận, bạn có thể yêu cầu gửi lại bên dưới."
-  );
+  const [notice, setNotice] = useState(() => {
+    if (initialToken) return "Đang xác nhận email của bạn...";
+    if (isVerifiedFromBackend) {
+      return "Xác nhận email thành công. Đang chuyển đến trang đăng nhập...";
+    }
+    return "Nếu chưa nhận được email xác nhận, bạn có thể yêu cầu gửi lại bên dưới.";
+  });
 
   const redirectPath = useMemo(
     () => (intent === "artist" ? "/artist-auth" : "/login"),
@@ -72,9 +85,18 @@ export default function VerifyEmail() {
   useEffect(() => {
     if (initialToken) {
       handleVerify(initialToken);
+      return;
+    }
+
+    if (isVerifiedFromBackend) {
+      const timeoutId = setTimeout(() => {
+        navigate(redirectPath, { replace: true });
+      }, 1000);
+
+      return () => clearTimeout(timeoutId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialToken]);
+  }, [initialToken, isVerifiedFromBackend, redirectPath]);
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-[#0b0b12] px-4 py-8 text-white">
