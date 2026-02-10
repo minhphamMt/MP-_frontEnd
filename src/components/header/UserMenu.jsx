@@ -8,6 +8,7 @@ import OptimizedImage from "../common/OptimizedImage";
 export default function UserMenu() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const logout = useAuthStore((state) => state.logout);
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -43,6 +44,18 @@ export default function UserMenu() {
     logout();
     navigate("/login", { replace: true });
   };
+
+  if (!isAuthenticated || !user) {
+    return (
+      <button
+        type="button"
+        onClick={() => navigate("/login")}
+        className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/20"
+      >
+        Đăng nhập
+      </button>
+    );
+  }
 
   return (
     <div className="relative" ref={menuRef}>

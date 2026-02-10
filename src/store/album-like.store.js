@@ -4,6 +4,8 @@ import {
   likeAlbum,
   unlikeAlbum,
 } from "../api/like.api";
+import useAuthStore from "./auth.store";
+import { emitAuthRequired } from "../utils/authPrompt";
 
 export const normalizeAlbumId = (album) => {
   const rawId =
@@ -58,6 +60,12 @@ const useAlbumLikeStore = create((set, get) => ({
   toggleAlbumLike: async (albumId) => {
     const targetId = normalizeAlbumId(albumId);
     if (!targetId) return;
+
+    const { isAuthenticated } = useAuthStore.getState();
+    if (!isAuthenticated) {
+      emitAuthRequired();
+      return;
+    }
 
     const { likedAlbumIds } = get();
     const isLiked = likedAlbumIds.includes(targetId);

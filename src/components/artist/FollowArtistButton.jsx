@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import useAuthStore from "../../store/auth.store";
 import useArtistFollowStore from "../../store/artist-follow.store";
+import { emitAuthRequired } from "../../utils/authPrompt";
 
 export default function FollowArtistButton({
   artist,
@@ -43,9 +44,13 @@ export default function FollowArtistButton({
       type="button"
       onClick={(event) => {
         event.stopPropagation();
+        if (!isAuthenticated) {
+          emitAuthRequired();
+          return;
+        }
         toggleFollow(artist);
       }}
-      disabled={!artistId || isPending || !isAuthenticated}
+      disabled={!artistId || isPending}
       className={`${baseClasses} ${sizeClasses} ${
         following
           ? "border-emerald-400/40 bg-emerald-400/20 text-emerald-100 hover:bg-emerald-400/30"
