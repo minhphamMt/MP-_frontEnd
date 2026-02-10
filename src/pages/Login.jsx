@@ -307,7 +307,7 @@ export default function Login({ initialMode = "login" }) {
                 ) : (
                   <motion.form
                     key="register"
-                    className="w-full space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)] sm:space-y-5 sm:p-8"
+                    className="w-full space-y-3 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_18px_45px_rgba(0,0,0,0.45)] sm:space-y-4 sm:p-6"
                     onSubmit={handleRegister}
                     variants={formVariants}
                     initial="initial"
@@ -320,43 +320,45 @@ export default function Login({ initialMode = "login" }) {
                     }}
                   >
                     <div>
-                      <h2 className="text-2xl font-semibold">Tạo tài khoản</h2>
-                      <p className="mt-1 text-sm text-white/60">
+                      <h2 className="text-xl font-semibold sm:text-2xl">Tạo tài khoản</h2>
+                      <p className="mt-1 text-xs text-white/60 sm:text-sm">
                         Đăng ký để lưu playlist và theo dõi nghệ sĩ.
                       </p>
                     </div>
 
-                    <label className="block space-y-2 text-sm">
-                      <span className="text-white/70">Tên hiển thị</span>
-                      <input
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                        value={displayName}
-                        onChange={(event) => setDisplayName(event.target.value)}
-                        placeholder="Nhập tên bạn muốn hiển thị"
-                        type="text"
-                        autoComplete="name"
-                        required
-                      />
-                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="block space-y-1.5 text-sm">
+                        <span className="text-white/70">Tên hiển thị</span>
+                        <input
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                          value={displayName}
+                          onChange={(event) => setDisplayName(event.target.value)}
+                          placeholder="Tên hiển thị"
+                          type="text"
+                          autoComplete="name"
+                          required
+                        />
+                      </label>
 
-                    <label className="block space-y-2 text-sm">
-                      <span className="text-white/70">Email</span>
-                      <input
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                        value={registerEmail}
-                        onChange={(event) => setRegisterEmail(event.target.value)}
-                        placeholder="email@example.com"
-                        type="email"
-                        autoComplete="email"
-                        required
-                      />
-                    </label>
+                      <label className="block space-y-1.5 text-sm">
+                        <span className="text-white/70">Email</span>
+                        <input
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                          value={registerEmail}
+                          onChange={(event) => setRegisterEmail(event.target.value)}
+                          placeholder="email@example.com"
+                          type="email"
+                          autoComplete="email"
+                          required
+                        />
+                      </label>
+                    </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
-                      <label className="block space-y-2 text-sm">
+                      <label className="block space-y-1.5 text-sm">
                         <span className="text-white/70">Mật khẩu</span>
                         <input
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
                           value={registerPassword}
                           onChange={(event) =>
                             setRegisterPassword(event.target.value)
@@ -367,10 +369,10 @@ export default function Login({ initialMode = "login" }) {
                           required
                         />
                       </label>
-                      <label className="block space-y-2 text-sm">
+                      <label className="block space-y-1.5 text-sm">
                         <span className="text-white/70">Nhập lại</span>
                         <input
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
                           value={confirmPassword}
                           onChange={(event) =>
                             setConfirmPassword(event.target.value)
@@ -392,12 +394,12 @@ export default function Login({ initialMode = "login" }) {
                     <button
                       disabled={loading}
                       type="submit"
-                      className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {loading ? "Đang đăng ký..." : "Đăng ký"}
                     </button>
 
-                    <div className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-white/40">
+                    <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.28em] text-white/40">
                       <span className="h-px flex-1 bg-white/10" />
                       hoặc
                       <span className="h-px flex-1 bg-white/10" />
@@ -407,12 +409,12 @@ export default function Login({ initialMode = "login" }) {
                       type="button"
                       onClick={handleGoogleLogin}
                       disabled={loading}
-                      className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <FcGoogle className="text-lg" />
                       Đăng nhập với Google
                     </button>
-                    
+
                     <p className="text-center text-xs text-white/50">
                       Đã có tài khoản?{" "}
                       <button
@@ -426,7 +428,7 @@ export default function Login({ initialMode = "login" }) {
                     <button
                       type="button"
                       onClick={handleArtistPortal}
-                      className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
+                      className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
                     >
                       Đăng ký trở thành nghệ sĩ
                     </button>
