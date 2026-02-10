@@ -5,3 +5,5 @@ export const createArtistRequest = (payload) =>
 
 export const getMyArtistRequest = () => api.get("/artist-requests/me");
 
+export const updateMyArtistRequest = (payload) =>
+  api.patch("/artist-requests/me", payload);

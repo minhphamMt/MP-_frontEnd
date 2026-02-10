@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { createArtistRequest, getMyArtistRequest } from "../api/artist-request.api";
+import {
+  createArtistRequest,
+  getMyArtistRequest,
+  updateMyArtistRequest,
+} from "../api/artist-request.api";
 import useAuthStore from "../store/auth.store";
 
 const statusStyles = {
@@ -25,7 +29,7 @@ export default function ArtistRequest() {
 
   const isAllowed = useMemo(
     () => authContext === "artist_request" || role === "ARTIST",
-    [authContext, role]
+    [authContext, role],
   );
 
   useEffect(() => {
@@ -37,6 +41,14 @@ export default function ArtistRequest() {
         const normalized =
           payload && (payload.id || payload.artist_name) ? payload : null;
         setRequest(normalized);
+        if (normalized) {
+          setForm({
+            artist_name: normalized.artist_name || "",
+            bio: normalized.bio || "",
+            avatar_url: normalized.avatar_url || "",
+            proof_link: normalized.proof_link || "",
+          });
+        }
       } catch (error) {
         console.error("Load artist request failed", error);
         setErrorMessage("Không thể tải yêu cầu nghệ sĩ.");
@@ -73,7 +85,10 @@ export default function ArtistRequest() {
 
     try {
       setSubmitting(true);
-      const res = await createArtistRequest(form);
+      const isResubmitting = request?.status === "rejected";
+      const res = isResubmitting
+        ? await updateMyArtistRequest(form)
+        : await createArtistRequest(form);
       const payload = res?.data?.data ?? res?.data ?? null;
       setRequest(payload);
     } catch (error) {
@@ -89,6 +104,7 @@ export default function ArtistRequest() {
   };
 
   const status = request?.status;
+  const canSubmitRequest = !request || status === "rejected";
 
   const handleLogout = () => {
     logout();
@@ -108,8 +124,8 @@ export default function ArtistRequest() {
               Gửi yêu cầu trở thành nghệ sĩ
             </h1>
             <p className="text-sm text-white/70">
-              Vui lòng cung cấp đầy đủ thông tin để đội ngũ MP xác thực hồ sơ của
-              bạn.
+              Vui lòng cung cấp đầy đủ thông tin để đội ngũ MP xác thực hồ sơ
+              của bạn.
             </p>
           </div>
 
@@ -132,7 +148,7 @@ export default function ArtistRequest() {
           <div className="rounded-2xl border border-white/10 bg-white/5 px-6 py-6 text-sm text-white/70">
             Đang tải thông tin yêu cầu...
           </div>
-        ) : request ? (
+        ) : !canSubmitRequest ? (
           <div className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
             <div>
               <h2 className="text-xl font-semibold">
@@ -143,14 +159,15 @@ export default function ArtistRequest() {
                 {status === "pending" &&
                   "Yêu cầu của bạn đang chờ admin xét duyệt. Vui lòng chờ trong 24-48h."}
                 {status === "rejected" &&
-                  "Yêu cầu đã bị từ chối. Bạn có thể liên hệ hỗ trợ để biết thêm chi tiết."}
+                  "Yêu cầu đã bị từ chối. Bạn có thể cập nhật thông tin và gửi lại yêu cầu ngay bên dưới."}
                 {status === "approved" &&
                   "Yêu cầu đã được duyệt. Đăng nhập lại để vào khu vực nghệ sĩ."}
               </p>
             </div>
             <div
               className={`rounded-2xl border px-4 py-3 text-sm ${
-                statusStyles[status] || "border-white/10 bg-white/5 text-white/70"
+                statusStyles[status] ||
+                "border-white/10 bg-white/5 text-white/70"
               }`}
             >
               <div className="grid gap-2 text-sm">
@@ -172,61 +189,80 @@ export default function ArtistRequest() {
             </div>
           </div>
         ) : (
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-6"
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="block space-y-2 text-sm">
-                <span className="text-white/70">Tên nghệ sĩ *</span>
-                <input
-                  value={form.artist_name}
-                  onChange={handleChange("artist_name")}
-                  placeholder="Tên nghệ sĩ"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                  required
-                />
-              </label>
-              <label className="block space-y-2 text-sm">
-                <span className="text-white/70">Link ảnh đại diện</span>
-                <input
-                  value={form.avatar_url}
-                  onChange={handleChange("avatar_url")}
-                  placeholder="https://"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                />
-              </label>
-            </div>
+          <div className="space-y-4">
+            {status === "rejected" && (
+              <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+                <p className="font-semibold">Yêu cầu trước đó đã bị từ chối.</p>
+                <p className="mt-1 text-rose-100/90">
+                  Lý do:{" "}
+                  {request?.reject_reason || "Chưa có lý do cụ thể từ admin."}
+                </p>
+                <p className="mt-1 text-rose-100/80">
+                  Vui lòng chỉnh sửa thông tin và gửi lại để admin duyệt lại.
+                </p>
+              </div>
+            )}
 
-            <label className="block space-y-2 text-sm">
-              <span className="text-white/70">Bio</span>
-              <textarea
-                value={form.bio}
-                onChange={handleChange("bio")}
-                placeholder="Giới thiệu ngắn về nghệ sĩ"
-                rows={4}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-              />
-            </label>
-
-            <label className="block space-y-2 text-sm">
-              <span className="text-white/70">Liên kết xác thực</span>
-              <input
-                value={form.proof_link}
-                onChange={handleChange("proof_link")}
-                placeholder="Link MXH, portfolio, fanpage..."
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-              />
-            </label>
-
-            <button
-              disabled={submitting}
-              type="submit"
-              className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-6"
             >
-              {submitting ? "Đang gửi yêu cầu..." : "Gửi yêu cầu"}
-            </button>
-          </form>
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="block space-y-2 text-sm">
+                  <span className="text-white/70">Tên nghệ sĩ *</span>
+                  <input
+                    value={form.artist_name}
+                    onChange={handleChange("artist_name")}
+                    placeholder="Tên nghệ sĩ"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                    required
+                  />
+                </label>
+                <label className="block space-y-2 text-sm">
+                  <span className="text-white/70">Link ảnh đại diện</span>
+                  <input
+                    value={form.avatar_url}
+                    onChange={handleChange("avatar_url")}
+                    placeholder="https://"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                  />
+                </label>
+              </div>
+
+              <label className="block space-y-2 text-sm">
+                <span className="text-white/70">Bio</span>
+                <textarea
+                  value={form.bio}
+                  onChange={handleChange("bio")}
+                  placeholder="Giới thiệu ngắn về nghệ sĩ"
+                  rows={4}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                />
+              </label>
+
+              <label className="block space-y-2 text-sm">
+                <span className="text-white/70">Liên kết xác thực</span>
+                <input
+                  value={form.proof_link}
+                  onChange={handleChange("proof_link")}
+                  placeholder="Link MXH, portfolio, fanpage..."
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                />
+              </label>
+
+              <button
+                disabled={submitting}
+                type="submit"
+                className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {submitting
+                  ? "Đang gửi yêu cầu..."
+                  : status === "rejected"
+                    ? "Gửi lại yêu cầu"
+                    : "Gửi yêu cầu"}
+              </button>
+            </form>
+          </div>
         )}
       </div>
     </div>
