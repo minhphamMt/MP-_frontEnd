@@ -65,37 +65,33 @@ export default function AppRoutes() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/403" element={<Forbidden />} />
 
-        {/* ===== USER / APP ===== */}
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={["USER", "ARTIST", "ADMIN"]} />
-          }
-        >
+        {/* ===== PUBLIC APP LAYOUT ===== */}
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/zing-chart" element={<ZingChart />} />
+          <Route path="/zing-chart/region/:region" element={<RegionChart />} />
+          <Route path="/new-release" element={<NewRelease />} />
+          <Route path="/top-50" element={<Top50Genres />} />
+          <Route path="/top-50/:id" element={<Top50GenreDetail />} />
+          <Route path="/top-100" element={<Navigate to="/top-50" replace />} />
+          <Route path="/albums" element={<Albums />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/song/:id" element={<SongDetail />} />
+          <Route path="/artist/:id" element={<ArtistDetail />} />
+          <Route path="/album/:id" element={<AlbumDetail />} />
+        </Route>
+
+        {/* ===== AUTHENTICATED USER/ARTIST FEATURES ===== */}
+        <Route element={<ProtectedRoute allowedRoles={["USER", "ARTIST", "ADMIN"]} />}>
           <Route element={<MainLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/zing-chart" element={<ZingChart />} />
-            <Route path="/zing-chart/region/:region" element={<RegionChart />} />
-            <Route path="/new-release" element={<NewRelease />} />
-            <Route path="/top-50" element={<Top50Genres />} />
-            <Route path="/top-50/:id" element={<Top50GenreDetail />} />
-            <Route path="/top-100" element={<Navigate to="/top-50" replace />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/me" element={<Profile />} />
             <Route path="/playlists" element={<Playlists />} />
             <Route path="/playlists/:id" element={<PlaylistDetail />} />
-            <Route
-              path="/library/followed-artists"
-              element={<FollowedArtists />}
-            />
+            <Route path="/library/followed-artists" element={<FollowedArtists />} />
             <Route path="/library/liked-albums" element={<LikedAlbums />} />
             <Route path="/library/liked-songs" element={<LikedSongs />} />
             <Route path="/library/playlists" element={<LibraryPlaylists />} />
-            <Route path="/albums" element={<Albums />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/song/:id" element={<SongDetail />} />
-            <Route path="/me" element={<Profile />} />
-            {/* 🔴 PUBLIC CONTENT */}
-            <Route path="/artist/:id" element={<ArtistDetail />} />
-            <Route path="/album/:id" element={<AlbumDetail />} />
           </Route>
         </Route>
 

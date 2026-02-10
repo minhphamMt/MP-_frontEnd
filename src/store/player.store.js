@@ -5,6 +5,8 @@ import { getLikedSongs } from "../api/like.api";
 import { getRecommendations } from "../api/recommendation.api";
 import { getSongById, recordSongPlay } from "../api/song.api";
 import { fetchPlayableSong, toPlayableSong } from "../utils/song";
+import useAuthStore from "./auth.store";
+import { emitAuthRequired } from "../utils/authPrompt";
 
 /* =====================
    HELPERS
@@ -373,6 +375,11 @@ const usePlayerStore = create((set, get) => ({
   toggleLike: async (songId) => {
     const targetId = normalizeSongId(songId);
     if (!targetId) return;
+
+    if (!useAuthStore.getState().isAuthenticated) {
+      emitAuthRequired();
+      return;
+    }
 
     const { likedSongIds } = get();
     const isLiked = likedSongIds.includes(targetId);

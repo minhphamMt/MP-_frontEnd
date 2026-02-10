@@ -1,5 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+import Toast from "../components/common/Toast";
+import { AUTH_REQUIRED_EVENT, getAuthRequiredMessage } from "../utils/authPrompt";
 import Header from "../components/header/Header";
 import PlayerBar from "../components/player/PlayerBar";
 import Sidebar from "../components/sidebar/Sidebar";
@@ -12,6 +14,21 @@ export default function MainLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const role = useAuthStore((state) => state.role);
   const shouldShowPlayer = role !== "ARTIST" && role !== "ADMIN";
+  const [authToastMessage, setAuthToastMessage] = useState("");
+
+
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const onAuthRequired = (event) => {
+      const nextMessage = event?.detail?.message || getAuthRequiredMessage();
+      setAuthToastMessage(nextMessage);
+    };
+
+    window.addEventListener(AUTH_REQUIRED_EVENT, onAuthRequired);
+    return () => window.removeEventListener(AUTH_REQUIRED_EVENT, onAuthRequired);
+  }, []);
 
   useEffect(() => {
     const mainEl = mainRef.current;
@@ -101,6 +118,11 @@ export default function MainLayout() {
       </div>
 
       {shouldShowPlayer && <PlayerBar />}
+      <Toast
+        title="Thông báo"
+        message={authToastMessage}
+        onClose={() => setAuthToastMessage("")}
+      />
     </div>
   );
 }

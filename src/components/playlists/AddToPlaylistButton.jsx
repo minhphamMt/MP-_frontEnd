@@ -16,6 +16,8 @@ import {
   getPlaylistById,
 } from "../../api/playlist.api";
 import { normalizeSongId } from "../../store/player.store";
+import useAuthStore from "../../store/auth.store";
+import { emitAuthRequired } from "../../utils/authPrompt";
 
 const extractData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
 
@@ -32,6 +34,7 @@ export default function AddToPlaylistButton({
   const [toastMessage, setToastMessage] = useState("");
   const [toastTitle, setToastTitle] = useState("");
   const [newPlaylistName, setNewPlaylistName] = useState("");
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const songId = useMemo(() => normalizeSongId(song) || song?.id, [song]);
 
@@ -161,6 +164,10 @@ export default function AddToPlaylistButton({
       <button
         onClick={(e) => {
           e.stopPropagation();
+          if (!isAuthenticated) {
+            emitAuthRequired();
+            return;
+          }
           setOpen(true);
         }}
         className={clsx(
