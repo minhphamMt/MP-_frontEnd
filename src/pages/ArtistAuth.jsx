@@ -303,10 +303,10 @@ export default function ArtistAuth() {
   );
 
   return (
-    <div className="flex h-dvh items-center justify-center overflow-hidden bg-[#0b0b12] px-4 py-2 text-white sm:py-4">
+    <div className="flex min-h-dvh items-start justify-center overflow-y-auto bg-[#0b0b12] px-4 py-4 text-white sm:py-6 lg:items-center">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-center">
         <motion.div
-          className="relative w-full max-h-[calc(100dvh-1rem)] overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.03] shadow-[0_35px_120px_rgba(0,0,0,0.6)]"
+          className="relative w-full overflow-visible rounded-[32px] border border-white/10 bg-white/[0.03] shadow-[0_35px_120px_rgba(0,0,0,0.6)] lg:max-h-[calc(100dvh-2rem)] lg:overflow-hidden"
           initial="initial"
           animate="animate"
           variants={glowVariants}
@@ -316,7 +316,7 @@ export default function ArtistAuth() {
           <div className="pointer-events-none absolute -bottom-24 right-6 h-72 w-72 rounded-full bg-sky-400/25 blur-[120px]" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
-          <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1.15fr)_420px] lg:items-center lg:gap-8 lg:p-8 xl:p-10">
+          <div className="grid gap-6 p-4 sm:p-8 lg:grid-cols-[minmax(0,1.15fr)_420px] lg:items-center lg:gap-8 lg:p-8 xl:p-10">
             <div className="relative z-10 space-y-6 lg:space-y-7">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-sky-500 text-lg font-semibold text-[#0c0914] shadow-lg shadow-sky-400/30">
@@ -326,7 +326,7 @@ export default function ArtistAuth() {
                   <p className="text-xs uppercase tracking-[0.32em] text-white/60">
                     Artist Portal
                   </p>
-                  <h1 className="text-3xl font-semibold">
+                  <h1 className="text-2xl font-semibold sm:text-3xl">
                     Đăng ký trở thành nghệ sĩ
                   </h1>
                 </div>
@@ -336,13 +336,13 @@ export default function ArtistAuth() {
                 {helpText}
               </p>
 
-              <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
+              <div className="inline-flex w-full flex-wrap rounded-2xl border border-white/10 bg-white/5 p-1 sm:w-auto sm:rounded-full">
                 {modes.map((item) => (
                   <button
                     key={item.key}
                     type="button"
                     onClick={() => handleNavigate(item.key)}
-                    className="relative px-4 py-2 text-xs font-medium"
+                    className="relative flex-1 px-3 py-2 text-xs font-medium sm:flex-none sm:px-4"
                   >
                     {mode === item.key && (
                       <motion.span
