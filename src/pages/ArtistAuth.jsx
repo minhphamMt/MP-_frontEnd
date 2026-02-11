@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/auth.store";
 
@@ -29,6 +30,8 @@ export default function ArtistAuth() {
     loginArtist,
     registerArtist,
     resendVerification,
+    forgotPassword,
+    resetPassword,
     loading,
     logout,
     setAuthContext,
@@ -48,6 +51,18 @@ export default function ArtistAuth() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [registerError, setRegisterError] = useState("");
   const [registerNotice, setRegisterNotice] = useState("");
+
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotCode, setForgotCode] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotMessage, setForgotMessage] = useState("");
+  const [isResetStep, setIsResetStep] = useState(false);
+
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -187,11 +202,111 @@ export default function ArtistAuth() {
     }
   };
 
+  const handleForgotPasswordRequest = async () => {
+    if (!forgotEmail) {
+      setLoginError("Vui lòng nhập email để nhận mã xác thực.");
+      return;
+    }
+
+    setLoginError("");
+    try {
+      const message = await forgotPassword({ email: forgotEmail });
+      setForgotMessage(message || "Nếu email hợp lệ, hệ thống đã gửi mã đặt lại mật khẩu.");
+      setIsResetStep(true);
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Không thể gửi mã đặt lại mật khẩu, vui lòng thử lại.";
+      setLoginError(msg);
+    }
+  };
+
+  const handleConfirmResetPassword = async () => {
+    if (!forgotEmail || !forgotCode || !forgotNewPassword) {
+      setLoginError("Vui lòng nhập đầy đủ email, mã xác thực và mật khẩu mới.");
+      return;
+    }
+    if (!/^\d{6}$/.test(forgotCode.trim())) {
+      setLoginError("Mã xác thực phải gồm đúng 6 chữ số.");
+      return;
+    }
+    if (forgotNewPassword.length < 6) {
+      setLoginError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      return;
+    }
+
+    setLoginError("");
+    try {
+      const message = await resetPassword({
+        email: forgotEmail,
+        verification_code: forgotCode.trim(),
+        new_password: forgotNewPassword,
+      });
+
+      setForgotMessage(message || "Đặt lại mật khẩu thành công.");
+      setForgotOpen(false);
+      setIsResetStep(false);
+      setLoginPassword("");
+      setLoginEmail(forgotEmail);
+      setForgotCode("");
+      setForgotNewPassword("");
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Không thể đặt lại mật khẩu, vui lòng thử lại.";
+      setLoginError(msg);
+    }
+  };
+
+  const openForgotModal = () => {
+    setForgotEmail(loginEmail || registerEmail);
+    setForgotMessage("");
+    setForgotCode("");
+    setForgotNewPassword("");
+    setShowResetPassword(false);
+    setIsResetStep(false);
+    setForgotOpen(true);
+  };
+
+  const renderPasswordInput = ({
+    label,
+    value,
+    onChange,
+    autoComplete,
+    showPassword,
+    toggleShowPassword,
+    className,
+  }) => (
+    <label className="block space-y-2 text-sm">
+      <span className="text-white/70">{label}</span>
+      <div className="relative">
+        <input
+          className={`${className} pr-12`}
+          value={value}
+          onChange={onChange}
+          type={showPassword ? "text" : "password"}
+          autoComplete={autoComplete}
+          required
+        />
+        <button
+          type="button"
+          onClick={toggleShowPassword}
+          className="absolute inset-y-0 right-3 inline-flex items-center text-white/60 transition hover:text-white"
+          aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+        >
+          {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+        </button>
+      </div>
+    </label>
+  );
+
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-[#0b0b12] px-4 py-4 text-white sm:py-8 lg:h-dvh lg:overflow-hidden lg:py-6">
+    <div className="flex h-dvh items-center justify-center overflow-hidden bg-[#0b0b12] px-4 py-2 text-white sm:py-4">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-center">
         <motion.div
-          className="relative w-full overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.03] shadow-[0_35px_120px_rgba(0,0,0,0.6)] lg:max-h-[calc(100dvh-3rem)]"
+          className="relative w-full max-h-[calc(100dvh-1rem)] overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.03] shadow-[0_35px_120px_rgba(0,0,0,0.6)]"
           initial="initial"
           animate="animate"
           variants={glowVariants}
@@ -315,20 +430,26 @@ export default function ArtistAuth() {
                       />
                     </label>
 
-                    <label className="block space-y-2 text-sm">
-                      <span className="text-white/70">Mật khẩu</span>
-                      <input
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400/40"
-                        value={loginPassword}
-                        onChange={(event) =>
-                          setLoginPassword(event.target.value)
-                        }
-                        placeholder="••••••"
-                        type="password"
-                        autoComplete="current-password"
-                        required
-                      />
-                    </label>
+                    {renderPasswordInput({
+                      label: "Mật khẩu",
+                      value: loginPassword,
+                      onChange: (event) => setLoginPassword(event.target.value),
+                      autoComplete: "current-password",
+                      showPassword: showLoginPassword,
+                      toggleShowPassword: () => setShowLoginPassword((prev) => !prev),
+                      className:
+                        "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400/40",
+                    })}
+
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={openForgotModal}
+                        className="text-xs text-sky-200 transition hover:text-sky-100"
+                      >
+                        Quên mật khẩu?
+                      </button>
+                    </div>
 
                     {loginError && (
                       <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
@@ -395,35 +516,37 @@ export default function ArtistAuth() {
                     </label>
 
                     <div className="grid gap-4 md:grid-cols-2">
-                      <label className="block space-y-2 text-sm">
-                        <span className="text-white/70">Mật khẩu</span>
-                        <input
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
-                          value={registerPassword}
-                          onChange={(event) =>
-                            setRegisterPassword(event.target.value)
-                          }
-                          placeholder="••••••"
-                          type="password"
-                          autoComplete="new-password"
-                          required
-                        />
-                      </label>
-                      <label className="block space-y-2 text-sm">
-                        <span className="text-white/70">Nhập lại</span>
-                        <input
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
-                          value={confirmPassword}
-                          onChange={(event) =>
-                            setConfirmPassword(event.target.value)
-                          }
-                          placeholder="••••••"
-                          type="password"
-                          autoComplete="new-password"
-                          required
-                        />
-                      </label>
+                      {renderPasswordInput({
+                        label: "Mật khẩu",
+                        value: registerPassword,
+                        onChange: (event) => setRegisterPassword(event.target.value),
+                        autoComplete: "new-password",
+                        showPassword: showRegisterPassword,
+                        toggleShowPassword: () => setShowRegisterPassword((prev) => !prev),
+                        className:
+                          "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/40",
+                      })}
+                      {renderPasswordInput({
+                        label: "Nhập lại",
+                        value: confirmPassword,
+                        onChange: (event) => setConfirmPassword(event.target.value),
+                        autoComplete: "new-password",
+                        showPassword: showConfirmPassword,
+                        toggleShowPassword: () => setShowConfirmPassword((prev) => !prev),
+                        className:
+                          "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/40",
+                      })}
                     </div>
+
+                    {/* <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={openForgotModal}
+                        className="text-xs text-indigo-200 transition hover:text-indigo-100"
+                      >
+                        Quên mật khẩu?
+                      </button>
+                    </div> */}
 
                     {registerNotice && (
                       <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
@@ -460,6 +583,101 @@ export default function ArtistAuth() {
           </div>
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {forgotOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-2xl border border-white/10 bg-[#10131d] p-5 text-white shadow-2xl"
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.98 }}
+            >
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold">Quên mật khẩu</h3>
+                  <p className="mt-1 text-sm text-white/60">
+                    {isResetStep
+                      ? "Nhập mã xác thực 6 số và mật khẩu mới của bạn."
+                      : "Nhập email để nhận mã đặt lại mật khẩu."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setForgotOpen(false)}
+                  className="rounded-lg border border-white/10 p-2 text-white/70 transition hover:text-white"
+                >
+                  <FiX size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block space-y-1.5 text-sm">
+                  <span className="text-white/70">Email</span>
+                  <input
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-white placeholder:text-white/40 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400/40"
+                    value={forgotEmail}
+                    onChange={(event) => setForgotEmail(event.target.value)}
+                    type="email"
+                    placeholder="email@artist.com"
+                    autoComplete="email"
+                    required
+                  />
+                </label>
+
+                {isResetStep && (
+                  <>
+                    <label className="block space-y-1.5 text-sm">
+                      <span className="text-white/70">Mã xác thực</span>
+                      <input
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-white placeholder:text-white/40 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400/40"
+                        value={forgotCode}
+                        onChange={(event) => setForgotCode(event.target.value)}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        placeholder="123456"
+                        required
+                      />
+                    </label>
+
+                    {renderPasswordInput({
+                      label: "Mật khẩu mới",
+                      value: forgotNewPassword,
+                      onChange: (event) => setForgotNewPassword(event.target.value),
+                      autoComplete: "new-password",
+                      showPassword: showResetPassword,
+                      toggleShowPassword: () => setShowResetPassword((prev) => !prev),
+                      className:
+                        "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-white placeholder:text-white/40 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400/40",
+                    })}
+                  </>
+                )}
+
+                {forgotMessage && (
+                  <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-100">
+                    {forgotMessage}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={isResetStep ? handleConfirmResetPassword : handleForgotPasswordRequest}
+                  disabled={loading}
+                  className="w-full rounded-xl bg-gradient-to-r from-sky-400 via-indigo-400 to-sky-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-sky-500/25 transition hover:-translate-y-[1px] hover:shadow-sky-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isResetStep ? "Xác nhận mật khẩu mới" : "Gửi mã xác thực"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
