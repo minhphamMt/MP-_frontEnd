@@ -38,11 +38,9 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Logo / Brand */}
       <div className="relative flex h-16 items-center justify-between px-5">
         <div className="flex items-center gap-2">
-          <div className="h-9 w-1 rounded-full bg-gradient-to-b from-cyan-300 via-violet-400 to-fuchsia-400 shadow-[0_0_14px_rgba(56,189,248,0.55)]" />
+          <div className="h-9 w-1 rounded-full bg-white/70" />
           <span className="text-xl font-extrabold tracking-tight">
-            <span className="bg-gradient-to-r from-cyan-300 to-violet-400 bg-clip-text text-transparent">
-              MINHPHAM
-            </span>
+            <span className="text-white">MINHPHAM</span>
           </span>
         </div>
                 <button
@@ -113,7 +111,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Fade dưới để ăn nhập PlayerBar */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#000000] to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-white/5"
         aria-hidden
       />
     </aside>

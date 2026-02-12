@@ -235,9 +235,7 @@ export default function Profile() {
         onClose={() => setToast({ title: "", message: "" })}
       />
 
-      <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur">
-        <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-fuchsia-500/20 blur-3xl" />
+      <header className="relative overflow-hidden rounded-3xl border border-white/15 bg-[#1a1a1a] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
             <div className="relative h-16 w-16 overflow-hidden rounded-full border border-white/10 bg-white/10">
@@ -272,7 +270,7 @@ export default function Profile() {
             <div className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
               {authUser?.role || "USER"}
             </div>
-            <div className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-xs font-semibold text-emerald-100">
+            <div className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80">
               Đang hoạt động
             </div>
           </div>
@@ -282,9 +280,8 @@ export default function Profile() {
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <form
           onSubmit={submitProfile}
-          className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.55)] backdrop-blur"
+          className="relative overflow-hidden rounded-3xl border border-white/15 bg-[#1a1a1a] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.55)]"
         >
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(56,189,248,0.12),transparent_45%)]" />
           <div className="relative space-y-6">
             <div>
               <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -295,34 +292,34 @@ export default function Profile() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="space-y-2 text-sm text-white/70">
-                <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                  <FiUser className="text-cyan-300" /> Tên hiển thị
+                  <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
+                  <FiUser className="text-white/70" /> Tên hiển thị
                 </span>
                 <input
                   value={profile.display_name}
                   onChange={handleProfileChange("display_name")}
                   placeholder="Nhập tên hiển thị"
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400/60 focus:bg-white/10"
+                  className="w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none transition focus:border-white/40"
                 />
               </label>
 
               {!isGoogleAccount ? (
                 <label className="space-y-2 text-sm text-white/70">
                   <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                    <FiMail className="text-emerald-300" /> Email
+                    <FiMail className="text-white/70" /> Email
                   </span>
                   <input
                     value={profile.email}
                     onChange={handleProfileChange("email")}
                     type="email"
                     placeholder="you@email.com"
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400/60 focus:bg-white/10"
+                    className="w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none transition focus:border-white/40"
                   />
                 </label>
               ) : (
                 <div className="space-y-2 text-sm text-white/70">
                   <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                    <FiMail className="text-emerald-300" /> Email
+                    <FiMail className="text-white/70" /> Email
                   </span>
                   <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60">
                     {profile.email || "Chưa có email"}
@@ -351,7 +348,7 @@ export default function Profile() {
 
             <label className="space-y-2 text-sm text-white/70">
               <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                <FiCamera className="text-cyan-300" /> Tải ảnh từ máy
+                <FiCamera className="text-white/70" /> Tải ảnh từ máy
               </span>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <input
@@ -359,7 +356,7 @@ export default function Profile() {
                   accept="image/*"
                   onChange={handleAvatarUpload}
                   disabled={loadingAvatar}
-                  className="w-full rounded-2xl border border-dashed border-white/20 bg-white/5 px-4 py-3 text-sm text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 file:transition hover:border-white/30 hover:bg-white/10"
+                  className="w-full rounded-2xl border border-dashed border-white/20 bg-[#111111] px-4 py-3 text-sm text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 file:transition hover:border-white/30"
                 />
                 <span className="text-xs text-white/50">
                   Ảnh sẽ được tải lên máy chủ và cập nhật ngay lập tức.
@@ -369,7 +366,7 @@ export default function Profile() {
 
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/60">
               <div className="flex items-start gap-3">
-                <FiCheckCircle className="mt-0.5 text-emerald-300" />
+                <FiCheckCircle className="mt-0.5 text-white/70" />
                 <div>
                   <p className="font-semibold text-white">Lưu ý</p>
                   <p className="text-xs text-white/60">
@@ -380,7 +377,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={!hasProfileChanges || loadingProfile}
-                className="rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-cyan-400/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-full bg-white px-6 py-2 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loadingProfile ? "Đang lưu..." : "Lưu thay đổi"}
               </button>
@@ -391,9 +388,8 @@ export default function Profile() {
          {!isGoogleAccount && (
           <form
             onSubmit={submitPassword}
-            className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.55)] backdrop-blur"
+            className="relative overflow-hidden rounded-3xl border border-white/15 bg-[#1a1a1a] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.55)]"
           >
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.18),transparent_45%)]" />
             <div className="relative space-y-6">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -406,40 +402,40 @@ export default function Profile() {
 
               <label className="space-y-2 text-sm text-white/70">
                 <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                  <FiKey className="text-cyan-300" /> Mật khẩu hiện tại
+                  <FiKey className="text-white/70" /> Mật khẩu hiện tại
                 </span>
                 <input
                   type="password"
                   value={passwords.oldPassword}
                   onChange={handlePasswordChange("oldPassword")}
                   placeholder="••••••••"
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400/60 focus:bg-white/10"
+                  className="w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none transition focus:border-white/40"
                 />
               </label>
 
               <label className="space-y-2 text-sm text-white/70">
                 <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                  <FiKey className="text-emerald-300" /> Mật khẩu mới
+                  <FiKey className="text-white/70" /> Mật khẩu mới
                 </span>
                 <input
                   type="password"
                   value={passwords.newPassword}
                   onChange={handlePasswordChange("newPassword")}
                   placeholder="Tối thiểu 6 ký tự"
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400/60 focus:bg-white/10"
+                  className="w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none transition focus:border-white/40"
                 />
               </label>
 
               <label className="space-y-2 text-sm text-white/70">
                 <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                  <FiKey className="text-violet-300" /> Xác nhận mật khẩu mới
+                  <FiKey className="text-white/70" /> Xác nhận mật khẩu mới
                 </span>
                 <input
                   type="password"
                   value={passwords.confirmPassword}
                   onChange={handlePasswordChange("confirmPassword")}
                   placeholder="Nhập lại mật khẩu mới"
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-violet-400/60 focus:bg-white/10"
+                  className="w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none transition focus:border-white/40"
                 />
               </label>
 
@@ -449,7 +445,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={loadingPassword}
-                className="w-full rounded-full bg-gradient-to-r from-violet-400 to-fuchsia-400 px-6 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-violet-400/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-full bg-white px-6 py-2 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loadingPassword ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
               </button>
