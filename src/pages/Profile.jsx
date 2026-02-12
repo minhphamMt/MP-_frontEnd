@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   FiCamera,
   FiCheckCircle,
+  FiEye,
+  FiEyeOff,
   FiKey,
   FiMail,
   FiUser,
@@ -31,6 +33,11 @@ export default function Profile() {
     oldPassword: "",
     newPassword: "",
     confirmPassword: "",
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    oldPassword: false,
+    newPassword: false,
+    confirmPassword: false,
   });
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [loadingPassword, setLoadingPassword] = useState(false);
@@ -99,6 +106,10 @@ export default function Profile() {
 
   const handlePasswordChange = (field) => (event) => {
     setPasswords((prev) => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
   const maxAvatarLength = 480;
@@ -267,10 +278,10 @@ export default function Profile() {
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
-            <div className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
+            <div className="rounded-full border border-fuchsia-300/40 bg-gradient-to-r from-fuchsia-500/25 to-violet-500/20 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-fuchsia-100 shadow-[0_8px_24px_rgba(192,132,252,0.35)]">
               {authUser?.role || "USER"}
             </div>
-            <div className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80">
+            <div className="rounded-full border border-emerald-300/40 bg-emerald-400/15 px-4 py-2 text-xs font-bold text-emerald-200 shadow-[0_8px_24px_rgba(16,185,129,0.35)]">
               Đang hoạt động
             </div>
           </div>
@@ -377,7 +388,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={!hasProfileChanges || loadingProfile}
-                className="rounded-full bg-white px-6 py-2 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-6 py-2 text-sm font-semibold text-white transition hover:from-violet-400 hover:to-fuchsia-400 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loadingProfile ? "Đang lưu..." : "Lưu thay đổi"}
               </button>
@@ -404,39 +415,69 @@ export default function Profile() {
                 <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
                   <FiKey className="text-white/70" /> Mật khẩu hiện tại
                 </span>
-                <input
-                  type="password"
-                  value={passwords.oldPassword}
-                  onChange={handlePasswordChange("oldPassword")}
-                  placeholder="••••••••"
-                  className="w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none transition focus:border-white/40"
-                />
+                <div className="relative">
+                  <input
+                    type={showPasswords.oldPassword ? "text" : "password"}
+                    value={passwords.oldPassword}
+                    onChange={handlePasswordChange("oldPassword")}
+                    placeholder="••••••••"
+                    className="w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 pr-12 text-sm text-white outline-none transition focus:border-white/40"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility("oldPassword")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition hover:bg-white/10 hover:text-white"
+                    aria-label={showPasswords.oldPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  >
+                    {showPasswords.oldPassword ? <FiEyeOff /> : <FiEye />}
+                  </button>
+                </div>
               </label>
 
               <label className="space-y-2 text-sm text-white/70">
                 <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
                   <FiKey className="text-white/70" /> Mật khẩu mới
                 </span>
-                <input
-                  type="password"
-                  value={passwords.newPassword}
-                  onChange={handlePasswordChange("newPassword")}
-                  placeholder="Tối thiểu 6 ký tự"
-                  className="w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none transition focus:border-white/40"
-                />
+                <div className="relative">
+                  <input
+                    type={showPasswords.newPassword ? "text" : "password"}
+                    value={passwords.newPassword}
+                    onChange={handlePasswordChange("newPassword")}
+                    placeholder="Tối thiểu 6 ký tự"
+                    className="w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 pr-12 text-sm text-white outline-none transition focus:border-white/40"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility("newPassword")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition hover:bg-white/10 hover:text-white"
+                    aria-label={showPasswords.newPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  >
+                    {showPasswords.newPassword ? <FiEyeOff /> : <FiEye />}
+                  </button>
+                </div>
               </label>
 
               <label className="space-y-2 text-sm text-white/70">
                 <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
                   <FiKey className="text-white/70" /> Xác nhận mật khẩu mới
                 </span>
-                <input
-                  type="password"
-                  value={passwords.confirmPassword}
-                  onChange={handlePasswordChange("confirmPassword")}
-                  placeholder="Nhập lại mật khẩu mới"
-                  className="w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none transition focus:border-white/40"
-                />
+                <div className="relative">
+                  <input
+                    type={showPasswords.confirmPassword ? "text" : "password"}
+                    value={passwords.confirmPassword}
+                    onChange={handlePasswordChange("confirmPassword")}
+                    placeholder="Nhập lại mật khẩu mới"
+                    className="w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 pr-12 text-sm text-white outline-none transition focus:border-white/40"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility("confirmPassword")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition hover:bg-white/10 hover:text-white"
+                    aria-label={showPasswords.confirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  >
+                    {showPasswords.confirmPassword ? <FiEyeOff /> : <FiEye />}
+                  </button>
+                </div>
               </label>
 
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white/60">
@@ -445,7 +486,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={loadingPassword}
-                className="w-full rounded-full bg-white px-6 py-2 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-2 text-sm font-semibold text-white transition hover:from-emerald-400 hover:to-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loadingPassword ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
               </button>

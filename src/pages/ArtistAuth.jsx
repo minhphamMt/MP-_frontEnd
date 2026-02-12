@@ -435,7 +435,7 @@ export default function ArtistAuth() {
                       value: loginPassword,
                       onChange: (event) => setLoginPassword(event.target.value),
                       autoComplete: "current-password",
-                      showPassword: showLoginPassword,
+                      showPassword: showLoginPassword,  
                       toggleShowPassword: () => setShowLoginPassword((prev) => !prev),
                       className:
                         "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400/40",
