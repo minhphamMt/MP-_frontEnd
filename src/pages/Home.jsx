@@ -23,7 +23,6 @@ export default function Home() {
   const [recommendationLoading, setRecommendationLoading] = useState(false);
 
   const ranRef = useRef(false);
-  const recommendationIdsRef = useRef([]);
   const artistRailRef = useRef(null);
   const newAlbumRailRef = useRef(null);
   const artistTimerRef = useRef(null);
@@ -42,20 +41,28 @@ export default function Home() {
 
   const quickPicks = useMemo(() => songs.slice(0, 6), [songs]);
 
-  const fetchRecommendedSongs = useCallback(async (seedSongId, excludeIds = []) => {
+  const fetchRecommendedSongs = useCallback(async (seedSongId) => {
     const recRes = seedSongId
       ? await getRecommendations(seedSongId)
       : await getColdStartRecommendations(30);
     const items = recRes?.data?.data || recRes?.data || [];
-    const mappedIds = items
-      .map((item) => item?.songId ?? item?.song_id ?? item?.id ?? item)
-      .filter(Boolean)
-      .map((id) => String(id));
-
-    const shuffledIds = [...new Set(mappedIds)].sort(() => Math.random() - 0.5);
-    const excludeSet = new Set((excludeIds || []).map((id) => String(id)));
-    const candidateIds = shuffledIds.filter((id) => !excludeSet.has(id));
-    const selectedIds = (candidateIds.length ? candidateIds : shuffledIds).slice(0, 9);
+    const selectedIds = items
+      .map((item, index) => ({
+        id: item?.songId ?? item?.song_id ?? item?.id ?? item,
+        score: Number(item?.score ?? item?.similarity_score ?? 0),
+        index,
+      }))
+      .filter((item) => item.id)
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return a.index - b.index;
+      })
+      .reduce((acc, item) => {
+        const songId = String(item.id);
+        if (!acc.includes(songId)) acc.push(songId);
+        return acc;
+      }, [])
+      .slice(0, 9);
 
     const songResults = await Promise.all(
       selectedIds.map(async (id) => {
@@ -118,14 +125,10 @@ export default function Home() {
   }, [isAuthenticated]);
 
   const loadRecommendations = useCallback(
-    async (seedSongId, { silent = false, forceFresh = false } = {}) => {
+    async (seedSongId, { silent = false } = {}) => {
       if (!silent) setRecommendationLoading(true);
       try {
-        const recommended = await fetchRecommendedSongs(
-          seedSongId,
-          forceFresh ? recommendationIdsRef.current : []
-        );
-        recommendationIdsRef.current = recommended.map((song) => String(song?.id)).filter(Boolean);
+        const recommended = await fetchRecommendedSongs(seedSongId);
         setSongs(recommended);
       } catch (error) {
         console.error("Load recommendations error:", error);
@@ -290,7 +293,7 @@ export default function Home() {
                 (await getRandomHistorySongId()) ||
                 (await getLastPlayedSongId()) ||
                 normalizeSongId(currentSong);
-              await loadRecommendations(seedSongId, { forceFresh: true });
+              await loadRecommendations(seedSongId);
             }}
             disabled={recommendationLoading}
             className="rounded-full border border-white/10 bg-[#1f1f1f] px-3 py-1.5 text-[12px] font-semibold text-white/80 transition hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-2 sm:text-[13px]"
