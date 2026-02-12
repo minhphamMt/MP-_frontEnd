@@ -42,52 +42,63 @@ export default function Home() {
   const quickPicks = useMemo(() => songs.slice(0, 6), [songs]);
 
   const fetchRecommendedSongs = useCallback(async (seedSongId) => {
+    const normalizeRecommendedIds = (items = []) =>
+      items
+        .map((item, index) => ({
+          id: item?.songId ?? item?.song_id ?? item?.id ?? item,
+          score: Number(item?.score ?? item?.similarity_score ?? 0),
+          index,
+        }))
+        .filter((item) => item.id)
+        .sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score;
+          return a.index - b.index;
+        })
+        .reduce((acc, item) => {
+          const songId = String(item.id);
+          if (!acc.includes(songId)) acc.push(songId);
+          return acc;
+        }, []);
+
     const recRes = seedSongId
       ? await getRecommendations(seedSongId)
       : await getColdStartRecommendations(30);
-    const items = recRes?.data?.data || recRes?.data || [];
-    const selectedIds = items
-      .map((item, index) => ({
-        id: item?.songId ?? item?.song_id ?? item?.id ?? item,
-        score: Number(item?.score ?? item?.similarity_score ?? 0),
-        index,
-      }))
-      .filter((item) => item.id)
-      .sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        return a.index - b.index;
-      })
-      .reduce((acc, item) => {
-        const songId = String(item.id);
-        if (!acc.includes(songId)) acc.push(songId);
-        return acc;
-      }, [])
-      .slice(0, 9);
+    const primaryItems = recRes?.data?.data || recRes?.data || [];
+    const selectedIds = normalizeRecommendedIds(primaryItems);
 
-    const songResults = await Promise.all(
-      selectedIds.map(async (id) => {
-        try {
-          const res = await getSongById(id);
-          const raw = res?.data?.data;
-          if (!raw) return null;
+    if (selectedIds.length < 9) {
+      const fallbackRes = await getColdStartRecommendations(50);
+      const fallbackItems = fallbackRes?.data?.data || fallbackRes?.data || [];
+      for (const id of normalizeRecommendedIds(fallbackItems)) {
+        if (!selectedIds.includes(id)) selectedIds.push(id);
+        if (selectedIds.length >= 30) break;
+      }
+    }
 
-          return {
-            id: raw.id,
-            title: raw.title,
-            artist_name: raw.artist_name || raw.artist?.name || "",
-            duration: raw.duration,
-            cover_url: resolveAssetUrl(raw.cover_url),
-            album_id: raw.album?.id || raw.album_id,
-            album_title: raw.album?.title || raw.album_title,
-            audio_url: `${import.meta.env.VITE_API_BASE_URL}${raw.audio_path}`,
-          };
-        } catch {
-          return null;
-        }
-      })
-    );
+    const songResults = [];
+    for (const id of selectedIds) {
+      if (songResults.length >= 9) break;
+      try {
+        const res = await getSongById(id);
+        const raw = res?.data?.data;
+        if (!raw) continue;
 
-    return songResults.filter(Boolean);
+        songResults.push({
+          id: raw.id,
+          title: raw.title,
+          artist_name: raw.artist_name || raw.artist?.name || "",
+          duration: raw.duration,
+          cover_url: resolveAssetUrl(raw.cover_url),
+          album_id: raw.album?.id || raw.album_id,
+          album_title: raw.album?.title || raw.album_title,
+          audio_url: `${import.meta.env.VITE_API_BASE_URL}${raw.audio_path}`,
+        });
+      } catch {
+        // skip invalid song detail and continue filling until đủ 9 bài
+      }
+    }
+
+    return songResults;
   }, []);
 
   const getLastPlayedSongId = useCallback(async () => {
