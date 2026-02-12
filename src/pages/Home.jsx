@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getAlbums } from "../api/album.api";
 import { getMyHistory } from "../api/history.api";
 import { getArtistCollections } from "../api/artist.api";
@@ -29,17 +29,48 @@ export default function Home() {
   const newAlbumTimerRef = useRef(null);
   const artistResumeRef = useRef(null);
   const newAlbumResumeRef = useRef(null);
-  const playSong = usePlayerStore((state) => state.playSong);
   const currentSong = usePlayerStore((state) => state.currentSong);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const greeting = useMemo(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Chào buổi sáng";
-    if (hour < 18) return "Chào buổi chiều";
-    return "Chào buổi tối";
+  const mapSongPayload = useCallback((raw) => {
+    if (!raw) return null;
+
+    return {
+      id: raw.id,
+      title: raw.title,
+      artist_name: raw.artist_name || raw.artist?.name || "",
+      duration: raw.duration,
+      cover_url: resolveAssetUrl(raw.cover_url),
+      album_id: raw.album?.id || raw.album_id,
+      album_title: raw.album?.title || raw.album_title,
+      audio_url: `${import.meta.env.VITE_API_BASE_URL}${raw.audio_path}`,
+    };
   }, []);
 
-  const quickPicks = useMemo(() => songs.slice(0, 6), [songs]);
+  const fetchSongsByIds = useCallback(
+    async (ids = [], limit = 9) => {
+      const maxCount = Number(limit) > 0 ? Number(limit) : 9;
+      const queue = ids.filter(Boolean);
+      const collected = [];
+
+      for (let index = 0; index < queue.length; index += 6) {
+        if (collected.length >= maxCount) break;
+
+        const chunk = queue.slice(index, index + 6);
+        const results = await Promise.allSettled(chunk.map((id) => getSongById(id)));
+
+        for (const result of results) {
+          if (result.status !== "fulfilled") continue;
+          const song = mapSongPayload(result.value?.data?.data);
+          if (!song) continue;
+          collected.push(song);
+          if (collected.length >= maxCount) break;
+        }
+      }
+
+      return collected;
+    },
+    [mapSongPayload]
+  );
 
   const fetchRecommendedSongs = useCallback(async (seedSongId) => {
     const normalizeRecommendedIds = (items = []) =>
@@ -75,31 +106,8 @@ export default function Home() {
       }
     }
 
-    const songResults = [];
-    for (const id of selectedIds) {
-      if (songResults.length >= 9) break;
-      try {
-        const res = await getSongById(id);
-        const raw = res?.data?.data;
-        if (!raw) continue;
-
-        songResults.push({
-          id: raw.id,
-          title: raw.title,
-          artist_name: raw.artist_name || raw.artist?.name || "",
-          duration: raw.duration,
-          cover_url: resolveAssetUrl(raw.cover_url),
-          album_id: raw.album?.id || raw.album_id,
-          album_title: raw.album?.title || raw.album_title,
-          audio_url: `${import.meta.env.VITE_API_BASE_URL}${raw.audio_path}`,
-        });
-      } catch {
-        // skip invalid song detail and continue filling until đủ 9 bài
-      }
-    }
-
-    return songResults;
-  }, []);
+    return fetchSongsByIds(selectedIds, 9);
+  }, [fetchSongsByIds]);
 
   const getLastPlayedSongId = useCallback(async () => {
     if (!isAuthenticated) return null;
@@ -153,13 +161,7 @@ export default function Home() {
   /* =======================
      LOAD HOME (GIỮ NGUYÊN)
      ======================= */
-  useEffect(() => {
-    if (ranRef.current) return;
-    ranRef.current = true;
-    loadHome();
-  }, []);
-
-  async function loadHome() {
+  const loadHome = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -174,16 +176,29 @@ export default function Home() {
       setArtistAlbums(artistRes?.data?.data || []);
       setNewAlbums(albumRes?.data?.data || []);
 
+      setLoading(false);
+
       const seedSongId = isAuthenticated
         ? (await getLastPlayedSongId()) || normalizeSongId(currentSong)
         : null;
-      await loadRecommendations(seedSongId, { silent: true });
+      loadRecommendations(seedSongId, { silent: true });
     } catch (err) {
       console.error("Load home error:", err);
     } finally {
       setLoading(false);
     }
-  }
+  }, [
+    currentSong,
+    getLastPlayedSongId,
+    isAuthenticated,
+    loadRecommendations,
+  ]);
+
+  useEffect(() => {
+    if (ranRef.current) return;
+    ranRef.current = true;
+    loadHome();
+  }, [loadHome]);
 
   /* =======================
      AUTO SCROLL (GIỮ NGUYÊN)
