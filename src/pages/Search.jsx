@@ -240,7 +240,8 @@ export default function Search() {
 
               <div>
                 <h2 className="mb-3 text-lg font-semibold text-white">Songs</h2>
-                <div className="w-full max-w-full overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-2 sm:p-3">
+                <div className="w-full overflow-x-hidden rounded-2xl border border-white/5 bg-[#181818] p-2 sm:p-3">
+
                   {songs.length ? (
                     <div className="space-y-1">
                       {songs.slice(0, 5).map((song) => (
