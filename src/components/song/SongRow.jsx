@@ -20,27 +20,24 @@ export default function SongRow({ song, queue }) {
     <div
       onClick={handlePlay}
       className={`
-        group relative flex w-full items-center gap-3 sm:gap-4
+        group relative flex w-full min-w-0 max-w-full items-center
+        gap-3 sm:gap-4
         rounded-xl px-3 py-2
-        cursor-pointer transition-all duration-200
+        cursor-pointer
+        transition-all duration-200
         hover:bg-[#2a2a2a]
         ${isActive ? "bg-[#242424] ring-1 ring-emerald-400/40" : ""}
       `}
     >
-      {/* Ambient glow */}
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100">
-        <div className="absolute -left-10 -top-10 h-24 w-24 rounded-full bg-emerald-400/10 blur-3xl" />
-      </div>
-
       {/* Cover */}
       <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-lg">
         <OptimizedImage
           src={resolveAssetUrl(song.cover_url)}
           alt={song.title}
-          className="h-full w-full object-cover transition duration-300 group-hover:scale-110"
+          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
         />
 
-        {/* Overlay */}
+        {/* Overlay play/pause */}
         <div
           className={`
             absolute inset-0 flex items-center justify-center
@@ -48,7 +45,7 @@ export default function SongRow({ song, queue }) {
             ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
           `}
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-400 text-black shadow-md shadow-emerald-400/30">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-400 text-black shadow-md">
             {isActive && isPlaying ? (
               <FiPause size={14} />
             ) : (
@@ -60,6 +57,7 @@ export default function SongRow({ song, queue }) {
 
       {/* Info */}
       <div className="flex-1 min-w-0 overflow-hidden">
+        {/* Title */}
         <div
           className={`truncate text-sm font-semibold transition ${
             isActive ? "text-emerald-300" : "text-white"
@@ -68,6 +66,7 @@ export default function SongRow({ song, queue }) {
           {song.title}
         </div>
 
+        {/* Artist + Album */}
         <div className="flex min-w-0 items-center gap-1 text-xs text-white/60">
           <span className="truncate">{song.artist_name}</span>
 
@@ -77,7 +76,7 @@ export default function SongRow({ song, queue }) {
               <Link
                 to={`/album/${song.album_id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="truncate text-white/70 hover:text-emerald-300 hover:underline transition"
+                className="min-w-0 truncate text-white/70 hover:text-emerald-300 hover:underline transition"
               >
                 {song.album_title}
               </Link>
@@ -86,7 +85,7 @@ export default function SongRow({ song, queue }) {
         </div>
       </div>
 
-      {/* Duration (ẩn mobile) */}
+      {/* Duration (ẩn trên mobile) */}
       <div className="hidden flex-shrink-0 text-xs text-white/50 tabular-nums sm:block">
         {formatDuration(song.duration)}
       </div>
