@@ -68,14 +68,24 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Gọi refresh: backend của bạn có thể nhận refreshToken qua cookie
-        const refreshRes = await api.post("/auth/refresh");
+        const refreshToken = useAuthStore.getState().refreshToken;
+        if (!refreshToken) {
+          useAuthStore.getState().logout();
+          processQueue(new Error("Missing refresh token"), null);
+          return Promise.reject(error);
+        }
+
+        const refreshRes = await api.post("/auth/refresh", { refreshToken });
 
         // Backend thường trả: { accessToken, ... }
         const newToken =
           refreshRes.data?.accessToken ||
           refreshRes.data?.data?.accessToken ||
           null;
+        const newRefreshToken =
+          refreshRes.data?.refreshToken ||
+          refreshRes.data?.data?.refreshToken ||
+          refreshToken;
 
         if (!newToken) {
           useAuthStore.getState().logout();
@@ -83,7 +93,10 @@ api.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        useAuthStore.getState().setAccessToken(newToken);
+        useAuthStore.getState().setTokens({
+          accessToken: newToken,
+          refreshToken: newRefreshToken,
+        });
         processQueue(null, newToken);
 
         // Retry request cũ

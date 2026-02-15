@@ -307,6 +307,25 @@ const usePlayerStore = create((set, get) => ({
     }
   },
   
+  resetForAuthChange: () => {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.src = "";
+
+    set({
+      currentSong: null,
+      queue: [],
+      currentIndex: -1,
+      isPlaying: false,
+      duration: 0,
+      currentTime: 0,
+      hasRecordedPlay: false,
+      shuffleHistory: [],
+      likedSongIds: [],
+      recommendationLoading: false,
+    });
+  },
+
   /* =====================
      HISTORY
   ===================== */

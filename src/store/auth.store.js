@@ -10,10 +10,18 @@ import {
   resendVerificationApi,
   forgotPasswordApi,
   resetPasswordApi,
+  logoutApi,
 } from "../api/auth.api";
-import { initializeApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
 const STORAGE_KEY = "auth-state";
+
+const resetPlayerStore = async () => {
+  try {
+    const { default: usePlayerStore } = await import("./player.store");
+    usePlayerStore.getState().resetForAuthChange();
+  } catch (error) {
+    console.warn("Failed to reset player store", error);
+  }
+};
 
 const safeParseJson = (value) => {
   try {
@@ -35,15 +43,17 @@ const loadStoredAuth = () => {
 
   const user = parsed.user || null;
   const accessToken = parsed.accessToken || null;
+  const refreshToken = parsed.refreshToken || null;
   const role = user?.role || parsed.role || null;
   const authContext = parsed.authContext || "default";
 
   return {
     user,
     accessToken,
+    refreshToken,
     role,
     authContext,
-    isAuthenticated: Boolean(user && accessToken),
+    isAuthenticated: Boolean(user && (accessToken || refreshToken)),
   };
 };
 
@@ -56,6 +66,7 @@ const persistAuthState = (state) => {
       accessToken: state.accessToken,
       role: state.role,
       authContext: state.authContext,
+      refreshToken: state.refreshToken,
     };
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -78,6 +89,7 @@ const clearStoredAuth = () => {
 const {
   user: storedUser,
   accessToken: storedToken,
+  refreshToken: storedRefreshToken,
   role: storedRole,
   authContext: storedAuthContext,
   isAuthenticated: storedIsAuthenticated,
@@ -89,6 +101,7 @@ const useAuthStore = create((set, get) => ({
      ===================== */
   user: storedUser || null,
   accessToken: storedToken || null,
+  refreshToken: storedRefreshToken || null,
   role: storedRole || null,
   authContext: storedAuthContext || "default",
   isAuthenticated: storedIsAuthenticated || false,
@@ -101,14 +114,24 @@ const useAuthStore = create((set, get) => ({
      ACTIONS
      ===================== */
 
-  setAccessToken: (token) => {
+  setTokens: ({ accessToken, refreshToken }) => {
     const currentState = get();
     const nextState = {
       ...currentState,
-      accessToken: token,
+      accessToken: accessToken ?? currentState.accessToken,
+      refreshToken: refreshToken ?? currentState.refreshToken,
+      isAuthenticated: Boolean(
+        currentState.user &&
+          ((accessToken ?? currentState.accessToken) ||
+            (refreshToken ?? currentState.refreshToken))
+      ),
     };
 
-    set({ accessToken: token });
+    set({
+      accessToken: nextState.accessToken,
+      refreshToken: nextState.refreshToken,
+      isAuthenticated: nextState.isAuthenticated,
+    });
     persistAuthState(nextState);
   },
   setAuthContext: (authContext) => {
@@ -126,7 +149,7 @@ const useAuthStore = create((set, get) => ({
       ...currentState,
       user,
       role: user?.role || currentState.role || null,
-      isAuthenticated: Boolean(user && currentState.accessToken),
+      isAuthenticated: Boolean(user && (currentState.accessToken || currentState.refreshToken)),
     };
 
     set(nextState);
@@ -140,16 +163,18 @@ const useAuthStore = create((set, get) => ({
       const res = await loginApi({ email, password });
 
       const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
+      const refreshToken = res.data?.refreshToken || res.data?.data?.refreshToken;
       const user = res.data?.user || res.data?.data?.user;
 
-      if (!accessToken || !user) {
-        throw new Error("Login response missing accessToken or user");
+      if (!accessToken || !refreshToken || !user) {
+        throw new Error("Login response missing token(s) or user");
       }
 
       const nextState = {
         user,
         accessToken,
         role: user.role,
+        refreshToken,
         authContext: "default",
         isAuthenticated: true,
         loading: false,
@@ -173,16 +198,18 @@ const useAuthStore = create((set, get) => ({
       const res = await firebaseLoginApi({ idToken });
 
       const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
+      const refreshToken = res.data?.refreshToken || res.data?.data?.refreshToken;
       const user = res.data?.user || res.data?.data?.user;
 
-      if (!accessToken || !user) {
-        throw new Error("Firebase login response missing accessToken or user");
+      if (!accessToken || !refreshToken || !user) {
+        throw new Error("Firebase login response missing token(s) or user");
       }
 
       const nextState = {
         user,
         accessToken,
         role: user.role,
+        refreshToken,
         authContext: "default",
         isAuthenticated: true,
         loading: false,
@@ -209,6 +236,7 @@ const useAuthStore = create((set, get) => ({
       });
 
       const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
+      const refreshToken = res.data?.refreshToken || res.data?.data?.refreshToken;
       const user = res.data?.user || res.data?.data?.user;
       const requiresEmailVerification =
         res.data?.requires_email_verification ||
@@ -222,14 +250,15 @@ const useAuthStore = create((set, get) => ({
         };
       }
 
-      if (!accessToken || !user) {
-        throw new Error("Register response missing accessToken or user");
+      if (!accessToken || !refreshToken || !user) {
+        throw new Error("Register response missing token(s) or user");
       }
 
       const nextState = {
         user,
         accessToken,
         role: user.role,
+        refreshToken,
         authContext: "default",
         isAuthenticated: true,
         loading: false,
@@ -266,6 +295,7 @@ const useAuthStore = create((set, get) => ({
         loading: false,
         isAuthReady: true, // ✅ CHỈ ĐÁNH TRUE KHI ME OK
         accessToken: get().accessToken, // giữ token đang có
+        refreshToken: get().refreshToken,
         authContext: get().authContext || "default",
       };
 
@@ -287,16 +317,18 @@ const useAuthStore = create((set, get) => ({
       const res = await artistLoginApi({ email, password });
 
       const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
+      const refreshToken = res.data?.refreshToken || res.data?.data?.refreshToken;
       const user = res.data?.user || res.data?.data?.user;
 
-      if (!accessToken || !user) {
-        throw new Error("Login response missing accessToken or user");
+      if (!accessToken || !refreshToken || !user) {
+        throw new Error("Login response missing token(s) or user");
       }
 
       const nextState = {
         user,
         accessToken,
         role: user.role,
+        refreshToken,
         authContext: "artist_request",
         isAuthenticated: true,
         loading: false,
@@ -324,6 +356,7 @@ const useAuthStore = create((set, get) => ({
       });
 
       const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
+      const refreshToken = res.data?.refreshToken || res.data?.data?.refreshToken;
       const user = res.data?.user || res.data?.data?.user;
       const requiresEmailVerification =
         res.data?.requires_email_verification ||
@@ -337,14 +370,15 @@ const useAuthStore = create((set, get) => ({
         };
       }
 
-      if (!accessToken || !user) {
-        throw new Error("Register response missing accessToken or user");
+      if (!accessToken || !refreshToken || !user) {
+        throw new Error("Register response missing token(s) or user");
       }
 
       const nextState = {
         user,
         accessToken,
         role: user.role,
+        refreshToken,
         authContext: "artist_request",
         isAuthenticated: true,
         loading: false,
@@ -366,15 +400,17 @@ const useAuthStore = create((set, get) => ({
     try {
       const res = await verifyEmailApi({ email, verification_code });
       const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
+      const refreshToken = res.data?.refreshToken || res.data?.data?.refreshToken;
       const user = res.data?.user || res.data?.data?.user;
 
-      if (!accessToken || !user) {
-        throw new Error("Verify email response missing accessToken or user");
+      if (!accessToken || !refreshToken || !user) {
+        throw new Error("Verify email response missing token(s) or user");
       }
 
       const nextState = {
         user,
         accessToken,
+        refreshToken,
         role: user.role,
         authContext,
         isAuthenticated: true,
@@ -412,18 +448,29 @@ const useAuthStore = create((set, get) => ({
   },
 
   /* ===== LOGOUT ===== */
-  logout: () => {
+  logout: async () => {
+    const refreshToken = get().refreshToken;
+
     set({
       user: null,
       accessToken: null,
+      refreshToken: null,
       role: null,
       authContext: "default",
       isAuthenticated: false,
       loading: false,
-      isAuthReady: true, // vẫn coi là ready
+      isAuthReady: true,
     });
-
     clearStoredAuth();
+    await resetPlayerStore();
+
+    if (refreshToken) {
+      try {
+        await logoutApi(refreshToken);
+      } catch (error) {
+        console.warn("Logout API failed", error);
+      }
+    }
   },
 }));
 

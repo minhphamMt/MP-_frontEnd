@@ -13,8 +13,10 @@ export const forgotPasswordApi = (payload) =>
 export const resetPasswordApi = (payload) =>
   api.post("/auth/reset-password", payload);
 
-// refreshToken có thể nằm trong cookie, nếu backend bạn yêu cầu body refreshToken
-// thì sửa thành: api.post("/auth/refresh", { refreshToken })
-export const refreshApi = () => api.post("/auth/refresh");
+export const refreshApi = (refreshToken) =>
+  api.post("/auth/refresh", { refreshToken });
+
+export const logoutApi = (refreshToken) =>
+  api.post("/auth/logout", { refreshToken });
 
 export const getMeApi = () => api.get("/users/me");
