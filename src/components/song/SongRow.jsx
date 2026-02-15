@@ -20,7 +20,7 @@ export default function SongRow({ song, queue }) {
     <div
       onClick={handlePlay}
       className={`
-        group relative flex w-full min-w-0 max-w-full items-center
+        group relative flex w-full min-w-0 max-w-full items-center overflow-hidden
         gap-3 sm:gap-4
         rounded-xl px-3 py-2
         cursor-pointer
@@ -56,18 +56,18 @@ export default function SongRow({ song, queue }) {
       </div>
 
       {/* Info */}
-      <div className="flex-1 min-w-0 overflow-hidden">
+      <div className="min-w-0 flex-1 overflow-hidden">
         {/* Title */}
         <div
           className={`truncate text-sm font-semibold transition ${
             isActive ? "text-emerald-300" : "text-white"
           }`}
         >
-          {song.title}
+          <span className="block w-full truncate">{song.title}</span>
         </div>
 
         {/* Artist + Album */}
-        <div className="flex min-w-0 items-center gap-1 text-xs text-white/60">
+        <div className="flex min-w-0 max-w-full items-center gap-1 overflow-hidden text-xs text-white/60">
           <span className="truncate">{song.artist_name}</span>
 
           {song.album_id && song.album_title && (

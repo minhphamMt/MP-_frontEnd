@@ -147,7 +147,7 @@ export default function Search() {
   }, [keyword, user?.id]);
 
   return (
-    <div className="w-full min-h-screen space-y-6 bg-[#121212] px-3 py-5 pb-12 sm:space-y-8 sm:px-6 sm:py-6">
+    <div className="w-full max-w-full min-h-screen space-y-6 overflow-x-hidden bg-[#121212] px-3 py-5 pb-12 sm:space-y-8 sm:px-6 sm:py-6">
       <div className="flex flex-col gap-4">
         <div className="space-y-2">
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/50 sm:tracking-[0.25em]">
@@ -193,7 +193,7 @@ export default function Search() {
       {!!keyword && (songs.length || artists.length || albums.length) && (
         <>
           {activeTab === "all" && (
-            <div className="grid w-full max-w-full gap-6 lg:grid-cols-[1.05fr_1.95fr]">
+            <div className="grid w-full max-w-full min-w-0 gap-6 lg:grid-cols-[1.05fr_1.95fr]">
               <div className="hidden lg:block">
                 <h2 className="mb-3 text-lg font-semibold text-white">
                   Top result
@@ -238,9 +238,9 @@ export default function Search() {
                 </div>
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <h2 className="mb-3 text-lg font-semibold text-white">Songs</h2>
-               <div className="w-full max-w-[100%] overflow-x-hidden rounded-2xl border border-white/5 bg-[#181818] p-2 sm:p-3">
+                <div className="w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-2 sm:p-3">
                   {songs.length ? (
                     <div className="w-full min-w-0 space-y-1">
                       {songs.slice(0, 5).map((song) => (
