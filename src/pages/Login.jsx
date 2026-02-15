@@ -41,6 +41,42 @@ const extractFirebaseErrorMessage = (err) => {
 const modalBackdrop =
   "fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm";
 
+const DISPLAY_NAME_REGEX = /^[\p{L}\p{N}\s._'-]+$/u;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const validateRegisterFields = ({ displayName, email, password, confirmPassword }) => {
+  const errors = {};
+  const trimmedName = displayName.trim();
+
+  if (!trimmedName) {
+    errors.displayName = "Vui lòng nhập tên hiển thị.";
+  } else if (trimmedName.length < 2 || trimmedName.length > 40) {
+    errors.displayName = "Tên hiển thị phải từ 2 đến 40 ký tự.";
+  } else if (!DISPLAY_NAME_REGEX.test(trimmedName)) {
+    errors.displayName = "Tên hiển thị chỉ gồm chữ, số và ký tự . _ ' -.";
+  }
+
+  if (!email.trim()) {
+    errors.email = "Vui lòng nhập email.";
+  } else if (!EMAIL_REGEX.test(email.trim())) {
+    errors.email = "Email không đúng định dạng.";
+  }
+
+  if (!password) {
+    errors.password = "Vui lòng nhập mật khẩu.";
+  } else if (password.length < 6) {
+    errors.password = "Mật khẩu phải có ít nhất 6 ký tự.";
+  }
+
+  if (!confirmPassword) {
+    errors.confirmPassword = "Vui lòng nhập lại mật khẩu.";
+  } else if (password !== confirmPassword) {
+    errors.confirmPassword = "Mật khẩu nhập lại chưa khớp.";
+  }
+
+  return errors;
+};
+
 export default function Login({ initialMode = "login" }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -68,6 +104,7 @@ export default function Login({ initialMode = "login" }) {
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [registerNotice, setRegisterNotice] = useState("");
+  const [registerFieldErrors, setRegisterFieldErrors] = useState({});
 
   const [awaitingVerification, setAwaitingVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
@@ -179,8 +216,16 @@ export default function Login({ initialMode = "login" }) {
   const handleRegister = async (event) => {
     event.preventDefault();
 
-    if (registerPassword !== confirmPassword) {
-      showError("Mật khẩu nhập lại chưa khớp.");
+    const nextErrors = validateRegisterFields({
+      displayName,
+      email: registerEmail,
+      password: registerPassword,
+      confirmPassword,
+    });
+    setRegisterFieldErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      showError(Object.values(nextErrors)[0]);
       return;
     }
 
@@ -188,7 +233,7 @@ export default function Login({ initialMode = "login" }) {
       const result = await register({
         email: registerEmail,
         password: registerPassword,
-        display_name: displayName,
+        display_name: displayName.trim(),
       });
 
       if (result?.requires_email_verification) {
@@ -535,12 +580,18 @@ export default function Login({ initialMode = "login" }) {
                       <input
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
                         value={displayName}
-                        onChange={(event) => setDisplayName(event.target.value)}
+                        onChange={(event) => {
+                          setDisplayName(event.target.value);
+                          setRegisterFieldErrors((prev) => ({ ...prev, displayName: "" }));
+                        }}
                         placeholder="Tên hiển thị"
                         type="text"
                         autoComplete="name"
                         required
                       />
+                      {registerFieldErrors.displayName && (
+                        <p className="text-xs text-rose-300">{registerFieldErrors.displayName}</p>
+                      )}
                     </label>
 
                     <label className="block space-y-1.5 text-sm">
@@ -548,18 +599,27 @@ export default function Login({ initialMode = "login" }) {
                       <input
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
                         value={registerEmail}
-                        onChange={(event) => setRegisterEmail(event.target.value)}
+                        onChange={(event) => {
+                          setRegisterEmail(event.target.value);
+                          setRegisterFieldErrors((prev) => ({ ...prev, email: "" }));
+                        }}
                         placeholder="email@example.com"
                         type="email"
                         autoComplete="email"
                         required
                       />
+                      {registerFieldErrors.email && (
+                        <p className="text-xs text-rose-300">{registerFieldErrors.email}</p>
+                      )}
                     </label>
 
                     {renderPasswordInput({
                       label: "Mật khẩu",
                       value: registerPassword,
-                      onChange: (event) => setRegisterPassword(event.target.value),
+                      onChange: (event) => {
+                        setRegisterPassword(event.target.value);
+                        setRegisterFieldErrors((prev) => ({ ...prev, password: "" }));
+                      },
                       autoComplete: "new-password",
                       showPassword: showRegisterPassword,
                       toggleShowPassword: () => setShowRegisterPassword((prev) => !prev),
@@ -570,13 +630,25 @@ export default function Login({ initialMode = "login" }) {
                     {renderPasswordInput({
                       label: "Nhập lại mật khẩu",
                       value: confirmPassword,
-                      onChange: (event) => setConfirmPassword(event.target.value),
+                      onChange: (event) => {
+                        setConfirmPassword(event.target.value);
+                        setRegisterFieldErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                      },
                       autoComplete: "new-password",
                       showPassword: showConfirmPassword,
                       toggleShowPassword: () => setShowConfirmPassword((prev) => !prev),
                       inputClassName:
                         "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40",
                     })}
+
+                    {(registerFieldErrors.password || registerFieldErrors.confirmPassword) && (
+                      <div className="space-y-1 text-xs text-rose-300">
+                        {registerFieldErrors.password && <p>{registerFieldErrors.password}</p>}
+                        {registerFieldErrors.confirmPassword && (
+                          <p>{registerFieldErrors.confirmPassword}</p>
+                        )}
+                      </div>
+                    )}
 
                     {registerNotice && (
                       <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-100">

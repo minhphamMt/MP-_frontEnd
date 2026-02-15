@@ -24,6 +24,43 @@ const rejectNonArtistLogin = (role) => role === "ADMIN" || !role;
 const hasArtistIntent = (user) =>
   user?.artist_register_intent === true || user?.artist_register_intent === 1;
 
+
+const DISPLAY_NAME_REGEX = /^[\p{L}\p{N}\s._'-]+$/u;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const validateRegisterFields = ({ displayName, email, password, confirmPassword }) => {
+  const errors = {};
+  const trimmedName = displayName.trim();
+
+  if (!trimmedName) {
+    errors.displayName = "Vui lòng nhập tên hiển thị.";
+  } else if (trimmedName.length < 2 || trimmedName.length > 40) {
+    errors.displayName = "Tên hiển thị phải từ 2 đến 40 ký tự.";
+  } else if (!DISPLAY_NAME_REGEX.test(trimmedName)) {
+    errors.displayName = "Tên hiển thị chỉ gồm chữ, số và ký tự . _ ' -.";
+  }
+
+  if (!email.trim()) {
+    errors.email = "Vui lòng nhập email.";
+  } else if (!EMAIL_REGEX.test(email.trim())) {
+    errors.email = "Email không đúng định dạng.";
+  }
+
+  if (!password) {
+    errors.password = "Vui lòng nhập mật khẩu.";
+  } else if (password.length < 6) {
+    errors.password = "Mật khẩu phải có ít nhất 6 ký tự.";
+  }
+
+  if (!confirmPassword) {
+    errors.confirmPassword = "Vui lòng nhập lại mật khẩu.";
+  } else if (password !== confirmPassword) {
+    errors.confirmPassword = "Mật khẩu nhập lại chưa khớp.";
+  }
+
+  return errors;
+};
+
 export default function ArtistAuth() {
   const navigate = useNavigate();
   const {
@@ -51,6 +88,7 @@ export default function ArtistAuth() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [registerError, setRegisterError] = useState("");
   const [registerNotice, setRegisterNotice] = useState("");
+  const [registerFieldErrors, setRegisterFieldErrors] = useState({});
 
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -131,8 +169,16 @@ export default function ArtistAuth() {
     setRegisterError("");
     setRegisterNotice("");
 
-    if (registerPassword !== confirmPassword) {
-      setRegisterError("Mật khẩu nhập lại chưa khớp.");
+    const nextErrors = validateRegisterFields({
+      displayName,
+      email: registerEmail,
+      password: registerPassword,
+      confirmPassword,
+    });
+    setRegisterFieldErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      setRegisterError(Object.values(nextErrors)[0]);
       return;
     }
 
@@ -140,7 +186,7 @@ export default function ArtistAuth() {
       const result = await registerArtist({
         email: registerEmail,
         password: registerPassword,
-        display_name: displayName,
+        display_name: displayName.trim(),
       });
 
       if (result?.requires_email_verification) {
@@ -494,12 +540,18 @@ export default function ArtistAuth() {
                       <input
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
                         value={displayName}
-                        onChange={(event) => setDisplayName(event.target.value)}
+                        onChange={(event) => {
+                          setDisplayName(event.target.value);
+                          setRegisterFieldErrors((prev) => ({ ...prev, displayName: "" }));
+                        }}
                         placeholder="Tên nghệ sĩ"
                         type="text"
                         autoComplete="name"
                         required
                       />
+                      {registerFieldErrors.displayName && (
+                        <p className="text-xs text-rose-300">{registerFieldErrors.displayName}</p>
+                      )}
                     </label>
 
                     <label className="block space-y-2 text-sm">
@@ -507,19 +559,28 @@ export default function ArtistAuth() {
                       <input
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
                         value={registerEmail}
-                        onChange={(event) => setRegisterEmail(event.target.value)}
+                        onChange={(event) => {
+                          setRegisterEmail(event.target.value);
+                          setRegisterFieldErrors((prev) => ({ ...prev, email: "" }));
+                        }}
                         placeholder="email@artist.com"
                         type="email"
                         autoComplete="email"
                         required
                       />
+                      {registerFieldErrors.email && (
+                        <p className="text-xs text-rose-300">{registerFieldErrors.email}</p>
+                      )}
                     </label>
 
                     <div className="grid gap-4 md:grid-cols-2">
                       {renderPasswordInput({
                         label: "Mật khẩu",
                         value: registerPassword,
-                        onChange: (event) => setRegisterPassword(event.target.value),
+                        onChange: (event) => {
+                          setRegisterPassword(event.target.value);
+                          setRegisterFieldErrors((prev) => ({ ...prev, password: "" }));
+                        },
                         autoComplete: "new-password",
                         showPassword: showRegisterPassword,
                         toggleShowPassword: () => setShowRegisterPassword((prev) => !prev),
@@ -529,7 +590,10 @@ export default function ArtistAuth() {
                       {renderPasswordInput({
                         label: "Nhập lại",
                         value: confirmPassword,
-                        onChange: (event) => setConfirmPassword(event.target.value),
+                        onChange: (event) => {
+                          setConfirmPassword(event.target.value);
+                          setRegisterFieldErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                        },
                         autoComplete: "new-password",
                         showPassword: showConfirmPassword,
                         toggleShowPassword: () => setShowConfirmPassword((prev) => !prev),
@@ -537,6 +601,15 @@ export default function ArtistAuth() {
                           "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/40",
                       })}
                     </div>
+
+                    {(registerFieldErrors.password || registerFieldErrors.confirmPassword) && (
+                      <div className="space-y-1 text-xs text-rose-300">
+                        {registerFieldErrors.password && <p>{registerFieldErrors.password}</p>}
+                        {registerFieldErrors.confirmPassword && (
+                          <p>{registerFieldErrors.confirmPassword}</p>
+                        )}
+                      </div>
+                    )}
 
                     {/* <div className="flex justify-end">
                       <button
