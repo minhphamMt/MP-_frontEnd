@@ -24,7 +24,7 @@ export default function SongRow({ song, queue }) {
     <div
       onClick={handlePlay}
       className={`
-        group relative flex items-center gap-4 rounded-xl px-3 py-2
+        group relative flex w-full min-w-0 max-w-full items-center gap-4 rounded-xl px-3 py-2
         cursor-pointer transition-all duration-200
         hover:bg-[#2a2a2a]
         ${
@@ -70,7 +70,7 @@ export default function SongRow({ song, queue }) {
       </div>
 
       {/* Info */}
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 overflow-hidden">
         <div
           className={`truncate text-sm font-semibold ${
             isActive ? "text-emerald-300" : "text-white"
@@ -79,12 +79,12 @@ export default function SongRow({ song, queue }) {
           {song.title}
         </div>
 
-        <div className="flex items-center gap-1 truncate text-xs text-white/60">
-          <span>{song.artist_name}</span>
+        <div className="flex min-w-0 items-center gap-1 text-xs text-white/60">
+          <span className="truncate">{song.artist_name}</span>
 
           {song.album_id && song.album_title && (
             <>
-              <span className="opacity-40">•</span>
+              <span className="shrink-0 opacity-40">•</span>
               <Link
                 to={`/album/${song.album_id}`}
                 onClick={(e) => e.stopPropagation()}
