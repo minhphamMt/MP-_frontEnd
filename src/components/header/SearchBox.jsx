@@ -38,17 +38,25 @@ useEffect(() => {
   if (!open) return;
 
   const update = () => {
-    const el = containerRef.current; // wrapper của SearchBox
+    const el = containerRef.current;
     if (!el) return;
 
     const rect = el.getBoundingClientRect();
-    const gap = 12; // giống mt-3
+    const gap = 12;
+    const viewportWidth = window.innerWidth;
+    const screenPadding = viewportWidth < 640 ? 8 : 12;
+    const maxWidth = viewportWidth - screenPadding * 2;
+    const safeWidth = Math.min(rect.width, maxWidth);
+    const safeLeft = Math.min(
+      Math.max(rect.left, screenPadding),
+      viewportWidth - safeWidth - screenPadding
+    );
 
     setDropdownStyle({
       position: "fixed",
-      left: rect.left,
+      left: safeLeft,
       top: rect.bottom + gap,
-      width: rect.width,
+      width: safeWidth,
       zIndex: 9999,
     });
   };
@@ -453,15 +461,15 @@ const handleResultNavigate = async (item) => {
   createPortal(
       <div
         style={dropdownStyle}
-        className="max-h-[65vh] overflow-y-auto px-0 sm:max-h-none"
+        className="max-h-[70vh] overflow-y-auto px-0 sm:max-h-none"
         ref={dropdownRef}
       >
-      <div className="rounded-2xl border border-[#2a2a2a] bg-[#181818] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
-        <div className="rounded-xl border border-white/5 bg-[#202020] p-4 shadow-inner shadow-black/20">
-          <div className="flex items-center justify-between text-sm text-white/70">
+      <div className="rounded-2xl border border-[#2a2a2a] bg-[#181818] p-2 shadow-[0_30px_90px_rgba(0,0,0,0.65)] sm:p-4">
+        <div className="rounded-xl border border-white/5 bg-[#202020] p-2 shadow-inner shadow-black/20 sm:p-4">
+          <div className="flex items-center justify-between gap-2 text-sm text-white/70">
             <div className="font-semibold text-white">Tìm kiếm nhanh</div>
             {keyword.trim() && (
-              <div className="text-xs uppercase tracking-[0.2em] text-[#1db954]">
+              <div className="hidden truncate text-xs uppercase tracking-[0.2em] text-[#1db954] sm:block">
                 "{keyword}"
               </div>
             )}
@@ -473,8 +481,8 @@ const handleResultNavigate = async (item) => {
           </div>
 
           {keyword.trim() ? (
-            <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-[#1a1a1a] p-3">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/60">
+            <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-[#1a1a1a] p-2 sm:p-3">
+              <div className="hidden items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/60 sm:flex">
                 <FiHeadphones className="text-white/70" />
                 <span>Gợi ý kết quả</span>
                 {loading && (
@@ -494,14 +502,14 @@ const handleResultNavigate = async (item) => {
                 {results.map((item) => (
                   <div
                     key={`${item.type}-${item.id}`}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white transition hover:bg-[#2a2a2a]"
+                    className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-white transition hover:bg-[#2a2a2a] sm:gap-3 sm:px-3"
                   >
                     <button
                       type="button"
                       onClick={() => handleResultNavigate(item)}
                       className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     >
-                      <div className="relative h-12 w-12 overflow-hidden rounded-lg border border-white/10 bg-[#2a2a2a]">
+                      <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/10 bg-[#2a2a2a] sm:h-12 sm:w-12">
                         {item.cover ? (
                           <OptimizedImage
                             src={resolveAssetUrl(item.cover)}
@@ -521,19 +529,19 @@ const handleResultNavigate = async (item) => {
                             item.displayLabel || item.name || item.title
                           )}
                         </div>
-                        {renderSecondary(item)}
+                        <div className="hidden sm:block">{renderSecondary(item)}</div>
                       </div>
                     </button>
 
-                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.15em] text-white/60">
-                      <span className="rounded-full bg-[#2a2a2a] px-2 py-1 text-white/70">
+                    <div className="flex items-center gap-1 text-[11px] uppercase tracking-[0.15em] text-white/60 sm:gap-2">
+                      <span className="hidden rounded-full bg-[#2a2a2a] px-2 py-1 text-white/70 sm:inline-flex">
                         {item.type}
                       </span>
                       {item.type === "song" && !isAdmin && (
                         <button
                           type="button"
                           onClick={() => handlePlaySong(item)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#1db954]/60 bg-[#1db954]/20 text-[#1db954] transition hover:border-[#1ed760] hover:bg-[#1db954]/30"
+                          className="flex h-8 w-8 items-center justify-center rounded-full border border-[#1db954]/60 bg-[#1db954]/20 text-[#1db954] transition hover:border-[#1ed760] hover:bg-[#1db954]/30 sm:h-9 sm:w-9"
                         >
                           <FiMusic />
                         </button>
@@ -544,8 +552,8 @@ const handleResultNavigate = async (item) => {
               </div>
             </div>
           ) : (
-            <div className="mt-3 space-y-3 rounded-xl border border-white/10 bg-[#1a1a1a] p-3">
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/60">
+            <div className="mt-3 space-y-3 rounded-xl border border-white/10 bg-[#1a1a1a] p-2 sm:p-3">
+              <div className="hidden items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/60 sm:flex">
                 <FiClock />
                 <span>Lịch sử tìm kiếm</span>
                 {loading && (

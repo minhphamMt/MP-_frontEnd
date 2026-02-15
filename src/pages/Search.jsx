@@ -144,16 +144,16 @@ export default function Search() {
   }, [keyword, user?.id]);
 
   return (
-    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 pb-12 sm:px-8">
+    <div className="min-h-screen space-y-6 overflow-x-hidden bg-[#121212] px-3 py-5 pb-12 sm:space-y-8 sm:px-8 sm:py-6">
       <div className="flex flex-col gap-4">
         <div className="space-y-2">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-white/50 sm:tracking-[0.25em]">
             Kết quả tìm kiếm
           </p>
           <h1 className="text-2xl font-semibold text-white sm:text-3xl">
             {keyword ? `“${keyword}”` : "Nhập từ khóa để tìm kiếm"}
           </h1>
-          <p className="text-sm text-white/60">
+          <p className="hidden text-sm text-white/60 sm:block">
             {loading
               ? "Đang tải dữ liệu..."
               : "Khám phá bài hát, nghệ sĩ và album phù hợp nhất."}
@@ -191,7 +191,7 @@ export default function Search() {
         <>
           {activeTab === "all" && (
             <div className="grid gap-6 lg:grid-cols-[1.1fr_1.9fr]">
-              <div>
+              <div className="hidden lg:block">
                 <h2 className="mb-3 text-lg font-semibold text-white">
                   Top result
                 </h2>
@@ -237,7 +237,7 @@ export default function Search() {
 
               <div>
                 <h2 className="mb-3 text-lg font-semibold text-white">Songs</h2>
-                <div className="rounded-2xl border border-white/5 bg-[#181818] p-3">
+                <div className="rounded-2xl border border-white/5 bg-[#181818] p-2 sm:p-3">
                   {songs.length ? (
                     <div className="space-y-1">
                       {songs.slice(0, 5).map((song) => (
