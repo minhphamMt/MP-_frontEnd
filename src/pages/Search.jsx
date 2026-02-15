@@ -147,7 +147,7 @@ export default function Search() {
   }, [keyword, user?.id]);
 
   return (
-    <div className="min-h-screen space-y-6 overflow-x-hidden bg-[#121212] px-3 py-5 pb-12 sm:space-y-8 sm:px-8 sm:py-6">
+    <div className="w-full min-h-screen space-y-6 bg-[#121212] px-3 py-5 pb-12 sm:space-y-8 sm:px-6 sm:py-6">
       <div className="flex flex-col gap-4">
         <div className="space-y-2">
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/50 sm:tracking-[0.25em]">
