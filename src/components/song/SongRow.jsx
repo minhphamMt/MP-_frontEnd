@@ -6,11 +6,7 @@ import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
 
 export default function SongRow({ song, queue }) {
-  const {
-    playSong,
-    currentSong,
-    isPlaying,
-  } = usePlayerStore();
+  const { playSong, currentSong, isPlaying } = usePlayerStore();
 
   const isActive =
     normalizeSongId(currentSong) === normalizeSongId(song);
@@ -24,39 +20,32 @@ export default function SongRow({ song, queue }) {
     <div
       onClick={handlePlay}
       className={`
-        group relative flex w-full min-w-0 max-w-full items-center gap-4 rounded-xl px-3 py-2
+        group relative flex w-full items-center gap-3 sm:gap-4
+        rounded-xl px-3 py-2
         cursor-pointer transition-all duration-200
         hover:bg-[#2a2a2a]
-        ${
-          isActive
-            ? "bg-[#242424] ring-1 ring-emerald-400/40"
-            : ""
-        }
+        ${isActive ? "bg-[#242424] ring-1 ring-emerald-400/40" : ""}
       `}
     >
       {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100">
-        <div className="absolute -left-10 -top-10 h-28 w-28 rounded-full bg-emerald-400/10 blur-3xl" />
+        <div className="absolute -left-10 -top-10 h-24 w-24 rounded-full bg-emerald-400/10 blur-3xl" />
       </div>
 
       {/* Cover */}
-      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg">
+      <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-lg">
         <OptimizedImage
           src={resolveAssetUrl(song.cover_url)}
           alt={song.title}
           className="h-full w-full object-cover transition duration-300 group-hover:scale-110"
         />
 
-        {/* Overlay play/pause */}
+        {/* Overlay */}
         <div
           className={`
             absolute inset-0 flex items-center justify-center
             bg-black/40 backdrop-blur-sm transition
-            ${
-              isActive
-                ? "opacity-100"
-                : "opacity-0 group-hover:opacity-100"
-            }
+            ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
           `}
         >
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-400 text-black shadow-md shadow-emerald-400/30">
@@ -70,9 +59,9 @@ export default function SongRow({ song, queue }) {
       </div>
 
       {/* Info */}
-      <div className="min-w-0 flex-1 overflow-hidden">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <div
-          className={`truncate text-sm font-semibold ${
+          className={`truncate text-sm font-semibold transition ${
             isActive ? "text-emerald-300" : "text-white"
           }`}
         >
@@ -84,7 +73,7 @@ export default function SongRow({ song, queue }) {
 
           {song.album_id && song.album_title && (
             <>
-              <span className="shrink-0 opacity-40">•</span>
+              <span className="flex-shrink-0 opacity-40">•</span>
               <Link
                 to={`/album/${song.album_id}`}
                 onClick={(e) => e.stopPropagation()}
@@ -97,8 +86,8 @@ export default function SongRow({ song, queue }) {
         </div>
       </div>
 
-      {/* Duration */}
-      <div className="hidden shrink-0 text-xs text-white/50 tabular-nums sm:block">
+      {/* Duration (ẩn mobile) */}
+      <div className="hidden flex-shrink-0 text-xs text-white/50 tabular-nums sm:block">
         {formatDuration(song.duration)}
       </div>
     </div>
