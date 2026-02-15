@@ -16,10 +16,13 @@ const normalizeArtist = (artist) => ({
   artist_name: artist.artist_name ?? artist.name ?? artist.title,
   cover_url:
     artist.cover_url ||
+    artist.avatar_url ||
     artist.avatar ||
     artist.image_url ||
+    artist.thumbnail_m ||
     artist.thumbnail ||
-    artist.image,
+    artist.image ||
+    artist.cover,
   song_count:
     artist.song_count ?? artist.track_count ?? artist.songs_count ?? 0,
 });
@@ -190,7 +193,7 @@ export default function Search() {
       {!!keyword && (songs.length || artists.length || albums.length) && (
         <>
           {activeTab === "all" && (
-            <div className="grid gap-6 lg:grid-cols-[1.1fr_1.9fr]">
+            <div className="grid w-full max-w-full gap-6 lg:grid-cols-[1.05fr_1.95fr]">
               <div className="hidden lg:block">
                 <h2 className="mb-3 text-lg font-semibold text-white">
                   Top result
@@ -237,7 +240,7 @@ export default function Search() {
 
               <div>
                 <h2 className="mb-3 text-lg font-semibold text-white">Songs</h2>
-                <div className="rounded-2xl border border-white/5 bg-[#181818] p-2 sm:p-3">
+                <div className="w-full max-w-full overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-2 sm:p-3">
                   {songs.length ? (
                     <div className="space-y-1">
                       {songs.slice(0, 5).map((song) => (
@@ -257,7 +260,7 @@ export default function Search() {
           {activeTab === "songs" && (
             <div>
               <h2 className="mb-3 text-lg font-semibold text-white">Songs</h2>
-              <div className="rounded-2xl border border-white/5 bg-[#181818] p-3">
+              <div className="w-full max-w-full overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-3">
                 {songs.length ? (
                   <div className="space-y-1">
                     {songs.map((song) => (
@@ -278,7 +281,7 @@ export default function Search() {
       {!!artists.length && (activeTab === "all" || activeTab === "artists") && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-white">Artists</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
             {artists.map((artist) => (
               <ArtistAlbumCard
                 key={artist.artist_id}
@@ -293,7 +296,7 @@ export default function Search() {
       {!!albums.length && (activeTab === "all" || activeTab === "albums") && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-white">Albums</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
             {albums.map((album) => (
               <AlbumCard key={album.id} album={album} variant="library" />
             ))}

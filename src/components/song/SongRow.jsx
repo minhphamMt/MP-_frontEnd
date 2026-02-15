@@ -98,7 +98,7 @@ export default function SongRow({ song, queue }) {
       </div>
 
       {/* Duration */}
-      <div className="shrink-0 text-xs text-white/50 tabular-nums">
+      <div className="hidden shrink-0 text-xs text-white/50 tabular-nums sm:block">
         {formatDuration(song.duration)}
       </div>
     </div>

@@ -32,46 +32,53 @@ export default function SearchBox() {
     const params = new URLSearchParams(location.search);
     return params.get("q") || params.get("keyword") || "";
   }, [location.search]);
-const [dropdownStyle, setDropdownStyle] = useState(null);
+  const [dropdownStyle, setDropdownStyle] = useState(null);
 
-useEffect(() => {
-  if (!open) return;
+  useEffect(() => {
+    if (!open) return;
 
-  const update = () => {
-    const el = containerRef.current;
-    if (!el) return;
+    const update = () => {
+      const el = containerRef.current;
+      if (!el) return;
 
-    const rect = el.getBoundingClientRect();
-    const gap = 12;
-    const viewportWidth = window.innerWidth;
-    const screenPadding = viewportWidth < 640 ? 8 : 12;
-    const maxWidth = viewportWidth - screenPadding * 2;
-    const safeWidth = Math.min(rect.width, maxWidth);
-    const safeLeft = Math.min(
-      Math.max(rect.left, screenPadding),
-      viewportWidth - safeWidth - screenPadding
-    );
+      const rect = el.getBoundingClientRect();
+      const gap = 12;
+      const viewportWidth = window.innerWidth;
+      const isTabletOrMobile = viewportWidth < 1024;
+      const screenPadding = viewportWidth < 640 ? 8 : 12;
+      const maxWidth = viewportWidth - screenPadding * 2;
 
-    setDropdownStyle({
-      position: "fixed",
-      left: safeLeft,
-      top: rect.bottom + gap,
-      width: safeWidth,
-      zIndex: 9999,
-    });
-  };
+      const preferredWidth = isTabletOrMobile
+        ? Math.max(rect.width * 1.35, rect.width + 80)
+        : rect.width;
+      const safeWidth = Math.min(preferredWidth, maxWidth);
 
-  update();
+      const anchorCenterX = rect.left + rect.width / 2;
+      const centeredLeft = anchorCenterX - safeWidth / 2;
+      const safeLeft = Math.min(
+        Math.max(centeredLeft, screenPadding),
+        viewportWidth - safeWidth - screenPadding
+      );
 
-  // Update khi scroll/resize (kể cả scroll trong container)
-  window.addEventListener("resize", update);
-  window.addEventListener("scroll", update, true);
+      setDropdownStyle({
+        position: "fixed",
+        left: safeLeft,
+        top: rect.bottom + gap,
+        width: safeWidth,
+        zIndex: 9999,
+      });
+    };
 
-  return () => {
-    window.removeEventListener("resize", update);
-    window.removeEventListener("scroll", update, true);
-  };
-}, [open, keyword]); // keyword đổi có thể làm height input/layout thay đổi nhẹ
+    update();
+
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open, keyword]);
 
   useEffect(() => {
     setKeyword(defaultKeyword);
@@ -238,19 +245,19 @@ useEffect(() => {
     }
   }, [isAdmin]);
 
-useEffect(() => {
-  if (!hasFocus) return; // 🔥 CHẶN TỰ MỞ KHI CHƯA CLICK
+  useEffect(() => {
+    if (!hasFocus) return;
 
-  const timer = setTimeout(() => {
-    if (keyword.trim()) {
-      fetchSuggestions(keyword);
-    } else {
-      setResults([]);
-    }
-  }, 320);
+    const timer = setTimeout(() => {
+      if (keyword.trim()) {
+        fetchSuggestions(keyword);
+      } else {
+        setResults([]);
+      }
+    }, 320);
 
-  return () => clearTimeout(timer);
-}, [fetchSuggestions, keyword, hasFocus]);
+    return () => clearTimeout(timer);
+  }, [fetchSuggestions, keyword, hasFocus]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
