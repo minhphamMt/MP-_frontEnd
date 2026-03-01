@@ -183,7 +183,7 @@ export default function AddToPlaylistButton({
       {open &&
         createPortal(
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-10"
+            className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 px-4 py-10"
             onClick={() => setOpen(false)}
           >
             <div

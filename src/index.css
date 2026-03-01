@@ -77,6 +77,70 @@ body {
   display: none;
 }
 
+
+.player-detail-range {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.95) var(--range-progress, 0%),
+    rgba(255, 255, 255, 0.24) var(--range-progress, 0%),
+    rgba(255, 255, 255, 0.24) 100%
+  );
+}
+
+.player-detail-range::-webkit-slider-runnable-track {
+  height: 100%;
+  border-radius: inherit;
+  background: transparent;
+}
+
+.player-detail-range::-moz-range-track {
+  height: 100%;
+  border-radius: inherit;
+  background: transparent;
+}
+
+.player-detail-range::-moz-range-progress {
+  height: 100%;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.player-detail-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.player-detail-range::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.player-detail-range-flat::-webkit-slider-thumb {
+  width: 0;
+  height: 0;
+  margin-top: 0;
+  opacity: 0;
+}
+
+.player-detail-range-flat::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
 .player-detail-shell {
   will-change: transform, opacity;
   backface-visibility: hidden;

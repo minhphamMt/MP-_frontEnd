@@ -356,7 +356,12 @@ export default function PlayerDetail({ isOpen, onClose }) {
             onChange={onSeekChange}
             onMouseUp={onSeekCommit}
             onTouchEnd={onSeekCommit}
-            className="h-2 w-full cursor-pointer accent-[#1db954]"
+            className="player-detail-range player-detail-range-flat h-2 w-full cursor-pointer"
+            style={{
+              "--range-progress": `${
+                total > 0 ? (Math.min(displayedTime, total) / total) * 100 : 0
+              }%`,
+            }}
           />
         </div>
 
@@ -433,8 +438,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
         <div className="flex items-center justify-end gap-2 md:gap-3">
           <AddToPlaylistButton
             song={currentSong}
-            triggerClassName="h-10 w-10 border-white/10 bg-white/5 text-white/80 ring-1 ring-white/5 md:hover:bg-white/10"
-            triggerLabel={<span className="text-xl leading-none">+</span>}
+            triggerClassName="h-10 w-10 border-white/15 bg-white/5 text-white/80 ring-1 ring-white/5 md:hover:border-white/30 md:hover:bg-white/15"
           />
 
           <button
@@ -451,9 +455,35 @@ export default function PlayerDetail({ isOpen, onClose }) {
             step={0.01}
             value={muted ? 0 : volume}
             onChange={(e) => handleVolumeChange(e.target.value)}
-            className="hidden h-2 w-32 cursor-pointer accent-[#1db954] md:block"
+            className="player-detail-range hidden h-2 w-32 cursor-pointer md:block"
+            style={{
+              "--range-progress": `${(muted ? 0 : volume) * 100}%`,
+            }}
           />
         </div>
+      </div>
+
+      <div className="mt-3 flex items-center gap-3 px-1 md:hidden">
+        <button
+          onClick={toggleMute}
+          className="text-base text-white/70 transition active:scale-95"
+          aria-label="Tắt/Mở tiếng"
+        >
+          {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
+        </button>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={muted ? 0 : volume}
+          onChange={(e) => handleVolumeChange(e.target.value)}
+          className="player-detail-range player-detail-range-flat h-2.5 w-full cursor-pointer"
+          style={{
+            "--range-progress": `${(muted ? 0 : volume) * 100}%`,
+          }}
+        />
+        <FaVolumeHigh className="text-base text-white/60" aria-hidden="true" />
       </div>
     </div>
   </div>
