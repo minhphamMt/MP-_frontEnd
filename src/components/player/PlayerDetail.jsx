@@ -351,12 +351,15 @@ export default function PlayerDetail({ isOpen, onClose }) {
             max={total || 0}
             step={0.1}
             value={Math.min(displayedTime, total || 0)}
+            onPointerDown={onSeekStart}
+            onPointerUp={onSeekCommit}
+            onPointerCancel={onSeekCommit}
             onMouseDown={onSeekStart}
             onTouchStart={onSeekStart}
             onChange={onSeekChange}
             onMouseUp={onSeekCommit}
             onTouchEnd={onSeekCommit}
-            className="player-detail-range player-detail-range-flat h-2 w-full cursor-pointer"
+            className="player-detail-range h-2 w-full cursor-pointer"
             style={{
               "--range-progress": `${
                 total > 0 ? (Math.min(displayedTime, total) / total) * 100 : 0
@@ -478,7 +481,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           step={0.01}
           value={muted ? 0 : volume}
           onChange={(e) => handleVolumeChange(e.target.value)}
-          className="player-detail-range player-detail-range-flat h-2.5 w-full cursor-pointer"
+          className="player-detail-range h-2.5 w-full cursor-pointer"
           style={{
             "--range-progress": `${(muted ? 0 : volume) * 100}%`,
           }}
