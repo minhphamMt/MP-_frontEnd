@@ -15,6 +15,7 @@ import { resolveAssetUrl } from "../../utils/asset";
 import PlayerDetailLyrics from "./PlayerDetailLyrics";
 import PlayerDetailQueue from "./PlayerDetailQueue";
 import OptimizedImage from "../common/OptimizedImage";
+import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 
 /* ================= utils ================= */
 const formatTime = (sec = 0) => {
@@ -428,12 +429,17 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Volume: ẩn trên phone, hiện từ tablet (md) trở lên.
-            => đảm bảo phone không bị lẹm, laptop nhỏ vẫn có đủ. */}
-        <div className="hidden items-center justify-end gap-3 md:flex">
+        {/* Right actions: Add to playlist (always visible) + volume (md+) */}
+        <div className="flex items-center justify-end gap-2 md:gap-3">
+          <AddToPlaylistButton
+            song={currentSong}
+            triggerClassName="h-10 w-10 border-white/10 bg-white/5 text-white/80 ring-1 ring-white/5 md:hover:bg-white/10"
+            triggerLabel={<span className="text-xl leading-none">+</span>}
+          />
+
           <button
             onClick={toggleMute}
-            className="text-lg opacity-70 transition md:hover:opacity-100"
+            className="hidden text-lg opacity-70 transition md:inline-flex md:hover:opacity-100"
             aria-label="Tắt/Mở tiếng"
           >
             {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
@@ -445,7 +451,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             step={0.01}
             value={muted ? 0 : volume}
             onChange={(e) => handleVolumeChange(e.target.value)}
-            className="h-2 w-32 cursor-pointer accent-[#1db954]"
+            className="hidden h-2 w-32 cursor-pointer accent-[#1db954] md:block"
           />
         </div>
       </div>
@@ -492,27 +498,27 @@ export default function PlayerDetail({ isOpen, onClose }) {
       {/* CONTENT */}
       {/* ✅ h-full + min-h-0 để flex con không “lèm” */}
       <div className="relative z-10 h-full w-full overflow-hidden">
-        <div className="relative mx-auto flex h-full w-full min-h-0 max-w-[1240px] flex-col overflow-hidden px-3 pt-2 pb-3 sm:px-6 sm:pt-7 sm:pb-7">
+        <div className="relative mx-auto flex h-full w-full min-h-0 max-w-[1240px] flex-col overflow-hidden px-3 pt-[calc(env(safe-area-inset-top)+8px)] pb-3 sm:px-6 sm:pt-7 sm:pb-7">
           {/* Close button */}
           <button
             onClick={onClose}
             className="
               absolute
-              right-3 top-3
+              right-3 top-[calc(env(safe-area-inset-top)+8px)]
               z-20
-              flex h-10 w-10 items-center justify-center
-              rounded-full
-              bg-white/10
-              text-white/90
-              ring-1 ring-white/10
+              flex h-9 w-9 items-center justify-center
+              rounded-2xl
+              bg-black/45
+              text-base text-white/85
+              ring-1 ring-white/20
               backdrop-blur
-              transition
-              md:hover:bg-white/20
-              sm:right-6 sm:top-6
+              shadow-[0_8px_25px_rgba(0,0,0,0.35)]
+              transition md:hover:bg-black/60 md:hover:text-white
+              sm:right-6 sm:top-6 sm:h-10 sm:w-10
             "
             aria-label="Đóng"
           >
-            ✕
+            <span className="-mt-[1px]">✕</span>
           </button>
 
           {/* Title */}
@@ -577,7 +583,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* Mobile/tablet swipe layout */}
           <div className="mt-3 flex min-h-0 flex-1 flex-col overflow-hidden lg:hidden">
-            <div className="mb-3 flex items-center justify-center gap-2 text-xs text-white/60">
+            <div className="mb-4 flex items-center justify-center gap-2 overflow-x-auto px-1 text-xs text-white/60 sm:mb-3 sm:px-0">
               {[
                 { id: "lyrics", label: "Lời bài hát" },
                 { id: "now", label: "Đang phát" },
