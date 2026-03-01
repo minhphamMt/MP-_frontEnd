@@ -175,6 +175,15 @@ body {
     animation-iteration-count: 1 !important;
   }
 
+  .player-detail-disc {
+    animation-duration: 12s !important;
+    animation-iteration-count: infinite !important;
+  }
+
+  .player-detail-disc.is-playing {
+    animation-play-state: running !important;
+  }
+
   button:hover,
   a:hover,
   [role="button"]:hover {

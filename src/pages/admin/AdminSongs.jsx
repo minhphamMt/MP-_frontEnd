@@ -271,7 +271,7 @@ export default function AdminSongs() {
       </div>
 
       {selectedSong && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-8 md:pl-64">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 px-4 pt-24 pb-8 md:items-center md:py-8 md:pl-64">
           <div className="max-h-[calc(100vh-4rem)] w-full max-w-3xl overflow-auto rounded-3xl border border-white/10 bg-[#181818] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.55)] sm:p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">Chi tiết bài hát chờ duyệt</h2>

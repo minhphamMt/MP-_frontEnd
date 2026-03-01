@@ -459,7 +459,7 @@ const handleResultNavigate = async (item) => {
               ? "Tìm kiếm nghệ sĩ, bài hát, album..."
               : "Tìm kiếm bài hát, nghệ sĩ, lời bài hát..."
           }
-          className="w-full rounded-full border border-[#2a2a2a] bg-[#1f1f1f] py-2.5 pl-12 pr-4 text-sm text-white placeholder:text-white/50 shadow-[0_14px_40px_rgba(0,0,0,0.35)] outline-none transition focus:border-[#1db954] focus:bg-[#232323]"
+          className="w-full rounded-full border border-[#2a2a2a] bg-[#1f1f1f] py-2.5 pl-12 pr-4 text-base text-white placeholder:text-white/50 shadow-[0_14px_40px_rgba(0,0,0,0.35)] outline-none transition focus:border-[#1db954] focus:bg-[#232323] sm:text-sm"
         />
       </form>
 
