@@ -82,13 +82,13 @@ body {
   -webkit-appearance: none;
   appearance: none;
   border-radius: 9999px;
-  touch-action: pan-y;
+  touch-action: none;
   background: linear-gradient(
     to right,
-    rgba(73, 208, 255, 0.95) 0%,
-    rgba(73, 208, 255, 0.95) var(--range-progress, 0%),
-    rgba(73, 208, 255, 0.25) var(--range-progress, 0%),
-    rgba(73, 208, 255, 0.25) 100%
+    rgba(29, 185, 84, 0.95) 0%,
+    rgba(29, 185, 84, 0.95) var(--range-progress, 0%),
+    rgba(29, 185, 84, 0.25) var(--range-progress, 0%),
+    rgba(29, 185, 84, 0.25) 100%
   );
 }
 
@@ -107,28 +107,28 @@ body {
 .player-detail-range::-moz-range-progress {
   height: 100%;
   border-radius: inherit;
-  background: rgba(73, 208, 255, 0.95);
+  background: rgba(29, 185, 84, 0.95);
 }
 
 .player-detail-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  margin-top: -4px;
-  width: 12px;
-  height: 12px;
+  margin-top: 0;
+  width: 0;
+  height: 0;
   border-radius: 9999px;
   border: 0;
-  background: rgba(165, 240, 255, 0.98);
-  box-shadow: 0 0 0 2px rgba(73, 208, 255, 0.25);
+  background: transparent;
+  box-shadow: none;
 }
 
 .player-detail-range::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
+  width: 0;
+  height: 0;
   border-radius: 9999px;
   border: 0;
-  background: rgba(165, 240, 255, 0.98);
-  box-shadow: 0 0 0 2px rgba(73, 208, 255, 0.25);
+  background: transparent;
+  box-shadow: none;
 }
 
 

@@ -223,6 +223,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
     doSeek(seekValue);
   };
 
+  const focusRangeInteraction = (e) => {
+    e.stopPropagation();
+  };
+
   /* ================= playback ================= */
   const togglePlay = () => {
     isPlaying ? pause() : resume();
@@ -344,13 +348,18 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
       {/* ================== SEEK ================== */}
       <div className="mt-2.5 space-y-2 sm:mt-4">
-        <div className="px-1 sm:px-2">
+        <div className="-my-2 px-1 py-2 sm:-my-1 sm:px-2 sm:py-1">
           <input
             type="range"
             min={0}
             max={total || 0}
             step={0.1}
             value={Math.min(displayedTime, total || 0)}
+            onPointerDownCapture={focusRangeInteraction}
+            onPointerMoveCapture={focusRangeInteraction}
+            onTouchStartCapture={focusRangeInteraction}
+            onTouchMoveCapture={focusRangeInteraction}
+            onMouseDownCapture={focusRangeInteraction}
             onPointerDown={onSeekStart}
             onPointerUp={onSeekCommit}
             onPointerCancel={onSeekCommit}
@@ -457,6 +466,11 @@ export default function PlayerDetail({ isOpen, onClose }) {
             max={1}
             step={0.01}
             value={muted ? 0 : volume}
+            onPointerDownCapture={focusRangeInteraction}
+            onPointerMoveCapture={focusRangeInteraction}
+            onTouchStartCapture={focusRangeInteraction}
+            onTouchMoveCapture={focusRangeInteraction}
+            onMouseDownCapture={focusRangeInteraction}
             onChange={(e) => handleVolumeChange(e.target.value)}
             className="player-detail-range hidden h-2 w-32 cursor-pointer md:block"
             style={{
@@ -474,18 +488,25 @@ export default function PlayerDetail({ isOpen, onClose }) {
         >
           {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
         </button>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={muted ? 0 : volume}
-          onChange={(e) => handleVolumeChange(e.target.value)}
-          className="player-detail-range h-2.5 w-full cursor-pointer"
-          style={{
-            "--range-progress": `${(muted ? 0 : volume) * 100}%`,
-          }}
-        />
+        <div className="-my-2 flex-1 py-2">
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={muted ? 0 : volume}
+            onPointerDownCapture={focusRangeInteraction}
+            onPointerMoveCapture={focusRangeInteraction}
+            onTouchStartCapture={focusRangeInteraction}
+            onTouchMoveCapture={focusRangeInteraction}
+            onMouseDownCapture={focusRangeInteraction}
+            onChange={(e) => handleVolumeChange(e.target.value)}
+            className="player-detail-range h-2.5 w-full cursor-pointer"
+            style={{
+              "--range-progress": `${(muted ? 0 : volume) * 100}%`,
+            }}
+          />
+        </div>
         <FaVolumeHigh className="text-base text-white/60" aria-hidden="true" />
       </div>
     </div>
