@@ -8,8 +8,8 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "Khoalan Music Platform",
-        short_name: "Khoalan Music",
+        name: "Khoaluan Music Platform",
+        short_name: "Khoaluan Music",
         description: "Music streaming platform",
         theme_color: "#000000",
         background_color: "#000000",
