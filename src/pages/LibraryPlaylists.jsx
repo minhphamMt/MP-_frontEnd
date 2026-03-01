@@ -74,7 +74,7 @@ export default function LibraryPlaylists() {
         <button
           type="button"
           onClick={() => navigate("/playlists")}
-          className="rounded-full border border-white/10 bg-[#1f1f1f] px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-[#2a2a2a]"
+          className="rounded-full border border-white/10 bg-[#1f1f1f] px-4 py-2 text-sm font-semibold text-white/80 transition md:hover:bg-[#2a2a2a]"
         >
           ← Quay lại thư viện
         </button>

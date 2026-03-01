@@ -367,7 +367,7 @@ export default function Profile() {
                   accept="image/*"
                   onChange={handleAvatarUpload}
                   disabled={loadingAvatar}
-                  className="w-full rounded-2xl border border-dashed border-white/20 bg-[#111111] px-4 py-3 text-sm text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 file:transition hover:border-white/30"
+                  className="w-full rounded-2xl border border-dashed border-white/20 bg-[#111111] px-4 py-3 text-sm text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 file:transition md:hover:border-white/30"
                 />
                 <span className="text-xs text-white/50">
                   Ảnh sẽ được tải lên máy chủ và cập nhật ngay lập tức.
@@ -388,7 +388,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={!hasProfileChanges || loadingProfile}
-                className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-6 py-2 text-sm font-semibold text-white transition hover:from-violet-400 hover:to-fuchsia-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-6 py-2 text-sm font-semibold text-white transition md:hover:from-violet-400 md:hover:to-fuchsia-400 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loadingProfile ? "Đang lưu..." : "Lưu thay đổi"}
               </button>
@@ -426,7 +426,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => togglePasswordVisibility("oldPassword")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition hover:bg-white/10 hover:text-white"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition md:hover:bg-white/10 md:hover:text-white"
                     aria-label={showPasswords.oldPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                   >
                     {showPasswords.oldPassword ? <FiEyeOff /> : <FiEye />}
@@ -449,7 +449,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => togglePasswordVisibility("newPassword")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition hover:bg-white/10 hover:text-white"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition md:hover:bg-white/10 md:hover:text-white"
                     aria-label={showPasswords.newPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                   >
                     {showPasswords.newPassword ? <FiEyeOff /> : <FiEye />}
@@ -472,7 +472,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => togglePasswordVisibility("confirmPassword")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition hover:bg-white/10 hover:text-white"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition md:hover:bg-white/10 md:hover:text-white"
                     aria-label={showPasswords.confirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                   >
                     {showPasswords.confirmPassword ? <FiEyeOff /> : <FiEye />}
@@ -486,7 +486,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={loadingPassword}
-                className="w-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-2 text-sm font-semibold text-white transition hover:from-emerald-400 hover:to-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-2 text-sm font-semibold text-white transition md:hover:from-emerald-400 md:hover:to-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loadingPassword ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
               </button>

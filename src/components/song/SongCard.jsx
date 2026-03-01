@@ -52,14 +52,14 @@ export default function SongCard({ song, queue }) {
           <OptimizedImage
             src={resolveAssetUrl(song.cover_url)}
             alt={song.title}
-             className="h-14 w-14 rounded-xl object-cover transition duration-300 group-hover:scale-110 sm:h-16 sm:w-16"
+             className="h-14 w-14 rounded-xl object-cover transition duration-300 md:group-hover:scale-110 sm:h-16 sm:w-16"
           />
 
-          <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 transition group-hover:opacity-100" />
+          <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 transition md:group-hover:opacity-100" />
 
           <span
             className={`absolute inset-0 flex items-center justify-center transition ${
-              isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+              isActive ? "opacity-100" : "opacity-0 md:group-hover:opacity-100"
             }`}
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1db954] text-base text-black shadow-lg shadow-[#1db954]/40 sm:h-10 sm:w-10 sm:text-lg">
@@ -91,14 +91,14 @@ export default function SongCard({ song, queue }) {
         {/* Like */}
          <AddToPlaylistButton
           song={song}
-          triggerClassName="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[13px] text-white/70 transition hover:border-white/20 hover:bg-white/10 sm:h-9 sm:w-9 sm:text-sm"
+          triggerClassName="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[13px] text-white/70 transition md:hover:border-white/20 md:hover:bg-white/10 sm:h-9 sm:w-9 sm:text-sm"
         />
         <button
           onClick={handleLike}
           className={`
            flex h-8 w-8 items-center justify-center rounded-full
             border border-white/10 bg-white/5 text-[13px] sm:h-9 sm:w-9 sm:text-sm
-            transition hover:border-white/30 hover:bg-white/10
+            transition md:hover:border-white/30 md:hover:bg-white/10
             ${isLiked ? "text-emerald-300" : "text-white/60"}
           `}
           title={isLiked ? "Bỏ thích" : "Yêu thích"}

@@ -235,7 +235,7 @@ export default function ArtistSongForm() {
           <button
             type="button"
             onClick={() => navigate("/artist/songs")}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition hover:border-white/30 hover:bg-white/10"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition md:hover:border-white/30 md:hover:bg-white/10"
           >
             <FiArrowLeft />
             Quay lại danh sách
@@ -313,7 +313,7 @@ export default function ArtistSongForm() {
                     onChange={(event) =>
                       setCoverFile(event.target.files?.[0] || null)
                     }
-                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
+                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 md:hover:border-white/20"
                   />
                 </div>
               </div>
@@ -335,7 +335,7 @@ export default function ArtistSongForm() {
                     type="file"
                     accept="audio/*"
                     onChange={handleAudioFileChange}
-                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
+                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 md:hover:border-white/20"
                   />
                 </div>
               </div>
@@ -386,7 +386,7 @@ export default function ArtistSongForm() {
             <button
               type="submit"
               disabled={loading || uploading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1db954] px-5 py-3 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-70"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1db954] px-5 py-3 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition md:hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-70"
             >
               <FiSave />
               {loading || uploading

@@ -34,8 +34,8 @@ export default function PlaylistGrid({
             onClick={() => onOpen?.(pl)}
             className={`group relative overflow-hidden text-left transition focus:outline-none ${
               isLibrary
-                ? "rounded-lg border border-transparent bg-[#181818] p-4 hover:bg-[#242424]"
-                : "rounded-xl border border-white/10 bg-white/5 shadow-lg hover:border-white/20 hover:shadow-[0_25px_70px_rgba(0,0,0,0.6)]"
+                ? "rounded-lg border border-transparent bg-[#181818] p-4 md:hover:bg-[#242424]"
+                : "rounded-xl border border-white/10 bg-white/5 shadow-lg md:hover:border-white/20 md:hover:shadow-[0_25px_70px_rgba(0,0,0,0.6)]"
             } ${isRowLayout ? "w-40 shrink-0 sm:w-44 md:w-48" : "w-full"}`}
           >
             <div
@@ -47,7 +47,7 @@ export default function PlaylistGrid({
                 <OptimizedImage
                   src={cover}
                   alt={pl.title}
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  className="h-full w-full object-cover transition duration-500 md:group-hover:scale-105"
                 />
               ) : (
                  <div
@@ -61,7 +61,7 @@ export default function PlaylistGrid({
                 </div>
               )}
 
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition md:group-hover:opacity-100">
                 <div
                   className={`rounded-full px-4 py-2 text-sm font-semibold shadow-lg ${
                     isLibrary

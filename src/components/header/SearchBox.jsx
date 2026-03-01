@@ -509,7 +509,7 @@ const handleResultNavigate = async (item) => {
                 {results.map((item) => (
                   <div
                     key={`${item.type}-${item.id}`}
-                    className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-white transition hover:bg-[#2a2a2a] sm:gap-3 sm:px-3"
+                    className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-white transition md:hover:bg-[#2a2a2a] sm:gap-3 sm:px-3"
                   >
                     <button
                       type="button"
@@ -548,7 +548,7 @@ const handleResultNavigate = async (item) => {
                         <button
                           type="button"
                           onClick={() => handlePlaySong(item)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full border border-[#1db954]/60 bg-[#1db954]/20 text-[#1db954] transition hover:border-[#1ed760] hover:bg-[#1db954]/30 sm:h-9 sm:w-9"
+                          className="flex h-8 w-8 items-center justify-center rounded-full border border-[#1db954]/60 bg-[#1db954]/20 text-[#1db954] transition md:hover:border-[#1ed760] md:hover:bg-[#1db954]/30 sm:h-9 sm:w-9"
                         >
                           <FiMusic />
                         </button>
@@ -586,7 +586,7 @@ const handleResultNavigate = async (item) => {
                       type="button"
                       key={item.id || item.keyword}
                        onClick={() => handleSearch(item.keyword || "")}
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white transition hover:bg-[#2a2a2a]"
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white transition md:hover:bg-[#2a2a2a]"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2a2a2a] text-white/70">
                         <FiClock />

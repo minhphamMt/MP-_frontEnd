@@ -25,7 +25,7 @@ export default function SongRow({ song, queue }) {
         rounded-xl px-3 py-2
         cursor-pointer
         transition-all duration-200
-        hover:bg-[#2a2a2a]
+        md:hover:bg-[#2a2a2a]
         ${isActive ? "bg-[#242424] ring-1 ring-emerald-400/40" : ""}
       `}
     >
@@ -34,7 +34,7 @@ export default function SongRow({ song, queue }) {
         <OptimizedImage
           src={resolveAssetUrl(song.cover_url)}
           alt={song.title}
-          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          className="h-full w-full object-cover transition duration-300 md:group-hover:scale-105"
         />
 
         {/* Overlay play/pause */}
@@ -42,7 +42,7 @@ export default function SongRow({ song, queue }) {
           className={`
             absolute inset-0 flex items-center justify-center
             bg-black/40 backdrop-blur-sm transition
-            ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
+            ${isActive ? "opacity-100" : "opacity-0 md:group-hover:opacity-100"}
           `}
         >
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-400 text-black shadow-md">
@@ -76,7 +76,7 @@ export default function SongRow({ song, queue }) {
               <Link
                 to={`/album/${song.album_id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="min-w-0 truncate text-white/70 hover:text-emerald-300 hover:underline transition"
+                className="min-w-0 truncate text-white/70 md:hover:text-emerald-300 md:hover:underline transition"
               >
                 {song.album_title}
               </Link>

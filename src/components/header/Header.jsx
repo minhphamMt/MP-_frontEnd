@@ -29,9 +29,9 @@ export default function Header({ onMenuClick }) {
             bg-white/5
             text-white/80
             transition-all duration-200
-            hover:border-white/30
-            hover:bg-white/10
-            hover:text-white
+            md:hover:border-white/30
+            md:hover:bg-white/10
+            md:hover:text-white
             active:scale-95
             md:hidden
           "
@@ -48,15 +48,15 @@ export default function Header({ onMenuClick }) {
             bg-white/5
             text-white/80
             transition-all duration-200
-            hover:border-white/30
-            hover:bg-white/10
-            hover:text-white
+            md:hover:border-white/30
+            md:hover:bg-white/10
+            md:hover:text-white
             active:scale-95
             sm:flex
           "
           title="Quay lại"
         >
-          <FiChevronLeft className="transition-transform group-hover:-translate-x-0.5" />
+          <FiChevronLeft className="transition-transform md:group-hover:-translate-x-0.5" />
         </button>
 
         <button
@@ -67,15 +67,15 @@ export default function Header({ onMenuClick }) {
             bg-white/5
             text-white/80
             transition-all duration-200
-            hover:border-white/30
-            hover:bg-white/10
-            hover:text-white
+            md:hover:border-white/30
+            md:hover:bg-white/10
+            md:hover:text-white
             active:scale-95
             sm:flex
           "
           title="Tiến tới"
         >
-          <FiChevronRight className="transition-transform group-hover:translate-x-0.5" />
+          <FiChevronRight className="transition-transform md:group-hover:translate-x-0.5" />
         </button>
       </div>
 

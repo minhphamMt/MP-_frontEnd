@@ -171,7 +171,7 @@ export default function AddToPlaylistButton({
           setOpen(true);
         }}
         className={clsx(
-           "flex items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/80 transition hover:border-white/30 hover:bg-white/15",
+           "flex items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/80 transition md:hover:border-white/30 md:hover:bg-white/15",
           variant === "icon" ? "h-9 w-9 p-0" : "gap-2 px-3 py-2 text-xs",
           triggerClassName
         )}
@@ -202,7 +202,7 @@ export default function AddToPlaylistButton({
                 </div>
                 <button
                   onClick={() => setOpen(false)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/70 transition hover:bg-white/10"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/70 transition md:hover:bg-white/10"
                   aria-label="Đóng"
                 >
                   <FiX />
@@ -221,7 +221,7 @@ export default function AddToPlaylistButton({
                       key={pl.id}
                       onClick={() => handleAdd(pl)}
                       disabled={saving}
-                      className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition hover:bg-white/10 disabled:opacity-60"
+                      className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition md:hover:bg-white/10 disabled:opacity-60"
                     >
                       <div className="flex items-center gap-3">
                         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-300">
@@ -261,7 +261,7 @@ export default function AddToPlaylistButton({
                   <button
                     onClick={handleCreatePlaylist}
                     disabled={!newPlaylistName.trim() || saving}
-                    className="rounded-lg bg-gradient-to-r from-emerald-400 to-emerald-500 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-lg bg-gradient-to-r from-emerald-400 to-emerald-500 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/30 transition md:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Tạo playlist
                   </button>

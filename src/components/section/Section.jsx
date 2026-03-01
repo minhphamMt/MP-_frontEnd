@@ -23,7 +23,7 @@ export default function Section({ title, subtitle, action, children }) {
       </div>
 
       {/* Content */}
-      <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#181818] p-4 transition hover:bg-[#242424]">
+      <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#181818] p-4 transition md:hover:bg-[#242424]">
         <div className="relative">{children}</div>
       </div>
     </section>

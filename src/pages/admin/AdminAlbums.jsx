@@ -204,7 +204,7 @@ export default function AdminAlbums() {
         </div>
         <button
           onClick={loadAlbums}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
+          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
         >
           <FiRefreshCw /> Làm mới
         </button>
@@ -263,7 +263,7 @@ export default function AdminAlbums() {
               <h2 className="text-xl font-semibold">Chi tiết album</h2>
               <button
                 onClick={() => setSelectedAlbum(null)}
-                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition hover:bg-white/10"
+                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition md:hover:bg-white/10"
               >
                 <FiX />
               </button>
@@ -374,7 +374,7 @@ export default function AdminAlbums() {
               </div>
               <button
                 onClick={() => setEditingAlbum(null)}
-                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition hover:bg-white/10"
+                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition md:hover:bg-white/10"
               >
                 <FiX />
               </button>
@@ -485,7 +485,7 @@ export default function AdminAlbums() {
                         onChange={(event) =>
                           setCoverFile(event.target.files?.[0] || null)
                         }
-                        className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
+                        className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 md:hover:border-white/20"
                       />
                     </div>
                   </div>
@@ -496,13 +496,13 @@ export default function AdminAlbums() {
             <div className="mt-6 flex justify-end gap-3 border-t border-white/10 pt-4">
               <button
                 onClick={() => setEditingAlbum(null)}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10"
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition md:hover:bg-white/10"
               >
                 Huỷ
               </button>
               <button
                 onClick={handleUpdate}
-                className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-400/30 transition hover:bg-emerald-300"
+                className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300"
               >
                 Lưu thay đổi
               </button>

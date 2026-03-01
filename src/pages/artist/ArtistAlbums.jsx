@@ -102,7 +102,7 @@ export default function ArtistAlbums() {
           <button
             type="button"
             onClick={() => navigate("/artist/albums/new")}
-            className="inline-flex items-center gap-2 rounded-full bg-[#1db954] px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition hover:translate-y-[-1px]"
+            className="inline-flex items-center gap-2 rounded-full bg-[#1db954] px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition md:hover:translate-y-[-1px]"
           >
             <FiPlus />
             Tạo album mới

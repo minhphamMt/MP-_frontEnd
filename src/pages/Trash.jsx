@@ -191,7 +191,7 @@ export default function Trash() {
         </div>
         <button
           onClick={loadDeletedItems}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
+          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
         >
           <FiRefreshCw /> Làm mới
         </button>
@@ -274,13 +274,13 @@ export default function Trash() {
                       <div className="flex flex-wrap gap-2 sm:justify-end">
                       <button
                         onClick={() => handleRestore(section.key, item)}
-                        className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-200 transition hover:bg-emerald-400/20"
+                        className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-200 transition md:hover:bg-emerald-400/20"
                       >
                         <FiRotateCcw /> Khôi phục
                       </button>
                       <button
                         onClick={() => handleHardDelete(section.key, item)}
-                        className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition hover:bg-rose-500/20"
+                        className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition md:hover:bg-rose-500/20"
                       >
                         <FiTrash2 /> Xoá vĩnh viễn
                       </button>

@@ -109,7 +109,7 @@ export default function ArtistDashboard() {
             <button
               type="button"
               onClick={() => navigate("/artist/albums")}
-              className="inline-flex items-center gap-2 rounded-full bg-[#1db954] px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition hover:translate-y-[-1px]"
+              className="inline-flex items-center gap-2 rounded-full bg-[#1db954] px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition md:hover:translate-y-[-1px]"
             >
               Quản lý album
               <FiArrowUpRight />
@@ -117,7 +117,7 @@ export default function ArtistDashboard() {
             <button
               type="button"
               onClick={() => navigate("/artist/albums/new")}
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
             >
               <FiPlus />
               Tạo album mới
@@ -125,7 +125,7 @@ export default function ArtistDashboard() {
              <button
               type="button"
               onClick={() => navigate("/artist/profile")}
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
             >
               <FiUser />
               Cập nhật hồ sơ
@@ -206,7 +206,7 @@ export default function ArtistDashboard() {
           <button
             type="button"
             onClick={() => navigate("/artist/albums")}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition hover:border-white/30 hover:bg-white/10"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition md:hover:border-white/30 md:hover:bg-white/10"
           >
             Xem tất cả
             <FiArrowUpRight />

@@ -443,7 +443,7 @@ setToastTitle("Thành công");
           <button
             type="submit"
             disabled={saving}
-            className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-black transition hover:bg-white/90 active:scale-[0.98] disabled:opacity-60"
+            className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-black transition md:hover:bg-white/90 active:scale-[0.98] disabled:opacity-60"
           >
             Tạo playlist
           </button>
@@ -458,7 +458,7 @@ setToastTitle("Thành công");
             <button
               type="button"
               onClick={() => navigate("/library/followed-artists")}
-              className="text-sm font-semibold text-white/70 transition hover:text-white"
+              className="text-sm font-semibold text-white/70 transition md:hover:text-white"
             >
               Xem tất cả
             </button>
@@ -479,7 +479,7 @@ setToastTitle("Thành công");
             <button
               type="button"
               onClick={() => navigate("/library/liked-albums")}
-              className="text-sm font-semibold text-white/70 transition hover:text-white"
+              className="text-sm font-semibold text-white/70 transition md:hover:text-white"
             >
               Xem tất cả
             </button>
@@ -517,7 +517,7 @@ setToastTitle("Thành công");
             <button
               type="button"
               onClick={() => navigate("/library/playlists")}
-              className="text-sm font-semibold text-white/70 transition hover:text-white"
+              className="text-sm font-semibold text-white/70 transition md:hover:text-white"
             >
               Xem tất cả
             </button>

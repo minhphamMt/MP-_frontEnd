@@ -322,7 +322,7 @@ export default function Home() {
               await loadRecommendations(seedSongId);
             }}
             disabled={recommendationLoading}
-            className="rounded-full border border-white/10 bg-[#1f1f1f] px-3 py-1.5 text-[12px] font-semibold text-white/80 transition hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-2 sm:text-[13px]"
+            className="rounded-full border border-white/10 bg-[#1f1f1f] px-3 py-1.5 text-[12px] font-semibold text-white/80 transition md:hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-2 sm:text-[13px]"
           >
            {recommendationLoading ? "Đang làm mới..." : "Làm mới"}
           </button>
@@ -373,7 +373,7 @@ export default function Home() {
                   artistAlbums.length
                 );
               }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition hover:text-white sm:flex"
+              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition md:hover:text-white sm:flex"
             >
               ‹
             </button>
@@ -390,7 +390,7 @@ export default function Home() {
                   artistAlbums.length
                 );
               }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition hover:text-white sm:flex"
+              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition md:hover:text-white sm:flex"
             >
               ›
             </button>
@@ -429,7 +429,7 @@ export default function Home() {
                   newAlbums.length
                 );
               }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition hover:text-white sm:flex"
+              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition md:hover:text-white sm:flex"
             >
               ‹
             </button>
@@ -446,7 +446,7 @@ export default function Home() {
                   newAlbums.length
                 );
               }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition hover:text-white sm:flex"
+              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition md:hover:text-white sm:flex"
             >
               ›
             </button>

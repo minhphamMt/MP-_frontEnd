@@ -53,8 +53,8 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
       data-card
       onClick={() => navigate(`/artist/${artist.artist_id}`)}
       className={`group relative w-full overflow-hidden transition-all duration-300 active:scale-[0.98] ${isLibrary
-          ? "rounded-lg border border-transparent bg-[#181818] p-4 hover:bg-[#242424]"
-          : "rounded-xl border border-white/10 bg-[#181818] hover:bg-[#242424]"
+          ? "rounded-lg border border-transparent bg-[#181818] p-4 md:hover:bg-[#242424]"
+          : "rounded-xl border border-white/10 bg-[#181818] md:hover:bg-[#242424]"
         } ${isRail ? "p-3" : "p-3 sm:p-4"}`}
     >
       {/* COVER */}
@@ -72,7 +72,7 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
     h-full w-full
     object-cover
     transition-transform duration-500
-    group-hover:scale-[1.05]
+    md:group-hover:scale-[1.05]
   "
         />
 
@@ -82,7 +82,7 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
               pointer-events-none absolute inset-0
               bg-gradient-to-t from-black/70 via-black/30 to-transparent
               opacity-0 transition duration-300
-              group-hover:opacity-100
+              md:group-hover:opacity-100
             "
           />
         )}
@@ -93,7 +93,7 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
           className="
             absolute inset-0 flex items-center justify-center
             opacity-0 transition duration-300
-            group-hover:opacity-100
+            md:group-hover:opacity-100
           "
         >
           <span
@@ -101,7 +101,7 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
               bg-[#1db954]
               text-lg text-black
               shadow-lg shadow-[#1db954]/40
-              transition-transform duration-300 group-hover:scale-110 ${isRail ? "h-10 w-10 text-base" : "sm:h-12 sm:w-12 sm:text-xl"
+              transition-transform duration-300 md:group-hover:scale-110 ${isRail ? "h-10 w-10 text-base" : "sm:h-12 sm:w-12 sm:text-xl"
               }`}
           >
             <FiPlay />

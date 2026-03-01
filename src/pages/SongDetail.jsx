@@ -101,7 +101,7 @@ export default function SongDetail() {
                 <OptimizedImage
                   src={resolveAssetUrl(song.cover_url)}
                   alt={song.title}
-                  className="aspect-square w-full object-cover transition duration-500 hover:scale-105"
+                  className="aspect-square w-full object-cover transition duration-500 md:hover:scale-105"
                 />
               ) : (
                 <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 text-4xl text-white/70">
@@ -151,7 +151,7 @@ export default function SongDetail() {
                 onClick={handlePlay}
                 className="rounded-full bg-gradient-to-r from-cyan-400 to-blue-400 px-6 py-2 text-sm font-semibold text-slate-900
                            shadow-lg shadow-cyan-500/30 transition
-                           hover:brightness-110 hover:scale-[1.05] active:scale-[0.97]"
+                           md:hover:brightness-110 md:hover:scale-[1.05] active:scale-[0.97]"
               >
                 {isActive && isPlaying ? "⏸ Tạm dừng" : "▶ Phát ngay"}
               </button>
@@ -165,7 +165,7 @@ export default function SongDetail() {
                     <span>Thêm vào thư viện</span>
                   </span>
                 }
-                triggerClassName="rounded-full border border-white/15 bg-white/5 px-6 py-2 text-sm text-white/80 transition hover:bg-white/10"
+                triggerClassName="rounded-full border border-white/15 bg-white/5 px-6 py-2 text-sm text-white/80 transition md:hover:bg-white/10"
               />
               <button
                 type="button"
@@ -175,7 +175,7 @@ export default function SongDetail() {
                 className={`inline-flex items-center gap-2 rounded-full border px-6 py-2 text-sm font-semibold transition ${
                   isLiked
                     ? "border-rose-400/60 bg-rose-500/20 text-rose-100"
-                    : "border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+                    : "border-white/15 bg-white/5 text-white/80 md:hover:bg-white/10"
                 }`}
               >
                 <FiHeart className={isLiked ? "text-rose-300" : ""} />

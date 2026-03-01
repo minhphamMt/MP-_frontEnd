@@ -28,7 +28,7 @@ const coverUrl = resolveAssetUrl(album?.cover_url || album?.cover);
 
 
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#181818]/80 shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition hover:-translate-y-1 hover:border-white/20 hover:bg-[#202020]">
+    <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#181818]/80 shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition md:hover:-translate-y-1 md:hover:border-white/20 md:hover:bg-[#202020]">
       <div className="relative">
         {coverUrl ? (
           <OptimizedImage
@@ -77,7 +77,7 @@ const coverUrl = resolveAssetUrl(album?.cover_url || album?.cover);
           <button
             type="button"
             onClick={onView}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:border-white/30 hover:bg-white/10"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
           >
             <FiEye />
             Xem chi tiết
@@ -85,7 +85,7 @@ const coverUrl = resolveAssetUrl(album?.cover_url || album?.cover);
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:border-white/30 hover:bg-white/10"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
           >
             <FiEdit2 />
             Chỉnh sửa
@@ -93,7 +93,7 @@ const coverUrl = resolveAssetUrl(album?.cover_url || album?.cover);
           <button
             type="button"
             onClick={onDelete}
-            className="inline-flex items-center gap-2 rounded-full border border-rose-400/30 bg-rose-500/10 px-4 py-2 text-sm text-rose-200 transition hover:border-rose-300/50 hover:bg-rose-500/20"
+            className="inline-flex items-center gap-2 rounded-full border border-rose-400/30 bg-rose-500/10 px-4 py-2 text-sm text-rose-200 transition md:hover:border-rose-300/50 md:hover:bg-rose-500/20"
           >
             <FiTrash2 />
             Xoá mềm

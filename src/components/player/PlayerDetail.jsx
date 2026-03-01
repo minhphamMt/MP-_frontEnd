@@ -251,7 +251,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       className={`flex h-10 w-10 items-center justify-center rounded-full border ring-1 ring-white/5 transition active:scale-95 ${
         likedSongIds.includes(normalizeSongId(currentSong))
           ? "border-[#1db954] text-[#1db954] bg-[#1db954]/10"
-          : "border-white/10 text-white/80 bg-white/5 hover:bg-white/10"
+          : "border-white/10 text-white/80 bg-white/5 md:hover:bg-white/10"
       }`}
       aria-label="Yêu thích"
     >
@@ -368,7 +368,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           <button
             onClick={toggleShuffle}
             className={`transition ${
-              shuffle ? "text-[#1db954]" : "text-white/55 hover:text-white/85"
+              shuffle ? "text-[#1db954]" : "text-white/55 md:hover:text-white/85"
             }`}
             aria-label="Trộn"
           >
@@ -377,7 +377,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           <button
             onClick={playPrev}
-            className="text-white/75 transition hover:text-white"
+            className="text-white/75 transition md:hover:text-white"
             aria-label="Bài trước"
           >
             <FaBackwardStep />
@@ -393,7 +393,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           <button
             onClick={playNext}
-            className="text-white/75 transition hover:text-white"
+            className="text-white/75 transition md:hover:text-white"
             aria-label="Bài tiếp"
           >
             <FaForwardStep />
@@ -404,7 +404,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             className={`relative transition ${
               repeatMode !== "off"
                 ? "text-[#1db954]"
-                : "text-white/55 hover:text-white/85"
+                : "text-white/55 md:hover:text-white/85"
             }`}
             aria-label="Lặp"
           >
@@ -424,7 +424,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
         <div className="hidden items-center justify-end gap-3 md:flex">
           <button
             onClick={toggleMute}
-            className="text-lg opacity-70 transition hover:opacity-100"
+            className="text-lg opacity-70 transition md:hover:opacity-100"
             aria-label="Tắt/Mở tiếng"
           >
             {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
@@ -498,7 +498,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
               ring-1 ring-white/10
               backdrop-blur
               transition
-              hover:bg-white/20
+              md:hover:bg-white/20
               sm:right-6 sm:top-6
             "
             aria-label="Đóng"
@@ -536,7 +536,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
                     className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold transition sm:text-sm ${
                       activeTab === tab.id
                         ? "bg-white text-black shadow-sm"
-                        : "text-white/70 hover:text-white"
+                        : "text-white/70 md:hover:text-white"
                     }`}
                   >
                     {tab.label}
@@ -587,7 +587,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
                   className={`rounded-full px-3 py-1 ring-1 transition ${
                     mobileTab === tab.id
                       ? "bg-white/15 text-white/90 ring-white/20"
-                      : "bg-white/5 text-white/60 ring-white/10 hover:text-white/80"
+                      : "bg-white/5 text-white/60 ring-white/10 md:hover:text-white/80"
                   }`}
                 >
                   {tab.label}

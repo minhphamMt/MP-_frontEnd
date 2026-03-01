@@ -53,8 +53,8 @@ export default function FollowArtistButton({
       disabled={!artistId || isPending}
       className={`${baseClasses} ${sizeClasses} ${
         following
-          ? "border-emerald-400/40 bg-emerald-400/20 text-emerald-100 hover:bg-emerald-400/30"
-          : "border-white/20 bg-white/10 text-white/80 hover:bg-white/20"
+          ? "border-emerald-400/40 bg-emerald-400/20 text-emerald-100 md:hover:bg-emerald-400/30"
+          : "border-white/20 bg-white/10 text-white/80 md:hover:bg-white/20"
       } ${className}`}
     >
       {following ? "Đang theo dõi" : "+ Theo dõi"}

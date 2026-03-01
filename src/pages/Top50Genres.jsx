@@ -79,16 +79,16 @@ export default function Top50Genres() {
               key={genre?.id}
               to={`/top-50/${genre?.id}`}
               state={{ genre, songs }}
-              className="group relative overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-3 shadow-[0_12px_40px_rgba(0,0,0,0.45)] transition hover:bg-[#202020]"
+              className="group relative overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-3 shadow-[0_12px_40px_rgba(0,0,0,0.45)] transition md:hover:bg-[#202020]"
             >
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-400/10 via-transparent to-emerald-500/10 opacity-0 transition group-hover:opacity-100" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-400/10 via-transparent to-emerald-500/10 opacity-0 transition md:group-hover:opacity-100" />
 
               <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
                 {cover ? (
                   <OptimizedImage
                     src={cover}
                     alt={genre?.name}
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                    className="h-full w-full object-cover transition duration-300 md:group-hover:scale-105"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-white/5 text-xs text-white/50">

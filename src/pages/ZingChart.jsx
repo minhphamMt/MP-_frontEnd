@@ -391,7 +391,7 @@ const xStep =
       key={song.id || idx}
         onClick={() => handlePlay(song, weeklySongs)}
       className={`group grid grid-cols-[32px_minmax(0,3fr)_minmax(0,1fr)] items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
-        song.audio_url ? "hover:bg-white/5" : "opacity-70 cursor-not-allowed"
+        song.audio_url ? "md:hover:bg-white/5" : "opacity-70 cursor-not-allowed"
       }`}
     >
       <div className="flex items-center justify-center text-lg font-semibold text-white/70 tabular-nums leading-none">
@@ -405,7 +405,7 @@ const xStep =
             alt={song.title}
             className="h-full w-full object-cover"
           />
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition md:group-hover:opacity-100">
             <span className="text-white text-sm">
               <FaPlay size={12} />
             </span>
@@ -444,7 +444,7 @@ const xStep =
             </span>
             <button
               onClick={loadChart}
-              className="rounded-full border border-white/10 bg-[#242424] px-3 py-1.5 text-[11px] font-semibold text-white/80 transition hover:bg-[#2a2a2a]"
+              className="rounded-full border border-white/10 bg-[#242424] px-3 py-1.5 text-[11px] font-semibold text-white/80 transition md:hover:bg-[#2a2a2a]"
             >
               Làm mới dữ liệu
             </button>
@@ -452,7 +452,7 @@ const xStep =
         }
       >
         <div className="flex w-full flex-col gap-6">
-         <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)] transition-all duration-300 hover:bg-[#1f1f1f]">
+         <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)] transition-all duration-300 md:hover:bg-[#1f1f1f]">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.08),_transparent_40%)]" />
 
             <div className="relative mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -678,7 +678,7 @@ const xStep =
               {highlightedSeries.map((item, idx) => (
                 <div
                   key={item.song?.id || idx}
-                  className="group flex items-center gap-3 rounded-xl border border-white/5 bg-[#242424] px-3 py-2 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#2a2a2a] hover:shadow-lg hover:shadow-black/30"
+                  className="group flex items-center gap-3 rounded-xl border border-white/5 bg-[#242424] px-3 py-2 transition-all duration-300 md:hover:-translate-y-0.5 md:hover:bg-[#2a2a2a] md:hover:shadow-lg md:hover:shadow-black/30"
                 >
                   <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/10 bg-[#1f1f1f]">
                     <OptimizedImage
@@ -719,7 +719,7 @@ const xStep =
            {weeklyColumns.map((column) => (
             <div
               key={column.title}
-               className="group relative overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#202020]"
+               className="group relative overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition-all duration-300 md:hover:-translate-y-1 md:hover:bg-[#202020]"
             >
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.08),_transparent_35%)]" />
 
@@ -730,7 +730,7 @@ const xStep =
                 {column.link && (
                   <Link
                     to={column.link}
-                   className="rounded-full border border-white/10 bg-[#242424] px-3 py-2 text-xs text-white/80 transition hover:bg-[#2a2a2a]"
+                   className="rounded-full border border-white/10 bg-[#242424] px-3 py-2 text-xs text-white/80 transition md:hover:bg-[#2a2a2a]"
                   >
                     Xem tất cả
                   </Link>
@@ -754,9 +754,9 @@ const xStep =
                       <div
                         key={song.id || idx}
                         onClick={() => handlePlay(song)}
-                          className={`group/item flex items-center gap-3 rounded-xl px-2 py-2 transition-all duration-300 hover:cursor-pointer ${
+                          className={`group/item flex items-center gap-3 rounded-xl px-2 py-2 transition-all duration-300 md:hover:cursor-pointer ${
                           playable
-                            ? "cursor-pointer hover:bg-white/10 hover:shadow-lg hover:shadow-black/20"
+                            ? "cursor-pointer md:hover:bg-white/10 md:hover:shadow-lg md:hover:shadow-black/20"
                                : "cursor-not-allowed"
                         }`}
                       >

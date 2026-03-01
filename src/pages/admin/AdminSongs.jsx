@@ -170,7 +170,7 @@ export default function AdminSongs() {
           </select>
           <button
             onClick={loadSongs}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
           >
             <FiRefreshCw /> Làm mới
           </button>
@@ -239,7 +239,7 @@ export default function AdminSongs() {
                   <button
                     onClick={() => setSelectedSong(song)}
                     aria-label="Xem chi tiết"
-                    className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/80 transition hover:bg-white/10"
+                    className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/80 transition md:hover:bg-white/10"
                   >
                     <FiInfo />
                     <span className="hidden lg:inline">Chi tiết</span>
@@ -248,7 +248,7 @@ export default function AdminSongs() {
                     <button
                       onClick={() => handleApprove(song)}
                       aria-label="Duyệt"
-                      className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200 transition hover:bg-emerald-500/20"
+                      className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200 transition md:hover:bg-emerald-500/20"
                     >
                       <FiCheckCircle />
                       <span className="hidden lg:inline">Duyệt</span>
@@ -258,7 +258,7 @@ export default function AdminSongs() {
                     <button
                       onClick={() => handleReject(song)}
                       aria-label="Từ chối"
-                      className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition hover:bg-rose-500/20"
+                      className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition md:hover:bg-rose-500/20"
                     >
                       <FiSlash />
                       <span className="hidden lg:inline">Từ chối</span>
@@ -277,7 +277,7 @@ export default function AdminSongs() {
               <h2 className="text-xl font-bold text-white">Chi tiết bài hát chờ duyệt</h2>
               <button
                 onClick={() => setSelectedSong(null)}
-                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition hover:bg-white/10"
+                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition md:hover:bg-white/10"
               >
                 <FiX />
               </button>

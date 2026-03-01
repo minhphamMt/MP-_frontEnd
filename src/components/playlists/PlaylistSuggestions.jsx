@@ -31,7 +31,7 @@ export default function PlaylistSuggestions({
         <button
           onClick={onRefresh}
           className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition
-                     hover:bg-white/20 hover:scale-[1.05] active:scale-[0.97]"
+                     md:hover:bg-white/20 md:hover:scale-[1.05] active:scale-[0.97]"
         >
           ⟳ Làm mới
         </button>
@@ -58,7 +58,7 @@ export default function PlaylistSuggestions({
           <div
             key={song.id}
             className="group flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between transition
-                       hover:bg-white/5 rounded-xl px-2"
+                       md:hover:bg-white/5 rounded-xl px-2"
           >
             {/* LEFT */}
             <div className="flex min-w-0 items-center gap-3">
@@ -66,13 +66,13 @@ export default function PlaylistSuggestions({
                 <OptimizedImage
                   src={resolveAssetUrl(song.cover_url)}
                   alt={song.title}
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                  className="h-full w-full object-cover transition duration-500 md:group-hover:scale-110"
                 />
 
                 {/* PLAY OVERLAY */}
                 <button
                   onClick={() => onPlay?.(song)}
-                  className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition md:group-hover:opacity-100"
                 >
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg">
                     ▶
@@ -96,7 +96,7 @@ export default function PlaylistSuggestions({
               <button
                 onClick={() => onPlay?.(song)}
                 className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition
-                           hover:bg-white/20 sm:hidden"
+                           md:hover:bg-white/20 sm:hidden"
               >
                 ▶ Nghe thử
               </button>
@@ -107,7 +107,7 @@ export default function PlaylistSuggestions({
                 disabled={saving}
                 className="rounded-full bg-gradient-to-r from-green-400 to-emerald-400 px-4 py-2 text-xs font-semibold text-slate-900
                            shadow-lg shadow-green-400/30 transition
-                           hover:brightness-110 hover:scale-[1.05] active:scale-[0.97]
+                           md:hover:brightness-110 md:hover:scale-[1.05] active:scale-[0.97]
                            disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 + Thêm

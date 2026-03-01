@@ -108,7 +108,7 @@ export default function Albums() {
                     className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm transition ${
                       isLiked
                         ? "border-rose-400/40 text-rose-300"
-                        : "border-white/10 text-white/70 hover:bg-white/15"
+                        : "border-white/10 text-white/70 md:hover:bg-white/15"
                     }`}
                     aria-label={isLiked ? "Bỏ thích album" : "Thích album"}
                   >

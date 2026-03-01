@@ -48,8 +48,8 @@ export default function AlbumCard({ album, variant = "rail" }) {
       className={`group relative cursor-pointer overflow-hidden transition-all duration-300
         ${
           isLibrary
-            ? "rounded-lg border border-transparent bg-[#181818] p-4 hover:bg-[#242424]"
-            : "rounded-xl border border-white/10 bg-[#181818] p-3 hover:bg-[#242424]"
+            ? "rounded-lg border border-transparent bg-[#181818] p-4 md:hover:bg-[#242424]"
+            : "rounded-xl border border-white/10 bg-[#181818] p-3 md:hover:bg-[#242424]"
         }
         ${
           isRail
@@ -74,8 +74,8 @@ export default function AlbumCard({ album, variant = "rail" }) {
             isLiked
               ? "border-[#1db954]/60 bg-[#1db954]/15 text-[#1db954]"
               : isLibrary
-                ? "border-white/10 bg-black/40 text-white/70 hover:bg-black/60"
-                : "border-white/20 bg-black/40 text-white/70 hover:bg-black/60"
+                ? "border-white/10 bg-black/40 text-white/70 md:hover:bg-black/60"
+                : "border-white/20 bg-black/40 text-white/70 md:hover:bg-black/60"
           }`}
           aria-label={isLiked ? "Bỏ thích album" : "Thích album"}
         >
@@ -89,7 +89,7 @@ export default function AlbumCard({ album, variant = "rail" }) {
     h-full w-full
     object-cover
     transition-transform duration-500
-    group-hover:scale-[1.05]
+    md:group-hover:scale-[1.05]
   `}
 />
 
@@ -100,7 +100,7 @@ export default function AlbumCard({ album, variant = "rail" }) {
             className="pointer-events-none absolute inset-0 
             bg-gradient-to-t from-black/70 via-black/30 to-transparent 
             opacity-0 transition duration-300 
-            group-hover:opacity-100"
+            md:group-hover:opacity-100"
           />
         )}
 
@@ -109,10 +109,10 @@ export default function AlbumCard({ album, variant = "rail" }) {
           onClick={handlePlayAlbum}
           className={`absolute ${
             isLibrary ? "bottom-3 right-3" : "inset-0 flex items-center justify-center"
-          } opacity-0 transition duration-300 group-hover:opacity-100`}
+          } opacity-0 transition duration-300 md:group-hover:opacity-100`}
         >
           <span
-            className={`flex h-12 w-12 items-center justify-center rounded-full text-xl transition-transform duration-300 group-hover:scale-110 ${
+            className={`flex h-12 w-12 items-center justify-center rounded-full text-xl transition-transform duration-300 md:group-hover:scale-110 ${
               isLibrary
                  ? "h-11 w-11 bg-[#1db954] text-black shadow-lg shadow-[#1db954]/40"
                 : "bg-[#1db954] text-black shadow-lg shadow-[#1db954]/40"

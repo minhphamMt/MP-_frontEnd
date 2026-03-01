@@ -162,7 +162,7 @@ export default function AdminArtistRequests() {
           </select>
           <button
             onClick={loadRequests}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
           >
             <FiRefreshCw /> Làm mới
           </button>
@@ -214,7 +214,7 @@ export default function AdminArtistRequests() {
                         );
                       }
                     }}
-                    className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 transition hover:border-white/25 sm:px-4"
+                    className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 transition md:hover:border-white/25 sm:px-4"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2">
@@ -246,13 +246,13 @@ export default function AdminArtistRequests() {
                         <>
                           <button
                             onClick={() => handleApprove(request)}
-                            className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-500/20"
+                            className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition md:hover:bg-emerald-500/20"
                           >
                             <FiCheckCircle /> Duyệt
                           </button>
                           <button
                             onClick={() => handleReject(request)}
-                            className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-100 transition hover:bg-rose-500/20"
+                            className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-100 transition md:hover:bg-rose-500/20"
                           >
                             <FiSlash /> Từ chối
                           </button>
@@ -291,7 +291,7 @@ export default function AdminArtistRequests() {
                               target="_blank"
                               rel="noreferrer"
                               onClick={(event) => event.stopPropagation()}
-                              className="mt-1 inline-flex items-center gap-1 break-all text-sm text-cyan-300 hover:text-cyan-200"
+                              className="mt-1 inline-flex items-center gap-1 break-all text-sm text-cyan-300 md:hover:text-cyan-200"
                             >
                               {request.proof_link} <FiExternalLink className="shrink-0" />
                             </a>

@@ -33,7 +33,7 @@ export default function LikedSongsSection({
             <button
               type="button"
               onClick={onViewAll}
-              className="text-sm font-semibold text-white/70 transition hover:text-white"
+              className="text-sm font-semibold text-white/70 transition md:hover:text-white"
             >
               Xem tất cả
             </button>
@@ -79,7 +79,7 @@ export default function LikedSongsSection({
                 ${
                   isPlayingCurrent
                     ? "bg-gradient-to-r from-cyan-400/10 to-transparent"
-                    : "hover:bg-white/5"
+                    : "md:hover:bg-white/5"
                 }`}
                >
                   {/* ICON 🎵 */}
@@ -88,7 +88,7 @@ export default function LikedSongsSection({
                       className={`transition ${
                         isPlayingCurrent
                           ? "text-cyan-400"
-                          : "text-white/40 group-hover:text-white"
+                          : "text-white/40 md:group-hover:text-white"
                       }`}
                     />
                     </div>
@@ -105,7 +105,7 @@ export default function LikedSongsSection({
                         onClick={() => onPlay?.(song)}
                         className="absolute inset-0 flex items-center justify-center
                       bg-black/50 opacity-0 transition
-                      group-hover:opacity-100"
+                      md:group-hover:opacity-100"
                       >
                         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1db954] text-black shadow-[0_8px_16px_rgba(29,185,84,0.35)]">
                           {isPlayingCurrent && isPlaying ? (
@@ -140,7 +140,7 @@ export default function LikedSongsSection({
                   <div className="hidden items-center justify-end gap-4 text-xs text-white/70 lg:flex">
                     <AddToPlaylistButton
                       song={song}
-                      triggerClassName="h-9 w-9 !border-white/20 !bg-white/5 hover:!bg-white/15"
+                      triggerClassName="h-9 w-9 !border-white/20 !bg-white/5 md:hover:!bg-white/15"
                     />
                     <button
                       onClick={() => songId && onToggleLike?.(songId)}
@@ -149,7 +149,7 @@ export default function LikedSongsSection({
                     ${
                       isLiked
                         ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
-                        : "border-white/20 text-white/60 hover:text-white hover:border-white/40"
+                        : "border-white/20 text-white/60 md:hover:text-white md:hover:border-white/40"
                     }`}
                    >
                       <FiHeart className="text-[16px]" />
@@ -162,7 +162,7 @@ export default function LikedSongsSection({
                    <div className="flex shrink-0 items-center justify-end gap-2 lg:hidden">
                     <AddToPlaylistButton
                       song={song}
-                      triggerClassName="h-8 w-8 !border-white/20 !bg-white/5 hover:!bg-white/15"
+                      triggerClassName="h-8 w-8 !border-white/20 !bg-white/5 md:hover:!bg-white/15"
                     />
                     <button
                       onClick={() => songId && onToggleLike?.(songId)}
@@ -171,7 +171,7 @@ export default function LikedSongsSection({
                     ${
                       isLiked
                         ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
-                        : "border-white/20 text-white/60 hover:text-white hover:border-white/40"
+                        : "border-white/20 text-white/60 md:hover:text-white md:hover:border-white/40"
                     }`}
                    >
                       <FiHeart className="text-[14px]" />

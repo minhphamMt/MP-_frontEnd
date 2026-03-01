@@ -123,7 +123,7 @@ export default function VerifyEmail() {
               type="button"
               disabled={loading}
               onClick={handleVerify}
-              className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Đang xác thực..." : "Xác thực mã"}
             </button>
@@ -132,7 +132,7 @@ export default function VerifyEmail() {
               type="button"
               disabled={loading}
               onClick={handleResend}
-              className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-medium text-white/85 transition hover:border-white/35 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-medium text-white/85 transition md:hover:border-white/35 md:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Gửi lại mã
             </button>

@@ -8,7 +8,7 @@ export default function SidebarItem({ to, icon: Icon, label, end = false }) {
       className={({ isActive }) =>
         [
           "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200",
-          " hover:bg-white/5",
+          " md:hover:bg-white/5",
           isActive
             ? [
                 "border border-cyan-400/30",
@@ -36,7 +36,7 @@ export default function SidebarItem({ to, icon: Icon, label, end = false }) {
           className={`
             relative flex h-9 w-9 items-center justify-center rounded-lg
             bg-white/5 text-white/80 transition
-            group-hover:bg-white/10
+            md:group-hover:bg-white/10
             group-[.active]:bg-gradient-to-br
             group-[.active]:from-cyan-400/30
             group-[.active]:to-violet-400/30

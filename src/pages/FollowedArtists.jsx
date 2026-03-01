@@ -60,7 +60,7 @@ export default function FollowedArtists() {
         <button
           type="button"
           onClick={() => navigate("/playlists")}
-          className="self-start rounded-full border border-white/10 bg-[#181818] px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-[#242424] sm:self-auto sm:text-sm"
+          className="self-start rounded-full border border-white/10 bg-[#181818] px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:bg-[#242424] sm:self-auto sm:text-sm"
         >
           ← Quay lại thư viện
         </button>

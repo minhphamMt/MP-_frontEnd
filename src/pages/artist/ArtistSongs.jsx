@@ -147,7 +147,7 @@ export default function ArtistSongs() {
           <button
             type="button"
             onClick={() => navigate("/artist/songs/new")}
-            className="inline-flex items-center gap-2 rounded-full bg-[#1db954] px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition hover:translate-y-[-1px]"
+            className="inline-flex items-center gap-2 rounded-full bg-[#1db954] px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition md:hover:translate-y-[-1px]"
           >
             <FiPlus />
             Tạo bài hát mới
@@ -246,7 +246,7 @@ export default function ArtistSongs() {
                   type="button"
                   onClick={() => navigate(`/artist/songs/${song.id}/edit`)}
                   disabled={!song.id}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition hover:border-white/30 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition md:hover:border-white/30 md:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <FiEdit2 />
                   Sửa
@@ -255,7 +255,7 @@ export default function ArtistSongs() {
                   type="button"
                   onClick={() => handleDelete(song.id)}
                   disabled={!song.id}
-                  className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-200 transition hover:border-rose-400/70 hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-200 transition md:hover:border-rose-400/70 md:hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <FiTrash2 />
                   Xoá mềm

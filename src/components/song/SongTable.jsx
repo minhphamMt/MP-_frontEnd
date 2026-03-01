@@ -69,14 +69,14 @@ export default function SongTable({
         {onRefresh && (
           <button
             onClick={onRefresh}
-            className="rounded-full border border-white/10 bg-[#1f1f1f] px-4 py-2 text-xs font-semibold text-white/80 transition hover:bg-[#2a2a2a]"
+            className="rounded-full border border-white/10 bg-[#1f1f1f] px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:bg-[#2a2a2a]"
           >
             Làm mới
           </button>
         )}
         <button
           onClick={playAll}
-          className="rounded-full bg-emerald-400 px-5 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition hover:bg-emerald-300"
+          className="rounded-full bg-emerald-400 px-5 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300"
         >
           ▶ Phát tất cả
         </button>
@@ -138,7 +138,7 @@ export default function SongTable({
                   className={`group grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 text-sm transition xl:grid-cols-[48px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)] ${
                     isActive
                       ? "bg-gradient-to-r from-cyan-400/10 to-transparent"
-                      : "hover:bg-white/5"
+                      : "md:hover:bg-white/5"
                   }`}
                 >
                   {/* Rank */}
@@ -156,7 +156,7 @@ export default function SongTable({
                       />
                       <button
                         onClick={() => handlePlaySong(song, songs)}
-                        className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition md:group-hover:opacity-100"
                       >
                         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1db954] text-black shadow-[0_8px_16px_rgba(29,185,84,0.35)]">
                           {isActive && isPlaying ? (
@@ -188,7 +188,7 @@ export default function SongTable({
                       <Link
                         to={`/album/${song.album_id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="hover:underline"
+                        className="md:hover:underline"
                       >
                         {song.album_title}
                       </Link>
@@ -201,7 +201,7 @@ export default function SongTable({
                   <div className="hidden items-center justify-end gap-4 text-xs text-white/70 xl:flex">
                     <AddToPlaylistButton
                       song={song}
-                      triggerClassName="h-9 w-9 !border-white/20 !bg-white/5 hover:!bg-white/15"
+                      triggerClassName="h-9 w-9 !border-white/20 !bg-white/5 md:hover:!bg-white/15"
                     />
                     <button
                       onClick={(e) => {
@@ -211,7 +211,7 @@ export default function SongTable({
                       className={`flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 ${
                         isLiked
                           ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
-                          : "border-white/20 text-white/60 hover:text-white hover:border-white/40"
+                          : "border-white/20 text-white/60 md:hover:text-white md:hover:border-white/40"
                       }`}
                     >
                       <FiHeart className="text-[16px]" />
@@ -223,7 +223,7 @@ export default function SongTable({
                   <div className="flex shrink-0 items-center justify-end gap-2 xl:hidden">
                     <AddToPlaylistButton
                       song={song}
-                      triggerClassName="h-8 w-8 !border-white/20 !bg-white/5 hover:!bg-white/15"
+                      triggerClassName="h-8 w-8 !border-white/20 !bg-white/5 md:hover:!bg-white/15"
                     />
                     <button
                       onClick={(e) => {
@@ -233,7 +233,7 @@ export default function SongTable({
                       className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200 ${
                         isLiked
                           ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
-                          : "border-white/20 text-white/60 hover:text-white hover:border-white/40"
+                          : "border-white/20 text-white/60 md:hover:text-white md:hover:border-white/40"
                       }`}
                     >
                       <FiHeart className="text-[14px]" />

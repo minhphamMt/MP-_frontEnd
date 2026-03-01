@@ -216,13 +216,13 @@ export default function AdminArtistList() {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={loadArtists}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
           >
             <FiRefreshCw /> Làm mới
           </button>
           <button
             onClick={() => navigate("/admin/artists/new")}
-            className="inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition hover:bg-emerald-300"
+            className="inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300"
           >
             <FiPlus /> Thêm nghệ sĩ
           </button>
@@ -296,7 +296,7 @@ export default function AdminArtistList() {
                   <button
                     onClick={() => handleEdit(artist)}
                     aria-label="Sửa"
-                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition hover:bg-white/10"
+                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition md:hover:bg-white/10"
                   >
                     <FiEdit2 />
                     <span className="hidden lg:inline">Sửa</span>
@@ -304,7 +304,7 @@ export default function AdminArtistList() {
                   <button
                     onClick={() => handleDelete(artist)}
                     aria-label="Xoá mềm"
-                    className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition hover:bg-rose-500/20"
+                    className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition md:hover:bg-rose-500/20"
                   >
                     <FiTrash2 />
                     <span className="hidden lg:inline">Xoá mềm</span>
@@ -334,7 +334,7 @@ export default function AdminArtistList() {
               </div>
               <button
                 onClick={() => setEditingArtist(null)}
-                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition hover:bg-white/10"
+                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition md:hover:bg-white/10"
               >
                 <FiX />
               </button>
@@ -358,7 +358,7 @@ export default function AdminArtistList() {
                         Chưa có ảnh đại diện
                       </div>
                     )}
-                    <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 transition hover:bg-white/10">
+                    <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 transition md:hover:bg-white/10">
                       <FiCamera /> Tải avatar mới
                       <input
                         type="file"
@@ -508,14 +508,14 @@ export default function AdminArtistList() {
             <div className="mt-6 flex justify-end gap-3 border-t border-white/10 pt-4">
               <button
                 onClick={() => setEditingArtist(null)}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10"
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition md:hover:bg-white/10"
               >
                 Huỷ
               </button>
               <button
                 onClick={handleUpdate}
                 disabled={saving}
-                className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-400/30 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
+                className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {saving ? "Đang lưu..." : "Lưu thay đổi"}
               </button>

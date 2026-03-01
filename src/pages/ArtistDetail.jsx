@@ -137,7 +137,7 @@ const renderBioHtml = (bio = "") => {
                 <OptimizedImage
                   src={coverUrl}
                   alt={artist?.name}
-                  className="aspect-square h-full w-full object-cover object-center transition duration-500 hover:scale-105"
+                  className="aspect-square h-full w-full object-cover object-center transition duration-500 md:hover:scale-105"
                 />
               ) : (
                 <div className="flex aspect-square w-full items-center justify-center bg-white/10 text-sm text-white/70">
@@ -180,7 +180,7 @@ const renderBioHtml = (bio = "") => {
                   onClick={() => playSong(songs[0], songs)}
                   className="rounded-full bg-gradient-to-r from-green-400 to-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900
                              shadow-lg shadow-emerald-400/30 transition
-                             hover:brightness-110 hover:scale-[1.05] active:scale-[0.97]"
+                             md:hover:brightness-110 md:hover:scale-[1.05] active:scale-[0.97]"
                 >
                   ▶ Phát tất cả
                 </button>
@@ -281,7 +281,7 @@ const renderBioHtml = (bio = "") => {
                   className={`grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 cursor-pointer transition xl:grid-cols-[60px_1fr_160px_140px_100px] xl:gap-3 xl:px-5 ${
                     isActive
                       ? "bg-gradient-to-r from-white/10 via-white/5 to-transparent"
-                      : "hover:bg-white/5"
+                      : "md:hover:bg-white/5"
                   }`}
                 >
                   {/* INDEX */}
@@ -329,7 +329,7 @@ const renderBioHtml = (bio = "") => {
                    <div className="flex items-center justify-end gap-2 sm:justify-center">
                     <AddToPlaylistButton
                       song={song}
-                       triggerClassName="h-8 w-8 !border-white/20 !bg-white/10 hover:!bg-white/20 sm:h-9 sm:w-9"
+                       triggerClassName="h-8 w-8 !border-white/20 !bg-white/10 md:hover:!bg-white/20 sm:h-9 sm:w-9"
                     />
                     <button
                       onClick={(e) => {
@@ -339,7 +339,7 @@ const renderBioHtml = (bio = "") => {
                       className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm transition sm:h-9 sm:w-9 ${
                         isLiked
                           ? "border-rose-400/40 text-rose-300"
-                          : "border-white/10 text-white/70 hover:bg-white/15"
+                          : "border-white/10 text-white/70 md:hover:bg-white/15"
                       }`}
                       aria-label={isLiked ? "Bỏ thích bài hát" : "Thích bài hát"}
                     >

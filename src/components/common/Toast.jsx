@@ -43,7 +43,7 @@ export default function Toast({
             e.preventDefault();
             onClose();
           }}
-          className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/80 transition hover:bg-white/20"
+          className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/80 transition md:hover:bg-white/20"
           aria-label="Đóng thông báo"
         >
           <FiX />

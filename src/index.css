@@ -168,7 +168,7 @@ body {
 
 
 /* Reduce heavy hover/motion effects on touch devices (mobile/tablet) */
-@media (hover: none), (pointer: coarse), (max-width: 1024px) {
+@media (md:hover: none), (pointer: coarse), (max-width: 1024px) {
   *, *::before, *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;

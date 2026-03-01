@@ -26,7 +26,7 @@ export default function PlaylistDetailHeader({
               <OptimizedImage
                 src={cover}
                 alt={playlist?.title}
-                className="h-full w-full object-cover transition duration-500 hover:scale-105"
+                className="h-full w-full object-cover transition duration-500 md:hover:scale-105"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-white/5 text-4xl text-white/30">
@@ -51,7 +51,7 @@ export default function PlaylistDetailHeader({
           {/* SHUFFLE */}
           <button
             onClick={() => onShuffle?.()}
-            className="group flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 shadow-md shadow-black/30 backdrop-blur transition hover:border-cyan-300/40 hover:bg-white/15 hover:text-white"
+            className="group flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 shadow-md shadow-black/30 backdrop-blur transition md:hover:border-cyan-300/40 md:hover:bg-white/15 md:hover:text-white"
           >
              <FiShuffle className="text-cyan-200" />
             Ngẫu nhiên
@@ -60,7 +60,7 @@ export default function PlaylistDetailHeader({
           {/* PLAY */}
           <button
             onClick={() => onPlay?.(playlist?.songs?.[0], playlist?.songs)}
-           className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-400/30 transition hover:brightness-110 hover:scale-[1.03] active:scale-[0.97]"
+           className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-400/30 transition md:hover:brightness-110 md:hover:scale-[1.03] active:scale-[0.97]"
           >
             <FiPlay />
             Phát tất cả
@@ -70,7 +70,7 @@ export default function PlaylistDetailHeader({
           <button
             onClick={() => onRename?.()}
             disabled={renaming}
-            className="group flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 shadow-md shadow-black/30 backdrop-blur transition hover:border-violet-300/40 hover:bg-white/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="group flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 shadow-md shadow-black/30 backdrop-blur transition md:hover:border-violet-300/40 md:hover:bg-white/15 md:hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
             <FiEdit2 className="text-violet-200" />
             Đổi tên
@@ -79,7 +79,7 @@ export default function PlaylistDetailHeader({
           {/* DELETE */}
           <button
             onClick={() => onDelete?.()}
-            className="group flex items-center gap-2 rounded-full border border-rose-300/40 bg-rose-500/15 px-4 py-2 text-sm font-semibold text-rose-100 shadow-md shadow-black/30 transition hover:bg-rose-500/25 hover:border-rose-200/60"
+            className="group flex items-center gap-2 rounded-full border border-rose-300/40 bg-rose-500/15 px-4 py-2 text-sm font-semibold text-rose-100 shadow-md shadow-black/30 transition md:hover:bg-rose-500/25 md:hover:border-rose-200/60"
           >
            <FiTrash2 className="text-rose-200" />
             Xóa

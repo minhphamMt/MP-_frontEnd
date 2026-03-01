@@ -50,7 +50,7 @@ export default function UserMenu() {
       <button
         type="button"
         onClick={() => navigate("/login")}
-        className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/20"
+        className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition md:hover:border-white/40 md:hover:bg-white/20"
       >
         Đăng nhập
       </button>
@@ -63,7 +63,7 @@ export default function UserMenu() {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/10 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/20"
+        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/10 text-sm font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/20"
         aria-label="Mở hồ sơ cá nhân"
         title={displayName}
         aria-expanded={isOpen}
@@ -89,7 +89,7 @@ export default function UserMenu() {
           <button
             type="button"
             onClick={handleNavigateProfile}
-            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/10"
+            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition md:hover:bg-white/10"
             role="menuitem"
           >
             <span className="flex items-center gap-2">
@@ -101,7 +101,7 @@ export default function UserMenu() {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 px-4 py-3 text-left text-red-200 transition hover:bg-white/10"
+            className="flex w-full items-center gap-3 px-4 py-3 text-left text-red-200 transition md:hover:bg-white/10"
             role="menuitem"
           >
             <FiLogOut className="text-red-200" />

@@ -339,7 +339,7 @@ export default function ArtistAuth() {
         <button
           type="button"
           onClick={toggleShowPassword}
-          className="absolute inset-y-0 right-3 inline-flex items-center text-white/60 transition hover:text-white"
+          className="absolute inset-y-0 right-3 inline-flex items-center text-white/60 transition md:hover:text-white"
           aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
         >
           {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
@@ -427,7 +427,7 @@ export default function ArtistAuth() {
               <button
                 type="button"
                 onClick={() => navigate("/login")}
-                className="inline-flex items-center gap-2 text-sm text-white/60 transition hover:text-white"
+                className="inline-flex items-center gap-2 text-sm text-white/60 transition md:hover:text-white"
               >
                 ← Quay lại đăng nhập người dùng
               </button>
@@ -491,7 +491,7 @@ export default function ArtistAuth() {
                       <button
                         type="button"
                         onClick={openForgotModal}
-                        className="text-xs text-sky-200 transition hover:text-sky-100"
+                        className="text-xs text-sky-200 transition md:hover:text-sky-100"
                       >
                         Quên mật khẩu?
                       </button>
@@ -506,7 +506,7 @@ export default function ArtistAuth() {
                     <button
                       disabled={loading}
                       type="submit"
-                      className="w-full rounded-xl bg-gradient-to-r from-sky-400 via-indigo-400 to-sky-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-sky-500/25 transition hover:-translate-y-[1px] hover:shadow-sky-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-xl bg-gradient-to-r from-sky-400 via-indigo-400 to-sky-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-sky-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-sky-500/40 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {loading ? "Đang đăng nhập..." : "Đăng nhập"}
                     </button>
@@ -615,7 +615,7 @@ export default function ArtistAuth() {
                       <button
                         type="button"
                         onClick={openForgotModal}
-                        className="text-xs text-indigo-200 transition hover:text-indigo-100"
+                        className="text-xs text-indigo-200 transition md:hover:text-indigo-100"
                       >
                         Quên mật khẩu?
                       </button>
@@ -636,7 +636,7 @@ export default function ArtistAuth() {
                     <button
                       disabled={loading}
                       type="submit"
-                      className="w-full rounded-xl bg-gradient-to-r from-indigo-400 via-sky-400 to-indigo-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-indigo-500/25 transition hover:-translate-y-[1px] hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-xl bg-gradient-to-r from-indigo-400 via-sky-400 to-indigo-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-indigo-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {loading ? "Đang đăng ký..." : "Đăng ký"}
                     </button>
@@ -645,7 +645,7 @@ export default function ArtistAuth() {
                       type="button"
                       onClick={handleResendVerification}
                       disabled={loading}
-                      className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-medium text-white/85 transition hover:border-white/35 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-medium text-white/85 transition md:hover:border-white/35 md:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Gửi lại email xác thực
                     </button>
@@ -683,7 +683,7 @@ export default function ArtistAuth() {
                 <button
                   type="button"
                   onClick={() => setForgotOpen(false)}
-                  className="rounded-lg border border-white/10 p-2 text-white/70 transition hover:text-white"
+                  className="rounded-lg border border-white/10 p-2 text-white/70 transition md:hover:text-white"
                 >
                   <FiX size={16} />
                 </button>
@@ -742,7 +742,7 @@ export default function ArtistAuth() {
                   type="button"
                   onClick={isResetStep ? handleConfirmResetPassword : handleForgotPasswordRequest}
                   disabled={loading}
-                  className="w-full rounded-xl bg-gradient-to-r from-sky-400 via-indigo-400 to-sky-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-sky-500/25 transition hover:-translate-y-[1px] hover:shadow-sky-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-xl bg-gradient-to-r from-sky-400 via-indigo-400 to-sky-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-sky-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-sky-500/40 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isResetStep ? "Xác nhận mật khẩu mới" : "Gửi mã xác thực"}
                 </button>

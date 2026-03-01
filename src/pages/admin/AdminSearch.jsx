@@ -287,7 +287,7 @@ export default function AdminSearch() {
             />
             <button
               onClick={handleSubmit}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-400 px-5 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition hover:bg-emerald-300"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-400 px-5 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300"
             >
               <FiSearch /> Tìm kiếm
             </button>
@@ -304,7 +304,7 @@ export default function AdminSearch() {
                 className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
                   isActive
                     ? "bg-white text-black"
-                    : "bg-[#2a2a2a] text-white/80 hover:bg-[#333]"
+                    : "bg-[#2a2a2a] text-white/80 md:hover:bg-[#333]"
                 }`}
               >
                 {tab}
@@ -337,7 +337,7 @@ export default function AdminSearch() {
         <div className="grid gap-6 lg:grid-cols-[1.1fr_1.9fr]">
           <div>
             <h2 className="mb-3 text-lg font-semibold text-white">Top result</h2>
-            <div className="rounded-2xl border border-white/5 bg-[#181818] p-5 transition hover:bg-[#202020]">
+            <div className="rounded-2xl border border-white/5 bg-[#181818] p-5 transition md:hover:bg-[#202020]">
               {topResult ? (
                 <button
                   type="button"
@@ -402,7 +402,7 @@ export default function AdminSearch() {
                       key={song.id || song._id}
                       type="button"
                       onClick={() => handleResultClick(song)}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition hover:bg-white/5"
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition md:hover:bg-white/5"
                     >
                       {song.imageUrl ? (
                         <OptimizedImage
@@ -445,7 +445,7 @@ export default function AdminSearch() {
                 key={artist.id || artist._id}
                 type="button"
                 onClick={() => handleResultClick(artist)}
-                className="rounded-2xl border border-white/5 bg-[#181818] p-4 text-left transition hover:bg-[#202020]"
+                className="rounded-2xl border border-white/5 bg-[#181818] p-4 text-left transition md:hover:bg-[#202020]"
               >
                  <div className="space-y-3">
                   {artist.imageUrl ? (
@@ -483,7 +483,7 @@ export default function AdminSearch() {
                 key={album.id || album._id}
                 type="button"
                 onClick={() => handleResultClick(album)}
-                className="rounded-2xl border border-white/5 bg-[#181818] p-4 text-left transition hover:bg-[#202020]"
+                className="rounded-2xl border border-white/5 bg-[#181818] p-4 text-left transition md:hover:bg-[#202020]"
               >
                 <div className="space-y-3">
                   {album.imageUrl ? (
@@ -521,7 +521,7 @@ export default function AdminSearch() {
                 key={user.id || user._id}
                 type="button"
                 onClick={() => handleResultClick(user)}
-                className="flex items-center gap-4 rounded-2xl border border-white/5 bg-[#181818] px-4 py-3 text-left transition hover:bg-[#202020]"
+                className="flex items-center gap-4 rounded-2xl border border-white/5 bg-[#181818] px-4 py-3 text-left transition md:hover:bg-[#202020]"
               >
                 {user.imageUrl ? (
                   <OptimizedImage

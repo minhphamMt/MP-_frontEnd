@@ -23,14 +23,14 @@ export default function Sidebar({ isOpen, onClose }) {
   return (
     <>
       <div
-        className={`fixed inset-0 z-30 bg-black/60 transition-opacity md:hidden ${
+        className={`fixed inset-0 z-30 bg-black/60 transition-opacity duration-300 ease-out lg:hidden ${
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
         aria-hidden
       />
       <aside
-       className={`fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col overflow-hidden bg-[#000000] text-white shadow-[0_30px_90px_rgba(0,0,0,0.65)] transition-transform duration-200 md:static md:translate-x-0 ${
+       className={`fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col overflow-hidden bg-[#000000] text-white shadow-[0_30px_90px_rgba(0,0,0,0.65)] transition-transform duration-300 ease-out lg:static lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -47,7 +47,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
                 <button
           onClick={onClose}
-          className="rounded-full border border-white/10 bg-white/5 p-2 text-white/80 transition hover:border-white/30 hover:bg-white/10 hover:text-white md:hidden"
+          className="rounded-full border border-white/10 bg-white/5 p-2 text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10 md:hover:text-white lg:hidden"
           aria-label="Đóng menu"
           title="Đóng menu"
         >

@@ -398,7 +398,7 @@ export default function Login({ initialMode = "login" }) {
         <button
           type="button"
           onClick={toggleShowPassword}
-          className="absolute inset-y-0 right-3 inline-flex items-center text-white/60 transition hover:text-white"
+          className="absolute inset-y-0 right-3 inline-flex items-center text-white/60 transition md:hover:text-white"
           aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
         >
           {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
@@ -511,7 +511,7 @@ export default function Login({ initialMode = "login" }) {
                       <button
                         type="button"
                         onClick={openForgotModal}
-                        className="text-xs text-green-300 transition hover:text-green-200"
+                        className="text-xs text-green-300 transition md:hover:text-green-200"
                       >
                         Quên mật khẩu?
                       </button>
@@ -526,7 +526,7 @@ export default function Login({ initialMode = "login" }) {
                     <button
                       disabled={loading}
                       type="submit"
-                      className="w-full rounded-xl bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-green-500/25 transition hover:-translate-y-[1px] hover:shadow-green-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-xl bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-green-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-green-500/40 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {loading ? "Đang đăng nhập..." : "Đăng nhập"}
                     </button>
@@ -535,7 +535,7 @@ export default function Login({ initialMode = "login" }) {
                       type="button"
                       onClick={handleGoogleLogin}
                       disabled={loading}
-                      className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition md:hover:border-white/30 md:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <FcGoogle className="text-lg" />
                       Đăng nhập với Google
@@ -546,7 +546,7 @@ export default function Login({ initialMode = "login" }) {
                       <button
                         type="button"
                         onClick={() => handleNavigate("register")}
-                        className="text-green-300 transition hover:text-green-200"
+                        className="text-green-300 transition md:hover:text-green-200"
                       >
                         Đăng ký ngay
                       </button>
@@ -555,7 +555,7 @@ export default function Login({ initialMode = "login" }) {
                     <button
                       type="button"
                       onClick={handleArtistPortal}
-                      className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white/85 transition hover:border-white/30 hover:bg-white/10"
+                      className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white/85 transition md:hover:border-white/30 md:hover:bg-white/10"
                     >
                       Đăng ký trở thành nghệ sĩ
                     </button>
@@ -659,7 +659,7 @@ export default function Login({ initialMode = "login" }) {
                     <button
                       disabled={loading}
                       type="submit"
-                      className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {loading ? "Đang đăng ký..." : "Đăng ký"}
                     </button>
@@ -668,7 +668,7 @@ export default function Login({ initialMode = "login" }) {
                       type="button"
                       onClick={handleGoogleLogin}
                       disabled={loading}
-                      className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition md:hover:border-white/30 md:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <FcGoogle className="text-lg" />
                       Đăng nhập với Google
@@ -679,7 +679,7 @@ export default function Login({ initialMode = "login" }) {
                       <button
                         type="button"
                         onClick={() => handleNavigate("login")}
-                        className="text-green-300 transition hover:text-green-200"
+                        className="text-green-300 transition md:hover:text-green-200"
                       >
                         Quay lại đăng nhập
                       </button>
@@ -688,7 +688,7 @@ export default function Login({ initialMode = "login" }) {
                     <button
                       type="button"
                       onClick={handleArtistPortal}
-                      className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/85 transition hover:border-white/30 hover:bg-white/10"
+                      className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/85 transition md:hover:border-white/30 md:hover:bg-white/10"
                     >
                       Đăng ký trở thành nghệ sĩ
                     </button>
@@ -730,7 +730,7 @@ export default function Login({ initialMode = "login" }) {
                 <button
                   type="button"
                   onClick={() => setAwaitingVerification(false)}
-                  className="rounded-lg p-2 text-white/65 transition hover:bg-white/10 hover:text-white"
+                  className="rounded-lg p-2 text-white/65 transition md:hover:bg-white/10 md:hover:text-white"
                   aria-label="Đóng"
                 >
                   <FiX />
@@ -755,7 +755,7 @@ export default function Login({ initialMode = "login" }) {
                   type="button"
                   onClick={handleVerifyCode}
                   disabled={loading}
-                  className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? "Đang xác thực..." : "Xác thực mã"}
                 </button>
@@ -763,7 +763,7 @@ export default function Login({ initialMode = "login" }) {
                   type="button"
                   onClick={handleResendVerification}
                   disabled={loading}
-                  className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/85 transition hover:border-white/35 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/85 transition md:hover:border-white/35 md:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Gửi lại mã
                 </button>
@@ -790,7 +790,7 @@ export default function Login({ initialMode = "login" }) {
                 <button
                   type="button"
                   onClick={() => setForgotOpen(false)}
-                  className="rounded-lg p-2 text-white/65 transition hover:bg-white/10 hover:text-white"
+                  className="rounded-lg p-2 text-white/65 transition md:hover:bg-white/10 md:hover:text-white"
                   aria-label="Đóng"
                 >
                   <FiX />
@@ -848,7 +848,7 @@ export default function Login({ initialMode = "login" }) {
                     type="button"
                     onClick={handleForgotPasswordRequest}
                     disabled={loading}
-                    className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Gửi mã xác thực
                   </button>
@@ -857,7 +857,7 @@ export default function Login({ initialMode = "login" }) {
                     type="button"
                     onClick={handleConfirmResetPassword}
                     disabled={loading}
-                    className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition hover:-translate-y-[1px] hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Xác nhận đặt lại mật khẩu
                   </button>

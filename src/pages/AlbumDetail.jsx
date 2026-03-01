@@ -130,7 +130,7 @@ export default function AlbumDetail() {
               <OptimizedImage
                 src={resolveAssetUrl(album.cover_url)}
                 alt={album.title}
-                className="aspect-square h-full w-full object-cover object-center transition duration-500 hover:scale-105"
+                className="aspect-square h-full w-full object-cover object-center transition duration-500 md:hover:scale-105"
               />
               <div className="absolute inset-0 rounded-2xl border border-white/10" />
             </div>
@@ -171,7 +171,7 @@ export default function AlbumDetail() {
                     onClick={() => playSong(songs[0], songs)}
                     className="rounded-full bg-gradient-to-r from-green-400 to-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900
                              shadow-lg shadow-green-400/30 transition
-                             hover:brightness-110 hover:scale-[1.05] active:scale-[0.97]"
+                             md:hover:brightness-110 md:hover:scale-[1.05] active:scale-[0.97]"
                 >
                     ▶ Phát tất cả
                   </button>
@@ -185,8 +185,8 @@ export default function AlbumDetail() {
                   onClick={() => toggleAlbumLike(albumId)}
                   className={`rounded-full border px-6 py-2 text-sm transition ${
                     isLiked
-                      ? "border-rose-400/40 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20"
-                      : "border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+                      ? "border-rose-400/40 bg-rose-500/10 text-rose-200 md:hover:bg-rose-500/20"
+                      : "border-white/15 bg-white/5 text-white/80 md:hover:bg-white/10"
                   }`}
                 >
                   {isLiked ? "✓ Đã thích" : "+ Thích album"}
@@ -255,7 +255,7 @@ export default function AlbumDetail() {
                     isActive
                       ? "bg-gradient-to-r from-white/10 via-white/5 to-transparent"
                       : canPlay
-                        ? "hover:bg-white/5 cursor-pointer"
+                        ? "md:hover:bg-white/5 cursor-pointer"
                         : "cursor-default"
                   }`}
                 >
@@ -299,7 +299,7 @@ export default function AlbumDetail() {
                   <div className="flex items-center justify-end gap-2 lg:justify-center">
                     <AddToPlaylistButton
                       song={song}
-                     triggerClassName="h-8 w-8 !border-white/20 !bg-white/10 hover:!bg-white/20 sm:h-9 sm:w-9"
+                     triggerClassName="h-8 w-8 !border-white/20 !bg-white/10 md:hover:!bg-white/20 sm:h-9 sm:w-9"
                     />
                     <button
                       onClick={(e) => {
@@ -309,7 +309,7 @@ export default function AlbumDetail() {
                       className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm transition sm:h-9 sm:w-9 ${
                         isLiked
                           ? "border-rose-400/40 text-rose-300"
-                          : "border-white/10 text-white/70 hover:bg-white/15"
+                          : "border-white/10 text-white/70 md:hover:bg-white/15"
                       }`}
                       aria-label={isLiked ? "Bỏ thích bài hát" : "Thích bài hát"}
                     >

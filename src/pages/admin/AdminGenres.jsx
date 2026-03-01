@@ -88,7 +88,7 @@ export default function AdminGenres() {
         </div>
         <button
           onClick={loadGenres}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
+          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
         >
           <FiRefreshCw /> Làm mới
         </button>
@@ -117,7 +117,7 @@ export default function AdminGenres() {
             />
             <button
               onClick={handleCreate}
-              className="inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition hover:bg-emerald-300"
+              className="inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300"
             >
               <FiPlus /> Thêm
             </button>
@@ -154,14 +154,14 @@ export default function AdminGenres() {
                 className="flex items-center justify-between px-4 py-3 text-sm text-white/80"
               >
                 <span
-                  className="cursor-pointer text-white hover:text-emerald-300"
+                  className="cursor-pointer text-white md:hover:text-emerald-300"
                   onClick={() => handleRename(genre)}
                 >
                   {genre.name}
                 </span>
                 <button
                   onClick={() => handleDelete(genre)}
-                  className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition hover:bg-rose-500/20"
+                  className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition md:hover:bg-rose-500/20"
                 >
                   <FiTrash2 /> Xoá mềm
                 </button>

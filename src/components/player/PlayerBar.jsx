@@ -174,7 +174,7 @@ export default function PlayerBar() {
                 const songId = normalizeSongId(currentSong);
                 if (songId) toggleLike(songId);
               }}
-              className={`ml-auto flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-sm transition hover:border-white/20 ${
+              className={`ml-auto flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-sm transition md:hover:border-white/20 ${
                 likedSongIds.includes(normalizeSongId(currentSong))
                   ? "text-[#1db954]"
                   : "text-white/60"
@@ -194,7 +194,7 @@ export default function PlayerBar() {
             <div className="flex items-center gap-5 text-lg">
               <button
                 onClick={playPrev}
-                className="text-white/70 hover:text-white"
+                className="text-white/70 md:hover:text-white"
               >
                 <FaBackwardStep />
               </button>
@@ -208,7 +208,7 @@ export default function PlayerBar() {
 
               <button
                 onClick={playNext}
-                className="text-white/70 hover:text-white"
+                className="text-white/70 md:hover:text-white"
               >
                 <FaForwardStep />
               </button>
@@ -238,7 +238,7 @@ export default function PlayerBar() {
 
             <button
               onClick={() => setShowDetail(true)}
-              className="text-white/70 hover:text-white"
+              className="text-white/70 md:hover:text-white"
             >
               <HiOutlineQueueList />
             </button>
@@ -264,7 +264,7 @@ export default function PlayerBar() {
             <div className="flex items-center gap-2 min-w-[140px]">
               <button
                 onClick={toggleMute}
-                className="text-white/70 hover:text-white"
+                className="text-white/70 md:hover:text-white"
               >
                 {muted || volumePercent === 0 ? (
                   <HiOutlineSpeakerXMark />

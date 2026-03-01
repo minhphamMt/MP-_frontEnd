@@ -70,7 +70,7 @@ export default function LikedAlbums() {
         <button
           type="button"
           onClick={() => navigate("/playlists")}
-          className="rounded-full border border-white/10 bg-[#181818] px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-[#242424]"
+          className="rounded-full border border-white/10 bg-[#181818] px-4 py-2 text-sm font-semibold text-white/80 transition md:hover:bg-[#242424]"
         >
           ← Quay lại thư viện
         </button>

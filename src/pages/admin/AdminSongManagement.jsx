@@ -327,7 +327,7 @@ export default function AdminSongManagement() {
         </div>
         <button
           onClick={loadSongs}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
+          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
         >
           <FiRefreshCw /> Làm mới
         </button>
@@ -417,7 +417,7 @@ export default function AdminSongManagement() {
                   <button
                     onClick={() => handleEdit(song)}
                     aria-label="Chỉnh sửa"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 transition hover:border-white/30 hover:bg-white/10 sm:px-4"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10 sm:px-4"
                   >
                     <FiEdit2 />
                     <span className="hidden lg:inline">Chỉnh sửa</span>
@@ -435,7 +435,7 @@ export default function AdminSongManagement() {
               <h2 className="text-xl font-semibold">Chỉnh sửa bài hát</h2>
               <button
                 onClick={() => setEditingSong(null)}
-                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition hover:bg-white/10"
+                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition md:hover:bg-white/10"
               >
                 <FiX />
               </button>
@@ -474,7 +474,7 @@ export default function AdminSongManagement() {
                       onChange={(event) =>
                         setCoverFile(event.target.files?.[0] || null)
                       }
-                      className="rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
+                      className="rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 md:hover:border-white/20"
                     />
                   </div>
                 </div>
@@ -593,7 +593,7 @@ export default function AdminSongManagement() {
                         className={`rounded-full border px-4 py-1 text-xs transition ${
                           isActive
                             ? "border-emerald-400/60 bg-emerald-400/20 text-emerald-100"
-                            : "border-white/10 bg-white/5 text-white/70 hover:border-white/30"
+                            : "border-white/10 bg-white/5 text-white/70 md:hover:border-white/30"
                         }`}
                       >
                         {genre.name}
@@ -606,7 +606,7 @@ export default function AdminSongManagement() {
                     <button
                       type="button"
                       onClick={() => setShowAllGenres((prev) => !prev)}
-                      className="text-xs font-semibold text-white/70 transition hover:text-white"
+                      className="text-xs font-semibold text-white/70 transition md:hover:text-white"
                     >
                       {showAllGenres ? "Thu gọn" : "Xem thêm"}
                     </button>
@@ -619,20 +619,20 @@ export default function AdminSongManagement() {
               {role === "ADMIN" && (
                 <button
                   onClick={handleSoftDelete}
-                  className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200 transition hover:bg-rose-500/20"
+                  className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200 transition md:hover:bg-rose-500/20"
                 >
                   <FiTrash2 /> Xoá mềm
                 </button>
               )}
               <button
                 onClick={() => setEditingSong(null)}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10"
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition md:hover:bg-white/10"
               >
                 Huỷ
               </button>
               <button
                 onClick={handleUpdate}
-                className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-400/30 transition hover:bg-emerald-300"
+                className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300"
               >
                 Lưu thay đổi
               </button>

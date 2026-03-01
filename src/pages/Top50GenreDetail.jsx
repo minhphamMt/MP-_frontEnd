@@ -67,7 +67,7 @@ export default function Top50GenreDetail() {
         <div>
           <Link
             to="/top-50"
-            className="mb-2 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-white/50 transition hover:text-white"
+            className="mb-2 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-white/50 transition md:hover:text-white"
           >
             <FiChevronLeft />
             Quay lại Top 50

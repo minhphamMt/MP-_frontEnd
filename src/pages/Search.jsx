@@ -174,7 +174,7 @@ export default function Search() {
                 className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
                   isActive
                     ? "bg-white text-black"
-                    : "bg-[#2a2a2a] text-white/80 hover:bg-[#333]"
+                    : "bg-[#2a2a2a] text-white/80 md:hover:bg-[#333]"
                 }`}
               >
                 {tab.label}
@@ -198,7 +198,7 @@ export default function Search() {
                 <h2 className="mb-3 text-lg font-semibold text-white">
                   Top result
                 </h2>
-                <div className="rounded-2xl border border-white/5 bg-[#181818] p-5 transition hover:bg-[#202020]">
+                <div className="rounded-2xl border border-white/5 bg-[#181818] p-5 transition md:hover:bg-[#202020]">
                   {topResult ? (
                     <div className="space-y-4">
                       {topResult.image ? (

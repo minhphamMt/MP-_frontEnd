@@ -32,7 +32,7 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
            ${
             isCurrent
               ? "border-[#1db954]/60 bg-[#1db954]/10 shadow-[0_0_30px_rgba(29,185,84,0.2)]"
-              : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
+              : "border-white/10 bg-white/5 md:hover:border-white/20 md:hover:bg-white/10"
           }
           ${isPlayed ? "opacity-45" : ""}
         `}

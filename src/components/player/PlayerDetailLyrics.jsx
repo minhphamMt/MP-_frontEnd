@@ -121,7 +121,7 @@ export default function PlayerDetailLyrics({
                     ${
                       isLineActive
                         ? "text-white"
-                        : "text-white/60 hover:text-white/85"
+                        : "text-white/60 md:hover:text-white/85"
                     }
                   `}
                 >

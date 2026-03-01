@@ -159,7 +159,7 @@ export default function AdminUserForm() {
     <div className="flex h-full min-h-0 flex-col gap-6 bg-[#121212] px-4 py-6 sm:px-8">
       <button
         onClick={() => navigate("/admin/users")}
-        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:bg-white/10"
+        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
       >
         <FiChevronLeft /> Quay lại danh sách
       </button>
@@ -177,7 +177,7 @@ export default function AdminUserForm() {
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="inline-flex items-center justify-center rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex items-center justify-center rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {saving ? "Đang lưu..." : isEdit ? "Lưu cập nhật" : "Tạo người dùng"}
           </button>
@@ -211,7 +211,7 @@ export default function AdminUserForm() {
                         Chưa có ảnh đại diện
                       </div>
                     )}
-                    <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 transition hover:bg-white/10">
+                    <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 transition md:hover:bg-white/10">
                       <FiCamera /> {isEdit ? "Tải avatar mới" : "Chọn avatar"}
                       <input
                         type="file"
@@ -307,7 +307,7 @@ export default function AdminUserForm() {
                     <button
                       onClick={handleSubmit}
                       disabled={saving}
-                      className="rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
+                      className="rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {saving
                         ? "Đang lưu..."

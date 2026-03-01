@@ -14,8 +14,8 @@ export default function PlaylistCard({ playlist, onOpen, variant = "grid" }) {
       onClick={() => onOpen?.(playlist)}
       className={`group relative w-full overflow-hidden text-left transition-all duration-300 sm:w-60 sm:shrink-0 sm:p-4 lg:w-64 ${
         isLibrary
-          ? "rounded-lg border border-transparent bg-[#181818] p-4 shadow-none hover:bg-[#242424]"
-          : "rounded-xl border border-white/10 bg-[#181818] p-3 hover:bg-[#242424]"
+          ? "rounded-lg border border-transparent bg-[#181818] p-4 shadow-none md:hover:bg-[#242424]"
+          : "rounded-xl border border-white/10 bg-[#181818] p-3 md:hover:bg-[#242424]"
       }`}
     >
       <div
@@ -27,7 +27,7 @@ export default function PlaylistCard({ playlist, onOpen, variant = "grid" }) {
           <OptimizedImage
             src={cover}
             alt={playlist?.title || playlist?.name || "Playlist"}
-            className={`h-36 w-full object-cover transition-transform duration-500 group-hover:scale-[1.05] sm:h-44 lg:h-52 ${
+            className={`h-36 w-full object-cover transition-transform duration-500 md:group-hover:scale-[1.05] sm:h-44 lg:h-52 ${
               isLibrary ? "rounded-md" : "rounded-xl"
             }`}
           />
@@ -44,7 +44,7 @@ export default function PlaylistCard({ playlist, onOpen, variant = "grid" }) {
         )}
 
         {!isLibrary && (
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 transition duration-300 md:group-hover:opacity-100" />
         )}
       </div>
 
