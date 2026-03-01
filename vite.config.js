@@ -4,31 +4,41 @@ import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   plugins: [
-    react(), // ⚠ QUAN TRỌNG - phải có dòng này
+    react({
+      jsxRuntime: "automatic", // đảm bảo không lỗi React is not defined
+    }),
+
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: "auto",
+
       manifest: {
         name: "Khoaluan Music Platform",
-        short_name: "Khoaluan Music",
+        short_name: "Khoaluan",
         description: "Music streaming platform",
-        theme_color: "#000000",
-        background_color: "#000000",
+        start_url: "/",
         display: "standalone",
         orientation: "portrait",
-        start_url: "/",
+        background_color: "#000000",
+        theme_color: "#000000",
+
         icons: [
           {
-            src: "/pwa-192.png",
+            src: "/web-app-manifest-192x192.png",
             sizes: "192x192",
-            type: "image/png"
+            type: "image/png",
           },
           {
-            src: "/pwa-512.png",
+            src: "/web-app-manifest-512x512.png",
             sizes: "512x512",
-            type: "image/png"
-          }
-        ]
-      }
-    })
-  ]
+            type: "image/png",
+          },
+        ],
+      },
+
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+      },
+    }),
+  ],
 });
