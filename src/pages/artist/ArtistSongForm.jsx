@@ -16,7 +16,7 @@ import OptimizedImage from "../../components/common/OptimizedImage";
 const emptyForm = {
   title: "",
   album_id: "",
-  duration: "",
+  duration: null,
   cover_url: "",
   audio_path: "",
 };
@@ -34,6 +34,27 @@ export default function ArtistSongForm() {
   const [audioFile, setAudioFile] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+
+  const extractDurationFromFile = useCallback(async (file) => {
+    if (!file) return null;
+    return new Promise((resolve, reject) => {
+      const fileUrl = URL.createObjectURL(file);
+      const audio = document.createElement("audio");
+      audio.preload = "metadata";
+      audio.onloadedmetadata = () => {
+        const value = Number.isFinite(audio.duration)
+          ? Math.round(audio.duration)
+          : null;
+        URL.revokeObjectURL(fileUrl);
+        resolve(value);
+      };
+      audio.onerror = () => {
+        URL.revokeObjectURL(fileUrl);
+        reject(new Error("Không thể đọc thời lượng audio."));
+      };
+      audio.src = fileUrl;
+    });
+  }, []);
   useEffect(() => {
     const loadArtistProfile = async () => {
       try {
@@ -87,7 +108,7 @@ export default function ArtistSongForm() {
       setFormValues({
         title: song?.title || song?.name || "",
         album_id: song?.album_id ?? song?.album?.id ?? "",
-        duration: song?.duration ?? "",
+        duration: song?.duration ?? null,
         cover_url: song?.cover_url ?? song?.cover ?? "",
         audio_path:
           song?.audio_path ||
@@ -112,6 +133,20 @@ export default function ArtistSongForm() {
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAudioFileChange = async (event) => {
+    const file = event.target.files?.[0] || null;
+    setAudioFile(file);
+    if (!file) return;
+
+    try {
+      const duration = await extractDurationFromFile(file);
+      setFormValues((prev) => ({ ...prev, duration }));
+    } catch (err) {
+      console.error("Extract duration failed", err);
+      setError("Không thể đọc thời lượng từ file audio. Hãy thử file mp3 khác.");
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -247,22 +282,16 @@ export default function ArtistSongForm() {
                 </select>
               </div>
 
-              <div>
-                <label className="text-sm text-white/70">Thời lượng (giây)</label>
-                <input
-                  name="duration"
-                  type="number"
-                  min="0"
-                  value={formValues.duration}
-                  onChange={handleChange}
-                  placeholder="Ví dụ: 225"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
-                />
-                {formValues.duration && (
-                  <p className="mt-2 text-xs text-white/50">
-                    Hiển thị: {formatDuration(formValues.duration)}
-                  </p>
-                )}
+              <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+                <p className="text-sm text-white/70">Thời lượng bài hát (tự động)</p>
+                <p className="mt-1 text-sm font-semibold text-white">
+                  {formValues.duration
+                    ? formatDuration(formValues.duration)
+                    : "Sẽ tự tính sau khi upload file mp3/audio"}
+                </p>
+                <p className="mt-1 text-xs text-white/50">
+                  Không cần nhập tay để tránh sai lệch dữ liệu.
+                </p>
               </div>
 
               <div>
@@ -305,9 +334,7 @@ export default function ArtistSongForm() {
                   <input
                     type="file"
                     accept="audio/*"
-                    onChange={(event) =>
-                      setAudioFile(event.target.files?.[0] || null)
-                    }
+                    onChange={handleAudioFileChange}
                     className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 hover:border-white/20"
                   />
                 </div>

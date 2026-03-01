@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { FiCheckCircle, FiRefreshCw, FiSlash } from "react-icons/fi";
+import { FiCheckCircle, FiInfo, FiRefreshCw, FiSlash, FiX } from "react-icons/fi";
 import { approveSong, blockSong } from "../../api/admin.api";
 import { getSongs } from "../../api/song.api";
 import { resolveAssetUrl } from "../../utils/asset";
@@ -33,12 +33,20 @@ export default function AdminSongs() {
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [selectedSong, setSelectedSong] = useState(null);
   const getSongCover = (song) =>
     song?.cover_url ||
     song?.cover ||
     song?.thumbnail ||
     song?.image ||
     song?.album_cover;
+  const getSongAudio = (song) =>
+    song?.audio_path ||
+    song?.audio_url ||
+    song?.audio ||
+    song?.source ||
+    song?.mp3_url ||
+    song?.file_url;
 
   const loadSongs = async () => {
     try {
@@ -76,6 +84,10 @@ export default function AdminSongs() {
   }, [location.search]);
 
   const handleApprove = async (song) => {
+    if (!getSongAudio(song)) {
+      alert("Bài hát chưa có file audio/mp3. Vui lòng kiểm tra trước khi duyệt.");
+      return;
+    }
     try {
       const res = await approveSong(song.id);
       const updated = res?.data?.song ?? res?.data?.data ?? res?.data ?? song;
@@ -114,6 +126,18 @@ export default function AdminSongs() {
         .some((value) => value.toLowerCase().includes(normalized))
     );
   }, [keyword, songs]);
+
+  const selectedSongAudioUrl = useMemo(() => {
+    if (!selectedSong) return "";
+    const audio = getSongAudio(selectedSong);
+    return audio ? resolveAssetUrl(audio) : "";
+  }, [selectedSong]);
+
+  const selectedSongCoverUrl = useMemo(() => {
+    if (!selectedSong) return "";
+    const cover = getSongCover(selectedSong);
+    return cover ? resolveAssetUrl(cover) : "";
+  }, [selectedSong]);
 
   return (
     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
@@ -200,6 +224,11 @@ export default function AdminSongs() {
                     <p className="text-xs text-white/50">
                       {song.album_title || "Single"}
                     </p>
+                    {!getSongAudio(song) && (
+                      <p className="text-[11px] font-semibold text-rose-300">
+                        Thiếu file mp3/audio
+                      </p>
+                    )}
                   </div>
                 </div>
                 <span className="hidden lg:block">{song.artist_name || "-"}</span>
@@ -207,6 +236,14 @@ export default function AdminSongs() {
                   {song.status || "-"}
                 </span>
                 <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setSelectedSong(song)}
+                    aria-label="Xem chi tiết"
+                    className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/80 transition hover:bg-white/10"
+                  >
+                    <FiInfo />
+                    <span className="hidden lg:inline">Chi tiết</span>
+                  </button>
                   {song.status !== "approved" && (
                     <button
                       onClick={() => handleApprove(song)}
@@ -232,6 +269,68 @@ export default function AdminSongs() {
             ))}
         </div>
       </div>
+
+      {selectedSong && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-8 md:pl-64">
+          <div className="max-h-[calc(100vh-4rem)] w-full max-w-3xl overflow-auto rounded-3xl border border-white/10 bg-[#181818] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.55)] sm:p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">Chi tiết bài hát chờ duyệt</h2>
+              <button
+                onClick={() => setSelectedSong(null)}
+                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition hover:bg-white/10"
+              >
+                <FiX />
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-5 md:grid-cols-[220px_1fr]">
+              <div>
+                {selectedSongCoverUrl ? (
+                  <OptimizedImage
+                    src={selectedSongCoverUrl}
+                    alt={selectedSong.title}
+                    className="h-[220px] w-full rounded-2xl object-cover"
+                  />
+                ) : (
+                  <div className="flex h-[220px] items-center justify-center rounded-2xl bg-white/10 text-xs text-white/60">
+                    Chưa có ảnh bìa
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3 text-sm text-white/80">
+                <p><span className="text-white/50">Tên bài hát:</span> {selectedSong.title || "-"}</p>
+                <p><span className="text-white/50">Nghệ sĩ:</span> {selectedSong.artist_name || selectedSong.artist?.name || "-"}</p>
+                <p><span className="text-white/50">Album:</span> {selectedSong.album_title || "Single"}</p>
+                <p><span className="text-white/50">Thể loại:</span> {Array.isArray(selectedSong.genres) ? selectedSong.genres.join(", ") || "-" : selectedSong.genres || "-"}</p>
+                <p><span className="text-white/50">Thời lượng:</span> {selectedSong.duration ? `${selectedSong.duration}s` : "Chưa có"}</p>
+                <p><span className="text-white/50">Ngày phát hành:</span> {selectedSong.release_date ? new Date(selectedSong.release_date).toLocaleDateString("vi-VN") : "Chưa có"}</p>
+                <p><span className="text-white/50">Trạng thái:</span> <span className={statusBadge(selectedSong.status)}>{selectedSong.status || "-"}</span></p>
+                <p><span className="text-white/50">ID:</span> {selectedSong.id}</p>
+                {selectedSong.reject_reason && (
+                  <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-rose-100">
+                    Lý do từ chối trước đó: {selectedSong.reject_reason}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+              <p className="mb-2 text-sm font-semibold text-white">File nhạc mp3/audio</p>
+              {selectedSongAudioUrl ? (
+                <>
+                  <audio controls className="w-full">
+                    <source src={selectedSongAudioUrl} />
+                  </audio>
+                  <p className="mt-2 text-xs text-emerald-300">Đã có file audio, đủ điều kiện cơ bản để duyệt.</p>
+                </>
+              ) : (
+                <p className="text-sm text-rose-300">Chưa có file audio/mp3. Không nên duyệt bài hát này.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

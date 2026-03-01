@@ -166,3 +166,20 @@ body {
   animation: song-slide-from-left 380ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+
+/* Reduce heavy hover/motion effects on touch devices (mobile/tablet) */
+@media (hover: none), (pointer: coarse), (max-width: 1024px) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  button:hover,
+  a:hover,
+  [role="button"]:hover {
+    transform: none !important;
+    filter: none !important;
+    box-shadow: none !important;
+  }
+}
