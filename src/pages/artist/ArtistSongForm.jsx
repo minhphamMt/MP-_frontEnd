@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiArrowLeft, FiMusic, FiSave } from "react-icons/fi";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { getAlbums } from "../../api/album.api";
 import {
   createSong,
@@ -10,6 +11,7 @@ import {
 } from "../../api/song.api";
 import { formatDuration } from "../../utils/song";
 import { getMyArtistProfile } from "../../api/artist.api";
+import { storage } from "../../utils/firebase";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../../components/common/OptimizedImage";
 
@@ -55,6 +57,18 @@ export default function ArtistSongForm() {
       audio.src = fileUrl;
     });
   }, []);
+
+  const uploadFileToFirebase = useCallback(async (file, folder) => {
+    if (!file) return null;
+    const safeName = file.name
+      .replace(/\s+/g, "-")
+      .replace(/[^a-zA-Z0-9.-]/g, "");
+    const fileName = `${Date.now()}-${crypto.randomUUID()}-${safeName}`;
+    const fileRef = ref(storage, `${folder}/${fileName}`);
+    await uploadBytes(fileRef, file, { contentType: file.type });
+    return getDownloadURL(fileRef);
+  }, []);
+
   useEffect(() => {
     const loadArtistProfile = async () => {
       try {
@@ -95,10 +109,9 @@ export default function ArtistSongForm() {
         const res = await getArtistSongs(artistId);
         const payload = res?.data?.data || res?.data || {};
         const list = payload?.songs || payload?.data || payload || [];
-        song =
-          Array.isArray(list)
-            ? list.find((item) => String(item?.id) === String(id))
-            : null;
+        song = Array.isArray(list)
+          ? list.find((item) => String(item?.id) === String(id))
+          : null;
       }
 
       if (!song) {
@@ -160,38 +173,27 @@ export default function ArtistSongForm() {
 
     try {
       setLoading(true);
-      let payload = {
+      setUploading(Boolean(audioFile || coverFile));
+
+      const uploadedAudioUrl = audioFile
+        ? await uploadFileToFirebase(audioFile, "uploads/music")
+        : null;
+      const uploadedCoverUrl = coverFile
+        ? await uploadFileToFirebase(coverFile, "uploads/covers")
+        : null;
+
+      const payload = {
         title: formValues.title.trim(),
         album_id: formValues.album_id || null,
         duration: formValues.duration ? Number(formValues.duration) : null,
-        cover_url: formValues.cover_url || null,
-        audio_path: formValues.audio_path || null,
+        cover_url: uploadedCoverUrl || formValues.cover_url || null,
+        audio_path: uploadedAudioUrl || formValues.audio_path || null,
       };
 
-      if (audioFile || coverFile) {
-        setUploading(true);
-        const formData = new FormData();
-        if (audioFile) {
-          formData.append("audio", audioFile);
-        }
-        if (coverFile) {
-          formData.append("cover", coverFile);
-        }
-        Object.entries(payload).forEach(([key, value]) => {
-          if (value !== null && value !== undefined && value !== "") {
-            formData.append(key, value);
-          }
-        });
-        payload = formData;
-      }
-
-      let songId = id;
       if (isEdit) {
-        const res = await updateSong(id, payload);
-        songId = res?.data?.data?.id ?? res?.data?.id ?? id;
+        await updateSong(id, payload);
       } else {
-        const res = await createSong(payload);
-        songId = res?.data?.data?.id ?? res?.data?.id ?? songId;
+        await createSong(payload);
       }
 
       navigate("/artist/songs");
@@ -209,12 +211,13 @@ export default function ArtistSongForm() {
       return URL.createObjectURL(coverFile);
     }
     return formValues.cover_url ? resolveAssetUrl(formValues.cover_url) : "";
-   }, [coverFile, formValues.cover_url]);
+  }, [coverFile, formValues.cover_url]);
 
   useEffect(() => {
     if (!coverFile || !coverPreview) return;
     return () => URL.revokeObjectURL(coverPreview);
   }, [coverFile, coverPreview]);
+
   return (
     <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
       <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
@@ -290,7 +293,7 @@ export default function ArtistSongForm() {
                     : "Sẽ tự tính sau khi upload file mp3/audio"}
                 </p>
                 <p className="mt-1 text-xs text-white/50">
-                  Không cần nhập tay để tránh sai lệch dữ liệu.
+                  File nhạc sẽ upload thẳng Firebase, backend chỉ nhận URL + metadata.
                 </p>
               </div>
 
@@ -305,7 +308,7 @@ export default function ArtistSongForm() {
                 />
                 <div className="mt-3">
                   <label className="text-xs text-white/50">
-                    Hoặc tải ảnh bìa (PNG/JPG)
+                    Hoặc tải ảnh bìa lên Firebase (PNG/JPG)
                   </label>
                   <input
                     type="file"
@@ -319,17 +322,17 @@ export default function ArtistSongForm() {
               </div>
 
               <div>
-                <label className="text-sm text-white/70">Audio path</label>
+                <label className="text-sm text-white/70">Audio URL</label>
                 <input
                   name="audio_path"
                   value={formValues.audio_path}
                   onChange={handleChange}
-                  placeholder="/uploads/songs/filename.mp3"
+                  placeholder="https://firebasestorage.googleapis.com/..."
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
                 />
                 <div className="mt-3">
                   <label className="text-xs text-white/50">
-                    Tải file nhạc lên (MP3/WAV)
+                    Tải file nhạc lên Firebase Storage (MP3/WAV)
                   </label>
                   <input
                     type="file"
@@ -347,7 +350,7 @@ export default function ArtistSongForm() {
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
             <h2 className="text-lg font-semibold text-white">Xem trước</h2>
             <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#181818]">
-               {coverPreview ? (
+              {coverPreview ? (
                 <OptimizedImage
                   src={coverPreview}
                   alt="Ảnh bìa"

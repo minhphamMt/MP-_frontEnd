@@ -5,8 +5,7 @@ import {
   signOut,
   signInWithPopup,
 } from "firebase/auth";
-import { firebaseLoginApi } from "../api/auth.api";
-import useAuthStore from "../store/auth.store";
+import { getStorage } from "firebase/storage";
 
 // ===== Firebase config từ ENV =====
 const firebaseConfig = {
@@ -32,6 +31,7 @@ const app =
 
 // ===== Auth =====
 export const auth = getAuth(app);
+export const storage = getStorage(app);
 
 // ===== Google Login =====
 const provider = new GoogleAuthProvider();
