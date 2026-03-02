@@ -430,9 +430,9 @@ export default function AdminSongManagement() {
 
       {editingSong && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 pt-24 pb-10 md:items-center md:py-10 lg:pl-64">
-          <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
+          <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-xs text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6 sm:text-sm">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold sm:text-xl">Chỉnh sửa bài hát</h2>
+              <h2 className="text-base font-semibold sm:text-xl">Chỉnh sửa bài hát</h2>
               <button
                 onClick={() => setEditingSong(null)}
                 className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition md:hover:bg-white/10"
@@ -444,7 +444,7 @@ export default function AdminSongManagement() {
             <div className="mt-6 flex-1 overflow-y-auto pr-1 sm:pr-2">
               <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-sm font-semibold text-white">Ảnh đại diện</p>
+                  <p className="text-xs font-semibold text-white sm:text-sm">Ảnh đại diện</p>
                   <div className="mt-4 flex flex-col gap-4">
                     {coverPreview ? (
                       <OptimizedImage
@@ -453,7 +453,7 @@ export default function AdminSongManagement() {
                         className="h-56 w-full rounded-2xl bg-black/40 object-contain shadow-lg"
                       />
                     ) : (
-                      <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
+                      <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-xs text-white/60 sm:text-sm">
                         Chưa có ảnh bài hát
                       </div>
                     )}
@@ -466,7 +466,7 @@ export default function AdminSongManagement() {
                         }))
                       }
                       placeholder="Cover URL (nếu không upload)"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
                     <input
                       type="file"
@@ -480,7 +480,7 @@ export default function AdminSongManagement() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block text-sm text-white/70 sm:col-span-2">
+                  <label className="block text-xs text-white/70 sm:col-span-2 sm:text-sm">
                     Tên bài hát
                     <input
                       value={editPayload.title}
@@ -490,10 +490,10 @@ export default function AdminSongManagement() {
                           title: event.target.value,
                         }))
                       }
-                      className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
                   </label>
-                  <label className="block text-sm text-white/70">
+                  <label className="block text-xs text-white/70 sm:text-sm">
                     Trạng thái
                     <select
                       value={editPayload.status}
@@ -503,7 +503,7 @@ export default function AdminSongManagement() {
                           status: event.target.value,
                         }))
                       }
-                      className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white sm:text-sm"
                     >
                       <option value="" className="text-black">
                         Không đổi
@@ -563,7 +563,7 @@ export default function AdminSongManagement() {
                   ))}
                 </select>
               </label> */}
-                  <label className="block text-sm text-white/70">
+                  <label className="block text-xs text-white/70 sm:text-sm">
                     Ngày phát hành
                     <input
                       type="date"
@@ -574,14 +574,14 @@ export default function AdminSongManagement() {
                           release_date: event.target.value,
                         }))
                       }
-                      className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
                   </label>
                 </div>
               </div>
 
               <div className="mt-6">
-                <p className="text-sm text-white/70">Thể loại</p>
+                <p className="text-xs text-white/70 sm:text-sm">Thể loại</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {visibleGenres.map((genre) => {
                     const isActive = editPayload.genres.includes(genre.name);
@@ -606,7 +606,7 @@ export default function AdminSongManagement() {
                     <button
                       type="button"
                       onClick={() => setShowAllGenres((prev) => !prev)}
-                      className="text-xs font-semibold text-white/70 transition md:hover:text-white"
+                      className="text-xs font-semibold text-white/70 transition md:hover:text-white sm:text-sm"
                     >
                       {showAllGenres ? "Thu gọn" : "Xem thêm"}
                     </button>
@@ -619,20 +619,20 @@ export default function AdminSongManagement() {
               {role === "ADMIN" && (
                 <button
                   onClick={handleSoftDelete}
-                  className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200 transition md:hover:bg-rose-500/20"
+                  className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-rose-500/10 px-4 py-2 text-xs text-rose-200 transition md:hover:bg-rose-500/20 sm:text-sm"
                 >
                   <FiTrash2 /> Xoá mềm
                 </button>
               )}
               <button
                 onClick={() => setEditingSong(null)}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition md:hover:bg-white/10"
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/80 transition md:hover:bg-white/10 sm:text-sm"
               >
                 Huỷ
               </button>
               <button
                 onClick={handleUpdate}
-                className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300"
+                className="rounded-full bg-emerald-400 px-5 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300 sm:text-sm"
               >
                 Lưu thay đổi
               </button>

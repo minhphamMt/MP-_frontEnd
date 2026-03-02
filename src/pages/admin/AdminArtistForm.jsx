@@ -160,13 +160,13 @@ export default function AdminArtistForm() {
         <FiChevronLeft /> Quay lại danh sách
       </button>
 
-      <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-[#181818] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.45)] sm:p-6">
+      <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-[#181818] p-5 text-xs shadow-[0_25px_80px_rgba(0,0,0,0.45)] sm:p-6 sm:text-sm">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
               Quản trị
             </p>
-            <h1 className="text-xl font-semibold text-white sm:text-2xl">
+            <h1 className="text-base font-semibold text-white sm:text-2xl">
               {isEdit ? "Chỉnh sửa nghệ sĩ" : "Tạo nghệ sĩ mới"}
             </h1>
           </div>
@@ -180,19 +180,19 @@ export default function AdminArtistForm() {
         </div>
 
         {errorMessage && (
-          <div className="mt-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+          <div className="mt-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-100 sm:text-sm">
             {errorMessage}
           </div>
         )}
 
         <div className="mt-6 flex min-h-0 flex-1 flex-col">
           {loading ? (
-            <div className="text-sm text-white/60">Đang tải dữ liệu...</div>
+            <div className="text-xs text-white/60 sm:text-sm">Đang tải dữ liệu...</div>
           ) : (
             <div className="h-full overflow-y-auto pr-1">
               <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-xs font-semibold text-white sm:text-sm">
                     {isEdit ? "Thông tin hiện tại" : "Ảnh đại diện"}
                   </p>
                   <div className="mt-4 flex flex-col gap-4">
@@ -203,7 +203,7 @@ export default function AdminArtistForm() {
                         className="h-56 w-full rounded-2xl object-cover shadow-lg"
                       />
                     ) : (
-                      <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
+                      <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-xs text-white/60 sm:text-sm">
                         Chưa có ảnh đại diện
                       </div>
                     )}
@@ -220,7 +220,7 @@ export default function AdminArtistForm() {
                       />
                     </label>
                     {isEdit && artist && (
-                      <div className="space-y-2 text-sm text-white/70">
+                      <div className="space-y-2 text-xs text-white/70 sm:text-sm">
                         <p>
                           <span className="text-white/60">Tên nghệ sĩ:</span>{" "}
                           <span className="text-white">
@@ -243,7 +243,7 @@ export default function AdminArtistForm() {
                 </div>
 
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-xs font-semibold text-white sm:text-sm">
                     {isEdit ? "Cập nhật nghệ sĩ" : "Thông tin nghệ sĩ"}
                   </p>
                   <div className="mt-4 grid gap-3 sm:gap-4 sm:grid-cols-2">
@@ -251,61 +251,61 @@ export default function AdminArtistForm() {
                       value={formValues.name}
                       onChange={handleChange("name")}
                       placeholder="Tên nghệ sĩ"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
                     <input
                       value={formValues.alias}
                       onChange={handleChange("alias")}
                       placeholder="Alias"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
                     <input
                       value={formValues.realname}
                       onChange={handleChange("realname")}
                       placeholder="Tên thật"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
                     <input
                       value={formValues.national}
                       onChange={handleChange("national")}
                       placeholder="Quốc gia"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
                     <input
                       type="date"
                       value={formValues.birthday}
                       onChange={handleChange("birthday")}
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 focus:border-emerald-400/60 focus:outline-none"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/80 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
                     <input
                       value={formValues.user_id}
                       onChange={handleChange("user_id")}
                       placeholder="User ID liên kết (tuỳ chọn)"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
                     <input
                       value={formValues.avatar_url}
                       onChange={handleChange("avatar_url")}
                       placeholder="Avatar URL (nếu không upload)"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2 sm:text-sm"
                     />
                     <input
                       value={formValues.cover_url}
                       onChange={handleChange("cover_url")}
                       placeholder="Cover URL"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2 sm:text-sm"
                     />
                     <input
                       value={formValues.short_bio}
                       onChange={handleChange("short_bio")}
                       placeholder="Tiểu sử ngắn"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2 sm:text-sm"
                     />
                     <textarea
                       value={formValues.bio}
                       onChange={handleChange("bio")}
                       placeholder="Tiểu sử chi tiết"
-                      className="min-h-[140px] rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2"
+                      className="min-h-[140px] rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2 sm:text-sm"
                     />
                   </div>
                   <div className="mt-4 flex justify-end">

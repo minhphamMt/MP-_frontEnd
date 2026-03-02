@@ -258,9 +258,9 @@ export default function AdminAlbums() {
 
       {selectedAlbum && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 lg:pl-64">
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#181818] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)]">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#181818] p-6 text-xs text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:text-sm">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Chi tiết album</h2>
+              <h2 className="text-base font-semibold sm:text-xl">Chi tiết album</h2>
               <button
                 onClick={() => setSelectedAlbum(null)}
                 className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition md:hover:bg-white/10"
@@ -270,7 +270,7 @@ export default function AdminAlbums() {
             </div>
             <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
               <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <p className="text-sm font-semibold text-white">
+                <p className="text-xs font-semibold text-white sm:text-sm">
                   Ảnh album
                 </p>
                 <div className="mt-4">
@@ -283,15 +283,15 @@ export default function AdminAlbums() {
                       className="h-60 w-full rounded-2xl bg-black/40 object-contain shadow-lg"
                     />
                   ) : (
-                    <div className="flex h-60 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
+                    <div className="flex h-60 items-center justify-center rounded-2xl bg-white/10 text-xs text-white/60 sm:text-sm">
                       Chưa có ảnh album
                     </div>
                   )}
                 </div>
                </div>
 
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5 text-sm text-white/70">
-                <p className="text-sm font-semibold text-white">Thông tin</p>
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-5 text-xs text-white/70 sm:text-sm">
+                <p className="text-xs font-semibold text-white sm:text-sm">Thông tin</p>
                 <div className="mt-4 space-y-3">
                   <p>
                     <span className="text-white/60">Tên album:</span>{" "}
@@ -316,14 +316,14 @@ export default function AdminAlbums() {
             </div>
             {selectedAlbum.songs?.length > 0 && (
               <div className="mt-6">
-                <p className="text-sm font-semibold text-white">
+                <p className="text-xs font-semibold text-white sm:text-sm">
                   Danh sách bài hát
                 </p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {selectedAlbum.songs.map((song) => (
                     <div
                       key={song.id}
-                      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-white/80"
+                      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-xs text-white/80 sm:text-sm"
                     >
                       <div className="h-12 w-12 overflow-hidden rounded-xl bg-black/40">
                         {getSongCover(song) || selectedAlbum.cover_url ? (
@@ -364,13 +364,13 @@ export default function AdminAlbums() {
 
       {editingAlbum && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-10 lg:pl-64">
-          <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
+          <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-xs text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6 sm:text-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
                   Quản lý album
                 </p>
-                <h2 className="mt-2 text-lg font-semibold sm:text-xl">Chỉnh sửa album</h2>
+                <h2 className="mt-2 text-base font-semibold sm:text-xl">Chỉnh sửa album</h2>
               </div>
               <button
                 onClick={() => setEditingAlbum(null)}
@@ -383,7 +383,7 @@ export default function AdminAlbums() {
            <div className="mt-6 flex-1 overflow-y-auto pr-1 sm:pr-2">
               <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-sm font-semibold text-white">Thông tin chi tiết</p>
+                  <p className="text-xs font-semibold text-white sm:text-sm">Thông tin chi tiết</p>
                   <div className="mt-4 flex flex-col gap-4">
                     {coverPreview ? (
                       <OptimizedImage
@@ -392,11 +392,11 @@ export default function AdminAlbums() {
                         className="h-56 w-full rounded-2xl bg-black/40 object-contain shadow-lg"
                       />
                     ) : (
-                      <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-sm text-white/60">
+                      <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-xs text-white/60 sm:text-sm">
                         Chưa có ảnh bìa
                       </div>
                     )}
-                    <div className="space-y-2 text-sm text-white/70">
+                    <div className="space-y-2 text-xs text-white/70 sm:text-sm">
                       <p>
                         <span className="text-white/60">Tên album:</span>{" "}
                         <span className="text-white">
@@ -432,9 +432,9 @@ export default function AdminAlbums() {
                 </div>
 
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-sm font-semibold text-white">Cập nhật album</p>
+                  <p className="text-xs font-semibold text-white sm:text-sm">Cập nhật album</p>
                   <div className="mt-4 space-y-4">
-                    <label className="block text-sm text-white/70">
+                    <label className="block text-xs text-white/70 sm:text-sm">
                       Tên album
                       <input
                         value={editPayload.title}
@@ -444,10 +444,10 @@ export default function AdminAlbums() {
                             title: event.target.value,
                           }))
                         }
-                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-xs text-white focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                       />
                     </label>
-                    <label className="block text-sm text-white/70">
+                    <label className="block text-xs text-white/70 sm:text-sm">
                       Ngày phát hành
                       <input
                         type="date"
@@ -458,10 +458,10 @@ export default function AdminAlbums() {
                             release_date: event.target.value,
                           }))
                         }
-                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-xs text-white focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                       />
                     </label>
-                    <label className="block text-sm text-white/70">
+                    <label className="block text-xs text-white/70 sm:text-sm">
                       Ảnh bìa (URL)
                       <input
                         value={editPayload.cover_url}
@@ -472,7 +472,7 @@ export default function AdminAlbums() {
                           }))
                         }
                         placeholder="https://..."
-                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                       />
                     </label>
                     <div>
@@ -496,13 +496,13 @@ export default function AdminAlbums() {
             <div className="mt-6 flex justify-end gap-3 border-t border-white/10 pt-4">
               <button
                 onClick={() => setEditingAlbum(null)}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition md:hover:bg-white/10"
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/80 transition md:hover:bg-white/10 sm:text-sm"
               >
                 Huỷ
               </button>
               <button
                 onClick={handleUpdate}
-                className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300"
+                className="rounded-full bg-emerald-400 px-5 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300 sm:text-sm"
               >
                 Lưu thay đổi
               </button>

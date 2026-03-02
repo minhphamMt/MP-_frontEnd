@@ -87,22 +87,69 @@ const seededNoise = (seed) => {
   return value - Math.floor(value);
 };
 
-const addGentleRandomToFlatSeries = (values, seriesSeed) => {
-  if (!Array.isArray(values) || values.length < 2) return values;
-  const maxValue = Math.max(...values);
-  const minValue = Math.min(...values);
-  const spread = maxValue - minValue;
-  const average = values.reduce((sum, item) => sum + item, 0) / values.length;
-  const isFlatSeries = spread <= Math.max(1, average * 0.025);
+const toDateKey = (dateValue) => {
+  if (!dateValue) return "";
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+};
 
-  if (!isFlatSeries) return values;
+const buildWeekDates = (referenceDate) => {
+  const base = referenceDate instanceof Date ? referenceDate : new Date(referenceDate);
+  const safe = Number.isNaN(base.getTime()) ? new Date() : base;
+  const dates = [];
+  for (let offset = 6; offset >= 0; offset -= 1) {
+    const day = new Date(safe);
+    day.setDate(safe.getDate() - offset);
+    dates.push(day);
+  }
+  return dates;
+};
 
-  const amplitude = Math.max(1, Math.round((average || 1) * 0.06));
-  return values.map((value, index) => {
-    const seed = toSeed(`${seriesSeed}-${index}`);
-    const centeredNoise = seededNoise(seed) - 0.5;
-    const nextValue = Math.round(value + centeredNoise * amplitude);
-    return Math.max(1, nextValue);
+const buildWeeklySeries = (rawPoints, seriesSeed) => {
+  const points = Array.isArray(rawPoints) ? [...rawPoints] : [];
+  points.sort((a, b) => {
+    const aTime = a.rawDate ? new Date(a.rawDate).getTime() : 0;
+    const bTime = b.rawDate ? new Date(b.rawDate).getTime() : 0;
+    return aTime - bTime;
+  });
+
+  const lastPoint = points[points.length - 1];
+  const referenceDate = lastPoint?.rawDate || lastPoint?.date || new Date();
+  const weekDates = buildWeekDates(referenceDate);
+  const byDate = new Map();
+  points.forEach((point) => {
+    const key = toDateKey(point.rawDate || point.date);
+    if (!key) return;
+    byDate.set(key, Number(point.plays) || 0);
+  });
+
+  const average =
+    points.length > 0
+      ? points.reduce((sum, point) => sum + (Number(point.plays) || 0), 0) /
+        points.length
+      : 120;
+
+  let lastValue = Math.max(1, Math.round(average || 1));
+  return weekDates.map((date, index) => {
+    const key = toDateKey(date);
+    const baseValue = byDate.has(key) ? byDate.get(key) : lastValue;
+    const seed = toSeed(`${seriesSeed}-${key}`);
+    const noise = seededNoise(seed) - 0.5;
+    const swing = Math.sin(((index + (seed % 7)) / 7) * Math.PI * 2);
+    const amplitude = Math.max(10, Math.round((average || baseValue || 1) * 0.22));
+    const nextValue = Math.max(
+      1,
+      Math.round(
+        (baseValue || average || 1) + swing * amplitude * 0.6 + noise * amplitude * 0.8
+      )
+    );
+    lastValue = nextValue;
+    return {
+      date: formatWeeklyDate(date.toISOString()),
+      rawDate: date.toISOString(),
+      plays: nextValue,
+    };
   });
 };
 
@@ -192,23 +239,19 @@ export default function ZingChart() {
       setSongs(normalizedWeekly);
       setSeriesData(
             normalizedWeekly.map((song) => {
-          const dataPoints = (seriesMap[song.id] || [])
-            .sort((a, b) => {
-              const aTime = a.rawDate ? new Date(a.rawDate).getTime() : 0;
-              const bTime = b.rawDate ? new Date(b.rawDate).getTime() : 0;
-              return aTime - bTime;
-            })
-            .slice(-7);
-
-          const rawPlays = dataPoints.map((point) => point.plays);
-          const randomizedPlays = addGentleRandomToFlatSeries(rawPlays, song.id);
+          const dataPoints = (seriesMap[song.id] || []).sort((a, b) => {
+            const aTime = a.rawDate ? new Date(a.rawDate).getTime() : 0;
+            const bTime = b.rawDate ? new Date(b.rawDate).getTime() : 0;
+            return aTime - bTime;
+          });
+          const weeklySeries = buildWeeklySeries(dataPoints, song.id);
 
           return {
             song,
             artist: song.artist_name || song.artist,
-            data: dataPoints.map((point, index) => ({
+            data: weeklySeries.map((point) => ({
               date: point.date,
-              plays: randomizedPlays[index] ?? point.plays,
+              plays: point.plays,
             })),
           };
         })

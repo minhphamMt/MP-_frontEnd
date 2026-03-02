@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { FiCheckCircle, FiInfo, FiRefreshCw, FiSlash, FiX } from "react-icons/fi";
-import { approveSong, blockSong } from "../../api/admin.api";
-import { getSongs } from "../../api/song.api";
+import { approveSong, blockSong, listAdminSongs } from "../../api/admin.api";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../../components/common/OptimizedImage";
 
 const STATUS_OPTIONS = [
-  { value: "all", label: "Tất cả" },
+  { value: "", label: "Tất cả" },
   { value: "pending", label: "Chờ duyệt" },
   { value: "approved", label: "Đã duyệt" },
   { value: "rejected", label: "Từ chối" },
@@ -29,7 +28,7 @@ const statusBadge = (status) => {
 export default function AdminSongs() {
   const location = useLocation();
   const [songs, setSongs] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -54,11 +53,11 @@ export default function AdminSongs() {
       const trimmedKeyword = keyword.trim();
       const params = {
         page: 1,
-        limit: 50,
-        ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+        limit: 100,
         ...(trimmedKeyword ? { keyword: trimmedKeyword, q: trimmedKeyword } : {}),
+        ...(statusFilter ? { status: statusFilter } : {}),
       };
-      const res = await getSongs(params);
+      const res = await listAdminSongs(params);
       const payload = res?.data?.data ?? res?.data ?? [];
       const list = Array.isArray(payload)
         ? payload
@@ -117,41 +116,7 @@ export default function AdminSongs() {
     }
   };
 
-  const visibleSongs = useMemo(() => {
-    const normalizedKeyword = keyword.trim().toLowerCase();
-    const statusPriority = {
-      pending: 0,
-      approved: 1,
-      rejected: 2,
-    };
-
-    const filteredByKeyword = normalizedKeyword
-      ? songs.filter((song) => {
-          const searchable = [
-            song?.title,
-            song?.artist_name,
-            song?.artist?.name,
-            song?.album_title,
-            song?.id,
-          ]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
-          return searchable.includes(normalizedKeyword);
-        })
-      : songs;
-
-    return [...filteredByKeyword].sort((a, b) => {
-      const left = statusPriority[a?.status] ?? 99;
-      const right = statusPriority[b?.status] ?? 99;
-      if (left !== right) {
-        return left - right;
-      }
-      return `${b?.updated_at || b?.created_at || ""}`.localeCompare(
-        `${a?.updated_at || a?.created_at || ""}`
-      );
-    });
-  }, [keyword, songs]);
+  const visibleSongs = useMemo(() => songs, [songs]);
 
   const selectedSongAudioUrl = useMemo(() => {
     if (!selectedSong) return "";
@@ -298,9 +263,9 @@ export default function AdminSongs() {
 
       {selectedSong && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 px-4 pt-24 pb-8 md:items-center md:py-8 lg:pl-64">
-          <div className="max-h-[calc(100vh-4rem)] w-full max-w-3xl overflow-auto rounded-3xl border border-white/10 bg-[#181818] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.55)] sm:p-6">
+          <div className="max-h-[calc(100vh-4rem)] w-full max-w-3xl overflow-auto rounded-3xl border border-white/10 bg-[#181818] p-5 text-xs shadow-[0_25px_80px_rgba(0,0,0,0.55)] sm:p-6 sm:text-sm">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white sm:text-xl">Chi tiết bài hát chờ duyệt</h2>
+              <h2 className="text-base font-bold text-white sm:text-xl">Chi tiết bài hát chờ duyệt</h2>
               <button
                 onClick={() => setSelectedSong(null)}
                 className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition md:hover:bg-white/10"
@@ -324,7 +289,7 @@ export default function AdminSongs() {
                 )}
               </div>
 
-              <div className="space-y-3 text-sm text-white/80">
+              <div className="space-y-3 text-xs text-white/80 sm:text-sm">
                 <p><span className="text-white/50">Tên bài hát:</span> {selectedSong.title || "-"}</p>
                 <p><span className="text-white/50">Nghệ sĩ:</span> {selectedSong.artist_name || selectedSong.artist?.name || "-"}</p>
                 <p><span className="text-white/50">Album:</span> {selectedSong.album_title || "Single"}</p>
@@ -342,16 +307,16 @@ export default function AdminSongs() {
             </div>
 
             <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="mb-2 text-sm font-semibold text-white">File nhạc mp3/audio</p>
+              <p className="mb-2 text-xs font-semibold text-white sm:text-sm">File nhạc mp3/audio</p>
               {selectedSongAudioUrl ? (
                 <>
                   <audio controls className="w-full">
                     <source src={selectedSongAudioUrl} />
                   </audio>
-                  <p className="mt-2 text-xs text-emerald-300">Đã có file audio, đủ điều kiện cơ bản để duyệt.</p>
+                  <p className="mt-2 text-xs text-emerald-300 sm:text-sm">Đã có file audio, đủ điều kiện cơ bản để duyệt.</p>
                 </>
               ) : (
-                <p className="text-sm text-rose-300">Chưa có file audio/mp3. Không nên duyệt bài hát này.</p>
+                <p className="text-xs text-rose-300 sm:text-sm">Chưa có file audio/mp3. Không nên duyệt bài hát này.</p>
               )}
             </div>
           </div>
