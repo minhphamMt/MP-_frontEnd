@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { FiCalendar, FiHeart } from "react-icons/fi";
+import { FiCalendar, FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import { getAlbumById } from "../api/album.api";
 import useAlbumLikeStore, {
   normalizeAlbumId,
@@ -27,6 +27,7 @@ export default function AlbumDetail() {
     toggleLike,
   } = usePlayerStore();
   const role = useAuthStore((state) => state.role);
+  const isArtistRole = role === "ARTIST";
   const canPlay = role !== "ARTIST" && role !== "ADMIN";
   const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
   const toggleAlbumLike = useAlbumLikeStore((s) => s.toggleAlbumLike);
@@ -182,12 +183,17 @@ export default function AlbumDetail() {
                 )}
 
                   <button
-                  onClick={() => toggleAlbumLike(albumId)}
+                  onClick={() => {
+                    if (!isArtistRole) {
+                      toggleAlbumLike(albumId);
+                    }
+                  }}
+                  disabled={isArtistRole}
                   className={`rounded-full border px-6 py-2 text-sm transition ${
                     isLiked
                       ? "border-rose-400/40 bg-rose-500/10 text-rose-200 md:hover:bg-rose-500/20"
                       : "border-white/15 bg-white/5 text-white/80 md:hover:bg-white/10"
-                  }`}
+                  } ${isArtistRole ? "cursor-not-allowed opacity-60" : ""}`}
                 >
                   {isLiked ? "✓ Đã thích" : "+ Thích album"}
                 </button>
@@ -245,23 +251,27 @@ export default function AlbumDetail() {
           <div className="divide-y divide-white/5">
             {songs.map((song, index) => {
               const songId = normalizeSongId(song);
-              const isActive = currentSong?.id === song.id;
+              const isActive = normalizeSongId(currentSong) === songId;
               const isLiked = songId && likedSongIds.includes(songId);
               return (
                 <div
                   key={song.id}
                   onClick={canPlay ? () => playSong(song, songs) : undefined}
-                  className={`grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 transition xl:grid-cols-[60px_1fr_140px_100px] xl:gap-3 xl:px-5 ${
+                  className={`group grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 transition xl:grid-cols-[60px_1fr_140px_100px] xl:gap-3 xl:px-5 ${
                     isActive
-                      ? "bg-gradient-to-r from-white/10 via-white/5 to-transparent"
+                      ? "bg-gradient-to-r from-cyan-400/10 to-transparent"
                       : canPlay
                         ? "md:hover:bg-white/5 cursor-pointer"
                         : "cursor-default"
                   }`}
                 >
                   {/* INDEX */}
-                  <div className="hidden text-center text-sm font-semibold text-white/70 xl:block">
-                    {index + 1}
+                  <div className="hidden text-center text-sm font-semibold xl:block">
+                    {isActive ? (
+                      <FiMusic className="mx-auto text-cyan-400" />
+                    ) : (
+                      <span className="text-white/70">{index + 1}</span>
+                    )}
                   </div>
 
                   {/* SONG */}
@@ -273,19 +283,25 @@ export default function AlbumDetail() {
                         className="h-full w-full object-cover"
                       />
 
-                      {isActive && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                          <span className="text-sm">
-                            {isPlaying ? "⏸" : "▶"}
-                          </span>
+                      <div
+                        className={`absolute inset-0 flex items-center justify-center bg-black/50 transition ${
+                          isActive ? "opacity-100" : "opacity-0 md:group-hover:opacity-100"
+                        }`}
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1db954] text-black shadow-[0_8px_16px_rgba(29,185,84,0.35)]">
+                          {isActive && isPlaying ? (
+                            <FiPause className="text-sm" />
+                          ) : (
+                            <FiPlay className="ml-0.5 text-sm" />
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
 
                     <div className="min-w-0">
                       <div
                          className={`truncate text-sm font-semibold sm:text-base ${
-                          isActive ? "text-green-300" : "text-white"
+                          isActive ? "text-cyan-300" : "text-white"
                         }`}
                       >
                         {song.title}
@@ -299,18 +315,20 @@ export default function AlbumDetail() {
                   <div className="flex items-center justify-end gap-2 lg:justify-center">
                     <AddToPlaylistButton
                       song={song}
+                     disabled={isArtistRole}
                      triggerClassName="h-8 w-8 !border-white/20 !bg-white/10 md:hover:!bg-white/20 sm:h-9 sm:w-9"
                     />
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (songId) toggleLike(songId);
+                        if (!isArtistRole && songId) toggleLike(songId);
                       }}
+                      disabled={isArtistRole}
                       className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm transition sm:h-9 sm:w-9 ${
                         isLiked
                           ? "border-rose-400/40 text-rose-300"
                           : "border-white/10 text-white/70 md:hover:bg-white/15"
-                      }`}
+                      } ${isArtistRole ? "cursor-not-allowed opacity-60" : ""}`}
                       aria-label={isLiked ? "Bỏ thích bài hát" : "Thích bài hát"}
                     >
                       <FiHeart />

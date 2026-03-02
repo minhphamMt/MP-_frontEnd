@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
+import useAuthStore from "../store/auth.store";
 
 const Login = lazy(() => import("../pages/Login"));
 const ArtistAuth = lazy(() => import("../pages/ArtistAuth"));
@@ -54,6 +55,17 @@ const fallback = (
   </div>
 );
 
+function HomeEntryRoute() {
+  const role = useAuthStore((state) => state.role);
+  if (role === "ADMIN") {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  if (role === "ARTIST") {
+    return <Navigate to="/artist/dashboard" replace />;
+  }
+  return <Home />;
+}
+
 export default function AppRoutes() {
   return (
     <Suspense fallback={fallback}>
@@ -67,7 +79,7 @@ export default function AppRoutes() {
 
         {/* ===== PUBLIC APP LAYOUT ===== */}
         <Route element={<MainLayout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<HomeEntryRoute />} />
           <Route path="/zing-chart" element={<ZingChart />} />
           <Route path="/zing-chart/region/:region" element={<RegionChart />} />
           <Route path="/new-release" element={<NewRelease />} />

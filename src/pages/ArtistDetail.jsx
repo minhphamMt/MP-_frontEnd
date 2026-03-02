@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { FiHeart } from "react-icons/fi";
+import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import api from "../api/axios";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import FollowArtistButton from "../components/artist/FollowArtistButton";
@@ -271,22 +271,26 @@ const renderBioHtml = (bio = "") => {
           <div className="divide-y divide-white/5">
             {songs.map((song, index) => {
               const songId = normalizeSongId(song);
-              const isActive = currentSong?.id === song.id;
+              const isActive = normalizeSongId(currentSong) === songId;
               const isLiked = songId && likedSongIds.includes(songId);
 
               return (
                 <div
                   key={song.id}
                   onClick={() => playSong(song, songs)}
-                  className={`grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 cursor-pointer transition xl:grid-cols-[60px_1fr_160px_140px_100px] xl:gap-3 xl:px-5 ${
+                  className={`group grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 cursor-pointer transition xl:grid-cols-[60px_1fr_160px_140px_100px] xl:gap-3 xl:px-5 ${
                     isActive
-                      ? "bg-gradient-to-r from-white/10 via-white/5 to-transparent"
+                      ? "bg-gradient-to-r from-cyan-400/10 to-transparent"
                       : "md:hover:bg-white/5"
                   }`}
                 >
                   {/* INDEX */}
-                 <div className="hidden text-center text-sm font-semibold text-white/70 xl:block">
-                    {index + 1}
+                 <div className="hidden text-center text-sm font-semibold xl:block">
+                    {isActive ? (
+                      <FiMusic className="mx-auto text-cyan-400" />
+                    ) : (
+                      <span className="text-white/70">{index + 1}</span>
+                    )}
                   </div>
 
                   {/* SONG */}
@@ -298,19 +302,25 @@ const renderBioHtml = (bio = "") => {
                         className="h-full w-full object-cover"
                       />
 
-                      {isActive && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                          <span className="text-sm">
-                            {isPlaying ? "⏸" : "▶"}
-                          </span>
+                      <div
+                        className={`absolute inset-0 flex items-center justify-center bg-black/50 transition ${
+                          isActive ? "opacity-100" : "opacity-0 md:group-hover:opacity-100"
+                        }`}
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1db954] text-black shadow-[0_8px_16px_rgba(29,185,84,0.35)]">
+                          {isActive && isPlaying ? (
+                            <FiPause className="text-sm" />
+                          ) : (
+                            <FiPlay className="ml-0.5 text-sm" />
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
 
                     <div className="min-w-0">
                       <div
                          className={`truncate text-sm font-semibold sm:text-base ${
-                          isActive ? "text-green-300" : "text-white"
+                          isActive ? "text-cyan-300" : "text-white"
                         }`}
                       >
                         {song.title}

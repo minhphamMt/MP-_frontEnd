@@ -118,14 +118,23 @@ export default function AdminSongs() {
   };
 
   const visibleSongs = useMemo(() => {
-    const normalized = keyword.trim().toLowerCase();
-    if (!normalized) return songs;
-    return songs.filter((song) =>
-      [song.title, song.artist_name, song.album_title, `${song.id}`]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(normalized))
-    );
-  }, [keyword, songs]);
+    const statusPriority = {
+      pending: 0,
+      approved: 1,
+      rejected: 2,
+    };
+
+    return [...songs].sort((a, b) => {
+      const left = statusPriority[a?.status] ?? 99;
+      const right = statusPriority[b?.status] ?? 99;
+      if (left !== right) {
+        return left - right;
+      }
+      return `${b?.updated_at || b?.created_at || ""}`.localeCompare(
+        `${a?.updated_at || a?.created_at || ""}`
+      );
+    });
+  }, [songs]);
 
   const selectedSongAudioUrl = useMemo(() => {
     if (!selectedSong) return "";
