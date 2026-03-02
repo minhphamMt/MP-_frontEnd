@@ -62,18 +62,27 @@ const setupMediaSession = () => {
   }
 
   const mediaSession = navigator.mediaSession;
+  const safeSetActionHandler = (action, handler) => {
+    try {
+      mediaSession.setActionHandler(action, handler);
+    } catch (error) {
+      // Ignore unsupported actions.
+    }
+  };
 
-  mediaSession.setActionHandler("play", () => usePlayerStore.getState().resume());
-  mediaSession.setActionHandler("pause", () => usePlayerStore.getState().pause());
-  mediaSession.setActionHandler("nexttrack", () =>
-    usePlayerStore.getState().playNext()
-  );
-  mediaSession.setActionHandler("previoustrack", () =>
-    usePlayerStore.getState().playPrev()
-  );
+  const play = () => usePlayerStore.getState().resume();
+  const pause = () => usePlayerStore.getState().pause();
+  const playNext = () => usePlayerStore.getState().playNext();
+  const playPrev = () => usePlayerStore.getState().playPrev();
 
-  mediaSession.setActionHandler("seekbackward", null);
-  mediaSession.setActionHandler("seekforward", null);
+  safeSetActionHandler("play", play);
+  safeSetActionHandler("pause", pause);
+  safeSetActionHandler("nexttrack", playNext);
+  safeSetActionHandler("previoustrack", playPrev);
+
+  // Some browsers still show 10s seek icons; map them to track skip.
+  safeSetActionHandler("seekbackward", playPrev);
+  safeSetActionHandler("seekforward", playNext);
 };
 
 const syncMediaSession = () => {

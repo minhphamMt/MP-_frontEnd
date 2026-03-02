@@ -127,8 +127,8 @@ const buildWeeklySeries = (rawPoints, seriesSeed, config = {}) => {
   const {
     index = 0,
     count = 5,
-    base = 68,
-    amplitude = 9,
+    base = 58,
+    amplitude = 6,
     globalMedian = 0,
     localAverage = 0,
   } = config;
@@ -266,11 +266,11 @@ export default function ZingChart() {
         .filter((value) => value > 0);
       const globalMedian = computeMedian(rawSeriesValues);
       const globalBase = clamp(
-        Math.round(Math.log10((globalMedian || 1) + 1) * 22 + 48),
-        55,
-        85
+        Math.round(Math.log10((globalMedian || 1) + 1) * 16 + 36),
+        35,
+        65
       );
-      const globalAmplitude = clamp(Math.round(globalBase * 0.14), 7, 12);
+      const globalAmplitude = clamp(Math.round(globalBase * 0.1), 4, 8);
 
       setWeeklySongs(normalizedWeekly);
       setSongs(normalizedWeekly);
