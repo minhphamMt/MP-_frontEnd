@@ -42,6 +42,68 @@ const extractSongsFromResponse = (payload) => {
 
 const audio = new Audio();
 
+const resolveMediaArtwork = (song) => {
+  const artwork = song?.cover_url;
+  if (!artwork) return [];
+
+  return [
+    { src: artwork, sizes: "96x96", type: "image/png" },
+    { src: artwork, sizes: "128x128", type: "image/png" },
+    { src: artwork, sizes: "192x192", type: "image/png" },
+    { src: artwork, sizes: "256x256", type: "image/png" },
+    { src: artwork, sizes: "384x384", type: "image/png" },
+    { src: artwork, sizes: "512x512", type: "image/png" },
+  ];
+};
+
+const setupMediaSession = () => {
+  if (typeof navigator === "undefined" || !("mediaSession" in navigator)) {
+    return;
+  }
+
+  const mediaSession = navigator.mediaSession;
+
+  mediaSession.setActionHandler("play", () => usePlayerStore.getState().resume());
+  mediaSession.setActionHandler("pause", () => usePlayerStore.getState().pause());
+  mediaSession.setActionHandler("nexttrack", () =>
+    usePlayerStore.getState().playNext()
+  );
+  mediaSession.setActionHandler("previoustrack", () =>
+    usePlayerStore.getState().playPrev()
+  );
+
+  mediaSession.setActionHandler("seekbackward", null);
+  mediaSession.setActionHandler("seekforward", null);
+};
+
+const syncMediaSession = () => {
+  if (typeof navigator === "undefined" || !("mediaSession" in navigator)) {
+    return;
+  }
+
+  const mediaSession = navigator.mediaSession;
+  const { currentSong, isPlaying } = usePlayerStore.getState();
+
+  mediaSession.playbackState = isPlaying ? "playing" : "paused";
+
+  if (currentSong) {
+    mediaSession.metadata = new MediaMetadata({
+      title: currentSong.title || "Không rõ",
+      artist: currentSong.artist_name || "Unknown Artist",
+      album: currentSong.album_title || "",
+      artwork: resolveMediaArtwork(currentSong),
+    });
+  }
+
+  if (typeof mediaSession.setPositionState === "function" && Number.isFinite(audio.duration) && audio.duration > 0) {
+    mediaSession.setPositionState({
+      duration: audio.duration,
+      playbackRate: audio.playbackRate || 1,
+      position: Math.min(audio.currentTime || 0, audio.duration),
+    });
+  }
+};
+
 /* =====================
    STORE
 ===================== */
@@ -424,6 +486,7 @@ const usePlayerStore = create((set, get) => ({
 ===================== */
 audio.addEventListener("loadedmetadata", () => {
   usePlayerStore.setState({ duration: audio.duration || 0 });
+  syncMediaSession();
 });
 
 audio.addEventListener("timeupdate", () => {
@@ -434,6 +497,7 @@ audio.addEventListener("timeupdate", () => {
     state.recordListeningProgress(time);
   }
   usePlayerStore.setState({ currentTime: time });
+  syncMediaSession();
 });
 
 audio.addEventListener("ended", () => {
@@ -447,5 +511,16 @@ audio.addEventListener("ended", () => {
 });
 
 audio.volume = usePlayerStore.getState().volume ?? 1;
+
+setupMediaSession();
+
+usePlayerStore.subscribe((state, prevState) => {
+  if (
+    state.currentSong !== prevState.currentSong ||
+    state.isPlaying !== prevState.isPlaying
+  ) {
+    syncMediaSession();
+  }
+});
 
 export default usePlayerStore;
