@@ -166,7 +166,7 @@ export default function AdminArtistForm() {
             <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
               Quản trị
             </p>
-            <h1 className="text-2xl font-semibold text-white">
+            <h1 className="text-xl font-semibold text-white sm:text-2xl">
               {isEdit ? "Chỉnh sửa nghệ sĩ" : "Tạo nghệ sĩ mới"}
             </h1>
           </div>
@@ -246,7 +246,7 @@ export default function AdminArtistForm() {
                   <p className="text-sm font-semibold text-white">
                     {isEdit ? "Cập nhật nghệ sĩ" : "Thông tin nghệ sĩ"}
                   </p>
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div className="mt-4 grid gap-3 sm:gap-4 sm:grid-cols-2">
                     <input
                       value={formValues.name}
                       onChange={handleChange("name")}

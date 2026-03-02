@@ -72,6 +72,40 @@ const colors = [
   },
 ];
 
+const toSeed = (seedSource) => {
+  const text = `${seedSource || "seed"}`;
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    hash = (hash << 5) - hash + text.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash) + 1;
+};
+
+const seededNoise = (seed) => {
+  const value = Math.sin(seed * 12.9898) * 43758.5453;
+  return value - Math.floor(value);
+};
+
+const addGentleRandomToFlatSeries = (values, seriesSeed) => {
+  if (!Array.isArray(values) || values.length < 2) return values;
+  const maxValue = Math.max(...values);
+  const minValue = Math.min(...values);
+  const spread = maxValue - minValue;
+  const average = values.reduce((sum, item) => sum + item, 0) / values.length;
+  const isFlatSeries = spread <= Math.max(1, average * 0.025);
+
+  if (!isFlatSeries) return values;
+
+  const amplitude = Math.max(1, Math.round((average || 1) * 0.06));
+  return values.map((value, index) => {
+    const seed = toSeed(`${seriesSeed}-${index}`);
+    const centeredNoise = seededNoise(seed) - 0.5;
+    const nextValue = Math.round(value + centeredNoise * amplitude);
+    return Math.max(1, nextValue);
+  });
+};
+
 export default function ZingChart() {
   const [songs, setSongs] = useState([]);
   const [weeklySongs, setWeeklySongs] = useState([]);
@@ -166,12 +200,15 @@ export default function ZingChart() {
             })
             .slice(-7);
 
+          const rawPlays = dataPoints.map((point) => point.plays);
+          const randomizedPlays = addGentleRandomToFlatSeries(rawPlays, song.id);
+
           return {
             song,
             artist: song.artist_name || song.artist,
-            data: dataPoints.map((point) => ({
+            data: dataPoints.map((point, index) => ({
               date: point.date,
-              plays: point.plays,
+              plays: randomizedPlays[index] ?? point.plays,
             })),
           };
         })

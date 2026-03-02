@@ -118,13 +118,30 @@ export default function AdminSongs() {
   };
 
   const visibleSongs = useMemo(() => {
+    const normalizedKeyword = keyword.trim().toLowerCase();
     const statusPriority = {
       pending: 0,
       approved: 1,
       rejected: 2,
     };
 
-    return [...songs].sort((a, b) => {
+    const filteredByKeyword = normalizedKeyword
+      ? songs.filter((song) => {
+          const searchable = [
+            song?.title,
+            song?.artist_name,
+            song?.artist?.name,
+            song?.album_title,
+            song?.id,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+          return searchable.includes(normalizedKeyword);
+        })
+      : songs;
+
+    return [...filteredByKeyword].sort((a, b) => {
       const left = statusPriority[a?.status] ?? 99;
       const right = statusPriority[b?.status] ?? 99;
       if (left !== right) {
@@ -134,7 +151,7 @@ export default function AdminSongs() {
         `${a?.updated_at || a?.created_at || ""}`
       );
     });
-  }, [songs]);
+  }, [keyword, songs]);
 
   const selectedSongAudioUrl = useMemo(() => {
     if (!selectedSong) return "";
@@ -280,10 +297,10 @@ export default function AdminSongs() {
       </div>
 
       {selectedSong && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 px-4 pt-24 pb-8 md:items-center md:py-8 md:pl-64">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 px-4 pt-24 pb-8 md:items-center md:py-8 lg:pl-64">
           <div className="max-h-[calc(100vh-4rem)] w-full max-w-3xl overflow-auto rounded-3xl border border-white/10 bg-[#181818] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.55)] sm:p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">Chi tiết bài hát chờ duyệt</h2>
+              <h2 className="text-lg font-bold text-white sm:text-xl">Chi tiết bài hát chờ duyệt</h2>
               <button
                 onClick={() => setSelectedSong(null)}
                 className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition md:hover:bg-white/10"

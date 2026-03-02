@@ -318,7 +318,7 @@ export default function AdminUsers() {
         onClose={() => setToast({ title: "", message: "" })}
       />
     {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 pt-24 pb-10 md:items-center md:py-10 md:pl-64">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 pt-24 pb-10 md:items-center md:py-10 lg:pl-64">
           <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
             <div className="flex items-center justify-between">
               <div>

@@ -429,10 +429,10 @@ export default function AdminSongManagement() {
       </div>
 
       {editingSong && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 pt-24 pb-10 md:items-center md:py-10 md:pl-64">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 pt-24 pb-10 md:items-center md:py-10 lg:pl-64">
           <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Chỉnh sửa bài hát</h2>
+              <h2 className="text-lg font-semibold sm:text-xl">Chỉnh sửa bài hát</h2>
               <button
                 onClick={() => setEditingSong(null)}
                 className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition md:hover:bg-white/10"
