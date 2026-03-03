@@ -285,7 +285,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const detailPanel = (
   <div
-    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(160deg,rgba(255,255,255,0.03),rgba(0,0,0,0.58))] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-6 ${songSlideClass}`}
+    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] border border-white/12 bg-[linear-gradient(160deg,rgba(9,12,18,0.18),rgba(4,7,12,0.3))] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-6 ${songSlideClass}`}
   >
     {/* ✅ KHÔNG SCROLL ở panel này để không mất controls */}
     <div className="flex min-h-0 flex-1 flex-col">
@@ -565,7 +565,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     >
       {/* BACKDROP */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 bg-[#06080c]/72"
         onMouseDown={(e) => {
           if (e.target !== e.currentTarget) return;
           if (backdropReady) onClose?.();
@@ -575,12 +575,12 @@ export default function PlayerDetail({ isOpen, onClose }) {
       {/* BG IMAGE (isolated layer) */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute inset-[-20%] opacity-28 blur-3xl"
+          className="absolute inset-[-24%] opacity-12 blur-[140px]"
           style={{
             backgroundImage: `url(${cover})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            filter: "saturate(1.02) contrast(1.01)",
+            filter: "saturate(0.45) brightness(0.58) contrast(0.88)",
           }}
         />
       </div>
@@ -600,9 +600,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
               rounded-2xl
               bg-black/35
               text-base text-white/85
-              backdrop-blur
               shadow-[0_8px_25px_rgba(0,0,0,0.35)]
-              transition md:hover:bg-black/60 md:hover:text-white
+              transition md:hover:bg-black/70 md:hover:text-white
               sm:right-6 sm:top-6 sm:h-10 sm:w-10
             "
             aria-label="Đóng"
@@ -635,7 +634,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             {detailPanel}
 
             {/* RIGHT */}
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.02),rgba(0,0,0,0.62))] p-4 backdrop-blur-xl sm:p-6">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/12 bg-[linear-gradient(145deg,rgba(8,11,18,0.16),rgba(4,7,12,0.34))] p-4 backdrop-blur-sm sm:p-6">
               {/* Tabs */}
               <div className="flex items-center gap-2 rounded-full bg-black/25 p-1">
                 {[
@@ -736,7 +735,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             >
               {/* Lyrics slide */}
               <div className="flex min-h-0 w-full min-w-[100%] snap-center overflow-hidden">
-                <div className="flex min-h-0 flex-1 flex-col rounded-3xl bg-white/5 p-5 backdrop-blur-xl overflow-hidden">
+                <div className="flex min-h-0 flex-1 flex-col rounded-3xl bg-black/20 p-5 backdrop-blur-sm overflow-hidden">
                   <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
                     Lời bài hát
                   </div>
@@ -760,7 +759,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
               {/* Queue slide */}
               <div className="flex min-h-0 w-full min-w-[100%] snap-center overflow-hidden">
-                <div className="flex min-h-0 flex-1 flex-col rounded-3xl bg-white/5 p-5 backdrop-blur-xl overflow-hidden">
+                <div className="flex min-h-0 flex-1 flex-col rounded-3xl bg-black/20 p-5 backdrop-blur-sm overflow-hidden">
                   <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
                     Danh sách phát
                   </div>

@@ -77,7 +77,7 @@ export default function AppRoutes() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/403" element={<Forbidden />} />
 
-        {/* ===== PUBLIC APP LAYOUT ===== */}
+        {/* ===== APP LAYOUT (shared) ===== */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomeEntryRoute />} />
           <Route path="/zing-chart" element={<ZingChart />} />
@@ -91,11 +91,11 @@ export default function AppRoutes() {
           <Route path="/song/:id" element={<SongDetail />} />
           <Route path="/artist/:id" element={<ArtistDetail />} />
           <Route path="/album/:id" element={<AlbumDetail />} />
-        </Route>
 
-        {/* ===== AUTHENTICATED USER/ARTIST FEATURES ===== */}
-        <Route element={<ProtectedRoute allowedRoles={["USER", "ARTIST", "ADMIN"]} />}>
-          <Route element={<MainLayout />}>
+          {/* ===== AUTHENTICATED USER/ARTIST FEATURES ===== */}
+          <Route
+            element={<ProtectedRoute allowedRoles={["USER", "ARTIST", "ADMIN"]} />}
+          >
             <Route path="/history" element={<History />} />
             <Route path="/me" element={<Profile />} />
             <Route path="/playlists" element={<Playlists />} />
@@ -105,11 +105,9 @@ export default function AppRoutes() {
             <Route path="/library/liked-songs" element={<LikedSongs />} />
             <Route path="/library/playlists" element={<LibraryPlaylists />} />
           </Route>
-        </Route>
 
-        {/* ===== ARTIST ROLE ===== */}
-        <Route element={<ProtectedRoute allowedRoles={["ARTIST", "ADMIN"]} />}>
-          <Route element={<MainLayout />}>
+          {/* ===== ARTIST ROLE ===== */}
+          <Route element={<ProtectedRoute allowedRoles={["ARTIST", "ADMIN"]} />}>
             <Route
               path="/artist"
               element={<Navigate to="/artist/dashboard" replace />}
@@ -124,11 +122,9 @@ export default function AppRoutes() {
             <Route path="/artist/songs/:id/edit" element={<ArtistSongForm />} />
             <Route path="/artist/trash" element={<Trash />} />
           </Route>
-        </Route>
 
-        {/* ===== ADMIN ===== */}
-        <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-          <Route element={<MainLayout />}>
+          {/* ===== ADMIN ===== */}
+          <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
             <Route
               path="/admin"
               element={<Navigate to="/admin/dashboard" replace />}
@@ -152,6 +148,7 @@ export default function AppRoutes() {
             <Route path="/admin/genres" element={<AdminGenres />} />
             <Route path="/admin/trash" element={<Trash />} />
           </Route>
+
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={["USER", "ARTIST"]} />}>
