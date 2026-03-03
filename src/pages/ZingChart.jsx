@@ -462,7 +462,7 @@ const xStep =
                 </p>
                 <div className="flex items-center gap-2 text-lg font-semibold">
                   <span className="text-white">Top 5 tuần</span>
-                  <span className="text-emerald-300">#zingchart</span>
+                  <span className="text-emerald-300">#Mchart</span>
                 </div>
               </div>
 
