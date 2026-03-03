@@ -260,10 +260,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
         const songId = normalizeSongId(currentSong);
         if (songId) toggleLike(songId);
       }}
-      className={`flex h-10 w-10 items-center justify-center rounded-full border ring-1 ring-white/5 transition active:scale-95 ${
+      className={`flex h-10 w-10 items-center justify-center rounded-full transition active:scale-95 ${
         likedSongIds.includes(normalizeSongId(currentSong))
-          ? "border-[#1db954] text-[#1db954] bg-[#1db954]/10"
-          : "border-white/10 text-white/80 bg-white/5 md:hover:bg-white/10"
+          ? "text-[#1db954] bg-[#1db954]/15"
+          : "text-white/80 bg-white/5 md:hover:bg-white/10"
       }`}
       aria-label="Yêu thích"
     >
@@ -285,7 +285,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const detailPanel = (
   <div
-    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] border border-white/12 bg-[linear-gradient(160deg,rgba(255,255,255,0.08),rgba(0,0,0,0.55))] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.52)] ring-1 ring-white/10 backdrop-blur-xl sm:p-6 ${songSlideClass}`}
+    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] bg-[linear-gradient(160deg,rgba(255,255,255,0.06),rgba(0,0,0,0.45))] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-6 ${songSlideClass}`}
   >
     {/* ✅ KHÔNG SCROLL ở panel này để không mất controls */}
     <div className="flex min-h-0 flex-1 flex-col">
@@ -294,7 +294,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
         {/* Desktop/Laptop/Tablet landscape: ảnh chữ nhật */}
         <div
           className="
-            relative hidden w-full items-center gap-8 overflow-hidden rounded-3xl bg-black/20 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/15
+            relative hidden w-full items-center gap-8
             sm:flex
           "
           style={{
@@ -302,7 +302,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             height: "clamp(180px, 38vh, 320px)",
           }}
         >
-          <div className="relative z-10 h-full w-[min(40%,320px)] overflow-hidden rounded-3xl ring-1 ring-white/15">
+          <div className="relative z-10 h-full w-[min(40%,320px)] overflow-hidden rounded-3xl">
             {cover && (
               <OptimizedImage
                 src={cover}
@@ -313,10 +313,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
 
           <div className="relative z-10 min-w-0 flex-1">
-            <h3 className="truncate text-4xl font-semibold tracking-tight text-white xl:text-5xl">
+            <h3 className="max-w-full overflow-hidden text-[clamp(2rem,4.2vw,4rem)] font-semibold leading-[1.06] tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
               {currentSong.title}
             </h3>
-            <p className="mt-3 truncate text-3xl font-medium tracking-wide text-emerald-400/80">
+            <p className="mt-3 overflow-hidden text-[clamp(1.45rem,2.4vw,2.2rem)] font-medium leading-tight tracking-wide text-emerald-400/80 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:1]">
               {artistId ? (
                 <Link
                   to={`/artist/${artistId}`}
@@ -330,13 +330,12 @@ export default function PlayerDetail({ isOpen, onClose }) {
             </p>
           </div>
 
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/35 to-black/70" />
         </div>
 
         {/* Phone: đĩa tròn */}
         <div className="relative flex items-center justify-center sm:hidden">
           <div
-            className="overflow-hidden rounded-full bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.60)] ring-1 ring-white/10"
+            className="overflow-hidden rounded-full bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.60)]"
             style={{
               // ✅ co theo màn hình điện thoại để không lẹm
               width: "clamp(210px, 70vw, 320px)",
@@ -366,10 +365,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
       </div>
 
       <div className="mt-3 text-center sm:hidden">
-        <h3 className="truncate text-2xl font-semibold tracking-tight text-white">
+        <h3 className="mx-auto max-w-[95%] overflow-hidden text-[clamp(1.35rem,6.5vw,1.95rem)] font-semibold leading-tight tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {currentSong.title}
         </h3>
-        <p className="mt-1 truncate text-sm text-white/70">
+        <p className="mx-auto mt-1 max-w-[95%] overflow-hidden text-sm text-white/70 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:1]">
           {artistId ? (
             <Link
               to={`/artist/${artistId}`}
@@ -487,7 +486,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
         <div className="flex items-center justify-end gap-2 md:gap-3">
           <AddToPlaylistButton
             song={currentSong}
-            triggerClassName="h-10 w-10 border-white/15 bg-white/5 text-white/80 ring-1 ring-white/10 md:hover:border-white/30 md:hover:bg-white/15"
+            triggerClassName="h-10 w-10 bg-white/5 text-white/80 md:hover:bg-white/15"
           />
 
           <button
@@ -566,7 +565,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     >
       {/* BACKDROP */}
       <div
-        className="absolute inset-0 bg-black/35 backdrop-blur-2xl"
+        className="absolute inset-0 bg-black/20 backdrop-blur-2xl"
         onMouseDown={(e) => {
           if (e.target !== e.currentTarget) return;
           if (backdropReady) onClose?.();
@@ -576,15 +575,15 @@ export default function PlayerDetail({ isOpen, onClose }) {
       {/* BG IMAGE (isolated layer) */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute inset-[-20%] opacity-60 blur-3xl"
+          className="absolute inset-[-20%] opacity-35 blur-3xl"
           style={{
             backgroundImage: `url(${cover})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            filter: "saturate(1.05) contrast(1.02)",
+            filter: "saturate(1.02) contrast(1.01)",
           }}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.10),transparent_45%),linear-gradient(180deg,rgba(0,0,0,0.18),rgba(0,0,0,0.62))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.06),transparent_50%),linear-gradient(180deg,rgba(0,0,0,0.10),rgba(0,0,0,0.45))]" />
       </div>
 
       {/* CONTENT */}
@@ -602,7 +601,6 @@ export default function PlayerDetail({ isOpen, onClose }) {
               rounded-2xl
               bg-black/35
               text-base text-white/85
-              ring-1 ring-white/20
               backdrop-blur
               shadow-[0_8px_25px_rgba(0,0,0,0.35)]
               transition md:hover:bg-black/60 md:hover:text-white
@@ -615,7 +613,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* Title */}
           <div className="mt-4 hidden flex-col items-center gap-1 text-center sm:mt-6 lg:hidden sm:flex">
-            <h2 className="text-xl font-semibold tracking-tight sm:text-3xl">
+            <h2 className="max-w-[min(90vw,780px)] overflow-hidden text-[clamp(1.25rem,3.6vw,2.2rem)] font-semibold leading-tight tracking-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
               {currentSong.title}
             </h2>
             <p className="text-xs text-white/60 sm:text-sm">
@@ -638,9 +636,9 @@ export default function PlayerDetail({ isOpen, onClose }) {
             {detailPanel}
 
             {/* RIGHT */}
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.06),rgba(0,0,0,0.55))] p-4 ring-1 ring-white/10 backdrop-blur-xl sm:p-6">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] bg-[linear-gradient(145deg,rgba(255,255,255,0.05),rgba(0,0,0,0.45))] p-4 backdrop-blur-xl sm:p-6">
               {/* Tabs */}
-              <div className="flex items-center gap-2 rounded-full bg-black/25 p-1 ring-1 ring-white/15">
+              <div className="flex items-center gap-2 rounded-full bg-black/25 p-1">
                 {[
                   { id: "queue", label: "Danh sách phát" },
                   { id: "lyrics", label: "Lời bài hát" },
@@ -700,10 +698,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
                     el.scrollTo({ left: width * index, behavior: "smooth" });
                     setMobileTab(tab.id);
                   }}
-                  className={`rounded-full px-3 py-1 ring-1 transition ${
+                  className={`rounded-full px-3 py-1 transition ${
                     mobileTab === tab.id
-                      ? "bg-white/15 text-white/90 ring-white/20"
-                      : "bg-white/5 text-white/60 ring-white/10 md:hover:text-white/80"
+                      ? "bg-white/15 text-white/90"
+                      : "bg-white/5 text-white/60 md:hover:text-white/80"
                   }`}
                 >
                   {tab.label}
@@ -739,7 +737,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             >
               {/* Lyrics slide */}
               <div className="flex min-h-0 w-full min-w-[100%] snap-center overflow-hidden">
-                <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl overflow-hidden">
+                <div className="flex min-h-0 flex-1 flex-col rounded-3xl bg-white/5 p-5 backdrop-blur-xl overflow-hidden">
                   <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
                     Lời bài hát
                   </div>
@@ -763,7 +761,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
               {/* Queue slide */}
               <div className="flex min-h-0 w-full min-w-[100%] snap-center overflow-hidden">
-                <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/5 backdrop-blur-xl overflow-hidden">
+                <div className="flex min-h-0 flex-1 flex-col rounded-3xl bg-white/5 p-5 backdrop-blur-xl overflow-hidden">
                   <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
                     Danh sách phát
                   </div>
