@@ -1,4 +1,5 @@
 import { FiHeart, FiPause, FiPlay, FiRadio } from "react-icons/fi";
+import { Link } from "react-router-dom";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
@@ -18,6 +19,7 @@ export default function SongCard({ song, queue }) {
   const normalizedId = normalizeSongId(song);
   const isActive = normalizeSongId(currentSong) === normalizedId;
   const isLiked = normalizedId !== null && likedSongIds.includes(normalizedId);
+  const artistId = song?.artist_id ?? song?.artist?.id ?? song?.artistId;
 
   const handlePlay = (e) => {
     e.stopPropagation();
@@ -84,7 +86,17 @@ export default function SongCard({ song, queue }) {
           </div>
 
           <div className="truncate text-xs text-white/70 sm:text-sm">
-            {song.artist_name}
+            {artistId ? (
+              <Link
+                to={`/artist/${artistId}`}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+              >
+                {song.artist_name}
+              </Link>
+            ) : (
+              song.artist_name
+            )}
           </div>
         </div>
 

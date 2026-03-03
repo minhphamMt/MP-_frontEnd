@@ -4,6 +4,7 @@ import { getSongById } from "../api/song.api";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { fetchPlayableSong } from "../utils/song";
 import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
+import { Link } from "react-router-dom";
 import { resolveAssetUrl } from "../utils/asset";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 import OptimizedImage from "../components/common/OptimizedImage";
@@ -254,6 +255,8 @@ export default function History() {
             {history.map((item) => {
               const isPlayingCurrent =
                 normalizeSongId(currentSong) === normalizeSongId(item);
+              const artistId =
+                item?.artist_id ?? item?.artist?.id ?? item?.artistId;
 
               return (
                 <div
@@ -302,7 +305,16 @@ export default function History() {
                         {item.title}
                       </div>
                       <div className="truncate text-xs text-white/60">
-                        {item.artist_name}
+                        {artistId ? (
+                          <Link
+                            to={`/artist/${artistId}`}
+                            className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                          >
+                            {item.artist_name}
+                          </Link>
+                        ) : (
+                          item.artist_name
+                        )}
                       </div>
                     </div>
                   </div>

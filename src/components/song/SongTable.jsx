@@ -131,6 +131,8 @@ export default function SongTable({
               const isActive = normalizeSongId(currentSong) === songId;
               const isLiked = songId && likedSongIds.includes(songId);
               const order = song.rank ?? index + 1;
+              const artistId =
+                song?.artist_id ?? song?.artist?.id ?? song?.artistId;
 
               return (
                 <div
@@ -177,7 +179,16 @@ export default function SongTable({
                         {song.title}
                       </div>
                       <div className="truncate text-xs text-white/60">
-                        {song.artist_name}
+                        {artistId ? (
+                          <Link
+                            to={`/artist/${artistId}`}
+                            className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                          >
+                            {song.artist_name}
+                          </Link>
+                        ) : (
+                          song.artist_name
+                        )}
                       </div>
                     </div>
                   </div>

@@ -1,4 +1,5 @@
 import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
+import { Link } from "react-router-dom";
 import AddToPlaylistButton from "./AddToPlaylistButton";
 import { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
@@ -71,6 +72,8 @@ export default function LikedSongsSection({
               const songId = normalizeSongId(song);
               const isPlayingCurrent = normalizeSongId(currentSong) === songId;
               const isLiked = songId && likedSongIds.includes(songId);
+              const artistId =
+                song?.artist_id ?? song?.artist?.id ?? song?.artistId;
 
               return (
                 <div
@@ -126,7 +129,16 @@ export default function LikedSongsSection({
                         {song.title}
                       </p>
                       <p className="truncate text-xs text-white/60">
-                        {song.artist_name || song.artist}
+                        {artistId ? (
+                          <Link
+                            to={`/artist/${artistId}`}
+                            className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                          >
+                            {song.artist_name || song.artist}
+                          </Link>
+                        ) : (
+                          song.artist_name || song.artist
+                        )}
                       </p>
                     </div>
                 </div>

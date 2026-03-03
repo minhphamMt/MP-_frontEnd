@@ -10,6 +10,7 @@ import {
   FaVolumeXmark,
 } from "react-icons/fa6";
 import { FiChevronDown, FiHeart } from "react-icons/fi";
+import { Link } from "react-router-dom";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
 import PlayerDetailLyrics from "./PlayerDetailLyrics";
@@ -245,6 +246,12 @@ export default function PlayerDetail({ isOpen, onClose }) {
   const cover = resolveAssetUrl(
     currentSong.cover || currentSong.cover_url || currentSong.image
   );
+  const artistId =
+    currentSong?.artist_id ??
+    currentSong?.artist?.id ??
+    currentSong?.artistId;
+  const artistLabel =
+    currentSong?.artist?.name || currentSong?.artist_name || "Unknown";
 
   const likeButton = (
     <button
@@ -342,7 +349,16 @@ export default function PlayerDetail({ isOpen, onClose }) {
           {currentSong.title}
         </h3>
         <p className="mt-1 truncate text-sm text-white/70">
-          {currentSong.artist?.name || currentSong.artist_name || "Unknown"}
+          {artistId ? (
+            <Link
+              to={`/artist/${artistId}`}
+              className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+            >
+              {artistLabel}
+            </Link>
+          ) : (
+            artistLabel
+          )}
         </p>
       </div>
 
@@ -581,7 +597,16 @@ export default function PlayerDetail({ isOpen, onClose }) {
               {currentSong.title}
             </h2>
             <p className="text-xs text-white/60 sm:text-sm">
-              {currentSong.artist?.name || currentSong.artist_name || "Unknown"}
+              {artistId ? (
+                <Link
+                  to={`/artist/${artistId}`}
+                  className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                >
+                  {artistLabel}
+                </Link>
+              ) : (
+                artistLabel
+              )}
             </p>
           </div>
 

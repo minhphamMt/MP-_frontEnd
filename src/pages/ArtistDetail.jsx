@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import api from "../api/axios";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
@@ -76,6 +76,7 @@ const renderBioHtml = (bio = "") => {
         songList.map((s) => ({
           ...s,
           artist_name: artistData?.name || artistData?.alias || "",
+          artist_id: artistData?.id ?? id,
           audio_url: `${import.meta.env.VITE_API_BASE_URL}${s.audio_path}`,
         }))
       );
@@ -273,6 +274,9 @@ const renderBioHtml = (bio = "") => {
               const songId = normalizeSongId(song);
               const isActive = normalizeSongId(currentSong) === songId;
               const isLiked = songId && likedSongIds.includes(songId);
+              const artistId = song.artist_id || id;
+              const artistLabel =
+                song.artist_name || artist?.name || "Nghệ sĩ";
 
               return (
                 <div
@@ -326,8 +330,18 @@ const renderBioHtml = (bio = "") => {
                         {song.title}
                       </div>
                         <div className="hidden truncate text-xs text-white/60 xl:block">
-                        {song.artist_name}
-                      </div>
+                          {artistId ? (
+                            <Link
+                              to={`/artist/${artistId}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                            >
+                              {artistLabel}
+                            </Link>
+                          ) : (
+                            artistLabel
+                          )}
+                        </div>
                     </div>
                   </div>
 

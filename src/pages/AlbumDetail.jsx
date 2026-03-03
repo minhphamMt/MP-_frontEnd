@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { FiCalendar, FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import { getAlbumById } from "../api/album.api";
 import useAlbumLikeStore, {
@@ -54,6 +54,8 @@ export default function AlbumDetail() {
           id: s.id,
           title: s.title,
           artist_name: s.artist_name || s.artist?.name || "",
+          artist_id:
+            s.artist_id || s.artist?.id || data.artist_id || data.artist?.id,
           duration: s.duration,
           cover_url: s.cover_url,
           audio_url: `${import.meta.env.VITE_API_BASE_URL}${s.audio_path}`,
@@ -265,6 +267,10 @@ export default function AlbumDetail() {
               const songId = normalizeSongId(song);
               const isActive = normalizeSongId(currentSong) === songId;
               const isLiked = songId && likedSongIds.includes(songId);
+              const artistId =
+                song.artist_id || album?.artist_id || album?.artist?.id;
+              const artistLabel =
+                song.artist_name || artistDisplayName || "Nghệ sĩ";
               return (
                 <div
                   key={song.id}
@@ -319,8 +325,18 @@ export default function AlbumDetail() {
                         {song.title}
                       </div>
                         <div className="hidden truncate text-xs text-white/60 xl:block">
-                        {song.artist_name}
-                      </div>
+                          {artistId ? (
+                            <Link
+                              to={`/artist/${artistId}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                            >
+                              {artistLabel}
+                            </Link>
+                          ) : (
+                            artistLabel
+                          )}
+                        </div>
                     </div>
                   </div>
                   {/* ACTIONS */}

@@ -13,6 +13,7 @@ import {
 } from "react-icons/hi2";
 import { RiRepeat2Fill } from "react-icons/ri";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import PlayerDetail from "./PlayerDetail";
 import { resolveAssetUrl } from "../../utils/asset";
@@ -59,6 +60,12 @@ export default function PlayerBar() {
   const volumePercent = Math.round((volume ?? 0) * 100);
   const displayVolumePercent = muted ? 0 : volumePercent;
   const volumeGradient = `linear-gradient(to right, #1db954 ${displayVolumePercent}%, rgba(255,255,255,0.2) ${displayVolumePercent}%)`;
+  const artistId =
+    currentSong?.artist_id ??
+    currentSong?.artist?.id ??
+    currentSong?.artistId;
+  const artistLabel =
+    currentSong?.artist_name || currentSong?.artist?.name || "";
 
   const handleVolumeChange = (value) => {
     const next = Math.round(Number(value));
@@ -92,7 +99,17 @@ export default function PlayerBar() {
               {currentSong.title}
             </div>
             <div className="truncate text-xs text-white/60">
-              {currentSong.artist_name}
+              {artistId ? (
+                <Link
+                  to={`/artist/${artistId}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                >
+                  {artistLabel}
+                </Link>
+              ) : (
+                artistLabel
+              )}
             </div>
           </div>
 
@@ -166,7 +183,16 @@ export default function PlayerBar() {
                 {currentSong.title}
               </div>
               <div className="truncate text-sm text-white/60">
-                {currentSong.artist_name}
+                {artistId ? (
+                  <Link
+                    to={`/artist/${artistId}`}
+                    className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                  >
+                    {artistLabel}
+                  </Link>
+                ) : (
+                  artistLabel
+                )}
               </div>
             </div>
             <button

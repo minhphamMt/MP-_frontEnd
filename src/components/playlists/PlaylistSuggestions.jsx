@@ -1,4 +1,5 @@
 import { resolveAssetUrl } from "../../utils/asset";
+import { Link } from "react-router-dom";
 import OptimizedImage from "../common/OptimizedImage";
 
 export default function PlaylistSuggestions({
@@ -54,12 +55,17 @@ export default function PlaylistSuggestions({
         )}
 
         {/* ITEMS */}
-        {songs.map((song) => (
-          <div
-            key={song.id}
-            className="group flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between transition
+        {songs.map((song) => {
+          const artistId =
+            song?.artist_id ?? song?.artist?.id ?? song?.artistId;
+          const artistLabel = song?.artist_name || song?.artist || "";
+
+          return (
+            <div
+              key={song.id}
+              className="group flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between transition
                        md:hover:bg-white/5 rounded-xl px-2"
-          >
+            >
             {/* LEFT */}
             <div className="flex min-w-0 items-center gap-3">
               <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
@@ -85,7 +91,16 @@ export default function PlaylistSuggestions({
                   {song.title}
                 </p>
                 <p className="truncate text-xs text-white/60">
-                  {song.artist_name}
+                  {artistId ? (
+                    <Link
+                      to={`/artist/${artistId}`}
+                      className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                    >
+                      {artistLabel}
+                    </Link>
+                  ) : (
+                    artistLabel
+                  )}
                 </p>
               </div>
             </div>
@@ -113,8 +128,9 @@ export default function PlaylistSuggestions({
                 + Thêm
               </button>
             </div>
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

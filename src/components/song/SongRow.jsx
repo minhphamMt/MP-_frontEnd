@@ -10,6 +10,7 @@ export default function SongRow({ song, queue }) {
 
   const isActive =
     normalizeSongId(currentSong) === normalizeSongId(song);
+  const artistId = song?.artist_id ?? song?.artist?.id ?? song?.artistId;
 
   const handlePlay = (e) => {
     e.stopPropagation();
@@ -68,7 +69,17 @@ export default function SongRow({ song, queue }) {
 
         {/* Artist + Album */}
         <div className="flex min-w-0 max-w-full items-center gap-1 overflow-hidden text-xs text-white/60">
-          <span className="truncate">{song.artist_name}</span>
+          {artistId ? (
+            <Link
+              to={`/artist/${artistId}`}
+              onClick={(e) => e.stopPropagation()}
+              className="min-w-0 truncate text-white/70 transition md:hover:text-emerald-300 md:hover:underline"
+            >
+              {song.artist_name}
+            </Link>
+          ) : (
+            <span className="truncate">{song.artist_name}</span>
+          )}
 
           {song.album_id && song.album_title && (
             <>

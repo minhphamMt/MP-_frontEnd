@@ -1,4 +1,5 @@
 import { memo, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
 
@@ -20,6 +21,8 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
     const sCover = resolveAssetUrl(song.cover || song.cover_url || song.image);
     const realIndex = queue.findIndex((q) => q === song);
     const isCurrent = realIndex === currentIndex;
+    const artistId = song?.artist_id ?? song?.artist?.id ?? song?.artistId;
+    const artistLabel = song?.artist?.name || song?.artist_name || "";
 
     return (
       <button
@@ -64,7 +67,17 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
             ) : null}
           </div>
           <div className="text-xs text-white/60 line-clamp-1">
-            {song.artist?.name || song.artist_name || ""}
+            {artistId ? (
+              <Link
+                to={`/artist/${artistId}`}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+              >
+                {artistLabel}
+              </Link>
+            ) : (
+              artistLabel
+            )}
           </div>
         </div>
       </button>

@@ -386,14 +386,16 @@ const xStep =
     playSong(playable, updatedQueue);
   };
 
-  const renderRankItem = (song, idx) => (
-    <div
-      key={song.id || idx}
+  const renderRankItem = (song, idx) => {
+    const artistId = song?.artist_id ?? song?.artist?.id ?? song?.artistId;
+    const artistLabel = song?.artist_name || song?.artist || "";
+
+    return (
+      <div
+        key={song.id || idx}
         onClick={() => handlePlay(song, weeklySongs)}
-      className={`group grid grid-cols-[32px_minmax(0,3fr)_minmax(0,1fr)] items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
-        song.audio_url ? "md:hover:bg-white/5" : "opacity-70 cursor-not-allowed"
-      }`}
-    >
+        className="group grid grid-cols-[32px_minmax(0,3fr)_minmax(0,1fr)] items-center gap-3 rounded-xl px-3 py-2 text-sm transition md:hover:bg-white/5 cursor-pointer"
+      >
       <div className="flex items-center justify-center text-lg font-semibold text-white/70 tabular-nums leading-none">
         {song.rank ?? idx + 1}
       </div>
@@ -405,8 +407,8 @@ const xStep =
             alt={song.title}
             className="h-full w-full object-cover"
           />
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition md:group-hover:opacity-100">
-            <span className="text-white text-sm">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition md:group-hover:opacity-100">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[#0c0914] shadow-lg shadow-black/30">
               <FaPlay size={12} />
             </span>
           </div>
@@ -415,7 +417,17 @@ const xStep =
         <div className="min-w-0">
           <div className="truncate font-medium text-white">{song.title}</div>
           <div className="truncate text-xs text-white/60">
-            {song.artist_name}
+            {artistId ? (
+              <Link
+                to={`/artist/${artistId}`}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+              >
+                {artistLabel}
+              </Link>
+            ) : (
+              artistLabel
+            )}
           </div>
         </div>
       </div>
@@ -424,13 +436,14 @@ const xStep =
         <FaRegClock size={12} />
         <span>{formatDuration(song.duration)}</span>
       </div>
-    </div>
-  );
+      </div>
+    );
+  };
 
   return (
      <div className="min-h-screen space-y-10 bg-[#121212] px-4 py-6 sm:px-8">
       <Section
-        title="MinhChart"
+        title="MChart"
         subtitle="Dữ liệu tuần này"
         action={
           <div className="flex items-center gap-2 text-xs text-white/70">
@@ -675,36 +688,54 @@ const xStep =
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              {highlightedSeries.map((item, idx) => (
-                <div
-                  key={item.song?.id || idx}
-                  className="group flex items-center gap-3 rounded-xl border border-white/5 bg-[#242424] px-3 py-2 transition-all duration-300 md:hover:-translate-y-0.5 md:hover:bg-[#2a2a2a] md:hover:shadow-lg md:hover:shadow-black/30"
-                >
-                  <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/10 bg-[#1f1f1f]">
-                    <OptimizedImage
-                      src={getSongCover(item.song)}
-                      alt={item.song?.title}
-                      className="h-full w-full object-cover"
-                    />
-                    <span
-                      className="absolute inset-0"
-                      style={{
-                        boxShadow: `inset 0 0 0 2px ${
-                          colors[idx % colors.length].main
-                        }`,
-                      }}
-                    />
-                  </div>
-                  <div className="text-sm">
-                    <div className="max-w-[220px] truncate font-semibold text-white">
-                      {item.song?.title}
+              {highlightedSeries.map((item, idx) => {
+                const artistId =
+                  item.song?.artist_id ??
+                  item.song?.artist?.id ??
+                  item.song?.artistId;
+                const artistLabel =
+                  item.song?.artist_name || item.song?.artist || "";
+
+                return (
+                  <div
+                    key={item.song?.id || idx}
+                    className="group flex items-center gap-3 rounded-xl border border-white/5 bg-[#242424] px-3 py-2 transition-all duration-300 md:hover:-translate-y-0.5 md:hover:bg-[#2a2a2a] md:hover:shadow-lg md:hover:shadow-black/30"
+                  >
+                    <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/10 bg-[#1f1f1f]">
+                      <OptimizedImage
+                        src={getSongCover(item.song)}
+                        alt={item.song?.title}
+                        className="h-full w-full object-cover"
+                      />
+                      <span
+                        className="absolute inset-0"
+                        style={{
+                          boxShadow: `inset 0 0 0 2px ${
+                            colors[idx % colors.length].main
+                          }`,
+                        }}
+                      />
                     </div>
-                    <div className="max-w-[220px] truncate text-white/60">
-                      {item.song?.artist_name}
+                    <div className="text-sm">
+                      <div className="max-w-[220px] truncate font-semibold text-white">
+                        {item.song?.title}
+                      </div>
+                      <div className="max-w-[220px] truncate text-white/60">
+                        {artistId ? (
+                          <Link
+                            to={`/artist/${artistId}`}
+                            className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                          >
+                            {artistLabel}
+                          </Link>
+                        ) : (
+                          artistLabel
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -748,8 +779,10 @@ const xStep =
 
                 {!loadingRegions &&
                   column.items.map((song, idx) => {
-                    
                     const playable = Boolean(song.audio_url);
+                    const artistId =
+                      song?.artist_id ?? song?.artist?.id ?? song?.artistId;
+                    const artistLabel = song?.artist_name || song?.artist || "";
                     return (
                       <div
                         key={song.id || idx}
@@ -782,7 +815,17 @@ const xStep =
                             {song.title}
                           </div>
                           <div className="truncate text-xs text-white/60">
-                            {song.artist_name}
+                            {artistId ? (
+                              <Link
+                                to={`/artist/${artistId}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                              >
+                                {artistLabel}
+                              </Link>
+                            ) : (
+                              artistLabel
+                            )}
                           </div>
                         </div>
 
