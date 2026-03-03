@@ -84,15 +84,15 @@ export default function PlayerDetailLyrics({
   return (
     <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden">
       {lyricsState.loading && (
-        <p className="text-sm text-white/60">Đang tải lời bài hát...</p>
+        <p className="rounded-xl border-[0.5px] border-slate-500/34 bg-white/[0.04] px-3 py-2 text-sm text-white/65">Đang tải lời bài hát...</p>
       )}
       {lyricsState.error && (
-        <p className="text-sm text-red-300">{lyricsState.error}</p>
+        <p className="rounded-xl border border-red-300/30 bg-red-400/10 px-3 py-2 text-sm text-red-200">{lyricsState.error}</p>
       )}
       {!lyricsState.loading &&
         !lyricsState.error &&
         lyricsState.items.length === 0 && (
-          <p className="text-sm text-white/50">Bài hát chưa có lời.</p>
+          <p className="rounded-xl border-[0.5px] border-slate-500/34 bg-white/[0.04] px-3 py-2 text-sm text-white/55">Bài hát chưa có lời.</p>
         )}
 
       {!lyricsState.loading &&
@@ -101,7 +101,7 @@ export default function PlayerDetailLyrics({
           <div
             ref={lyricsContainerRef}
             className="
-              mt-3 flex-1 space-y-2 overflow-y-auto pr-2
+              mt-3 flex-1 space-y-1.5 overflow-y-auto pr-2
               text-sm sm:text-base
               leading-relaxed
               scrollbar-hidden
@@ -117,11 +117,11 @@ export default function PlayerDetailLyrics({
                   data-lyric-index={index}
                   onClick={() => handleLyricClick(item)}
                   className={`
-                    group block w-full rounded-2xl px-3 py-2 text-left transition
+                    group block w-full rounded-xl border px-3 py-2 text-left transition
                     ${
                       isLineActive
-                        ? "text-white"
-                        : "text-white/60 md:hover:text-white/85"
+                        ? "border-slate-400/42 bg-white/[0.14] text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)]"
+                        : "border-transparent text-white/62 md:hover:border-slate-500/34 md:hover:bg-white/[0.05] md:hover:text-white/86"
                     }
                   `}
                 >
@@ -130,8 +130,8 @@ export default function PlayerDetailLyrics({
                       block transition
                       ${
                         isLineActive
-                          ? "text-base sm:text-lg font-semibold"
-                          : "text-sm sm:text-base"
+                          ? "text-[15px] sm:text-[1.05rem] font-semibold"
+                          : "text-[13px] sm:text-[15px]"
                       }
                     `}
                   >
@@ -145,3 +145,5 @@ export default function PlayerDetailLyrics({
     </div>
   );
 }
+
+

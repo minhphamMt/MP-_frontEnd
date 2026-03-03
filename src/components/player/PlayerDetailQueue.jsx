@@ -30,17 +30,17 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
         type="button"
         onClick={() => playAt(realIndex)}
         className={`
-          group flex w-full items-center gap-3 rounded-2xl border px-3 py-2 text-left transition
-          ring-1 ring-white/5
+          group relative flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition
+          ring-1 ring-black/22 backdrop-blur-md
            ${
             isCurrent
-              ? "border-[#1db954]/60 bg-[#1db954]/10 shadow-[0_0_30px_rgba(29,185,84,0.2)]"
-              : "border-white/10 bg-white/5 md:hover:border-white/20 md:hover:bg-white/10"
+              ? "border-[#38d982]/55 bg-[#1db954]/14 shadow-[0_14px_28px_rgba(20,120,72,0.26)]"
+              : "border-slate-500/35 bg-white/[0.04] md:hover:border-slate-400/45 md:hover:bg-white/[0.08]"
           }
-          ${isPlayed ? "opacity-45" : ""}
+          ${isPlayed ? "opacity-55" : ""}
         `}
       >
-        <div className="h-12 w-12 overflow-hidden rounded-xl bg-white/10 ring-1 ring-white/10">
+        <div className="h-12 w-12 overflow-hidden rounded-xl bg-white/10 ring-1 ring-black/30 shadow-[0_10px_22px_rgba(0,0,0,0.25)]">
           {sCover && (
             <OptimizedImage
               src={sCover}
@@ -50,23 +50,23 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
           )}
         </div>
 
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <div className="text-sm font-semibold line-clamp-1">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-start gap-2">
+            <div className="min-w-0 flex-1 text-[13px] font-semibold leading-tight text-white/90 sm:text-sm line-clamp-2">
               {song.title}
             </div>
             {label ? (
-              <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/70 ring-1 ring-white/10">
+              <span className="shrink-0 rounded-full border-[0.5px] border-slate-500/34 bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/72">
                 {label}
               </span>
             ) : null}
              {isCurrent ? (
-              <span className="rounded-full bg-[#1db954]/20 px-2 py-0.5 text-[10px] font-semibold text-[#1db954] ring-1 ring-[#1db954]/30">
+              <span className="shrink-0 rounded-full border border-[#38d982]/35 bg-[#1db954]/20 px-2 py-0.5 text-[10px] font-semibold text-[#66e8a1]">
                 Đang phát
               </span>
             ) : null}
           </div>
-          <div className="text-xs text-white/60 line-clamp-1">
+          <div className="mt-1 text-[11px] text-white/62 sm:text-xs line-clamp-2">
             {artistId ? (
               <Link
                 to={`/artist/${artistId}`}
@@ -85,9 +85,9 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
   };
 
   return (
-    <div className="mt-5 flex-1 min-h-0 space-y-7 overflow-y-auto pr-1">
+    <div className="mt-4 flex-1 min-h-0 space-y-6 overflow-y-auto pr-1">
       {played.length ? (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {played.map((song, idx) => (
             <Item key={song.id || idx} song={song} idx={idx} isPlayed />
           ))}
@@ -95,12 +95,12 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
 ) : null}
 
       <div>
-        <div className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.34em] text-white/56">
           Tiếp theo
         </div>
 
         {upcoming.length ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {upcoming.map((song, idx) => (
               <Item key={song.id || idx} song={song} idx={idx} />
             ))}
@@ -113,3 +113,5 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
   );
 }
 export default memo(PlayerDetailQueue);
+
+

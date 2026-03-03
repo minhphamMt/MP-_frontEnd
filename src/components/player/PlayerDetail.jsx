@@ -9,7 +9,7 @@ import {
   FaVolumeHigh,
   FaVolumeXmark,
 } from "react-icons/fa6";
-import { FiChevronDown, FiHeart } from "react-icons/fi";
+import { FiHeart } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
@@ -246,6 +246,19 @@ export default function PlayerDetail({ isOpen, onClose }) {
   const cover = resolveAssetUrl(
     currentSong.cover || currentSong.cover_url || currentSong.image
   );
+  const panelSurfaceStyle = cover
+    ? {
+        backgroundImage: `linear-gradient(160deg, rgba(15, 20, 31, 0.64), rgba(6, 10, 18, 0.76)), radial-gradient(circle at 16% -10%, rgba(255, 255, 255, 0.14), transparent 48%), url(${cover})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundBlendMode: "normal, screen, overlay",
+      }
+    : {
+        backgroundImage:
+          "linear-gradient(160deg, rgba(15,20,31,0.66), rgba(6,10,18,0.78))",
+      };
+  const panelSurfaceClass =
+    "border-[0.5px] border-[#2a3140]/90 bg-slate-900/42 shadow-[0_30px_70px_rgba(2,8,18,0.58)] ring-1 ring-black/46 backdrop-blur-[30px]";
   const artistId =
     currentSong?.artist_id ??
     currentSong?.artist?.id ??
@@ -262,8 +275,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
       }}
       className={`flex h-10 w-10 items-center justify-center rounded-full transition active:scale-95 ${
         likedSongIds.includes(normalizeSongId(currentSong))
-          ? "text-[#1db954] bg-[#1db954]/15"
-          : "text-white/80 bg-white/5 md:hover:bg-white/10"
+          ? "border border-[#33d17a]/55 bg-[#1db954]/24 text-[#66e79d] shadow-[0_0_24px_rgba(29,185,84,0.3)]"
+          : "border-[0.5px] border-[#2a3140]/82 bg-white/[0.06] text-white/80 md:hover:bg-white/12"
       }`}
       aria-label="Yêu thích"
     >
@@ -285,7 +298,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const detailPanel = (
   <div
-    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] bg-[linear-gradient(160deg,rgba(6,10,16,0.1),rgba(3,5,9,0.22))] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.2)] backdrop-blur-sm sm:p-6 ${songSlideClass}`}
+    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] p-4 sm:p-6 ${panelSurfaceClass} ${songSlideClass}`}
+    style={panelSurfaceStyle}
   >
     {/* ✅ KHÔNG SCROLL ở panel này để không mất controls */}
     <div className="flex min-h-0 flex-1 flex-col">
@@ -302,7 +316,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             height: "clamp(180px, 38vh, 320px)",
           }}
         >
-          <div className="relative z-10 h-full w-[min(40%,320px)] overflow-hidden rounded-3xl">
+          <div className="relative z-10 h-full w-[min(42%,336px)] overflow-hidden rounded-3xl ring-1 ring-black/28 shadow-[0_28px_70px_rgba(8,14,28,0.52)]">
             {cover && (
               <OptimizedImage
                 src={cover}
@@ -313,10 +327,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
 
           <div className="relative z-10 min-w-0 flex-1">
-            <h3 className="max-w-full overflow-hidden text-[clamp(2rem,4.2vw,4rem)] font-semibold leading-[1.06] tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+            <h3 className="max-w-full overflow-hidden text-[clamp(1.6rem,3.2vw,3.15rem)] font-semibold leading-[1.08] tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
               {currentSong.title}
             </h3>
-            <p className="mt-3 overflow-hidden text-[clamp(1.45rem,2.4vw,2.2rem)] font-medium leading-tight tracking-wide text-emerald-400/80 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:1]">
+            <p className="mt-2.5 overflow-hidden text-[clamp(0.98rem,1.7vw,1.35rem)] font-medium leading-snug tracking-wide text-emerald-300/90 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
               {artistId ? (
                 <Link
                   to={`/artist/${artistId}`}
@@ -335,7 +349,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
         {/* Phone: đĩa tròn */}
         <div className="relative flex items-center justify-center sm:hidden">
           <div
-            className="overflow-hidden rounded-full bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.60)]"
+            className="overflow-hidden rounded-full border-[0.5px] border-slate-500/32 bg-white/5 shadow-[0_30px_90px_rgba(4,10,20,0.62)]"
             style={{
               // ✅ co theo màn hình điện thoại để không lẹm
               width: "clamp(210px, 70vw, 320px)",
@@ -365,10 +379,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
       </div>
 
       <div className="mt-3 text-center sm:hidden">
-        <h3 className="mx-auto max-w-[95%] overflow-hidden text-[clamp(1.35rem,6.5vw,1.95rem)] font-semibold leading-tight tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+        <h3 className="mx-auto max-w-[95%] overflow-hidden text-[clamp(1.1rem,5.2vw,1.55rem)] font-semibold leading-tight tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
           {currentSong.title}
         </h3>
-        <p className="mx-auto mt-1 max-w-[95%] overflow-hidden text-sm text-white/70 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:1]">
+        <p className="mx-auto mt-1 max-w-[95%] overflow-hidden text-xs text-white/75 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
           {artistId ? (
             <Link
               to={`/artist/${artistId}`}
@@ -427,11 +441,13 @@ export default function PlayerDetail({ isOpen, onClose }) {
         </div>
 
         {/* Controls: luôn center */}
-        <div className="flex items-center justify-center gap-4 text-xl sm:gap-5 sm:text-2xl">
+        <div className="flex items-center justify-center gap-3 text-lg sm:gap-4 sm:text-xl">
           <button
             onClick={toggleShuffle}
-            className={`transition ${
-              shuffle ? "text-[#1db954]" : "text-white/55 md:hover:text-white/85"
+            className={`flex h-10 w-10 items-center justify-center rounded-full border transition sm:h-11 sm:w-11 ${
+              shuffle
+                ? "border-[#37d880]/60 bg-[#1db954]/22 text-[#5ce297] shadow-[0_0_22px_rgba(29,185,84,0.28)]"
+                : "border-[#2a3140]/82 bg-white/[0.05] text-white/65 md:hover:bg-white/12 md:hover:text-white/90"
             }`}
             aria-label="Trộn"
           >
@@ -440,7 +456,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           <button
             onClick={playPrev}
-            className="text-white/75 transition md:hover:text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2a3140]/82 bg-white/[0.05] text-white/80 transition md:hover:bg-white/12 md:hover:text-white sm:h-11 sm:w-11"
             aria-label="Bài trước"
           >
             <FaBackwardStep />
@@ -448,7 +464,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           <button
             onClick={togglePlay}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-[#3bd16f] text-2xl text-black shadow-[0_0_45px_rgba(59,209,111,0.55)] transition active:scale-95 sm:h-16 sm:w-16"
+            className="relative flex h-14 w-14 items-center justify-center rounded-full border border-[#7df3af]/55 bg-[radial-gradient(circle_at_32%_28%,#8ef9bb,#42d57b_58%,#249956)] text-2xl text-[#062512] shadow-[0_0_48px_rgba(75,220,126,0.58)] transition active:scale-95 sm:h-16 sm:w-16"
             aria-label="Phát/Tạm dừng"
           >
             {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
@@ -456,7 +472,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           <button
             onClick={playNext}
-            className="text-white/75 transition md:hover:text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2a3140]/82 bg-white/[0.05] text-white/80 transition md:hover:bg-white/12 md:hover:text-white sm:h-11 sm:w-11"
             aria-label="Bài tiếp"
           >
             <FaForwardStep />
@@ -464,10 +480,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           <button
             onClick={toggleRepeatMode}
-            className={`relative transition ${
+            className={`relative flex h-10 w-10 items-center justify-center rounded-full border transition sm:h-11 sm:w-11 ${
               repeatMode !== "off"
-                ? "text-[#1db954]"
-                : "text-white/55 md:hover:text-white/85"
+                ? "border-[#37d880]/60 bg-[#1db954]/22 text-[#5ce297] shadow-[0_0_22px_rgba(29,185,84,0.28)]"
+                : "border-[#2a3140]/82 bg-white/[0.05] text-white/65 md:hover:bg-white/12 md:hover:text-white/90"
             }`}
             aria-label="Lặp"
           >
@@ -486,12 +502,12 @@ export default function PlayerDetail({ isOpen, onClose }) {
         <div className="flex items-center justify-end gap-2 md:gap-3">
           <AddToPlaylistButton
             song={currentSong}
-            triggerClassName="h-10 w-10 bg-white/5 text-white/80 md:hover:bg-white/15"
+            triggerClassName="h-10 w-10 border-[0.5px] border-[#2a3140]/82 bg-white/[0.06] text-white/80 md:hover:bg-white/14"
           />
 
           <button
             onClick={toggleMute}
-            className="hidden text-lg opacity-70 transition md:inline-flex md:hover:opacity-100"
+            className="hidden h-10 w-10 items-center justify-center rounded-full border border-[#2a3140]/82 bg-white/[0.05] text-lg text-white/75 transition md:inline-flex md:hover:bg-white/12 md:hover:text-white"
             aria-label="Tắt/Mở tiếng"
           >
             {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
@@ -519,7 +535,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       <div className="mt-3 flex items-center gap-3 px-1 md:hidden">
         <button
           onClick={toggleMute}
-          className="text-base text-white/70 transition active:scale-95"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#2a3140]/82 bg-white/[0.05] text-base text-white/78 transition active:scale-95"
           aria-label="Tắt/Mở tiếng"
         >
           {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
@@ -565,7 +581,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     >
       {/* BACKDROP */}
       <div
-        className="absolute inset-0 bg-black/5"
+        className="absolute inset-0 bg-[#04070f]/40"
         onMouseDown={(e) => {
           if (e.target !== e.currentTarget) return;
           if (backdropReady) onClose?.();
@@ -575,14 +591,25 @@ export default function PlayerDetail({ isOpen, onClose }) {
       {/* BG IMAGE (isolated layer) */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute inset-[-34%] opacity-[0.05] blur-[240px]"
+          className="absolute inset-[-20%] opacity-[0.62] blur-[95px]"
           style={{
             backgroundImage: `url(${cover})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            filter: "saturate(0.22) brightness(0.5) contrast(0.85)",
+            filter: "saturate(1.42) brightness(0.5) contrast(1.08)",
           }}
         />
+        <div
+          className="absolute inset-[-26%] opacity-[0.26] blur-[140px]"
+          style={{
+            backgroundImage: `url(${cover})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "saturate(1.7) hue-rotate(-8deg) brightness(0.55)",
+            transform: "scale(1.07)",
+          }}
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_12%,rgba(137,240,196,0.16),transparent_42%),radial-gradient(circle_at_82%_80%,rgba(74,164,255,0.16),transparent_46%),linear-gradient(160deg,rgba(5,8,16,0.34),rgba(1,3,8,0.72))]" />
       </div>
 
       {/* CONTENT */}
@@ -596,12 +623,13 @@ export default function PlayerDetail({ isOpen, onClose }) {
               absolute
               right-3 top-[calc(env(safe-area-inset-top)+8px)]
               z-20
-              flex h-9 w-9 items-center justify-center
-              rounded-2xl
+              flex h-9 w-9 items-center justify-center lg:hidden
+              rounded-xl
+              border-[0.5px] border-[#2a3140]/88
               bg-black/35
               text-base text-white/85
-              shadow-[0_8px_25px_rgba(0,0,0,0.35)]
-              transition md:hover:bg-black/70 md:hover:text-white
+              shadow-[0_12px_30px_rgba(0,0,0,0.42)]
+              transition md:hover:bg-black/60 md:hover:text-white
               sm:right-6 sm:top-6 sm:h-10 sm:w-10
             "
             aria-label="Đóng"
@@ -611,7 +639,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* Title */}
           <div className="mt-4 hidden flex-col items-center gap-1 text-center sm:mt-6 lg:hidden sm:flex">
-            <h2 className="max-w-[min(90vw,780px)] overflow-hidden text-[clamp(1.25rem,3.6vw,2.2rem)] font-semibold leading-tight tracking-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+            <h2 className="max-w-[min(90vw,780px)] overflow-hidden text-[clamp(1.05rem,3vw,1.7rem)] font-semibold leading-tight tracking-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
               {currentSong.title}
             </h2>
             <p className="text-xs text-white/60 sm:text-sm">
@@ -634,26 +662,40 @@ export default function PlayerDetail({ isOpen, onClose }) {
             {detailPanel}
 
             {/* RIGHT */}
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] bg-[linear-gradient(145deg,rgba(6,10,16,0.1),rgba(3,5,9,0.24))] p-4 backdrop-blur-sm sm:p-6">
-              {/* Tabs */}
-              <div className="flex items-center gap-2 rounded-full bg-black/25 p-1">
-                {[
-                  { id: "queue", label: "Danh sách phát" },
-                  { id: "lyrics", label: "Lời bài hát" },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold transition sm:text-sm ${
-                      activeTab === tab.id
-                        ? "bg-[#f5f4ef] text-[#205534] shadow-sm"
-                        : "text-white/70 md:hover:text-white"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
+            <div
+              className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] p-4 sm:p-6 ${panelSurfaceClass}`}
+              style={panelSurfaceStyle}
+            >
+              {/* Tabs + close */}
+              <div className="flex items-center gap-2">
+                <div className="flex flex-1 items-center gap-2 rounded-full border-[0.5px] border-[#2a3140]/82 bg-black/30 p-1">
+                  {[
+                    { id: "queue", label: "Danh sách phát" },
+                    { id: "lyrics", label: "Lời bài hát" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold transition sm:text-sm ${
+                        activeTab === tab.id
+                          ? "bg-white/95 text-slate-900 shadow-[0_8px_18px_rgba(0,0,0,0.18)]"
+                          : "text-white/72 md:hover:bg-white/8 md:hover:text-white"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[0.5px] border-[#2a3140]/88 bg-black/36 text-white/85 shadow-[0_12px_28px_rgba(0,0,0,0.4)] transition md:hover:bg-black/58 md:hover:text-white"
+                  aria-label="Đóng"
+                >
+                  <span className="-mt-[1px] text-lg leading-none">✕</span>
+                </button>
               </div>
 
               {/* ✅ only this area scrolls */}
@@ -680,7 +722,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* Mobile/tablet swipe layout */}
           <div className="mt-3 flex min-h-0 flex-1 flex-col overflow-hidden lg:hidden">
-            <div className="mb-4 flex items-center justify-center gap-2 overflow-x-auto px-1 text-xs text-white/60 sm:mb-3 sm:px-0">
+            <div className="mb-4 flex items-center justify-center gap-2 overflow-x-auto rounded-full border-[0.5px] border-[#2a3140]/82 bg-black/24 px-2 py-1 text-xs text-white/60 sm:mb-3 sm:px-1">
               {[
                 { id: "lyrics", label: "Lời bài hát" },
                 { id: "now", label: "Đang phát" },
@@ -696,10 +738,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
                     el.scrollTo({ left: width * index, behavior: "smooth" });
                     setMobileTab(tab.id);
                   }}
-                  className={`rounded-full px-3 py-1 transition ${
+                  className={`rounded-full px-3 py-1.5 font-medium transition ${
                     mobileTab === tab.id
-                      ? "bg-white/15 text-white/90"
-                      : "bg-white/5 text-white/60 md:hover:text-white/80"
+                      ? "bg-white/92 text-slate-900 shadow-[0_8px_16px_rgba(0,0,0,0.18)]"
+                      : "text-white/62 md:hover:bg-white/8 md:hover:text-white/85"
                   }`}
                 >
                   {tab.label}
@@ -735,7 +777,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
             >
               {/* Lyrics slide */}
               <div className="flex min-h-0 w-full min-w-[100%] snap-center overflow-hidden">
-                <div className="flex min-h-0 flex-1 flex-col rounded-3xl bg-black/20 p-5 backdrop-blur-sm overflow-hidden">
+                <div
+                  className={`flex min-h-0 flex-1 flex-col rounded-3xl p-5 overflow-hidden ${panelSurfaceClass}`}
+                  style={panelSurfaceStyle}
+                >
                   <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
                     Lời bài hát
                   </div>
@@ -759,7 +804,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
               {/* Queue slide */}
               <div className="flex min-h-0 w-full min-w-[100%] snap-center overflow-hidden">
-                <div className="flex min-h-0 flex-1 flex-col rounded-3xl bg-black/20 p-5 backdrop-blur-sm overflow-hidden">
+                <div
+                  className={`flex min-h-0 flex-1 flex-col rounded-3xl p-5 overflow-hidden ${panelSurfaceClass}`}
+                  style={panelSurfaceStyle}
+                >
                   <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
                     Danh sách phát
                   </div>
@@ -784,3 +832,5 @@ export default function PlayerDetail({ isOpen, onClose }) {
     </div>
   );
 }
+
+
