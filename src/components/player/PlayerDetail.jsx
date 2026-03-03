@@ -285,7 +285,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const detailPanel = (
   <div
-    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/15 via-white/5 to-black/30 p-4 shadow-[0_30px_90px_rgba(0,0,0,0.45)] ring-1 ring-white/10 backdrop-blur-xl sm:bg-white/5 sm:p-6 ${songSlideClass}`}
+    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] border border-white/12 bg-[linear-gradient(160deg,rgba(255,255,255,0.08),rgba(0,0,0,0.55))] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.52)] ring-1 ring-white/10 backdrop-blur-xl sm:p-6 ${songSlideClass}`}
   >
     {/* ✅ KHÔNG SCROLL ở panel này để không mất controls */}
     <div className="flex min-h-0 flex-1 flex-col">
@@ -294,7 +294,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
         {/* Desktop/Laptop/Tablet landscape: ảnh chữ nhật */}
         <div
           className="
-            relative hidden w-full overflow-hidden rounded-3xl bg-black/30 shadow-[0_25px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/10
+            relative hidden w-full items-center gap-8 overflow-hidden rounded-3xl bg-black/20 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/15
             sm:flex
           "
           style={{
@@ -302,14 +302,35 @@ export default function PlayerDetail({ isOpen, onClose }) {
             height: "clamp(180px, 38vh, 320px)",
           }}
         >
-          {cover && (
-            <OptimizedImage
-              src={cover}
-              alt={currentSong.title}
-              className="h-full w-full object-contain"
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/80" />
+          <div className="relative z-10 h-full w-[min(40%,320px)] overflow-hidden rounded-3xl ring-1 ring-white/15">
+            {cover && (
+              <OptimizedImage
+                src={cover}
+                alt={currentSong.title}
+                className="h-full w-full object-cover"
+              />
+            )}
+          </div>
+
+          <div className="relative z-10 min-w-0 flex-1">
+            <h3 className="truncate text-4xl font-semibold tracking-tight text-white xl:text-5xl">
+              {currentSong.title}
+            </h3>
+            <p className="mt-3 truncate text-3xl font-medium tracking-wide text-emerald-400/80">
+              {artistId ? (
+                <Link
+                  to={`/artist/${artistId}`}
+                  className="transition md:hover:text-emerald-300"
+                >
+                  {artistLabel}
+                </Link>
+              ) : (
+                artistLabel
+              )}
+            </p>
+          </div>
+
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/35 to-black/70" />
         </div>
 
         {/* Phone: đĩa tròn */}
@@ -384,7 +405,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             onChange={onSeekChange}
             onMouseUp={onSeekCommit}
             onTouchEnd={onSeekCommit}
-            className="player-detail-range h-2 w-full cursor-pointer"
+            className="player-detail-range h-2.5 w-full cursor-pointer"
             style={{
               "--range-progress": `${
                 total > 0 ? (Math.min(displayedTime, total) / total) * 100 : 0
@@ -393,7 +414,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           />
         </div>
 
-        <div className="flex items-center justify-between px-1 sm:px-2 text-[11px] text-white/60 sm:text-xs">
+        <div className="flex items-center justify-between px-1 text-[11px] text-white/70 sm:px-2 sm:text-xs">
           <span>{formatTime(displayedTime)}</span>
           <span>{formatTime(total)}</span>
         </div>
@@ -428,7 +449,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           <button
             onClick={togglePlay}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1db954] text-2xl text-black shadow-[0_0_45px_rgba(29,185,84,0.55)] transition active:scale-95 sm:h-16 sm:w-16"
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-[#3bd16f] text-2xl text-black shadow-[0_0_45px_rgba(59,209,111,0.55)] transition active:scale-95 sm:h-16 sm:w-16"
             aria-label="Phát/Tạm dừng"
           >
             {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
@@ -466,7 +487,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
         <div className="flex items-center justify-end gap-2 md:gap-3">
           <AddToPlaylistButton
             song={currentSong}
-            triggerClassName="h-10 w-10 border-white/15 bg-white/5 text-white/80 ring-1 ring-white/5 md:hover:border-white/30 md:hover:bg-white/15"
+            triggerClassName="h-10 w-10 border-white/15 bg-white/5 text-white/80 ring-1 ring-white/10 md:hover:border-white/30 md:hover:bg-white/15"
           />
 
           <button
@@ -534,7 +555,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
   /* ================= render ================= */
   return (
     <div
-      className={`player-detail-shell fixed inset-0 z-[999] h-[100svh] max-h-[100svh]
+        className={`player-detail-shell fixed inset-0 z-[999] h-[100svh] max-h-[100svh]
       overflow-hidden text-white ${stableClass} ${animateClass}`}
       style={{
         animationDuration: `${ANIM_MS}ms`,
@@ -545,7 +566,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     >
       {/* BACKDROP */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-2xl"
+        className="absolute inset-0 bg-black/35 backdrop-blur-2xl"
         onMouseDown={(e) => {
           if (e.target !== e.currentTarget) return;
           if (backdropReady) onClose?.();
@@ -555,20 +576,21 @@ export default function PlayerDetail({ isOpen, onClose }) {
       {/* BG IMAGE (isolated layer) */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute inset-[-20%] opacity-40 blur-3xl"
+          className="absolute inset-[-20%] opacity-60 blur-3xl"
           style={{
             backgroundImage: `url(${cover})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
+            filter: "saturate(1.05) contrast(1.02)",
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#0b0b0b]/85 to-black" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.10),transparent_45%),linear-gradient(180deg,rgba(0,0,0,0.18),rgba(0,0,0,0.62))]" />
       </div>
 
       {/* CONTENT */}
       {/* ✅ h-full + min-h-0 để flex con không “lèm” */}
       <div className="relative z-10 h-full w-full overflow-hidden">
-        <div className="relative mx-auto flex h-full w-full min-h-0 max-w-[1240px] flex-col overflow-hidden px-3 pt-[calc(env(safe-area-inset-top)+8px)] pb-3 sm:px-6 sm:pt-7 sm:pb-7">
+        <div className="relative mx-auto flex h-full w-full min-h-0 max-w-[1360px] flex-col overflow-hidden px-3 pt-[calc(env(safe-area-inset-top)+8px)] pb-3 sm:px-6 sm:pt-7 sm:pb-7">
           {/* Close button */}
           <button
             onClick={onClose}
@@ -578,7 +600,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
               z-20
               flex h-9 w-9 items-center justify-center
               rounded-2xl
-              bg-black/45
+              bg-black/35
               text-base text-white/85
               ring-1 ring-white/20
               backdrop-blur
@@ -592,7 +614,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </button>
 
           {/* Title */}
-          <div className="mt-4 hidden flex-col items-center gap-1 text-center sm:mt-6 sm:flex">
+          <div className="mt-4 hidden flex-col items-center gap-1 text-center sm:mt-6 lg:hidden sm:flex">
             <h2 className="text-xl font-semibold tracking-tight sm:text-3xl">
               {currentSong.title}
             </h2>
@@ -612,13 +634,13 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* Main grid */}
           {/* Desktop layout */}
-          <div className="mt-5 hidden min-h-0 flex-1 gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_400px] overflow-hidden">
+          <div className="mt-5 hidden min-h-0 flex-1 gap-6 overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_40%] xl:grid-cols-[minmax(0,1fr)_38%]">
             {detailPanel}
 
             {/* RIGHT */}
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-4 ring-1 ring-white/5 backdrop-blur-xl sm:p-6">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.06),rgba(0,0,0,0.55))] p-4 ring-1 ring-white/10 backdrop-blur-xl sm:p-6">
               {/* Tabs */}
-              <div className="flex items-center gap-2 rounded-full bg-white/5 p-1 ring-1 ring-white/10">
+              <div className="flex items-center gap-2 rounded-full bg-black/25 p-1 ring-1 ring-white/15">
                 {[
                   { id: "queue", label: "Danh sách phát" },
                   { id: "lyrics", label: "Lời bài hát" },
@@ -629,7 +651,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold transition sm:text-sm ${
                       activeTab === tab.id
-                        ? "bg-white text-black shadow-sm"
+                        ? "bg-[#f5f4ef] text-[#205534] shadow-sm"
                         : "text-white/70 md:hover:text-white"
                     }`}
                   >
