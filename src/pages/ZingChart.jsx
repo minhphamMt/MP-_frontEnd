@@ -72,109 +72,10 @@ const colors = [
   },
 ];
 
-const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-
-const computeMedian = (values) => {
-  if (!Array.isArray(values) || values.length === 0) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  if (sorted.length % 2 === 1) return sorted[mid];
-  return (sorted[mid - 1] + sorted[mid]) / 2;
-};
-
-const toSeed = (seedSource) => {
-  const text = `${seedSource || "seed"}`;
-  let hash = 0;
-  for (let i = 0; i < text.length; i += 1) {
-    hash = (hash << 5) - hash + text.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash) + 1;
-};
-
-const seededNoise = (seed) => {
-  const value = Math.sin(seed * 12.9898) * 43758.5453;
-  return value - Math.floor(value);
-};
-
-const toDateKey = (dateValue) => {
-  if (!dateValue) return "";
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
-};
-
-const buildWeekDates = (referenceDate) => {
-  const base = referenceDate instanceof Date ? referenceDate : new Date(referenceDate);
-  const safe = Number.isNaN(base.getTime()) ? new Date() : base;
-  const dates = [];
-  for (let offset = 6; offset >= 0; offset -= 1) {
-    const day = new Date(safe);
-    day.setDate(safe.getDate() - offset);
-    dates.push(day);
-  }
-  return dates;
-};
-
-const buildWeeklySeries = (rawPoints, seriesSeed, config = {}) => {
-  const points = Array.isArray(rawPoints) ? [...rawPoints] : [];
-  points.sort((a, b) => {
-    const aTime = a.rawDate ? new Date(a.rawDate).getTime() : 0;
-    const bTime = b.rawDate ? new Date(b.rawDate).getTime() : 0;
-    return aTime - bTime;
-  });
-
-  const {
-    index = 0,
-    count = 5,
-    base = 58,
-    amplitude = 6,
-    globalMedian = 0,
-    localAverage = 0,
-  } = config;
-
-  const lastPoint = points[points.length - 1];
-  const referenceDate = lastPoint?.rawDate || lastPoint?.date || new Date();
-  const weekDates = buildWeekDates(referenceDate);
-
-  const localFactor = Math.log10((localAverage || globalMedian || base) + 1);
-  const globalFactor = Math.log10((globalMedian || base) + 1);
-  const localOffset = clamp((localFactor - globalFactor) * 6, -4, 4);
-
-  const midIndex = Math.round((count - 1) / 2);
-  const rankOffset = clamp((midIndex - index) * 2, -6, 6);
-  const biasSeed = toSeed(`${seriesSeed}-bias`);
-  const bias = (seededNoise(biasSeed) - 0.5) * 4;
-
-  const center = clamp(base + rankOffset + localOffset + bias, base - 10, base + 10);
-  const ampSeed = toSeed(`${seriesSeed}-amp`);
-  const amp = clamp(
-    amplitude * (0.85 + seededNoise(ampSeed) * 0.3),
-    amplitude * 0.7,
-    amplitude * 1.3
-  );
-
-  const phaseSeed = toSeed(`${seriesSeed}-phase`);
-  const phase = ((phaseSeed % 360) * Math.PI) / 180;
-  const phase2 = (((phaseSeed >> 1) % 360) * Math.PI) / 180;
-
-  return weekDates.map((date, dayIndex) => {
-    const key = toDateKey(date);
-    const noise = seededNoise(toSeed(`${seriesSeed}-${key}`)) - 0.5;
-    const wave =
-      Math.sin(phase + dayIndex * 1.05) +
-      0.45 * Math.sin(phase2 + dayIndex * 2.1);
-    const nextValue = Math.max(
-      1,
-      Math.round(center + amp * wave + amp * 0.25 * noise)
-    );
-
-    return {
-      date: formatWeeklyDate(date.toISOString()),
-      rawDate: date.toISOString(),
-      plays: nextValue,
-    };
-  });
+const sortByDate = (a, b) => {
+  const aTime = a.rawDate ? new Date(a.rawDate).getTime() : 0;
+  const bTime = b.rawDate ? new Date(b.rawDate).getTime() : 0;
+  return aTime - bTime;
 };
 
 export default function ZingChart() {
@@ -259,43 +160,11 @@ export default function ZingChart() {
         return acc;
       }, {});
 
-      const rawSeriesValues = weeklySeriesPayload
-        .map((item) =>
-          Number(item.play_count ?? item.plays ?? item.playCount ?? 0) || 0
-        )
-        .filter((value) => value > 0);
-      const globalMedian = computeMedian(rawSeriesValues);
-      const globalBase = clamp(
-        Math.round(Math.log10((globalMedian || 1) + 1) * 16 + 36),
-        35,
-        65
-      );
-      const globalAmplitude = clamp(Math.round(globalBase * 0.1), 4, 8);
-
       setWeeklySongs(normalizedWeekly);
       setSongs(normalizedWeekly);
       setSeriesData(
-        normalizedWeekly.map((song, index) => {
-          const dataPoints = (seriesMap[song.id] || []).sort((a, b) => {
-            const aTime = a.rawDate ? new Date(a.rawDate).getTime() : 0;
-            const bTime = b.rawDate ? new Date(b.rawDate).getTime() : 0;
-            return aTime - bTime;
-          });
-          const localAverage =
-            dataPoints.length > 0
-              ? dataPoints.reduce(
-                  (sum, point) => sum + (Number(point.plays) || 0),
-                  0
-                ) / dataPoints.length
-              : globalMedian || globalBase;
-          const weeklySeries = buildWeeklySeries(dataPoints, song.id, {
-            index,
-            count: normalizedWeekly.length,
-            base: globalBase,
-            amplitude: globalAmplitude,
-            globalMedian,
-            localAverage,
-          });
+        normalizedWeekly.map((song) => {
+          const weeklySeries = (seriesMap[song.id] || []).sort(sortByDate);
 
           return {
             song,
