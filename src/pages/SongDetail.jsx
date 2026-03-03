@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { FiClock, FiDisc, FiHeart, FiMusic, FiPlus, FiUser } from "react-icons/fi";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getSongById } from "../api/song.api";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import {
@@ -14,6 +14,7 @@ import OptimizedImage from "../components/common/OptimizedImage";
 
 export default function SongDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [song, setSong] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -85,6 +86,16 @@ export default function SongDetail() {
   const songId = normalizeSongId(song);
   const isActive = normalizeSongId(currentSong) === songId;
   const isLiked = songId && likedSongIds.includes(songId);
+  const artistId = song.artist_id;
+  const albumId = song.album_id;
+
+  const goToArtist = () => {
+    if (artistId) navigate(`/artist/${artistId}`);
+  };
+
+  const goToAlbum = () => {
+    if (albumId) navigate(`/album/${albumId}`);
+  };
 
   return (
     <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
@@ -123,20 +134,30 @@ export default function SongDetail() {
               </h1>
 
               {song.artist_name && (
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm text-white/80">
+                <button
+                  type="button"
+                  onClick={goToArtist}
+                  disabled={!artistId}
+                  className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm text-white/80 transition md:hover:bg-white/20 disabled:cursor-default disabled:opacity-70"
+                >
                   <FiUser className="text-cyan-200" />
                   <span>{song.artist_name}</span>
-                </div>
+                </button>
               )}
             </div>
 
             {/* META */}
             <div className="flex flex-wrap gap-3 text-sm text-white/70">
               {song.album_title && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                <button
+                  type="button"
+                  onClick={goToAlbum}
+                  disabled={!albumId}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 transition md:hover:bg-white/10 disabled:cursor-default disabled:opacity-70"
+                >
                   <FiDisc className="text-emerald-200" />
                   {song.album_title}
-                </span>
+                </button>
               )}
 
               <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
@@ -203,7 +224,18 @@ export default function SongDetail() {
               Nghệ sĩ
             </div>
             <div className="mt-1 text-white">
-              {song.artist_name || "Không rõ"}
+              {song.artist_name ? (
+                <button
+                  type="button"
+                  onClick={goToArtist}
+                  disabled={!artistId}
+                  className="transition md:hover:text-cyan-300 disabled:cursor-default disabled:hover:text-white"
+                >
+                  {song.artist_name}
+                </button>
+              ) : (
+                "Không rõ"
+              )}
             </div>
           </div>
 
@@ -212,7 +244,18 @@ export default function SongDetail() {
               Album
             </div>
             <div className="mt-1 text-white">
-              {song.album_title || "Đang cập nhật"}
+              {song.album_title ? (
+                <button
+                  type="button"
+                  onClick={goToAlbum}
+                  disabled={!albumId}
+                  className="transition md:hover:text-cyan-300 disabled:cursor-default disabled:hover:text-white"
+                >
+                  {song.album_title}
+                </button>
+              ) : (
+                "Đang cập nhật"
+              )}
             </div>
           </div>
 

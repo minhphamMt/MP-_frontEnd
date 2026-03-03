@@ -82,6 +82,13 @@ const audioPath =
       raw.artistName ??
       raw.artist?.name ??
       "",
+    artist_id:
+      source.artist_id ??
+      source.artistId ??
+      source.artist?.id ??
+      raw.artist_id ??
+      raw.artistId ??
+      raw.artist?.id,
     duration: source.duration ?? source.length ?? raw.duration ?? raw.length ?? 0,
     cover_url: resolveAssetUrl(cover, baseUrl),
     album_id: source.album_id ?? source.albumId ?? source.album?.id,

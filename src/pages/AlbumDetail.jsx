@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { FiCalendar, FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import { getAlbumById } from "../api/album.api";
 import useAlbumLikeStore, {
@@ -16,6 +16,7 @@ const formatTime = (s = 0) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 export default function AlbumDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [album, setAlbum] = useState(null);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -105,6 +106,7 @@ export default function AlbumDetail() {
       const artistMeta = album?.artist || {};
   const artistDisplayName =
     album?.artist_name || artistMeta?.name || artistMeta?.alias;
+  const artistId = album?.artist_id || artistMeta?.id;
   const artistInfoItems = [
     { label: "Nghệ danh", value: artistMeta?.alias },
     { label: "Tên thật", value: artistMeta?.realname },
@@ -146,9 +148,14 @@ export default function AlbumDetail() {
                 {album.title}
               </h1>
                {artistDisplayName && (
-                <p className="mt-1 text-sm text-white/70">
+                <button
+                  type="button"
+                  onClick={() => artistId && navigate(`/artist/${artistId}`)}
+                  disabled={!artistId}
+                  className="mt-1 text-sm text-white/70 transition md:hover:text-cyan-300 disabled:cursor-default disabled:hover:text-white/70"
+                >
                   {artistDisplayName}
-                </p>
+                </button>
               )}
             </div>
 
@@ -211,9 +218,14 @@ export default function AlbumDetail() {
               <span>Nghệ sĩ</span>
             </div>
             {artistDisplayName && (
-              <p className="text-lg font-semibold text-white">
+              <button
+                type="button"
+                onClick={() => artistId && navigate(`/artist/${artistId}`)}
+                disabled={!artistId}
+                className="text-lg font-semibold text-white transition md:hover:text-cyan-300 disabled:cursor-default disabled:hover:text-white"
+              >
                 {artistDisplayName}
-              </p>
+              </button>
             )}
             {artistInfoItems.length > 0 && (
               <div className="grid gap-3 text-sm text-white/80 sm:grid-cols-2">
