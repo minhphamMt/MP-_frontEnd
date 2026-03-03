@@ -5,7 +5,8 @@ export const getZingChart = () => api.get("/charts/zing");
 export const getZingChartSeries = (params) =>
   api.get("/charts/zing/series", { params });
 
-export const getNewReleaseChart = () => api.get("/charts/new-release");
+export const getNewReleaseChart = (params) =>
+  api.get("/charts/new-release", { params });
 
 export const getTop100Chart = () => api.get("/charts/top-100");
 export const getTop50ByGenres = () => api.get("/charts/top-50/genres");
