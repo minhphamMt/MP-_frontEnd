@@ -285,7 +285,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const detailPanel = (
   <div
-    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] border border-white/12 bg-[linear-gradient(160deg,rgba(9,12,18,0.18),rgba(4,7,12,0.3))] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-6 ${songSlideClass}`}
+    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] bg-[linear-gradient(160deg,rgba(8,12,18,0.1),rgba(4,7,12,0.2))] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur-sm sm:p-6 ${songSlideClass}`}
   >
     {/* ✅ KHÔNG SCROLL ở panel này để không mất controls */}
     <div className="flex min-h-0 flex-1 flex-col">
@@ -565,7 +565,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     >
       {/* BACKDROP */}
       <div
-        className="absolute inset-0 bg-[#06080c]/72"
+        className="absolute inset-0 bg-black/10"
         onMouseDown={(e) => {
           if (e.target !== e.currentTarget) return;
           if (backdropReady) onClose?.();
@@ -575,12 +575,12 @@ export default function PlayerDetail({ isOpen, onClose }) {
       {/* BG IMAGE (isolated layer) */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute inset-[-24%] opacity-12 blur-[140px]"
+          className="absolute inset-[-28%] opacity-7 blur-[180px]"
           style={{
             backgroundImage: `url(${cover})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            filter: "saturate(0.45) brightness(0.58) contrast(0.88)",
+            filter: "saturate(0.35) brightness(0.7) contrast(0.9)",
           }}
         />
       </div>
@@ -634,7 +634,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             {detailPanel}
 
             {/* RIGHT */}
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/12 bg-[linear-gradient(145deg,rgba(8,11,18,0.16),rgba(4,7,12,0.34))] p-4 backdrop-blur-sm sm:p-6">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] bg-[linear-gradient(145deg,rgba(8,11,18,0.1),rgba(4,7,12,0.22))] p-4 backdrop-blur-sm sm:p-6">
               {/* Tabs */}
               <div className="flex items-center gap-2 rounded-full bg-black/25 p-1">
                 {[
