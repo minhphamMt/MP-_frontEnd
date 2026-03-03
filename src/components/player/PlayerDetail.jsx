@@ -285,7 +285,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const detailPanel = (
   <div
-    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] bg-[linear-gradient(160deg,rgba(255,255,255,0.06),rgba(0,0,0,0.45))] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-6 ${songSlideClass}`}
+    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(160deg,rgba(255,255,255,0.03),rgba(0,0,0,0.58))] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-6 ${songSlideClass}`}
   >
     {/* ✅ KHÔNG SCROLL ở panel này để không mất controls */}
     <div className="flex min-h-0 flex-1 flex-col">
@@ -565,7 +565,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     >
       {/* BACKDROP */}
       <div
-        className="absolute inset-0 bg-black/20 backdrop-blur-2xl"
+        className="absolute inset-0 bg-black/44 backdrop-blur-2xl"
         onMouseDown={(e) => {
           if (e.target !== e.currentTarget) return;
           if (backdropReady) onClose?.();
@@ -575,7 +575,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       {/* BG IMAGE (isolated layer) */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute inset-[-20%] opacity-35 blur-3xl"
+          className="absolute inset-[-20%] opacity-28 blur-3xl"
           style={{
             backgroundImage: `url(${cover})`,
             backgroundSize: "cover",
@@ -583,7 +583,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             filter: "saturate(1.02) contrast(1.01)",
           }}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.06),transparent_50%),linear-gradient(180deg,rgba(0,0,0,0.10),rgba(0,0,0,0.45))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.02),transparent_52%),linear-gradient(180deg,rgba(0,0,0,0.3),rgba(0,0,0,0.72))]" />
       </div>
 
       {/* CONTENT */}
@@ -636,7 +636,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             {detailPanel}
 
             {/* RIGHT */}
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] bg-[linear-gradient(145deg,rgba(255,255,255,0.05),rgba(0,0,0,0.45))] p-4 backdrop-blur-xl sm:p-6">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.02),rgba(0,0,0,0.62))] p-4 backdrop-blur-xl sm:p-6">
               {/* Tabs */}
               <div className="flex items-center gap-2 rounded-full bg-black/25 p-1">
                 {[
