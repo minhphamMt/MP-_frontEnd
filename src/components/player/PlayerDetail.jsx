@@ -565,7 +565,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     >
       {/* BACKDROP */}
       <div
-        className="absolute inset-0 bg-black/44 backdrop-blur-2xl"
+        className="absolute inset-0"
         onMouseDown={(e) => {
           if (e.target !== e.currentTarget) return;
           if (backdropReady) onClose?.();
@@ -583,7 +583,6 @@ export default function PlayerDetail({ isOpen, onClose }) {
             filter: "saturate(1.02) contrast(1.01)",
           }}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.02),transparent_52%),linear-gradient(180deg,rgba(0,0,0,0.3),rgba(0,0,0,0.72))]" />
       </div>
 
       {/* CONTENT */}
