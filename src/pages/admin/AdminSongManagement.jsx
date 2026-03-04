@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FiEdit2, FiRefreshCw, FiSearch, FiTrash2, FiX } from "react-icons/fi";
 import {
   listAdminSongs,
@@ -12,6 +12,7 @@ import { resolveAssetUrl } from "../../utils/asset";
 import { deleteSong } from "../../api/song.api";
 import useAuthStore from "../../store/auth.store";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import Toast from "../../components/common/Toast";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tất cả" },
@@ -38,6 +39,7 @@ const getSongCover = (song) =>
 
 export default function AdminSongManagement() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [songs, setSongs] = useState([]);
   const [genres, setGenres] = useState([]);
   const [artists, setArtists] = useState([]);
@@ -46,6 +48,7 @@ export default function AdminSongManagement() {
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [toast, setToast] = useState({ title: "", message: "" });
   const [editingSong, setEditingSong] = useState(null);
   const [autoOpenedId, setAutoOpenedId] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
@@ -134,6 +137,13 @@ export default function AdminSongManagement() {
   }, []);
 
   useEffect(() => {
+    const pendingToast = location.state?.toast;
+    if (!pendingToast) return;
+    setToast(pendingToast);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location, navigate]);
+
+  useEffect(() => {
     const params = new URLSearchParams(location.search);
     setKeyword(params.get("keyword") || "");
   }, [location.search]);
@@ -143,20 +153,8 @@ export default function AdminSongManagement() {
   }, [keyword, statusFilter]);
 
   const handleEdit = (song) => {
-    setEditingSong(song);
-    setShowAllGenres(false);
-    setEditPayload({
-      title: song?.title || "",
-      artist_id: song?.artist_id ? `${song.artist_id}` : "",
-      album_id: song?.album_id ? `${song.album_id}` : "",
-      status: song?.status || "",
-      release_date: song?.release_date
-        ? new Date(song.release_date).toISOString().slice(0, 10)
-        : "",
-      genres: normalizeGenreValue(song?.genres),
-      cover_url: getSongCover(song) || "",
-    });
-    setCoverFile(null);
+    if (!song?.id) return;
+    navigate(`/admin/songs/${song.id}/edit`);
   };
 
   const handleToggleGenre = (name) => {
@@ -315,7 +313,7 @@ export default function AdminSongManagement() {
   }, [autoOpenedId, location.search, songs]);
 
   return (
-    <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
+    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -334,7 +332,7 @@ export default function AdminSongManagement() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_0.4fr]">
-        <div className="rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+        <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
           <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80">
             <FiSearch className="text-white/50" />
             <input
@@ -345,7 +343,7 @@ export default function AdminSongManagement() {
             />
           </div>
         </div>
-        <div className="rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+        <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
@@ -361,12 +359,12 @@ export default function AdminSongManagement() {
       </div>
 
       {errorMessage && (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
           {errorMessage}
         </div>
       )}
 
-      <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+      <div className="overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
         <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.4fr_0.8fr_0.6fr_0.7fr]">
           <span>Bài hát</span>
           <span className="hidden lg:block">Nghệ sĩ</span>
@@ -430,7 +428,7 @@ export default function AdminSongManagement() {
 
       {editingSong && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 pt-24 pb-10 md:items-center md:py-10 lg:pl-64">
-          <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-xs text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6 sm:text-sm">
+          <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 text-xs text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6 sm:text-sm">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold sm:text-xl">Chỉnh sửa bài hát</h2>
               <button
@@ -640,6 +638,11 @@ export default function AdminSongManagement() {
           </div>
         </div>
       )}
+      <Toast
+        title={toast.title}
+        message={toast.message}
+        onClose={() => setToast({ title: "", message: "" })}
+      />
     </div>
   );
 }

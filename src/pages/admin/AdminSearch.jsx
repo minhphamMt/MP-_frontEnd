@@ -6,14 +6,64 @@ import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../../components/common/OptimizedImage";
 
 const SEARCH_TABS = [
-  "All",
-  "Songs",
-  "Playlists",
-  "Albums",
-  "Podcasts & Shows",
-  "Artists",
-  "Profiles",
+  { id: "all", label: "Tất cả" },
+  { id: "song", label: "Bài hát" },
+  { id: "album", label: "Album" },
+  { id: "artist", label: "Nghệ sĩ" },
+  { id: "user", label: "Hồ sơ" },
 ];
+
+const normalizeType = (item) => {
+  const rawType = `${item.type || item.entity_type || item.entityType || item.kind || ""}`
+    .toLowerCase()
+    .trim();
+
+  if (rawType.includes("playlist")) return null;
+  if (
+    item.playlist_id ||
+    item.playlistId ||
+    item.owner_id ||
+    item.ownerId ||
+    item.is_public !== undefined ||
+    item.privacy !== undefined
+  ) {
+    return null;
+  }
+
+  if (["user", "profile"].includes(rawType)) return "user";
+  if (["artist"].includes(rawType)) return "artist";
+  if (["album"].includes(rawType)) return "album";
+  if (["song", "track"].includes(rawType)) return "song";
+
+  if (item.display_name || item.email) return "user";
+  if (item.role === "ARTIST") return "artist";
+  if (item.alias || item.realname || item.zing_artist_id) return "artist";
+  if (item.name && !item.title) return "artist";
+
+  if (
+    item.title &&
+    (item.play_count !== undefined ||
+      item.audio_url ||
+      item.audio_path ||
+      item.duration !== undefined ||
+      item.weekly_play_count !== undefined)
+  ) {
+    return "song";
+  }
+
+  if (
+    item.title &&
+    (item.release_date ||
+      item.zing_album_id ||
+      item.artist_name ||
+      item.artist_id ||
+      item.album_type)
+  ) {
+    return "album";
+  }
+
+  return null;
+};
 
 const getResultImage = (item, type) => {
   if (!item) return "";
@@ -25,6 +75,7 @@ const getResultImage = (item, type) => {
     item.image_url ||
     item.coverUrl ||
     item.imageUrl;
+
   if (type === "user" || type === "artist") {
     return (
       item.avatar ||
@@ -38,75 +89,78 @@ const getResultImage = (item, type) => {
       common
     );
   }
-  return (
-    common ||
-    item.album_cover ||
-    item.albumCover ||
-    item.artwork ||
-    item.artwork_url
-  );
+
+  return common || item.album_cover || item.albumCover || item.artwork || item.artwork_url;
 };
+
+const getSecondaryLabel = (item, type) => {
+  if (type === "song") {
+    return item.artist_name || item.artist?.name || item.album_title;
+  }
+  if (type === "album") {
+    return item.artist_name || item.artist?.name || item.release_date;
+  }
+  if (type === "artist") {
+    return item.alias || item.realname || item.national;
+  }
+  return item.email || item.role || item.alias;
+};
+
+const getTargetId = (item) =>
+  item.id ??
+  item._id ??
+  item.song_id ??
+  item.songId ??
+  item.album_id ??
+  item.albumId ??
+  item.user_id ??
+  item.userId ??
+  item.artist_id ??
+  item.artistId ??
+  "";
 
 export default function AdminSearch() {
   const location = useLocation();
   const navigate = useNavigate();
+
   const [keyword, setKeyword] = useState("");
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+
   const query = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return (params.get("q") || params.get("keyword") || "").trim();
   }, [location.search]);
 
-  const normalizedResults = useMemo(() => {
-    return results
-      .map((item) => {
-        let type = item.type || item.entity_type || item.entityType || item.kind;
+  const normalizedResults = useMemo(
+    () =>
+      results
+        .map((item) => {
+          const type = normalizeType(item);
+          if (!["artist", "song", "album", "user"].includes(type)) {
+            return null;
+          }
 
-        if (!type && (item.display_name || item.email)) type = "user";
-        if (!type && item.role === "ARTIST") type = "artist";
-        if (
-          !type &&
-          item.title &&
-          (item.play_count !== undefined ||
-            item.audio_url ||
-            item.audio_path ||
-            item.duration !== undefined ||
-            item.album_id ||
-            item.album_title ||
-            item.weekly_play_count !== undefined)
-        )
-          type = "song";
-        if (
-          !type &&
-          item.title &&
-          (item.release_date ||
-            item.zing_album_id ||
-            item.artist_name ||
-            item.artist_id)
-        )
-          type = "album";
-        if (!type && item.name) type = "artist";
+          return {
+            ...item,
+            type,
+            displayLabel:
+              item.display_name || item.title || item.name || item.email || "Unknown",
+            secondaryLabel: getSecondaryLabel(item, type),
+            imageUrl: getResultImage(item, type),
+          };
+        })
+        .filter(Boolean),
+    [results]
+  );
 
-        const normalizedType = (type || "").toLowerCase();
-        if (!["artist", "song", "album", "user"].includes(normalizedType)) {
-          return null;
-        }
-
-        return {
-          ...item,
-          type: normalizedType,
-          displayLabel:
-            item.display_name || item.title || item.name || item.email,
-          secondaryLabel:
-            item.artist_name || item.email || item.role || item.album_title,
-          imageUrl: getResultImage(item, normalizedType),
-        };
-      })
-      .filter(Boolean);
-  }, [results]);
+  const visibleResults = useMemo(() => {
+    if (activeTab === "all") return normalizedResults;
+    return normalizedResults.filter((item) => item.type === activeTab);
+  }, [activeTab, normalizedResults]);
 
   const groupedResults = useMemo(() => {
     const groups = {
@@ -116,7 +170,7 @@ export default function AdminSearch() {
       users: [],
     };
 
-    normalizedResults.forEach((item) => {
+    visibleResults.forEach((item) => {
       if (item.type === "song") groups.songs.push(item);
       if (item.type === "artist") groups.artists.push(item);
       if (item.type === "album") groups.albums.push(item);
@@ -124,27 +178,35 @@ export default function AdminSearch() {
     });
 
     return groups;
-  }, [normalizedResults]);
+  }, [visibleResults]);
+
+  const tabCounts = useMemo(
+    () => ({
+      all: normalizedResults.length,
+      song: normalizedResults.filter((item) => item.type === "song").length,
+      album: normalizedResults.filter((item) => item.type === "album").length,
+      artist: normalizedResults.filter((item) => item.type === "artist").length,
+      user: normalizedResults.filter((item) => item.type === "user").length,
+    }),
+    [normalizedResults]
+  );
 
   const topResult = useMemo(() => {
-    if (groupedResults.songs.length) {
-      return { ...groupedResults.songs[0], label: "Song" };
-    }
-    if (groupedResults.artists.length) {
-      return { ...groupedResults.artists[0], label: "Artist" };
-    }
-    if (groupedResults.albums.length) {
-      return { ...groupedResults.albums[0], label: "Album" };
-    }
-    if (groupedResults.users.length) {
-      return { ...groupedResults.users[0], label: "Profile" };
-    }
-    return null;
-  }, [groupedResults]);
+    const first = visibleResults[0];
+    if (!first) return null;
+    const labels = {
+      song: "Bài hát",
+      artist: "Nghệ sĩ",
+      album: "Album",
+      user: "Hồ sơ",
+    };
+    return { ...first, label: labels[first.type] || "Kết quả" };
+  }, [visibleResults]);
 
   const runSearch = async (rawValue) => {
     const trimmed = rawValue.trim();
     if (!trimmed) return;
+
     try {
       setLoading(true);
       const res = await searchAdmin({
@@ -154,8 +216,7 @@ export default function AdminSearch() {
         limit: 50,
       });
       const payload = res?.data?.data ?? res?.data ?? [];
-      const itemsSource =
-        payload.items || payload.results || payload.data || payload;
+      const itemsSource = payload.items || payload.results || payload.data || payload;
       const list = Array.isArray(itemsSource)
         ? itemsSource
         : [
@@ -176,9 +237,8 @@ export default function AdminSearch() {
   };
 
   useEffect(() => {
-    if (!query) return;
     setKeyword(query);
-     }, [query]);
+  }, [query]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -195,6 +255,7 @@ export default function AdminSearch() {
       return;
     }
     runSearch(debouncedKeyword);
+    setActiveTab("all");
     if (debouncedKeyword !== query) {
       navigate(`/admin/search?q=${encodeURIComponent(debouncedKeyword)}`, {
         replace: true,
@@ -211,19 +272,12 @@ export default function AdminSearch() {
 
   const handleResultClick = (item) => {
     if (!item) return;
+
     const label =
       item.display_name || item.displayLabel || item.name || item.title || "";
-    const targetId =
-      item.id ??
-      item._id ??
-      item.song_id ??
-      item.songId ??
-      item.album_id ??
-      item.albumId ??
-      item.user_id ??
-      item.userId ??
-      "";
+    const targetId = getTargetId(item);
     const encodedLabel = encodeURIComponent(label);
+
     if (item.type === "artist") {
       if (targetId) {
         navigate(`/admin/artists/${targetId}/edit`);
@@ -232,22 +286,25 @@ export default function AdminSearch() {
       navigate(`/admin/artists?keyword=${encodedLabel}`);
       return;
     }
+
     if (item.type === "album") {
-      navigate(
-        `/admin/albums?keyword=${encodedLabel}${
-          targetId ? `&targetId=${targetId}` : ""
-        }`
-      );
+      if (targetId) {
+        navigate(`/admin/albums/${targetId}/edit`);
+        return;
+      }
+      navigate(`/admin/albums?keyword=${encodedLabel}`);
       return;
     }
+
     if (item.type === "song") {
-      navigate(
-         `/admin/songs?keyword=${encodedLabel}${
-          targetId ? `&targetId=${targetId}` : ""
-        }`
-      );
+      if (targetId) {
+        navigate(`/admin/songs/${targetId}/edit`);
+        return;
+      }
+      navigate(`/admin/songs?keyword=${encodedLabel}`);
       return;
     }
+
     if (item.type === "user") {
       if (targetId) {
         navigate(`/admin/users/${targetId}/edit`);
@@ -257,16 +314,22 @@ export default function AdminSearch() {
     }
   };
 
+  const hasNoResult =
+    !!debouncedKeyword &&
+    !loading &&
+    !groupedResults.songs.length &&
+    !groupedResults.artists.length &&
+    !groupedResults.albums.length &&
+    !groupedResults.users.length;
+
   return (
-    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 pb-12 sm:px-8">
+    <div className="admin-page-shell min-h-screen space-y-8 px-4 py-6 pb-12 sm:px-8">
       <div className="flex flex-col gap-4">
         <div className="space-y-2">
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
             Quản trị
           </p>
-          <h1 className="text-3xl font-extrabold text-white">
-            Tìm kiếm quản trị
-          </h1>
+          <h1 className="text-3xl font-extrabold text-white">Tìm kiếm quản trị</h1>
           <p className="text-sm text-white/60">
             {loading
               ? "Đang tải dữ liệu..."
@@ -274,7 +337,7 @@ export default function AdminSearch() {
           </p>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+        <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <input
               value={keyword}
@@ -282,7 +345,7 @@ export default function AdminSearch() {
               onKeyDown={(event) => {
                 if (event.key === "Enter") handleSubmit();
               }}
-              placeholder="Nhập từ khoá tìm kiếm..."
+              placeholder="Nhập từ khóa tìm kiếm..."
               className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
             />
             <button
@@ -296,18 +359,18 @@ export default function AdminSearch() {
 
         <div className="flex flex-wrap gap-2">
           {SEARCH_TABS.map((tab) => {
-            const isActive = tab === "All";
+            const isActive = tab.id === activeTab;
+            const count = tabCounts[tab.id] ?? 0;
             return (
               <button
-                key={tab}
+                key={tab.id}
                 type="button"
+                onClick={() => setActiveTab(tab.id)}
                 className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                  isActive
-                    ? "bg-white text-black"
-                    : "bg-[#2a2a2a] text-white/80 md:hover:bg-[#333]"
+                  isActive ? "bg-white text-black" : "bg-[#2a2a2a] text-white/80 md:hover:bg-[#333]"
                 }`}
               >
-                {tab}
+                {tab.label} {debouncedKeyword ? `(${count})` : ""}
               </button>
             );
           })}
@@ -315,28 +378,21 @@ export default function AdminSearch() {
       </div>
 
       {errorMessage && (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
           {errorMessage}
         </div>
       )}
 
-      {!!debouncedKeyword &&
-        !loading &&
-        !groupedResults.songs.length &&
-        !groupedResults.artists.length &&
-        !groupedResults.albums.length &&
-        !groupedResults.users.length && (
-          <div className="rounded-2xl border border-white/5 bg-[#181818] p-6 text-white/70">
-            Không tìm thấy kết quả phù hợp.
-          </div>
-        )}
-        {(groupedResults.songs.length ||
-        groupedResults.artists.length ||
-        groupedResults.albums.length ||
-        groupedResults.users.length) && (
+      {hasNoResult && (
+        <div className="rounded-2xl border border-white/5 bg-[#181818] p-6 text-white/70">
+          Không tìm thấy kết quả phù hợp.
+        </div>
+      )}
+
+      {!!visibleResults.length && (
         <div className="grid gap-6 lg:grid-cols-[1.1fr_1.9fr]">
           <div>
-            <h2 className="mb-3 text-lg font-semibold text-white">Top result</h2>
+            <h2 className="mb-3 text-lg font-semibold text-white">Kết quả nổi bật</h2>
             <div className="rounded-2xl border border-white/5 bg-[#181818] p-5 transition md:hover:bg-[#202020]">
               {topResult ? (
                 <button
@@ -367,70 +423,94 @@ export default function AdminSearch() {
                       </div>
                     )}
                     <div>
-                      <h3 className="text-xl font-semibold text-white">
-                        {topResult.displayLabel}
-                      </h3>
+                      <h3 className="text-xl font-semibold text-white">{topResult.displayLabel}</h3>
                       <div className="mt-2 flex items-center gap-2 text-xs text-white/60">
                         <span className="rounded-full bg-[#2a2a2a] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">
                           {topResult.label}
                         </span>
                         <span className="truncate">
-                          {topResult.secondaryLabel ||
-                            topResult.alias ||
-                            topResult.id ||
-                            topResult._id}
+                          {topResult.secondaryLabel || getTargetId(topResult)}
                         </span>
                       </div>
                     </div>
                   </div>
                 </button>
               ) : (
-                <div className="text-sm text-white/60">
-                  Chưa có kết quả để hiển thị.
-                </div>
+                <div className="text-sm text-white/60">Chưa có kết quả để hiển thị.</div>
               )}
             </div>
           </div>
 
           <div>
-            <h2 className="mb-3 text-lg font-semibold text-white">Songs</h2>
+            <h2 className="mb-3 text-lg font-semibold text-white">Kết quả nhanh</h2>
             <div className="rounded-2xl border border-white/5 bg-[#181818] p-3">
-              {groupedResults.songs.length ? (
-                <div className="space-y-1">
-                  {groupedResults.songs.slice(0, 5).map((song) => (
-                    <button
-                      key={song.id || song._id}
-                      type="button"
-                      onClick={() => handleResultClick(song)}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition md:hover:bg-white/5"
-                    >
-                      {song.imageUrl ? (
-                        <OptimizedImage
-                          src={resolveAssetUrl(song.imageUrl)}
-                          alt={song.displayLabel}
-                          className="h-10 w-10 rounded-lg object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2a2a2a] text-[10px] text-white/60">
-                          No image
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-white">
-                          {song.displayLabel}
-                        </p>
-                        <p className="text-xs text-white/60">
-                          {song.secondaryLabel || "Không có thông tin nghệ sĩ"}
-                        </p>
+              <div className="space-y-1">
+                {visibleResults.slice(0, 6).map((item) => (
+                  <button
+                    key={`${item.type}-${getTargetId(item) || item.displayLabel}`}
+                    type="button"
+                    onClick={() => handleResultClick(item)}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition md:hover:bg-white/5"
+                  >
+                    {item.imageUrl ? (
+                      <OptimizedImage
+                        src={resolveAssetUrl(item.imageUrl)}
+                        alt={item.displayLabel}
+                        className={`h-10 w-10 object-cover ${
+                          item.type === "artist" || item.type === "user"
+                            ? "rounded-full"
+                            : "rounded-lg"
+                        }`}
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2a2a2a] text-[10px] text-white/60">
+                        No image
                       </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="px-3 py-4 text-sm text-white/60">
-                  Chưa có bài hát phù hợp.
-                </div>
-              )}
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-white">{item.displayLabel}</p>
+                      <p className="truncate text-xs text-white/60">{item.secondaryLabel || "-"}</p>
+                    </div>
+                    <span className="rounded-full bg-[#2a2a2a] px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-white/70">
+                      {item.type}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!!groupedResults.songs.length && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-white">Bài hát</h2>
+          <div className="rounded-2xl border border-white/5 bg-[#181818] p-3">
+            <div className="space-y-1">
+              {groupedResults.songs.map((song) => (
+                <button
+                  key={song.id || song._id}
+                  type="button"
+                  onClick={() => handleResultClick(song)}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition md:hover:bg-white/5"
+                >
+                  {song.imageUrl ? (
+                    <OptimizedImage
+                      src={resolveAssetUrl(song.imageUrl)}
+                      alt={song.displayLabel}
+                      className="h-10 w-10 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2a2a2a] text-[10px] text-white/60">
+                      No image
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-white">{song.displayLabel}</p>
+                    <p className="text-xs text-white/60">{song.secondaryLabel || "-"}</p>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -438,7 +518,7 @@ export default function AdminSearch() {
 
       {!!groupedResults.artists.length && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-white">Artists</h2>
+          <h2 className="text-lg font-semibold text-white">Nghệ sĩ</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {groupedResults.artists.map((artist) => (
               <button
@@ -447,7 +527,7 @@ export default function AdminSearch() {
                 onClick={() => handleResultClick(artist)}
                 className="rounded-2xl border border-white/5 bg-[#181818] p-4 text-left transition md:hover:bg-[#202020]"
               >
-                 <div className="space-y-3">
+                <div className="space-y-3">
                   {artist.imageUrl ? (
                     <OptimizedImage
                       src={resolveAssetUrl(artist.imageUrl)}
@@ -460,12 +540,8 @@ export default function AdminSearch() {
                     </div>
                   )}
                   <div>
-                    <p className="text-sm font-semibold text-white">
-                      {artist.displayLabel}
-                    </p>
-                    <p className="text-xs text-white/60">
-                      {artist.secondaryLabel || "Nghệ sĩ"}
-                    </p>
+                    <p className="text-sm font-semibold text-white">{artist.displayLabel}</p>
+                    <p className="text-xs text-white/60">{artist.secondaryLabel || "Nghệ sĩ"}</p>
                   </div>
                 </div>
               </button>
@@ -476,7 +552,7 @@ export default function AdminSearch() {
 
       {!!groupedResults.albums.length && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-white">Albums</h2>
+          <h2 className="text-lg font-semibold text-white">Album</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {groupedResults.albums.map((album) => (
               <button
@@ -498,12 +574,8 @@ export default function AdminSearch() {
                     </div>
                   )}
                   <div>
-                    <p className="text-sm font-semibold text-white">
-                      {album.displayLabel}
-                    </p>
-                    <p className="text-xs text-white/60">
-                      {album.secondaryLabel || "Album"}
-                    </p>
+                    <p className="text-sm font-semibold text-white">{album.displayLabel}</p>
+                    <p className="text-xs text-white/60">{album.secondaryLabel || "Album"}</p>
                   </div>
                 </div>
               </button>
@@ -514,7 +586,7 @@ export default function AdminSearch() {
 
       {!!groupedResults.users.length && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-white">Users</h2>
+          <h2 className="text-lg font-semibold text-white">Người dùng</h2>
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {groupedResults.users.map((user) => (
               <button
@@ -535,15 +607,8 @@ export default function AdminSearch() {
                   </div>
                 )}
                 <div>
-                  <p className="text-sm font-semibold text-white">
-                    {user.displayLabel}
-                  </p>
-                  <p className="text-xs text-white/60">
-                    {user.secondaryLabel ||
-                      user.alias ||
-                      user.id ||
-                      user._id}
-                  </p>
+                  <p className="text-sm font-semibold text-white">{user.displayLabel}</p>
+                  <p className="text-xs text-white/60">{user.secondaryLabel || getTargetId(user)}</p>
                 </div>
               </button>
             ))}

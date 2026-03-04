@@ -1,39 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { FiRefreshCw, FiSearch, FiX } from "react-icons/fi";
-import {
-  deleteAlbum,
-  getAlbumById,
-  getAlbums,
-  updateAlbum,
-} from "../../api/album.api";
+import { useLocation, useNavigate } from "react-router-dom";
+import { FiRefreshCw, FiSearch } from "react-icons/fi";
+import { deleteAlbum, getAlbums } from "../../api/album.api";
 import ArtistAlbumTile from "../../components/artist/ArtistAlbumTile";
-import { resolveAssetUrl } from "../../utils/asset";
-import { formatDateDisplay } from "../../utils/date";
-import OptimizedImage from "../../components/common/OptimizedImage";
-
-const formatDateInput = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
-};
+import Toast from "../../components/common/Toast";
 
 export default function AdminAlbums() {
+  const navigate = useNavigate();
   const location = useLocation();
+
   const [albums, setAlbums] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [selectedAlbum, setSelectedAlbum] = useState(null);
-  const [editingAlbum, setEditingAlbum] = useState(null);
-  const [autoOpenedId, setAutoOpenedId] = useState(null);
-  const [coverFile, setCoverFile] = useState(null);
-  const [editPayload, setEditPayload] = useState({
-    title: "",
-    release_date: "",
-    cover_url: "",
-  });
+  const [toast, setToast] = useState({ title: "", message: "" });
 
   const loadAlbums = async () => {
     try {
@@ -70,137 +50,45 @@ export default function AdminAlbums() {
   }, [location.search]);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const targetId = params.get("targetId") || params.get("id");
-    if (!targetId || targetId === autoOpenedId) return;
-    const match = albums.find(
-      (album) => `${album.id}` === `${targetId}` || `${album._id}` === `${targetId}`
-    );
-    if (match) {
-      handleEdit(match);
-      setAutoOpenedId(`${targetId}`);
-    }
-  }, [albums, autoOpenedId, location.search]);
-  
+    const pendingToast = location.state?.toast;
+    if (!pendingToast) return;
+    setToast(pendingToast);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location, navigate]);
+
   const filteredAlbums = useMemo(() => {
     const normalized = keyword.trim().toLowerCase();
     if (!normalized) return albums;
     return albums.filter((album) =>
-      [album.title, album.artist_name]
+      [album.title, album.artist_name, `${album.id}`]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(normalized))
     );
   }, [albums, keyword]);
 
-  const handleView = async (albumId) => {
-    try {
-      const res = await getAlbumById(albumId);
-      const album = res?.data?.data ?? res?.data ?? null;
-      setSelectedAlbum(album);
-    } catch (error) {
-      console.error("Load album detail failed", error);
-      alert("Không thể tải chi tiết album.");
-    }
-  };
-
-  const getSongCover = (song) =>
-    song?.cover_url || song?.cover || song?.thumbnail || song?.image;
-
-   const handleEdit = async (album) => {
-    try {
-      const res = await getAlbumById(album.id);
-      const detail = res?.data?.data ?? res?.data ?? album;
-      setEditingAlbum(detail);
-      setEditPayload({
-        title: detail?.title || "",
-        release_date: formatDateInput(detail?.release_date),
-        cover_url: detail?.cover_url || detail?.cover || "",
-      });
-      setCoverFile(null);
-    } catch (error) {
-      console.error("Load album detail failed", error);
-      setEditingAlbum(album);
-      setEditPayload({
-        title: album?.title || "",
-        release_date: formatDateInput(album?.release_date),
-        cover_url: album?.cover_url || album?.cover || "",
-      });
-      setCoverFile(null);
-    }
-  };
-
-  const handleUpdate = async () => {
-    if (!editingAlbum) return;
-    try {
-      let payload = {
-        title: editPayload.title || undefined,
-        release_date: editPayload.release_date || null,
-      cover_url: editPayload.cover_url || null,
-      };
-
-      if (coverFile) {
-        const formData = new FormData();
-        formData.append("cover", coverFile);
-        Object.entries(payload).forEach(([key, value]) => {
-          if (value !== null && value !== undefined && value !== "") {
-            formData.append(key, value);
-          }
-        });
-        payload = formData;
-      }
-
-      await updateAlbum(editingAlbum.id, payload);
-      setEditingAlbum(null);
-      setCoverFile(null);
-      await loadAlbums();
-    } catch (error) {
-      console.error("Update album failed", error);
-      alert("Không thể cập nhật album.");
-    }
-  };
-
-  const coverPreview = useMemo(() => {
-    if (coverFile) {
-      return URL.createObjectURL(coverFile);
-    }
-    if (editPayload.cover_url) {
-      return resolveAssetUrl(editPayload.cover_url);
-    }
-    if (editingAlbum?.cover_url || editingAlbum?.cover) {
-      return resolveAssetUrl(editingAlbum?.cover_url || editingAlbum?.cover);
-    }
-    return null;
-  }, [coverFile, editPayload.cover_url, editingAlbum]);
-
-  useEffect(() => {
-    if (!coverFile || !coverPreview) return undefined;
-    return () => URL.revokeObjectURL(coverPreview);
-  }, [coverFile, coverPreview]);
-
   const handleDelete = async (albumId) => {
     const confirmed = window.confirm(
-      "Bạn có chắc muốn xoá mềm album này? Album sẽ nằm trong thùng rác."
+      "Bạn có chắc muốn xóa mềm album này? Album sẽ nằm trong thùng rác."
     );
     if (!confirmed) return;
     try {
       await deleteAlbum(albumId);
       await loadAlbums();
+      setToast({ title: "Thành công", message: "Đã xóa mềm album." });
     } catch (error) {
       console.error("Delete album failed", error);
-      alert("Không thể xoá mềm album.");
+      alert("Không thể xóa mềm album.");
     }
   };
 
   return (
-    <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
+    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
             Quản trị
           </p>
-          <h1 className="text-3xl font-extrabold text-white">
-            Quản lý album
-          </h1>
+          <h1 className="text-3xl font-extrabold text-white">Quản lý album</h1>
         </div>
         <button
           onClick={loadAlbums}
@@ -210,7 +98,7 @@ export default function AdminAlbums() {
         </button>
       </div>
 
-      <div className="rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+      <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="flex flex-1 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80">
             <FiSearch className="text-white/50" />
@@ -225,7 +113,7 @@ export default function AdminAlbums() {
       </div>
 
       {errorMessage && (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
           {errorMessage}
         </div>
       )}
@@ -248,268 +136,19 @@ export default function AdminAlbums() {
             <ArtistAlbumTile
               key={album.id}
               album={album}
-              onView={() => handleView(album.id)}
-              onEdit={() => handleEdit(album)}
+              onView={() => navigate(`/admin/albums/${album.id}`)}
+              onEdit={() => navigate(`/admin/albums/${album.id}/edit`)}
               onDelete={() => handleDelete(album.id)}
             />
           ))}
         </div>
       )}
 
-      {selectedAlbum && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 lg:pl-64">
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#181818] p-6 text-xs text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:text-sm">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold sm:text-xl">Chi tiết album</h2>
-              <button
-                onClick={() => setSelectedAlbum(null)}
-                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition md:hover:bg-white/10"
-              >
-                <FiX />
-              </button>
-            </div>
-            <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <p className="text-xs font-semibold text-white sm:text-sm">
-                  Ảnh album
-                </p>
-                <div className="mt-4">
-                  {selectedAlbum.cover_url || selectedAlbum.cover ? (
-                    <OptimizedImage
-                      src={resolveAssetUrl(
-                        selectedAlbum.cover_url || selectedAlbum.cover
-                      )}
-                      alt={selectedAlbum.title}
-                      className="h-60 w-full rounded-2xl bg-black/40 object-contain shadow-lg"
-                    />
-                  ) : (
-                    <div className="flex h-60 items-center justify-center rounded-2xl bg-white/10 text-xs text-white/60 sm:text-sm">
-                      Chưa có ảnh album
-                    </div>
-                  )}
-                </div>
-               </div>
-
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5 text-xs text-white/70 sm:text-sm">
-                <p className="text-xs font-semibold text-white sm:text-sm">Thông tin</p>
-                <div className="mt-4 space-y-3">
-                  <p>
-                    <span className="text-white/60">Tên album:</span>{" "}
-                    <span className="text-white">{selectedAlbum.title}</span>
-                  </p>
-                  <p>
-                    <span className="text-white/60">Nghệ sĩ:</span>{" "}
-                    <span className="text-white">
-                      {selectedAlbum.artist?.name ||
-                        selectedAlbum.artist_name ||
-                        "-"}
-                    </span>
-                  </p>
-                  <p>
-                    <span className="text-white/60">Ngày phát hành:</span>{" "}
-                    <span className="text-white">
-                      {formatDateDisplay(selectedAlbum.release_date)}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
-            {selectedAlbum.songs?.length > 0 && (
-              <div className="mt-6">
-                <p className="text-xs font-semibold text-white sm:text-sm">
-                  Danh sách bài hát
-                </p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {selectedAlbum.songs.map((song) => (
-                    <div
-                      key={song.id}
-                      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-xs text-white/80 sm:text-sm"
-                    >
-                      <div className="h-12 w-12 overflow-hidden rounded-xl bg-black/40">
-                        {getSongCover(song) || selectedAlbum.cover_url ? (
-                          <OptimizedImage
-                            src={resolveAssetUrl(
-                              getSongCover(song) ||
-                                selectedAlbum.cover_url ||
-                                selectedAlbum.cover
-                            )}
-                            alt={song.title}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[10px] text-white/50">
-                            No image
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate font-semibold text-white">
-                          {song.title}
-                        </p>
-                        <p className="truncate text-xs text-white/50">
-                          {song.artist_name ||
-                            selectedAlbum.artist?.name ||
-                            selectedAlbum.artist_name ||
-                            "-"}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {editingAlbum && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-10 lg:pl-64">
-          <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-xs text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6 sm:text-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-                  Quản lý album
-                </p>
-                <h2 className="mt-2 text-base font-semibold sm:text-xl">Chỉnh sửa album</h2>
-              </div>
-              <button
-                onClick={() => setEditingAlbum(null)}
-                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition md:hover:bg-white/10"
-              >
-                <FiX />
-              </button>
-            </div>
-
-           <div className="mt-6 flex-1 overflow-y-auto pr-1 sm:pr-2">
-              <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-xs font-semibold text-white sm:text-sm">Thông tin chi tiết</p>
-                  <div className="mt-4 flex flex-col gap-4">
-                    {coverPreview ? (
-                      <OptimizedImage
-                        src={coverPreview}
-                        alt={editPayload.title || "Album cover"}
-                        className="h-56 w-full rounded-2xl bg-black/40 object-contain shadow-lg"
-                      />
-                    ) : (
-                      <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-xs text-white/60 sm:text-sm">
-                        Chưa có ảnh bìa
-                      </div>
-                    )}
-                    <div className="space-y-2 text-xs text-white/70 sm:text-sm">
-                      <p>
-                        <span className="text-white/60">Tên album:</span>{" "}
-                        <span className="text-white">
-                          {editingAlbum.title || "Chưa đặt tên"}
-                        </span>
-                      </p>
-                      <p>
-                        <span className="text-white/60">Nghệ sĩ:</span>{" "}
-                        <span className="text-white">
-                          {editingAlbum.artist?.name ||
-                            editingAlbum.artist_name ||
-                            "-"}
-                        </span>
-                      </p>
-                      <p>
-                        <span className="text-white/60">Ngày phát hành:</span>{" "}
-                        <span className="text-white">
-                          {formatDateDisplay(editingAlbum.release_date)}
-                        </span>
-                      </p>
-                      {editingAlbum.songs?.length > 0 && (
-                        <div>
-                          <p className="text-white/60">Danh sách bài hát:</p>
-                          <ul className="mt-2 space-y-1 text-white/80">
-                            {editingAlbum.songs.map((song) => (
-                              <li key={song.id}>• {song.title}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-xs font-semibold text-white sm:text-sm">Cập nhật album</p>
-                  <div className="mt-4 space-y-4">
-                    <label className="block text-xs text-white/70 sm:text-sm">
-                      Tên album
-                      <input
-                        value={editPayload.title}
-                        onChange={(event) =>
-                          setEditPayload((prev) => ({
-                            ...prev,
-                            title: event.target.value,
-                          }))
-                        }
-                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-xs text-white focus:border-emerald-400/60 focus:outline-none sm:text-sm"
-                      />
-                    </label>
-                    <label className="block text-xs text-white/70 sm:text-sm">
-                      Ngày phát hành
-                      <input
-                        type="date"
-                        value={editPayload.release_date}
-                        onChange={(event) =>
-                          setEditPayload((prev) => ({
-                            ...prev,
-                            release_date: event.target.value,
-                          }))
-                        }
-                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-xs text-white focus:border-emerald-400/60 focus:outline-none sm:text-sm"
-                      />
-                    </label>
-                    <label className="block text-xs text-white/70 sm:text-sm">
-                      Ảnh bìa (URL)
-                      <input
-                        value={editPayload.cover_url}
-                        onChange={(event) =>
-                          setEditPayload((prev) => ({
-                            ...prev,
-                            cover_url: event.target.value,
-                          }))
-                        }
-                        placeholder="https://..."
-                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
-                      />
-                    </label>
-                    <div>
-                      <label className="text-xs text-white/50">
-                        Hoặc tải ảnh bìa (PNG/JPG)
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(event) =>
-                          setCoverFile(event.target.files?.[0] || null)
-                        }
-                        className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 md:hover:border-white/20"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3 border-t border-white/10 pt-4">
-              <button
-                onClick={() => setEditingAlbum(null)}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/80 transition md:hover:bg-white/10 sm:text-sm"
-              >
-                Huỷ
-              </button>
-              <button
-                onClick={handleUpdate}
-                className="rounded-full bg-emerald-400 px-5 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300 sm:text-sm"
-              >
-                Lưu thay đổi
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Toast
+        title={toast.title}
+        message={toast.message}
+        onClose={() => setToast({ title: "", message: "" })}
+      />
     </div>
   );
 }

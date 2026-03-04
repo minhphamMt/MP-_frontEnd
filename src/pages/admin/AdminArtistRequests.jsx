@@ -128,7 +128,7 @@ export default function AdminArtistRequests() {
   }, [keyword, requests]);
 
   return (
-    <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-6 lg:px-8">
+    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -170,12 +170,12 @@ export default function AdminArtistRequests() {
       </div>
 
       {errorMessage && (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
           {errorMessage}
         </div>
       )}
 
-      <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+      <div className="overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
         <div className="border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50">
           Danh sách yêu cầu
         </div>

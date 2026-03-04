@@ -36,10 +36,16 @@ const ArtistSongForm = lazy(() => import("../pages/artist/ArtistSongForm"));
 const ArtistProfile = lazy(() => import("../pages/artist/ArtistProfile"));
 const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
 const AdminSongManagement = lazy(() => import("../pages/admin/AdminSongManagement"));
+const AdminSongForm = lazy(() => import("../pages/admin/AdminSongForm"));
+const AdminSongReviewDetail = lazy(() =>
+  import("../pages/admin/AdminSongReviewDetail")
+);
 const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
 const AdminSongs = lazy(() => import("../pages/admin/AdminSongs"));
 const AdminGenres = lazy(() => import("../pages/admin/AdminGenres"));
 const AdminAlbums = lazy(() => import("../pages/admin/AdminAlbums"));
+const AdminAlbumForm = lazy(() => import("../pages/admin/AdminAlbumForm"));
+const AdminAlbumDetail = lazy(() => import("../pages/admin/AdminAlbumDetail"));
 const AdminSearch = lazy(() => import("../pages/admin/AdminSearch"));
 const AdminArtistForm = lazy(() => import("../pages/admin/AdminArtistForm"));
 const AdminArtistList = lazy(() => import("../pages/admin/AdminArtistList"));
@@ -142,9 +148,15 @@ export default function AppRoutes() {
             />
             <Route path="/admin/search" element={<AdminSearch />} />
             <Route path="/admin/songs" element={<AdminSongManagement />} />
+            <Route path="/admin/songs/:id/edit" element={<AdminSongForm />} />
             <Route path="/admin/songs/review" element={<AdminSongs />} />
+            <Route
+              path="/admin/songs/review/:id"
+              element={<AdminSongReviewDetail />}
+            />
             <Route path="/admin/albums" element={<AdminAlbums />} />
-            <Route path="/admin/albums" element={<AdminAlbums />} />
+            <Route path="/admin/albums/:id" element={<AdminAlbumDetail />} />
+            <Route path="/admin/albums/:id/edit" element={<AdminAlbumForm />} />
             <Route path="/admin/genres" element={<AdminGenres />} />
             <Route path="/admin/trash" element={<Trash />} />
           </Route>

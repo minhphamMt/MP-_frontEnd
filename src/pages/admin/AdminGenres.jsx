@@ -76,7 +76,7 @@ export default function AdminGenres() {
   };
 
   return (
-    <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
+    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -95,7 +95,7 @@ export default function AdminGenres() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+        <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
           <input
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
@@ -107,7 +107,7 @@ export default function AdminGenres() {
           />
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+        <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
           <div className="flex gap-2">
             <input
               value={newGenre}
@@ -126,12 +126,12 @@ export default function AdminGenres() {
       </div>
 
       {errorMessage && (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
           {errorMessage}
         </div>
       )}
 
-      <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+      <div className="overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
         <div className="grid grid-cols-[1fr_0.4fr] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50">
           <span>Thể loại</span>
           <span className="text-right">Hành động</span>

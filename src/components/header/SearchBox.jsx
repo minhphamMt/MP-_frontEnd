@@ -119,7 +119,7 @@ export default function SearchBox() {
 
     setLoading(true);
     try {
-       if (isAdmin) {
+      if (isAdmin) {
         const res = await searchAdmin({ q: trimmed, limit: 8, page: 1 });
         const payload = res?.data?.data ?? res?.data ?? {};
         const itemsSource =
@@ -137,6 +137,19 @@ export default function SearchBox() {
           .map((item) => {
             let type =
               item.type || item.entity_type || item.entityType || item.kind;
+            const rawType = `${type || ""}`.toLowerCase();
+
+            if (rawType.includes("playlist")) return null;
+            if (
+              item.playlist_id ||
+              item.playlistId ||
+              item.owner_id ||
+              item.ownerId ||
+              item.is_public !== undefined ||
+              item.privacy !== undefined
+            ) {
+              return null;
+            }
 
             if (!type && (item.display_name || item.email)) type = "user";
             if (!type && item.role === "ARTIST") type = "artist";
@@ -184,6 +197,7 @@ export default function SearchBox() {
                 item.artist_name ||
                 item.artist?.name ||
                 item.owner?.name ||
+                item.owner_name ||
                 item.email ||
                 item.role,
               cover:
@@ -355,29 +369,33 @@ const handleResultNavigate = async (item) => {
       item.albumId ??
       item.user_id ??
       item.userId ??
+      item.artist_id ??
+      item.artistId ??
       "";
     if (item.type === "artist") {
-      navigate(
-        `/admin/users?role=ARTIST&keyword=${encodeURIComponent(label)}`
-      );
+      if (targetId) {
+        navigate(`/admin/artists/${targetId}/edit`);
+      } else {
+        navigate(`/admin/artists?keyword=${encodeURIComponent(label)}`);
+      }
     } else if (item.type === "album") {
-      navigate(
-        `/admin/albums?keyword=${encodeURIComponent(label)}${
-          targetId ? `&targetId=${targetId}` : ""
-        }`
-      );
+      if (targetId) {
+        navigate(`/admin/albums/${targetId}/edit`);
+      } else {
+        navigate(`/admin/albums?keyword=${encodeURIComponent(label)}`);
+      }
     } else if (item.type === "song") {
-     navigate(
-        `/admin/songs?keyword=${encodeURIComponent(label)}${
-          targetId ? `&targetId=${targetId}` : ""
-        }`
-      );
+      if (targetId) {
+        navigate(`/admin/songs/${targetId}/edit`);
+      } else {
+        navigate(`/admin/songs?keyword=${encodeURIComponent(label)}`);
+      }
     } else if (item.type === "user") {
-      navigate(
-        `/admin/users?keyword=${encodeURIComponent(label)}${
-          targetId ? `&targetId=${targetId}` : ""
-        }`
-      );
+      if (targetId) {
+        navigate(`/admin/users/${targetId}/edit`);
+      } else {
+        navigate(`/admin/users?keyword=${encodeURIComponent(label)}`);
+      }
     } else {
       navigate(`/admin/search?q=${encodeURIComponent(label)}`);
     }

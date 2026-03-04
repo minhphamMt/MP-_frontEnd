@@ -64,7 +64,7 @@ export default function AdminDashboard() {
   }, [overview]);
 
   return (
-    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
+    <div className="admin-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
       <div className="space-y-2">
         <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
           Quản trị
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
       </div>
 
       {errorMessage && (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
           {errorMessage}
         </div>
       )}
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-3xl border border-white/10 bg-[#181818] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.5)]">
+        <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.5)]">
           <div className="flex items-center gap-2 text-white">
             <div className="h-8 w-1 rounded-full bg-gradient-to-b from-cyan-300 to-violet-400" />
             <h2 className="text-xl font-bold">Trạng thái bài hát</h2>
@@ -123,7 +123,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-[#181818] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.5)]">
+        <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.5)]">
           <div className="flex items-center gap-2 text-white">
             <FiTrendingUp />
             <h2 className="text-xl font-bold">Top bài hát tuần</h2>

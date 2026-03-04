@@ -192,7 +192,7 @@ export default function AdminUsers() {
   };
   
   return (
-    <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
+    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -218,7 +218,7 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+      <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
         <input
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
@@ -228,12 +228,12 @@ export default function AdminUsers() {
       </div>
 
       {errorMessage && (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
           {errorMessage}
         </div>
       )}
 
-      <div className="overflow-hidden rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+      <div className="overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
         <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.2fr_1fr_0.7fr_0.6fr]">
           <span>Người dùng</span>
           <span className="hidden lg:block">Thông tin</span>
@@ -291,7 +291,7 @@ export default function AdminUsers() {
                 </span>
                 <div className="flex items-center justify-end gap-2">
                   <button
-                    onClick={() => handleEdit(user)}
+                    onClick={() => navigate(`/admin/users/${user.id}/edit`)}
                     aria-label="Sửa"
                     className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition md:hover:bg-white/10"
                   >
@@ -319,7 +319,7 @@ export default function AdminUsers() {
       />
     {editingUser && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 pt-24 pb-10 md:items-center md:py-10 lg:pl-64">
-          <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 text-xs text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6 sm:text-sm">
+          <div className="flex w-full max-w-3xl max-h-[calc(100vh-6rem)] flex-col overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 text-xs text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:p-6 sm:text-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">

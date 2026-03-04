@@ -160,7 +160,7 @@ export default function AdminArtistForm() {
         <FiChevronLeft /> Quay lại danh sách
       </button>
 
-      <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-[#181818] p-5 text-xs shadow-[0_25px_80px_rgba(0,0,0,0.45)] sm:p-6 sm:text-sm">
+      <div className="flex min-h-0 flex-1 flex-col admin-glass rounded-3xl border border-white/10 bg-[#181818] p-5 text-xs shadow-[0_25px_80px_rgba(0,0,0,0.45)] sm:p-6 sm:text-sm">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -180,7 +180,7 @@ export default function AdminArtistForm() {
         </div>
 
         {errorMessage && (
-          <div className="mt-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-100 sm:text-sm">
+          <div className="mt-4 admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-100 sm:text-sm">
             {errorMessage}
           </div>
         )}

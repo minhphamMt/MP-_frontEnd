@@ -13,6 +13,7 @@ export default function MainLayout() {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const role = useAuthStore((state) => state.role);
+  const isAdminRoute = location.pathname.startsWith("/admin");
   const shouldShowPlayer = role !== "ARTIST" && role !== "ADMIN";
   const [authToastMessage, setAuthToastMessage] = useState("");
 
@@ -91,7 +92,11 @@ export default function MainLayout() {
 
         <main
           ref={mainRef}
-          className="scrollbar-page relative flex-1 overflow-y-auto bg-[#121212] px-4 py-4 sm:px-6 sm:py-6"
+          className={`scrollbar-page relative flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 ${
+            isAdminRoute
+              ? "admin-main-surface bg-[radial-gradient(circle_at_top,_#1f1537_0%,_#111111_45%,_#0a0a0a_100%)]"
+              : "bg-[#121212]"
+          }`}
         >
           <div
             ref={backgroundRef}
@@ -100,18 +105,24 @@ export default function MainLayout() {
           >
             <div
               data-blob
-              className="absolute -top-24 -left-20 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl"
+              className={`absolute -top-24 -left-20 h-72 w-72 rounded-full blur-3xl ${
+                isAdminRoute ? "bg-violet-500/25" : "bg-indigo-500/20"
+              }`}
             />
             <div
               data-blob
-              className="absolute top-24 right-0 h-80 w-80 rounded-full bg-fuchsia-500/20 blur-3xl"
+              className={`absolute top-24 right-0 h-80 w-80 rounded-full blur-3xl ${
+                isAdminRoute ? "bg-sky-500/20" : "bg-fuchsia-500/20"
+              }`}
             />
             <div
               data-blob
-              className="absolute bottom-12 left-1/3 h-64 w-64 rounded-full bg-cyan-400/15 blur-3xl"
+              className={`absolute bottom-12 left-1/3 h-64 w-64 rounded-full blur-3xl ${
+                isAdminRoute ? "bg-purple-400/20" : "bg-cyan-400/15"
+              }`}
             />
           </div>
-          <div className="relative z-10">
+          <div className={`relative z-10 ${isAdminRoute ? "admin-content" : ""}`}>
             <Outlet />
           </div>
         </main>

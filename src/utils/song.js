@@ -9,15 +9,35 @@ export const formatDuration = (s = 0) => {
 
 const resolveAudioUrl = (path, baseUrl) => {
   if (!path) return undefined;
-  if (/^https?:\/\//i.test(path)) return path;
+  const rawPath = `${path}`.trim();
+
+  // Handle Firebase object path stored as url-encoded string (uploads%2Fmusic%2F...).
+  // Support both raw object path and absolute URL forms.
+  if (/uploads%2F/i.test(rawPath)) {
+    try {
+      const encodedPath = /^https?:\/\//i.test(rawPath)
+        ? new URL(rawPath).pathname.replace(/^\/+/, "")
+        : rawPath;
+      const decodedPath = decodeURIComponent(encodedPath).replace(/^\/+/, "");
+      const storageBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET;
+      if (decodedPath.startsWith("uploads/") && storageBucket) {
+        return `https://storage.googleapis.com/${storageBucket}/${decodedPath}`;
+      }
+    } catch {
+      // Fallback to base URL strategy below if decode fails.
+    }
+  }
+  if (/^https?:\/\//i.test(rawPath)) return rawPath;
 
   const cleanedBase = (baseUrl || "").replace(/\/$/, "");
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const normalizedPath = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
 
   return cleanedBase ? `${cleanedBase}${normalizedPath}` : normalizedPath;
 };
 
-export const toPlayableSong = (raw = {}) => {
+export const toPlayableSong = (rawInput = {}) => {
+  const raw =
+    rawInput && typeof rawInput === "object" ? rawInput : {};
   const baseUrl =
     import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
   const source = raw.song ?? raw;
