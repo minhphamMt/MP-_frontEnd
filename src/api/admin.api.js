@@ -2,6 +2,8 @@ import api from "./axios";
 
 export const getAdminOverview = (params = {}) =>
   api.get("/admin/reports/overview", { params });
+export const getReportCharts = (params = {}) =>
+  api.get("/admin/reports/charts", { params });
 
 export const searchAdmin = (params = {}) => api.get("/admin/search", { params });
 

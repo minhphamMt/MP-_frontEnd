@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FiBarChart2,
   FiClock,
@@ -9,78 +9,43 @@ import {
   FiUserCheck,
   FiUsers,
 } from "react-icons/fi";
-import {
-  getAdminOverview,
-  listAdminSongs,
-  listArtistRequests,
-  listUsers,
-} from "../../api/admin.api";
-import { getAlbums } from "../../api/album.api";
+import * as echarts from "echarts/core";
+import { LineChart as ELineChart, BarChart, PieChart as EPieChart } from "echarts/charts";
+import { GridComponent, TooltipComponent, LegendComponent } from "echarts/components";
+import { SVGRenderer } from "echarts/renderers";
+import ReactEChartsCore from "echarts-for-react/lib/core";
+import { getAdminOverview, getReportCharts } from "../../api/admin.api";
+
+echarts.use([
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  ELineChart,
+  BarChart,
+  EPieChart,
+  SVGRenderer,
+]);
+
+const CHART_INCLUDE =
+  "song_status,weekly_top,genre_status,user_distribution,artist_request_trend,album_by_month";
 
 const extractData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
-
-const extractList = (payload, keys = []) => {
-  if (Array.isArray(payload)) return payload;
-  if (!payload || typeof payload !== "object") return [];
-  for (const key of keys) {
-    if (Array.isArray(payload[key])) return payload[key];
-  }
-  return [];
-};
-
-const normalizeGenreValue = (genres) => {
-  if (!genres) return [];
-  if (Array.isArray(genres)) return genres.filter(Boolean);
-  if (typeof genres === "string") {
-    return genres
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-  return [];
-};
-
-const pad2 = (value) => String(value).padStart(2, "0");
-
-const toLocalDateKey = (value) => {
-  if (!value) return "";
-  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value)) {
-    return value.slice(0, 10);
-  }
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
-};
-
-const toMonthKey = (value) => {
-  if (!value) return "";
-  if (typeof value === "string" && /^\d{4}-\d{2}/.test(value)) {
-    return value.slice(0, 7);
-  }
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}`;
-};
-
-const formatDayLabel = (value) => {
-  if (!value) return "";
-  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    const [, month, day] = value.split("-");
-    return `${day}-${month}`;
-  }
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return `${pad2(date.getDate())}-${pad2(date.getMonth() + 1)}`;
-};
-
-const formatMonthLabel = (value) => {
-  const [year, month] = value.split("-");
-  return `${month}/${year}`;
-};
 
 const safeNumber = (value) => {
   const next = Number(value);
   return Number.isFinite(next) ? next : 0;
+};
+
+const formatDayLabel = (value) => {
+  if (!value || typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return value || "";
+  const [, month, day] = value.split("-");
+  return `${day}-${month}`;
+};
+
+const formatMonthLabel = (value) => {
+  if (!value || typeof value !== "string" || !/^\d{4}-\d{2}$/.test(value)) return value || "";
+  const [year, month] = value.split("-");
+  return `${month}/${year}`;
 };
 
 function ChartPanel({ title, subtitle, icon: Icon, children, right }) {
@@ -104,135 +69,502 @@ function ChartPanel({ title, subtitle, icon: Icon, children, right }) {
 }
 
 function DonutChart({ segments, total }) {
-  const radius = 76;
-  const size = 184;
-  const strokeWidth = 20;
-  const circumference = 2 * Math.PI * radius;
-  let offset = 0;
+  const stats = useMemo(() => {
+    const map = new Map();
+    segments.forEach((item) => map.set(item.label, safeNumber(item.value)));
+    return map;
+  }, [segments]);
+
+  const option = useMemo(
+    () => ({
+      animationDuration: 350,
+      animationEasing: "cubicOut",
+      tooltip: {
+        trigger: "item",
+        backgroundColor: "rgba(16, 16, 16, 0.95)",
+        borderColor: "rgba(255,255,255,0.12)",
+        textStyle: { color: "#e5e7eb" },
+      },
+      legend: {
+        orient: "vertical",
+        top: "center",
+        right: 12,
+        icon: "circle",
+        itemWidth: 9,
+        itemHeight: 9,
+        textStyle: { color: "rgba(255,255,255,0.78)", fontSize: 13 },
+        formatter: (name) => {
+          const value = safeNumber(stats.get(name));
+          const percent = total > 0 ? ((value / total) * 100).toFixed(1) : "0.0";
+          return `${name}  ${value} (${percent}%)`;
+        },
+      },
+      graphic: [
+        {
+          type: "text",
+          left: "32%",
+          top: "43%",
+          style: {
+            text: "Tổng",
+            fill: "rgba(255,255,255,0.52)",
+            fontSize: 11,
+            fontWeight: 600,
+            textAlign: "center",
+          },
+        },
+        {
+          type: "text",
+          left: "32%",
+          top: "50%",
+          style: {
+            text: `${total}`,
+            fill: "#f3f4f6",
+            fontSize: 40,
+            fontWeight: 800,
+            textAlign: "center",
+          },
+        },
+      ],
+      series: [
+        {
+          type: "pie",
+          radius: ["52%", "72%"],
+          center: ["32%", "50%"],
+          avoidLabelOverlap: true,
+          label: { show: false },
+          labelLine: { show: false },
+          data: segments.map((item) => ({
+            name: item.label,
+            value: safeNumber(item.value),
+            itemStyle: { color: item.color },
+          })),
+        },
+      ],
+    }),
+    [segments, stats, total]
+  );
 
   return (
-    <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-      <div className="relative">
-        <svg width={size} height={size} className="-rotate-90">
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="rgba(255,255,255,0.1)"
-            strokeWidth={strokeWidth}
-            fill="none"
-          />
-          {segments.map((segment) => {
-            const length = total > 0 ? (segment.value / total) * circumference : 0;
-            const circle = (
-              <circle
-                key={segment.label}
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                stroke={segment.color}
-                strokeWidth={strokeWidth}
-                fill="none"
-                strokeLinecap="round"
-                strokeDasharray={`${length} ${circumference - length}`}
-                strokeDashoffset={-offset}
-              />
-            );
-            offset += length;
-            return circle;
-          })}
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-white/50">Tổng</p>
-          <p className="text-3xl font-black text-white">{total}</p>
-        </div>
-      </div>
-      <div className="w-full space-y-2">
-        {segments.map((segment) => {
-          const percent = total > 0 ? ((segment.value / total) * 100).toFixed(1) : "0.0";
-          return (
-            <div
-              key={segment.label}
-              className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm"
-            >
-              <div className="flex items-center gap-2">
-                <span
-                  className="inline-block h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: segment.color }}
-                />
-                <span className="text-white/80">{segment.label}</span>
-              </div>
-              <span className="text-white/65">
-                {segment.value} ({percent}%)
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <ReactEChartsCore
+      echarts={echarts}
+      option={option}
+      notMerge
+      lazyUpdate
+      opts={{ renderer: "svg" }}
+      className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
+      style={{ width: "100%", height: 260 }}
+    />
+  );
+}
+
+function WeeklyTopChart({ items }) {
+  const option = useMemo(
+    () => ({
+      animationDuration: 350,
+      animationEasing: "cubicOut",
+      grid: { top: 12, right: 14, bottom: 8, left: 16, containLabel: true },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "shadow" },
+        backgroundColor: "rgba(16, 16, 16, 0.95)",
+        borderColor: "rgba(255,255,255,0.12)",
+        textStyle: { color: "#e5e7eb" },
+        formatter: (params) => {
+          const p = Array.isArray(params) ? params[0] : params;
+          const idx = p?.dataIndex ?? 0;
+          const row = items[idx] || {};
+          return `#${idx + 1} ${row.label || ""}<br/>${row.artist || ""}<br/>Điểm: ${safeNumber(
+            row.value
+          )}`;
+        },
+      },
+      xAxis: {
+        type: "value",
+        minInterval: 1,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        splitLine: { lineStyle: { color: "rgba(255,255,255,0.08)", type: "dashed" } },
+        axisLabel: { color: "rgba(255,255,255,0.45)", fontSize: 11 },
+      },
+      yAxis: {
+        type: "category",
+        inverse: true,
+        data: items.map((item, idx) => `#${idx + 1} ${item.label}`),
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: {
+          color: "rgba(255,255,255,0.86)",
+          fontSize: 12,
+          width: 220,
+          overflow: "truncate",
+        },
+      },
+      series: [
+        {
+          type: "bar",
+          data: items.map((item) => safeNumber(item.value)),
+          barMaxWidth: 14,
+          itemStyle: {
+            borderRadius: [0, 999, 999, 0],
+            color: {
+              type: "linear",
+              x: 0,
+              y: 0,
+              x2: 1,
+              y2: 0,
+              colorStops: [
+                { offset: 0, color: "#34d399" },
+                { offset: 1, color: "#67e8f9" },
+              ],
+            },
+          },
+          label: {
+            show: true,
+            position: "right",
+            color: "#6ee7b7",
+            fontWeight: 700,
+            formatter: ({ value }) => Number(value).toFixed(0),
+          },
+        },
+      ],
+    }),
+    [items]
+  );
+
+  return (
+    <ReactEChartsCore
+      echarts={echarts}
+      option={option}
+      notMerge
+      lazyUpdate
+      opts={{ renderer: "svg" }}
+      className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
+      style={{ width: "100%", height: 470 }}
+    />
+  );
+}
+
+function GenreStatusChart({ rows }) {
+  const option = useMemo(
+    () => ({
+      animationDuration: 350,
+      animationEasing: "cubicOut",
+      grid: { top: 34, right: 12, bottom: 8, left: 12, containLabel: true },
+      legend: {
+        top: 0,
+        right: 8,
+        itemWidth: 10,
+        itemHeight: 10,
+        textStyle: { color: "rgba(255,255,255,0.65)", fontSize: 11 },
+      },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "shadow" },
+        backgroundColor: "rgba(16, 16, 16, 0.95)",
+        borderColor: "rgba(255,255,255,0.12)",
+        textStyle: { color: "#e5e7eb" },
+      },
+      xAxis: {
+        type: "value",
+        minInterval: 1,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        splitLine: { lineStyle: { color: "rgba(255,255,255,0.08)", type: "dashed" } },
+        axisLabel: { color: "rgba(255,255,255,0.45)", fontSize: 11 },
+      },
+      yAxis: {
+        type: "category",
+        inverse: true,
+        data: rows.map((row) => row.name),
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: {
+          color: "rgba(255,255,255,0.85)",
+          fontSize: 12,
+          width: 160,
+          overflow: "truncate",
+        },
+      },
+      series: [
+        {
+          name: "Chờ duyệt",
+          type: "bar",
+          stack: "total",
+          barMaxWidth: 14,
+          data: rows.map((row) => safeNumber(row.pending)),
+          itemStyle: { color: "#fbbf24", borderRadius: [0, 0, 0, 0] },
+        },
+        {
+          name: "Đã duyệt",
+          type: "bar",
+          stack: "total",
+          barMaxWidth: 14,
+          data: rows.map((row) => safeNumber(row.approved)),
+          itemStyle: { color: "#34d399", borderRadius: [0, 0, 0, 0] },
+        },
+        {
+          name: "Từ chối",
+          type: "bar",
+          stack: "total",
+          barMaxWidth: 14,
+          data: rows.map((row) => safeNumber(row.rejected)),
+          itemStyle: { color: "#fb7185", borderRadius: [0, 999, 999, 0] },
+          label: {
+            show: true,
+            position: "right",
+            color: "rgba(255,255,255,0.62)",
+            fontSize: 11,
+            formatter: ({ dataIndex }) => safeNumber(rows[dataIndex]?.total).toFixed(0),
+          },
+        },
+      ],
+    }),
+    [rows]
+  );
+
+  return (
+    <ReactEChartsCore
+      echarts={echarts}
+      option={option}
+      notMerge
+      lazyUpdate
+      opts={{ renderer: "svg" }}
+      className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
+      style={{ width: "100%", height: 300 }}
+    />
+  );
+}
+
+function RoleDistributionChart({ counts, total }) {
+  const roleRows = useMemo(
+    () => [
+      { name: "USER", value: safeNumber(counts.user), color: "#93c5fd" },
+      { name: "ARTIST", value: safeNumber(counts.artist), color: "#34d399" },
+      { name: "ADMIN", value: safeNumber(counts.admin), color: "#fbbf24" },
+    ],
+    [counts]
+  );
+
+  const option = useMemo(
+    () => ({
+      animationDuration: 350,
+      animationEasing: "cubicOut",
+      grid: { top: 8, right: 12, bottom: 6, left: 8, containLabel: true },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "shadow" },
+        backgroundColor: "rgba(16, 16, 16, 0.95)",
+        borderColor: "rgba(255,255,255,0.12)",
+        textStyle: { color: "#e5e7eb" },
+      },
+      xAxis: {
+        type: "value",
+        axisLine: { show: false },
+        axisTick: { show: false },
+        splitLine: { show: false },
+        axisLabel: { show: false },
+      },
+      yAxis: {
+        type: "category",
+        inverse: true,
+        data: roleRows.map((item) => item.name),
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { color: "rgba(255,255,255,0.85)", fontSize: 12, fontWeight: 600 },
+      },
+      series: [
+        {
+          type: "bar",
+          data: roleRows.map((item) => ({ value: item.value, itemStyle: { color: item.color } })),
+          barMaxWidth: 10,
+          showBackground: true,
+          backgroundStyle: { color: "rgba(255,255,255,0.12)", borderRadius: 999 },
+          itemStyle: { borderRadius: [0, 999, 999, 0] },
+          label: {
+            show: true,
+            position: "right",
+            color: "rgba(255,255,255,0.72)",
+            formatter: ({ value }) => {
+              const v = safeNumber(value);
+              const p = total > 0 ? ((v / total) * 100).toFixed(1) : "0.0";
+              return `${v} (${p}%)`;
+            },
+          },
+        },
+      ],
+    }),
+    [roleRows, total]
+  );
+
+  return (
+    <ReactEChartsCore
+      echarts={echarts}
+      option={option}
+      notMerge
+      lazyUpdate
+      opts={{ renderer: "svg" }}
+      className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
+      style={{ width: "100%", height: 190 }}
+    />
   );
 }
 
 function LineChart({ labels, values }) {
-  const width = 640;
-  const height = 220;
-  const max = Math.max(...values, 1);
-  const points = values.map((value, index) => {
-    const x = labels.length > 1 ? (index / (labels.length - 1)) * (width - 40) + 20 : width / 2;
-    const y = height - 24 - (value / max) * (height - 56);
-    return `${x},${y}`;
-  });
+  const option = useMemo(
+    () => ({
+      animationDuration: 350,
+      animationEasing: "cubicOut",
+      grid: { top: 24, right: 16, bottom: 34, left: 42 },
+      tooltip: {
+        trigger: "axis",
+        backgroundColor: "rgba(16, 16, 16, 0.95)",
+        borderColor: "rgba(255,255,255,0.12)",
+        textStyle: { color: "#e5e7eb" },
+        axisPointer: { type: "line", lineStyle: { color: "rgba(52,211,153,0.6)" } },
+      },
+      xAxis: {
+        type: "category",
+        boundaryGap: false,
+        data: labels,
+        axisLine: { lineStyle: { color: "rgba(255,255,255,0.15)" } },
+        axisTick: { show: false },
+        axisLabel: { color: "rgba(255,255,255,0.58)", fontSize: 11 },
+      },
+      yAxis: {
+        type: "value",
+        minInterval: 1,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: {
+          color: "rgba(255,255,255,0.5)",
+          fontSize: 11,
+          formatter: (value) => Number(value).toFixed(0),
+        },
+        splitLine: { lineStyle: { color: "rgba(255,255,255,0.08)", type: "dashed" } },
+      },
+      series: [
+        {
+          type: "line",
+          data: values,
+          smooth: 0.25,
+          symbol: "circle",
+          symbolSize: 8,
+          showSymbol: true,
+          lineStyle: { width: 3, color: "#34d399" },
+          itemStyle: { color: "#34d399" },
+          label: {
+            show: true,
+            position: "top",
+            color: "#9ae6c7",
+            fontSize: 10,
+            formatter: ({ value }) => Number(value).toFixed(0),
+          },
+          areaStyle: {
+            color: {
+              type: "linear",
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: "rgba(52, 211, 153, 0.28)" },
+                { offset: 1, color: "rgba(52, 211, 153, 0.02)" },
+              ],
+            },
+          },
+        },
+      ],
+    }),
+    [labels, values]
+  );
 
   return (
-    <div className="space-y-3">
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="h-[210px] w-full rounded-2xl border border-white/10 bg-[#141414]"
-      >
-        {[0, 1, 2, 3].map((line) => {
-          const y = 22 + line * ((height - 46) / 3);
-          return (
-            <line
-              key={line}
-              x1="20"
-              x2={width - 20}
-              y1={y}
-              y2={y}
-              stroke="rgba(255,255,255,0.08)"
-              strokeDasharray="4 6"
-            />
-          );
-        })}
-        <polyline
-          points={points.join(" ")}
-          fill="none"
-          stroke="#34d399"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {values.map((value, index) => {
-          const [x, y] = points[index].split(",").map(Number);
-          return (
-            <g key={`${labels[index]}-${index}`}>
-              <circle cx={x} cy={y} r="4.5" fill="#34d399" />
-              <text x={x} y={y - 10} fill="#9ae6c7" fontSize="10" textAnchor="middle">
-                {value}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
+    <ReactEChartsCore
+      echarts={echarts}
+      option={option}
+      notMerge
+      lazyUpdate
+      opts={{ renderer: "svg" }}
+      className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
+      style={{ width: "100%", height: 250 }}
+    />
+  );
+}
 
-      <div
-        className="grid gap-1 text-center text-[11px] text-white/55"
-        style={{ gridTemplateColumns: `repeat(${labels.length || 1}, minmax(0, 1fr))` }}
-      >
-        {labels.map((label, index) => (
-          <span key={`${label}-${index}`}>{label}</span>
-        ))}
-      </div>
-    </div>
+function AlbumByMonthChart({ items }) {
+  const option = useMemo(
+    () => ({
+      animationDuration: 350,
+      animationEasing: "cubicOut",
+      grid: { top: 20, right: 12, bottom: 34, left: 34 },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "shadow" },
+        backgroundColor: "rgba(16, 16, 16, 0.95)",
+        borderColor: "rgba(255,255,255,0.12)",
+        textStyle: { color: "#e5e7eb" },
+      },
+      xAxis: {
+        type: "category",
+        data: items.map((item) => item.label),
+        axisTick: { show: false },
+        axisLine: { lineStyle: { color: "rgba(255,255,255,0.15)" } },
+        axisLabel: { color: "rgba(255,255,255,0.58)", fontSize: 11 },
+      },
+      yAxis: {
+        type: "value",
+        minInterval: 1,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: {
+          color: "rgba(255,255,255,0.5)",
+          fontSize: 11,
+          formatter: (value) => Number(value).toFixed(0),
+        },
+        splitLine: { lineStyle: { color: "rgba(255,255,255,0.08)", type: "dashed" } },
+      },
+      series: [
+        {
+          type: "bar",
+          data: items.map((item) => item.value),
+          barMaxWidth: 28,
+          itemStyle: {
+            borderRadius: [8, 8, 0, 0],
+            color: {
+              type: "linear",
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: "#67e8f9" },
+                { offset: 1, color: "#34d399" },
+              ],
+            },
+          },
+          label: {
+            show: true,
+            position: "top",
+            color: "rgba(255,255,255,0.72)",
+            fontSize: 11,
+            formatter: ({ value }) => Number(value).toFixed(0),
+          },
+        },
+      ],
+    }),
+    [items]
+  );
+
+  return (
+    <ReactEChartsCore
+      echarts={echarts}
+      option={option}
+      notMerge
+      lazyUpdate
+      opts={{ renderer: "svg" }}
+      className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
+      style={{ width: "100%", height: 250 }}
+    />
   );
 }
 
@@ -241,49 +573,67 @@ export default function AdminAnalytics() {
   const [errorMessage, setErrorMessage] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
   const [overview, setOverview] = useState(null);
-  const [weeklyTopSongs, setWeeklyTopSongs] = useState([]);
-  const [songs, setSongs] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [artistRequests, setArtistRequests] = useState([]);
-  const [albums, setAlbums] = useState([]);
+  const [charts, setCharts] = useState({
+    song_status: [],
+    weekly_top: [],
+    genre_status: [],
+    user_distribution: {
+      role: { USER: 0, ARTIST: 0, ADMIN: 0 },
+      activity: { active: 0, inactive: 0 },
+    },
+    artist_request_trend: [],
+    album_by_month: [],
+  });
 
   const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true);
-      const [overviewRes, songsRes, usersRes, requestsRes, albumsRes] = await Promise.all([
+      const timezone =
+        Intl?.DateTimeFormat?.().resolvedOptions?.().timeZone || "Asia/Ho_Chi_Minh";
+
+      const [overviewRes, chartsRes] = await Promise.all([
         getAdminOverview({ limit: 10 }),
-        listAdminSongs({ page: 1, limit: 200 }),
-        listUsers({ page: 1, limit: 200 }),
-        listArtistRequests({ page: 1, limit: 200 }),
-        getAlbums({ page: 1, limit: 200 }),
+        getReportCharts({
+          tz: timezone,
+          bucket: "day",
+          include: CHART_INCLUDE,
+        }),
       ]);
 
       const overviewPayload = extractData(overviewRes) ?? {};
       const resolvedOverview =
-        overviewPayload?.overview ?? overviewPayload?.data?.overview ?? overviewPayload;
-      const resolvedTopSongs =
-        overviewPayload?.weeklyTopSongs ?? overviewPayload?.data?.weeklyTopSongs ?? [];
+        overviewPayload?.overview ?? overviewPayload?.data?.overview ?? overviewPayload ?? null;
+      setOverview(resolvedOverview);
 
-      setOverview(resolvedOverview ?? null);
-      setWeeklyTopSongs(Array.isArray(resolvedTopSongs) ? resolvedTopSongs : []);
-
-      const songsPayload = extractData(songsRes) ?? [];
-      setSongs(extractList(songsPayload, ["items", "songs"]));
-
-      const usersPayload = extractData(usersRes) ?? [];
-      setUsers(extractList(usersPayload, ["items", "users"]));
-
-      const requestPayload = extractData(requestsRes) ?? [];
-      setArtistRequests(extractList(requestPayload, ["items", "requests"]));
-
-      const albumsPayload = extractData(albumsRes) ?? [];
-      setAlbums(extractList(albumsPayload, ["items", "albums"]));
+      const chartPayload = extractData(chartsRes) ?? {};
+      setCharts({
+        song_status: Array.isArray(chartPayload.song_status) ? chartPayload.song_status : [],
+        weekly_top: Array.isArray(chartPayload.weekly_top) ? chartPayload.weekly_top : [],
+        genre_status: Array.isArray(chartPayload.genre_status) ? chartPayload.genre_status : [],
+        user_distribution: {
+          role: {
+            USER: safeNumber(chartPayload?.user_distribution?.role?.USER),
+            ARTIST: safeNumber(chartPayload?.user_distribution?.role?.ARTIST),
+            ADMIN: safeNumber(chartPayload?.user_distribution?.role?.ADMIN),
+          },
+          activity: {
+            active: safeNumber(chartPayload?.user_distribution?.activity?.active),
+            inactive: safeNumber(chartPayload?.user_distribution?.activity?.inactive),
+          },
+        },
+        artist_request_trend: Array.isArray(chartPayload.artist_request_trend)
+          ? chartPayload.artist_request_trend
+          : [],
+        album_by_month: Array.isArray(chartPayload.album_by_month)
+          ? chartPayload.album_by_month
+          : [],
+      });
 
       setErrorMessage("");
       setLastUpdated(new Date());
     } catch (error) {
       console.error("Load admin analytics failed", error);
-      setErrorMessage("Không thể tải dữ liệu thống kê.");
+      setErrorMessage("Không thể tải dữ liệu dashboard.");
     } finally {
       setLoading(false);
     }
@@ -294,170 +644,121 @@ export default function AdminAnalytics() {
   }, [loadAnalytics]);
 
   const songStatusSummary = useMemo(() => {
-    const fallback = songs.reduce(
-      (acc, song) => {
-        const status = `${song?.status || ""}`.toLowerCase();
-        if (status === "approved") acc.approved += 1;
-        else if (status === "pending") acc.pending += 1;
-        else if (status === "rejected" || status === "blocked") acc.rejected += 1;
-        else acc.other += 1;
-        return acc;
-      },
-      { pending: 0, approved: 0, rejected: 0, other: 0 }
-    );
+    const overviewStats = overview?.songsByStatus;
+    if (overviewStats && typeof overviewStats === "object") {
+      const pending = safeNumber(overviewStats.pending);
+      const approved = safeNumber(overviewStats.approved);
+      const rejected = safeNumber(overviewStats.rejected);
+      const overviewTotal = safeNumber(overview?.songs);
+      const knownTotal = pending + approved + rejected;
+      const other = Math.max(0, overviewTotal - knownTotal);
 
-    const fromOverview = overview?.songsByStatus || {};
-    const pending = safeNumber(fromOverview.pending ?? fallback.pending);
-    const approved = safeNumber(fromOverview.approved ?? fallback.approved);
-    const rejected =
-      safeNumber(fromOverview.rejected ?? fallback.rejected) +
-      safeNumber(fromOverview.blocked ?? 0);
-    const other = safeNumber(fallback.other);
+      const segments = [
+        { label: "Chờ duyệt", value: pending, color: "#fbbf24" },
+        { label: "Đã duyệt", value: approved, color: "#34d399" },
+        { label: "Từ chối", value: rejected, color: "#fb7185" },
+        { label: "Khác", value: other, color: "#a78bfa" },
+      ].filter((item) => item.value > 0);
+
+      const total =
+        overviewTotal > 0
+          ? overviewTotal
+          : segments.reduce((sum, item) => sum + item.value, 0);
+      return { segments, total };
+    }
+
+    const accumulator = { pending: 0, approved: 0, rejected: 0, other: 0 };
+
+    charts.song_status.forEach((item) => {
+      const key = `${item?.key || "other"}`.toLowerCase();
+      const value = safeNumber(item?.value);
+      if (key === "pending") accumulator.pending += value;
+      else if (key === "approved") accumulator.approved += value;
+      else if (key === "rejected") accumulator.rejected += value;
+      else accumulator.other += value;
+    });
 
     const segments = [
-      { label: "Chờ duyệt", value: pending, color: "#fbbf24" },
-      { label: "Đã duyệt", value: approved, color: "#34d399" },
-      { label: "Từ chối", value: rejected, color: "#fb7185" },
-      { label: "Khác", value: other, color: "#a78bfa" },
+      { label: "Chờ duyệt", value: accumulator.pending, color: "#fbbf24" },
+      { label: "Đã duyệt", value: accumulator.approved, color: "#34d399" },
+      { label: "Từ chối", value: accumulator.rejected, color: "#fb7185" },
+      { label: "Khác", value: accumulator.other, color: "#a78bfa" },
     ].filter((item) => item.value > 0);
 
     const total = segments.reduce((sum, item) => sum + item.value, 0);
     return { segments, total };
-  }, [overview, songs]);
+  }, [charts.song_status, overview]);
 
   const weeklyRanking = useMemo(() => {
-    const base = weeklyTopSongs.slice(0, 8).map((song, index, array) => {
-      const value =
-        safeNumber(
-          song?.play_count ||
-            song?.total_plays ||
-            song?.score ||
-            song?.views ||
-            song?.points
-        ) || array.length - index;
+    return charts.weekly_top.slice(0, 8).map((song, index, array) => {
+      const score = safeNumber(song?.score) || array.length - index;
       return {
-        label: song?.title || song?.name || `Bài hát #${index + 1}`,
-        artist: song?.artist_name || song?.artist || "Nghệ sĩ",
-        value,
+        label: song?.title || `Bài hát #${index + 1}`,
+        artist: song?.artist_name || "Nghệ sĩ",
+        value: score,
       };
     });
-
-    const max = Math.max(...base.map((item) => item.value), 1);
-    return base.map((item) => ({
-      ...item,
-      percent: (item.value / max) * 100,
-    }));
-  }, [weeklyTopSongs]);
+  }, [charts.weekly_top]);
 
   const genreStatusRows = useMemo(() => {
-    const map = new Map();
-    songs.forEach((song) => {
-      const genres = normalizeGenreValue(song?.genres);
-      const names = genres.length ? genres : [song?.genre_name || "Khác"];
-      const status = `${song?.status || ""}`.toLowerCase();
-      names.forEach((name) => {
-        const current = map.get(name) || {
-          name,
-          pending: 0,
-          approved: 0,
-          rejected: 0,
-          total: 0,
-        };
-        if (status === "approved") current.approved += 1;
-        else if (status === "pending") current.pending += 1;
-        else current.rejected += 1;
-        current.total += 1;
-        map.set(name, current);
-      });
-    });
-
-    return [...map.values()]
+    return charts.genre_status
+      .map((row) => ({
+        name: row?.genre || "Khác",
+        pending: safeNumber(row?.pending),
+        approved: safeNumber(row?.approved),
+        rejected: safeNumber(row?.rejected),
+        total: safeNumber(row?.total),
+      }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 6);
-  }, [songs]);
+  }, [charts.genre_status]);
 
   const roleSummary = useMemo(() => {
-    const counts = users.reduce(
-      (acc, user) => {
-        const role = `${user?.role || "USER"}`.toUpperCase();
-        if (role === "ADMIN") acc.admin += 1;
-        else if (role === "ARTIST") acc.artist += 1;
-        else acc.user += 1;
-        if (user?.is_active) acc.active += 1;
-        else acc.inactive += 1;
-        return acc;
-      },
-      { admin: 0, artist: 0, user: 0, active: 0, inactive: 0 }
-    );
-    const total = counts.admin + counts.artist + counts.user;
+    const role = charts.user_distribution?.role || {};
+    const activity = charts.user_distribution?.activity || {};
+    const counts = {
+      user: safeNumber(role.USER),
+      artist: safeNumber(role.ARTIST),
+      admin: safeNumber(role.ADMIN),
+      active: safeNumber(activity.active),
+      inactive: safeNumber(activity.inactive),
+    };
+    const total = counts.user + counts.artist + counts.admin;
     return { counts, total };
-  }, [users]);
+  }, [charts.user_distribution]);
 
   const requestTrend = useMemo(() => {
-    const days = 14;
-    const now = new Date();
-    const timeline = Array.from({ length: days }).map((_, index) => {
-      const date = new Date(now);
-      date.setDate(now.getDate() - (days - 1 - index));
-      const key = toLocalDateKey(date);
-      return {
-        key,
-        label: formatDayLabel(key),
-        total: 0,
-      };
-    });
-    const indexMap = new Map(timeline.map((item, index) => [item.key, index]));
-
-    artistRequests.forEach((request) => {
-      const raw = request?.created_at || request?.createdAt || request?.updated_at;
-      if (!raw) return;
-      const key = toLocalDateKey(raw);
-      if (!key) return;
-      const idx = indexMap.get(key);
-      if (idx === undefined) return;
-      timeline[idx].total += 1;
-    });
-
+    const list = charts.artist_request_trend.map((item) => ({
+      key: item?.date || "",
+      value: safeNumber(item?.count),
+    }));
     return {
-      labels: timeline.map((item) => item.label),
-      values: timeline.map((item) => item.total),
-      total: timeline.reduce((sum, item) => sum + item.total, 0),
+      labels: list.map((item) =>
+        /^\d{4}-\d{2}-\d{2}$/.test(item.key) ? formatDayLabel(item.key) : item.key
+      ),
+      values: list.map((item) => item.value),
+      total: list.reduce((sum, item) => sum + item.value, 0),
     };
-  }, [artistRequests]);
+  }, [charts.artist_request_trend]);
 
   const albumByMonth = useMemo(() => {
-    const months = 6;
-    const now = new Date();
-    const timeline = [];
-    for (let i = months - 1; i >= 0; i -= 1) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-      timeline.push({ key, label: formatMonthLabel(key), value: 0 });
-    }
-    const indexMap = new Map(timeline.map((item, index) => [item.key, index]));
-
-    albums.forEach((album) => {
-      if (!album?.release_date) return;
-      const key = toMonthKey(album.release_date);
-      if (!key) return;
-      const idx = indexMap.get(key);
-      if (idx === undefined) return;
-      timeline[idx].value += 1;
-    });
-
-    const max = Math.max(...timeline.map((item) => item.value), 1);
-    return timeline.map((item) => ({
-      ...item,
-      percent: (item.value / max) * 100,
+    return charts.album_by_month.map((item) => ({
+      key: item?.month || "",
+      label: formatMonthLabel(item?.month || ""),
+      value: safeNumber(item?.count),
     }));
-  }, [albums]);
+  }, [charts.album_by_month]);
 
   const overviewKpi = useMemo(() => {
+    const totalSongFromStatus = songStatusSummary.total;
+    const totalAlbumFromTrend = albumByMonth.reduce((sum, item) => sum + item.value, 0);
+    const totalUsersFromRole = roleSummary.total;
+
     return [
       {
         key: "users",
         label: "Người dùng",
-        value: safeNumber(overview?.users ?? users.length),
+        value: safeNumber(overview?.users ?? totalUsersFromRole),
         icon: FiUsers,
       },
       {
@@ -469,26 +770,26 @@ export default function AdminAnalytics() {
       {
         key: "albums",
         label: "Album",
-        value: safeNumber(overview?.albums ?? albums.length),
+        value: safeNumber(overview?.albums ?? totalAlbumFromTrend),
         icon: FiDisc,
       },
       {
         key: "songs",
         label: "Bài hát",
-        value: safeNumber(overview?.songs ?? songs.length),
+        value: safeNumber(overview?.songs ?? totalSongFromStatus),
         icon: FiMusic,
       },
     ];
-  }, [albums.length, overview, roleSummary.counts.artist, songs.length, users.length]);
+  }, [albumByMonth, overview, roleSummary, songStatusSummary.total]);
 
   return (
     <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">Quản trị</p>
-          <h1 className="text-3xl font-extrabold text-white">Thống kê hệ thống</h1>
+          <h1 className="text-3xl font-extrabold text-white">Dashboard</h1>
           <p className="mt-1 text-sm text-white/60">
-            Tổng hợp dữ liệu bài hát, người dùng, yêu cầu nghệ sĩ và album.
+            Dữ liệu biểu đồ được tổng hợp trực tiếp từ backend để bảo đảm đồng bộ.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -554,27 +855,7 @@ export default function AdminAnalytics() {
           ) : weeklyRanking.length === 0 ? (
             <p className="text-sm text-white/60">Chưa có dữ liệu top bài hát tuần.</p>
           ) : (
-            <div className="space-y-3">
-              {weeklyRanking.map((item, index) => (
-                <div key={`${item.label}-${index}`} className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-3 text-sm">
-                    <div className="min-w-0">
-                      <p className="truncate text-white">
-                        #{index + 1} {item.label}
-                      </p>
-                      <p className="truncate text-xs text-white/55">{item.artist}</p>
-                    </div>
-                    <span className="text-xs text-emerald-300">{item.value}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-300"
-                      style={{ width: `${item.percent}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <WeeklyTopChart items={weeklyRanking} />
           )}
         </ChartPanel>
       </div>
@@ -590,44 +871,7 @@ export default function AdminAnalytics() {
           ) : genreStatusRows.length === 0 ? (
             <p className="text-sm text-white/60">Không có dữ liệu thể loại bài hát.</p>
           ) : (
-            <div className="space-y-3">
-              {genreStatusRows.map((row) => (
-                <div key={row.name}>
-                  <div className="mb-1.5 flex items-center justify-between text-sm">
-                    <span className="truncate text-white">{row.name}</span>
-                    <span className="text-xs text-white/55">{row.total}</span>
-                  </div>
-                  <div className="flex h-2.5 overflow-hidden rounded-full bg-white/10">
-                    <span
-                      className="bg-amber-300"
-                      style={{ width: `${(row.pending / row.total) * 100}%` }}
-                    />
-                    <span
-                      className="bg-emerald-300"
-                      style={{ width: `${(row.approved / row.total) * 100}%` }}
-                    />
-                    <span
-                      className="bg-rose-300"
-                      style={{ width: `${(row.rejected / row.total) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-              <div className="flex flex-wrap gap-3 pt-1 text-xs text-white/60">
-                <span className="inline-flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-amber-300" />
-                  Chờ duyệt
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-emerald-300" />
-                  Đã duyệt
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-rose-300" />
-                  Từ chối
-                </span>
-              </div>
-            </div>
+            <GenreStatusChart rows={genreStatusRows} />
           )}
         </ChartPanel>
 
@@ -642,29 +886,7 @@ export default function AdminAnalytics() {
             <p className="text-sm text-white/60">Không có dữ liệu người dùng.</p>
           ) : (
             <div className="space-y-4">
-              {[
-                { label: "USER", value: roleSummary.counts.user, color: "#93c5fd" },
-                { label: "ARTIST", value: roleSummary.counts.artist, color: "#34d399" },
-                { label: "ADMIN", value: roleSummary.counts.admin, color: "#fbbf24" },
-              ].map((item) => {
-                const percent = (item.value / roleSummary.total) * 100;
-                return (
-                  <div key={item.label} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/80">{item.label}</span>
-                      <span className="text-white/60">
-                        {item.value} ({percent.toFixed(1)}%)
-                      </span>
-                    </div>
-                    <div className="h-2 rounded-full bg-white/10">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${percent}%`, backgroundColor: item.color }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+              <RoleDistributionChart counts={roleSummary.counts} total={roleSummary.total} />
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center">
                   <p className="text-xs uppercase tracking-[0.2em] text-white/45">Hoạt động</p>
@@ -699,6 +921,8 @@ export default function AdminAnalytics() {
         >
           {loading ? (
             <p className="text-sm text-white/60">Đang tải dữ liệu...</p>
+          ) : requestTrend.values.length === 0 ? (
+            <p className="text-sm text-white/60">Chưa có dữ liệu yêu cầu nghệ sĩ.</p>
           ) : requestTrend.total === 0 ? (
             <p className="text-sm text-white/60">14 ngày gần nhất không có yêu cầu nào.</p>
           ) : (
@@ -713,32 +937,10 @@ export default function AdminAnalytics() {
         >
           {loading ? (
             <p className="text-sm text-white/60">Đang tải dữ liệu...</p>
+          ) : albumByMonth.length === 0 ? (
+            <p className="text-sm text-white/60">Chưa có dữ liệu album theo tháng.</p>
           ) : (
-            <div className="space-y-4">
-              <div className="flex h-44 items-end justify-between gap-2 rounded-2xl border border-white/10 bg-[#141414] px-3 pb-3 pt-4">
-                {albumByMonth.map((item) => (
-                  <div key={item.key} className="flex min-w-0 flex-1 flex-col items-center gap-2">
-                    <div className="relative flex w-full items-end justify-center rounded-t-xl bg-white/5">
-                      <div
-                        className="w-full rounded-t-xl bg-gradient-to-t from-cyan-400/90 to-emerald-300/90"
-                        style={{ height: `${Math.max(item.percent, 4)}%` }}
-                      />
-                    </div>
-                    <span className="text-[11px] text-white/55">{item.value}</span>
-                  </div>
-                ))}
-              </div>
-              <div
-                className="grid gap-2 text-[11px] text-white/55"
-                style={{ gridTemplateColumns: `repeat(${albumByMonth.length || 1}, minmax(0, 1fr))` }}
-              >
-                {albumByMonth.map((item) => (
-                  <span key={`label-${item.key}`} className="text-center">
-                    {item.label}
-                  </span>
-                ))}
-              </div>
-            </div>
+            <AlbumByMonthChart items={albumByMonth} />
           )}
         </ChartPanel>
       </div>
