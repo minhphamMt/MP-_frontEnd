@@ -8,11 +8,172 @@ import {
   FiPlus,
   FiUser,
 } from "react-icons/fi";
+import * as echarts from "echarts/core";
+import { PieChart, BarChart, LineChart } from "echarts/charts";
+import { GridComponent, TooltipComponent, LegendComponent } from "echarts/components";
+import { SVGRenderer } from "echarts/renderers";
+import ReactEChartsCore from "echarts-for-react/lib/core";
 import useAuthStore from "../../store/auth.store";
 import { getAlbums } from "../../api/album.api";
 import { getArtistSongs } from "../../api/song.api";
 import ArtistAlbumTile from "../../components/artist/ArtistAlbumTile";
 import { getMyArtistProfile } from "../../api/artist.api";
+
+echarts.use([
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  PieChart,
+  BarChart,
+  LineChart,
+  SVGRenderer,
+]);
+
+const STATUS_STYLE = {
+  approved: { label: "Đã duyệt", color: "#34d399" },
+  pending: { label: "Chờ duyệt", color: "#fbbf24" },
+  rejected: { label: "Từ chối", color: "#fb7185" },
+  draft: { label: "Nháp", color: "#94a3b8" },
+  blocked: { label: "Bị chặn", color: "#ef4444" },
+  other: { label: "Khác", color: "#a78bfa" },
+};
+
+const safeNumber = (value) => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+};
+
+const parseDate = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const normalizeStatus = (value) => `${value ?? ""}`.trim().toLowerCase();
+
+const isTruthyFlag = (value) => {
+  if (value === true || value === 1) return true;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return normalized === "true" || normalized === "1" || normalized === "yes";
+  }
+  return false;
+};
+
+const APPROVED_SONG_STATUS = new Set([
+  "approved",
+]);
+
+const PUBLISHED_ALBUM_STATUS = new Set([
+  "approved",
+  "published",
+  "release",
+  "released",
+  "public",
+  "active",
+]);
+
+const SONG_RELEASE_DATE_KEYS = ["release_date", "releaseDate"];
+const SONG_CREATED_DATE_KEYS = [
+  "approved_at",
+  "approval_date",
+  "created_at",
+  "createdAt",
+  "updated_at",
+  "updatedAt",
+];
+
+const ALBUM_PUBLISHED_DATE_KEYS = [
+  "release_date",
+  "releaseDate",
+  "published_at",
+  "publishedAt",
+  "released_at",
+  "releasedAt",
+  "publish_date",
+  "publishDate",
+];
+
+const isAlbumPublished = (album) => {
+  const status = normalizeStatus(album?.status);
+  if (PUBLISHED_ALBUM_STATUS.has(status)) return true;
+
+  if (isTruthyFlag(album?.is_published) || isTruthyFlag(album?.is_public)) return true;
+
+  const releaseDate = pickDate(album, ALBUM_PUBLISHED_DATE_KEYS);
+  if (!releaseDate) return false;
+
+  return releaseDate.getTime() <= Date.now();
+};
+
+const isSongApproved = (song) => {
+  const status = normalizeStatus(song?.status);
+  return APPROVED_SONG_STATUS.has(status);
+};
+
+const getSongPublishedDate = (song) => {
+  const releaseDate = pickDate(song, SONG_RELEASE_DATE_KEYS);
+  if (releaseDate) {
+    if (releaseDate.getTime() > Date.now()) return null;
+    return releaseDate;
+  }
+
+  return pickDate(song, SONG_CREATED_DATE_KEYS);
+};
+
+const toMonthKey = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+};
+
+const getLastMonthKeys = (count = 6) => {
+  const now = new Date();
+  const keys = [];
+  for (let i = count - 1; i >= 0; i -= 1) {
+    keys.push(toMonthKey(new Date(now.getFullYear(), now.getMonth() - i, 1)));
+  }
+  return keys;
+};
+
+const formatMonthLabel = (monthKey) => {
+  if (!monthKey || !/^\d{4}-\d{2}$/.test(monthKey)) return monthKey || "";
+  const [year, month] = monthKey.split("-");
+  return `${month}/${year}`;
+};
+
+const pickDate = (item, keys) => {
+  for (const key of keys) {
+    const raw = item?.[key];
+    if (!raw) continue;
+    const date = new Date(raw);
+    if (!Number.isNaN(date.getTime())) return date;
+  }
+  return null;
+};
+
+function ChartCard({ title, children }) {
+  return (
+    <article className="artist-soft-card p-4">
+      <p className="text-[11px] uppercase tracking-[0.22em] text-white/55">{title}</p>
+      <div className="mt-3">{children}</div>
+    </article>
+  );
+}
+
+function MiniChart({ option, height = 180 }) {
+  return (
+    <ReactEChartsCore
+      echarts={echarts}
+      option={option}
+      notMerge
+      lazyUpdate
+      opts={{ renderer: "svg" }}
+      className="overflow-hidden rounded-2xl border border-white/10 bg-black/25"
+      style={{ width: "100%", height }}
+    />
+  );
+}
 
 export default function ArtistDashboard() {
   const navigate = useNavigate();
@@ -25,11 +186,7 @@ export default function ArtistDashboard() {
 
   const artistId = artistProfile?.id ?? user?.artist_id ?? null;
   const artistName =
-    artistProfile?.name ||
-    user?.display_name ||
-    user?.name ||
-    user?.email ||
-    "Nghệ sĩ";
+    artistProfile?.name || user?.display_name || user?.name || user?.email || "Nghệ sĩ";
 
   useEffect(() => {
     const loadArtistProfile = async () => {
@@ -62,7 +219,7 @@ export default function ArtistDashboard() {
     try {
       setLoading(true);
       const [albumsRes, songsRes] = await Promise.all([
-        getAlbums({ artist_id: artistId, limit: 12 }),
+        getAlbums({ artist_id: artistId, limit: 100 }),
         getArtistSongs(artistId),
       ]);
 
@@ -94,6 +251,206 @@ export default function ArtistDashboard() {
     return { totalAlbums, totalSongs, pendingSongs, newestAlbum };
   }, [albums, songs]);
 
+  const songStatusData = useMemo(() => {
+    const counts = { approved: 0, pending: 0, rejected: 0, draft: 0, blocked: 0, other: 0 };
+    songs.forEach((song) => {
+      const key = `${song?.status || "other"}`.toLowerCase();
+      if (counts[key] !== undefined) counts[key] += 1;
+      else counts.other += 1;
+    });
+
+    return Object.entries(counts)
+      .filter(([, value]) => value > 0)
+      .map(([key, value]) => ({
+        name: STATUS_STYLE[key]?.label || STATUS_STYLE.other.label,
+        value,
+        color: STATUS_STYLE[key]?.color || STATUS_STYLE.other.color,
+      }));
+  }, [songs]);
+
+  const albumStatusData = useMemo(() => {
+    const published = albums.filter((album) => isAlbumPublished(album)).length;
+    const unpublished = Math.max(0, albums.length - published);
+
+    return [
+      { name: "Đã phát hành", value: published, color: "#34d399" },
+      { name: "Chưa phát hành", value: unpublished, color: "#fbbf24" },
+    ].filter((item) => item.value > 0);
+  }, [albums]);
+
+  const songTimeline = useMemo(() => {
+    const months = getLastMonthKeys(6);
+    const map = new Map(months.map((key) => [key, 0]));
+
+    songs.forEach((song) => {
+      if (!isSongApproved(song)) return;
+      const date = getSongPublishedDate(song);
+      if (!date) return;
+      const key = toMonthKey(date);
+      if (map.has(key)) map.set(key, safeNumber(map.get(key)) + 1);
+    });
+
+    return months.map((key) => ({ key, label: formatMonthLabel(key), value: safeNumber(map.get(key)) }));
+  }, [songs]);
+
+  const releaseTypeData = useMemo(() => {
+    const inAlbum = songs.filter(
+      (song) =>
+        song?.album_id || song?.albumId || song?.album?.id || song?.album_title || song?.albumTitle
+    ).length;
+    const single = Math.max(0, songs.length - inAlbum);
+
+    return [
+      { name: "Single", value: single, color: "#67e8f9" },
+      { name: "Trong album", value: inAlbum, color: "#34d399" },
+    ];
+  }, [songs]);
+
+  const songStatusOption = useMemo(
+    () => ({
+      animationDuration: 300,
+      tooltip: { trigger: "item" },
+      legend: {
+        bottom: 0,
+        textStyle: { color: "rgba(255,255,255,0.65)", fontSize: 11 },
+      },
+      series: [
+        {
+          type: "pie",
+          radius: ["48%", "70%"],
+          center: ["50%", "42%"],
+          label: { show: false },
+          labelLine: { show: false },
+          data: songStatusData.map((item) => ({
+            name: item.name,
+            value: item.value,
+            itemStyle: { color: item.color },
+          })),
+        },
+      ],
+    }),
+    [songStatusData]
+  );
+
+  const albumStatusOption = useMemo(
+    () => ({
+      animationDuration: 300,
+      tooltip: { trigger: "item" },
+      legend: {
+        bottom: 0,
+        textStyle: { color: "rgba(255,255,255,0.65)", fontSize: 11 },
+      },
+      series: [
+        {
+          type: "pie",
+          radius: ["48%", "70%"],
+          center: ["50%", "42%"],
+          label: { show: false },
+          labelLine: { show: false },
+          data: albumStatusData.map((item) => ({
+            name: item.name,
+            value: item.value,
+            itemStyle: { color: item.color },
+          })),
+        },
+      ],
+    }),
+    [albumStatusData]
+  );
+
+  const songTimelineOption = useMemo(
+    () => ({
+      animationDuration: 300,
+      grid: { top: 14, right: 8, bottom: 22, left: 30 },
+      tooltip: { trigger: "axis" },
+      xAxis: {
+        type: "category",
+        data: songTimeline.map((item) => item.label),
+        boundaryGap: false,
+        axisLine: { lineStyle: { color: "rgba(255,255,255,0.15)" } },
+        axisTick: { show: false },
+        axisLabel: { color: "rgba(255,255,255,0.55)", fontSize: 10 },
+      },
+      yAxis: {
+        type: "value",
+        minInterval: 1,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { color: "rgba(255,255,255,0.45)", fontSize: 10 },
+        splitLine: { lineStyle: { color: "rgba(255,255,255,0.08)", type: "dashed" } },
+      },
+      series: [
+        {
+          type: "line",
+          smooth: 0.3,
+          symbol: "circle",
+          symbolSize: 6,
+          lineStyle: { width: 2, color: "#67e8f9" },
+          itemStyle: { color: "#67e8f9" },
+          data: songTimeline.map((item) => item.value),
+          areaStyle: {
+            color: {
+              type: "linear",
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: "rgba(103,232,249,0.28)" },
+                { offset: 1, color: "rgba(103,232,249,0.02)" },
+              ],
+            },
+          },
+        },
+      ],
+    }),
+    [songTimeline]
+  );
+
+  const releaseTypeOption = useMemo(
+    () => ({
+      animationDuration: 300,
+      grid: { top: 14, right: 8, bottom: 22, left: 20 },
+      tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+      xAxis: {
+        type: "category",
+        data: releaseTypeData.map((item) => item.name),
+        axisLine: { lineStyle: { color: "rgba(255,255,255,0.15)" } },
+        axisTick: { show: false },
+        axisLabel: { color: "rgba(255,255,255,0.6)", fontSize: 11 },
+      },
+      yAxis: {
+        type: "value",
+        minInterval: 1,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { color: "rgba(255,255,255,0.45)", fontSize: 10 },
+        splitLine: { lineStyle: { color: "rgba(255,255,255,0.08)", type: "dashed" } },
+      },
+      series: [
+        {
+          type: "bar",
+          barMaxWidth: 28,
+          data: releaseTypeData.map((item) => ({
+            value: item.value,
+            itemStyle: {
+              color: item.color,
+              borderRadius: [8, 8, 0, 0],
+            },
+          })),
+          label: {
+            show: true,
+            position: "top",
+            color: "rgba(255,255,255,0.75)",
+            fontSize: 11,
+            formatter: ({ value }) => Number(value).toFixed(0),
+          },
+        },
+      ],
+    }),
+    [releaseTypeData]
+  );
+
   const latestAlbums = albums.slice(0, 3);
 
   return (
@@ -102,12 +459,9 @@ export default function ArtistDashboard() {
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div>
             <p className="artist-label">Artist Workspace</p>
-            <h1 className="mt-3 text-3xl font-black text-white sm:text-4xl">
-              Xin chào, {artistName}
-            </h1>
+            <h1 className="mt-3 text-3xl font-black text-white sm:text-4xl">Xin chào, {artistName}</h1>
             <p className="mt-3 max-w-2xl text-sm text-white/70">
-              Theo dõi hiệu suất phát hành, quản lý album và bài hát trong một giao diện
-              thống nhất dành cho nghệ sĩ.
+              Theo dõi hiệu suất phát hành, quản lý album và bài hát trong một giao diện thống nhất.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <button
@@ -194,6 +548,40 @@ export default function ArtistDashboard() {
             <FiArrowUpRight />
           </button>
         </article>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2">
+        <ChartCard title="Trạng thái bài hát">
+          {loading ? (
+            <p className="px-2 py-8 text-sm text-white/65">Đang tải dữ liệu...</p>
+          ) : (
+            <MiniChart option={songStatusOption} />
+          )}
+        </ChartCard>
+
+        <ChartCard title="Trạng thái album">
+          {loading ? (
+            <p className="px-2 py-8 text-sm text-white/65">Đang tải dữ liệu...</p>
+          ) : (
+            <MiniChart option={albumStatusOption} />
+          )}
+        </ChartCard>
+
+        <ChartCard title="Bài hát mới theo tháng">
+          {loading ? (
+            <p className="px-2 py-8 text-sm text-white/65">Đang tải dữ liệu...</p>
+          ) : (
+            <MiniChart option={songTimelineOption} />
+          )}
+        </ChartCard>
+
+        <ChartCard title="Single và bài trong album">
+          {loading ? (
+            <p className="px-2 py-8 text-sm text-white/65">Đang tải dữ liệu...</p>
+          ) : (
+            <MiniChart option={releaseTypeOption} />
+          )}
+        </ChartCard>
       </section>
 
       <section className="artist-page-shell artist-glass p-6">
