@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import {
   FiCamera,
   FiEdit2,
@@ -14,6 +14,7 @@ import Toast from "../../components/common/Toast";
 import { resolveAssetUrl } from "../../utils/asset";
 import { formatDateDisplay } from "../../utils/date";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import { confirmAdminAction } from "../../utils/adminDialog";
 
 const formatDateInput = (value) => {
   if (!value) return "";
@@ -103,9 +104,13 @@ export default function AdminArtistList() {
   }, [artists, keyword]);
 
   const handleDelete = async (artist) => {
-    const confirmed = window.confirm(
-      `Bạn có chắc muốn xoá mềm nghệ sĩ "${artist.name}"? Nghệ sĩ sẽ nằm trong thùng rác.`
-    );
+    const confirmed = await confirmAdminAction({
+      title: "Xóa mềm nghệ sĩ",
+      message: `Bạn có chắc muốn xóa mềm nghệ sĩ "${artist.name}"? Nghệ sĩ sẽ nằm trong thùng rác.`,
+      confirmText: "Xóa mềm",
+      cancelText: "Hủy",
+      tone: "danger",
+    });
     if (!confirmed) return;
     try {
       await deleteArtist(artist.id);
@@ -526,3 +531,4 @@ export default function AdminArtistList() {
     </div>
   );
 }
+

@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { FiChevronLeft, FiTrash2 } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
 import { deleteAlbum, getAlbumById } from "../../api/album.api";
 import { resolveAssetUrl } from "../../utils/asset";
 import { formatDateDisplay } from "../../utils/date";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import { confirmAdminAction } from "../../utils/adminDialog";
 
 const getSongCover = (song) =>
   song?.cover_url || song?.cover || song?.thumbnail || song?.image;
@@ -50,9 +51,13 @@ export default function AdminAlbumDetail() {
 
   const handleDelete = async () => {
     if (!album?.id) return;
-    const confirmed = window.confirm(
-      `Bạn có chắc muốn xóa mềm album "${album.title || album.id}"?`
-    );
+    const confirmed = await confirmAdminAction({
+      title: "Xóa mềm album",
+      message: `Bạn có chắc muốn xóa mềm album "${album.title || album.id}"?`,
+      confirmText: "Xóa mềm",
+      cancelText: "Hủy",
+      tone: "danger",
+    });
     if (!confirmed) return;
     try {
       await deleteAlbum(album.id);
@@ -62,7 +67,7 @@ export default function AdminAlbumDetail() {
       });
     } catch (error) {
       console.error("Delete album failed", error);
-      alert("Không thể xóa mềm album.");
+      setErrorMessage("Không thể xóa mềm album.");
     }
   };
 
@@ -188,3 +193,4 @@ export default function AdminAlbumDetail() {
     </div>
   );
 }
+

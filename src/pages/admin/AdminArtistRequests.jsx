@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import {
   FiCheckCircle,
   FiChevronDown,
@@ -12,6 +12,7 @@ import {
   listArtistRequests,
   rejectArtistRequest,
 } from "../../api/admin.api";
+import { promptAdminInput } from "../../utils/adminDialog";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "Tất cả" },
@@ -96,19 +97,26 @@ export default function AdminArtistRequests() {
       await loadRequests();
     } catch (error) {
       console.error("Approve artist request failed", error);
-      alert("Không thể duyệt yêu cầu.");
+      setErrorMessage("Không thể duyệt yêu cầu.");
     }
   };
 
-  const handleReject = async (request) => {
-    const reason = window.prompt("Nhập lý do từ chối yêu cầu:");
-    if (!reason) return;
+    const handleReject = async (request) => {
+    const reason = await promptAdminInput({
+      title: "Từ chối yêu cầu nghệ sĩ",
+      message: "Nhập lý do từ chối yêu cầu",
+      placeholder: "Nhập lý do...",
+      confirmText: "Từ chối",
+      cancelText: "Hủy",
+      tone: "danger",
+    });
+    if (!reason?.trim()) return;
     try {
-      await rejectArtistRequest(request.id, { reject_reason: reason });
+      await rejectArtistRequest(request.id, { reject_reason: reason.trim() });
       await loadRequests();
     } catch (error) {
       console.error("Reject artist request failed", error);
-      alert("Không thể từ chối yêu cầu.");
+      setErrorMessage("Không thể từ chối yêu cầu.");
     }
   };
 
@@ -310,3 +318,4 @@ export default function AdminArtistRequests() {
     </div>
   );
 }
+

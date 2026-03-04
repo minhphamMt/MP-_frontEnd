@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiRefreshCw, FiSearch } from "react-icons/fi";
 import { deleteAlbum, getAlbums } from "../../api/album.api";
 import ArtistAlbumTile from "../../components/artist/ArtistAlbumTile";
 import Toast from "../../components/common/Toast";
+import { confirmAdminAction } from "../../utils/adminDialog";
 
 export default function AdminAlbums() {
   const navigate = useNavigate();
@@ -67,9 +68,13 @@ export default function AdminAlbums() {
   }, [albums, keyword]);
 
   const handleDelete = async (albumId) => {
-    const confirmed = window.confirm(
-      "Bạn có chắc muốn xóa mềm album này? Album sẽ nằm trong thùng rác."
-    );
+    const confirmed = await confirmAdminAction({
+      title: "Xóa mềm album",
+      message: "Bạn có chắc muốn xóa mềm album này? Album sẽ nằm trong thùng rác.",
+      confirmText: "Xóa mềm",
+      cancelText: "Hủy",
+      tone: "danger",
+    });
     if (!confirmed) return;
     try {
       await deleteAlbum(albumId);
@@ -77,7 +82,7 @@ export default function AdminAlbums() {
       setToast({ title: "Thành công", message: "Đã xóa mềm album." });
     } catch (error) {
       console.error("Delete album failed", error);
-      alert("Không thể xóa mềm album.");
+      setToast({ title: "Lỗi", message: "Không thể xóa mềm album." });
     }
   };
 
@@ -152,3 +157,4 @@ export default function AdminAlbums() {
     </div>
   );
 }
+

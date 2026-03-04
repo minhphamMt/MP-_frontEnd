@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiEdit2, FiRefreshCw, FiSearch, FiTrash2, FiX } from "react-icons/fi";
 import {
@@ -13,6 +13,7 @@ import { deleteSong } from "../../api/song.api";
 import useAuthStore from "../../store/auth.store";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import Toast from "../../components/common/Toast";
+import { confirmAdminAction } from "../../utils/adminDialog";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tất cả" },
@@ -206,15 +207,19 @@ export default function AdminSongManagement() {
       await loadSongs();
     } catch (error) {
       console.error("Update song failed", error);
-      alert("Không thể cập nhật bài hát.");
+      setToast({ title: "Lỗi", message: "Không thể cập nhật bài hát." });
     }
   };
 
   const handleSoftDelete = async () => {
     if (!editingSong) return;
-    const confirmed = window.confirm(
-      `Bạn có chắc muốn xoá mềm bài hát "${editingSong.title}"?`
-    );
+    const confirmed = await confirmAdminAction({
+      title: "Xóa mềm bài hát",
+      message: `Bạn có chắc muốn xóa mềm bài hát "${editingSong.title}"?`,
+      confirmText: "Xóa mềm",
+      cancelText: "Hủy",
+      tone: "danger",
+    });
     if (!confirmed) return;
     try {
       await deleteSong(editingSong.id);
@@ -222,7 +227,7 @@ export default function AdminSongManagement() {
       await loadSongs();
     } catch (error) {
       console.error("Soft delete song failed", error);
-      alert("Không thể xoá mềm bài hát.");
+      setToast({ title: "Lỗi", message: "Không thể xóa mềm bài hát." });
     }
   };
 
@@ -251,7 +256,7 @@ export default function AdminSongManagement() {
       id: `${album.id}`,
       label: `${album.id} - ${album.title || "Album"}${
         album.artist?.name || album.artist_name
-          ? ` · ${album.artist?.name || album.artist_name}`
+          ? ` Â· ${album.artist?.name || album.artist_name}`
           : ""
       }`,
     }));
@@ -646,3 +651,4 @@ export default function AdminSongManagement() {
     </div>
   );
 }
+

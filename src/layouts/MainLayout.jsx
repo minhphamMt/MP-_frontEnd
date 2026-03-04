@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import Toast from "../components/common/Toast";
+import AdminDialogHost from "../components/admin/AdminDialogHost";
 import { AUTH_REQUIRED_EVENT, getAuthRequiredMessage } from "../utils/authPrompt";
 import Header from "../components/header/Header";
 import PlayerBar from "../components/player/PlayerBar";
@@ -129,6 +130,7 @@ export default function MainLayout() {
       </div>
 
       {shouldShowPlayer && <PlayerBar />}
+      <AdminDialogHost />
       <Toast
         title="Thông báo"
         message={authToastMessage}

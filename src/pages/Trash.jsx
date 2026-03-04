@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { FiRefreshCw, FiRotateCcw, FiTrash2 } from "react-icons/fi";
 import useAuthStore from "../store/auth.store";
 import {
@@ -12,6 +12,7 @@ import {
   restoreGenre,
   restoreSong,
 } from "../api/trash.api";
+import { confirmAdminAction } from "../utils/adminDialog";
 
 const formatDateTime = (value) => {
   if (!value) return "Chưa rõ";
@@ -145,31 +146,48 @@ export default function Trash() {
     genres: hardDeleteGenre,
   };
 
-  const handleRestore = async (type, item) => {
-    const confirmed = window.confirm(
-      `Khôi phục ${type === "songs" ? "bài hát" : type === "albums" ? "album" : type === "artists" ? "nghệ sĩ" : "thể loại"} "${item.name || item.title}"?`
-    );
+    const handleRestore = async (type, item) => {
+    const confirmed = await confirmAdminAction({
+      title: "Khôi phục bản ghi",
+      message: `Khôi phục ${
+        type === "songs"
+          ? "bài hát"
+          : type === "albums"
+            ? "album"
+            : type === "artists"
+              ? "nghệ sĩ"
+              : "thể loại"
+      } "${item.name || item.title}"?`,
+      confirmText: "Khôi phục",
+      cancelText: "Hủy",
+    });
     if (!confirmed) return;
     try {
       await restoreHandlers[type](item.id);
       await loadDeletedItems();
     } catch (error) {
       console.error("Restore item failed", error);
-      alert("Không thể khôi phục bản ghi.");
+      setErrorMessage("Không thể khôi phục bản ghi.");
     }
   };
 
-  const handleHardDelete = async (type, item) => {
-    const confirmed = window.confirm(
-      `Bạn chắc chắn muốn xoá vĩnh viễn "${item.name || item.title}"? Hành động này không thể hoàn tác.`
-    );
+    const handleHardDelete = async (type, item) => {
+    const confirmed = await confirmAdminAction({
+      title: "Xóa vĩnh viễn",
+      message: `Bạn chắc chắn muốn xóa vĩnh viễn "${
+        item.name || item.title
+      }"? Hành động này không thể hoàn tác.`,
+      confirmText: "Xóa vĩnh viễn",
+      cancelText: "Hủy",
+      tone: "danger",
+    });
     if (!confirmed) return;
     try {
       await hardDeleteHandlers[type](item.id);
       await loadDeletedItems();
     } catch (error) {
       console.error("Hard delete item failed", error);
-      alert("Không thể xoá vĩnh viễn bản ghi.");
+      setErrorMessage("Không thể xóa vĩnh viễn bản ghi.");
     }
   };
 
@@ -295,3 +313,4 @@ export default function Trash() {
     </div>
   );
 }
+

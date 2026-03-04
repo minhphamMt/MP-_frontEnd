@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import {
   FiCamera,
   FiEdit2,
@@ -19,6 +19,7 @@ import {
 import Toast from "../../components/common/Toast";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import { confirmAdminAction } from "../../utils/adminDialog";
 
 const getUserAvatar = (user) =>
   user?.avatar_url ||
@@ -100,9 +101,13 @@ export default function AdminUsers() {
   }, [keyword, users]);
 
   const handleDelete = async (user) => {
-    const confirmed = window.confirm(
-      `Bạn có chắc muốn xoá người dùng "${user.display_name || user.email}"?`
-    );
+    const confirmed = await confirmAdminAction({
+      title: "Xóa người dùng",
+      message: `Bạn có chắc muốn xóa người dùng "${user.display_name || user.email}"?`,
+      confirmText: "Xóa",
+      cancelText: "Hủy",
+      tone: "danger",
+    });
     if (!confirmed) return;
     try {
       await deleteUser(user.id);
@@ -474,3 +479,4 @@ export default function AdminUsers() {
     </div>
   );
 }
+

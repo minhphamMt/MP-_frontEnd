@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { FiChevronLeft, FiTrash2 } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
 import { deleteAlbum, getAlbumById, updateAlbum } from "../../api/album.api";
 import { resolveAssetUrl } from "../../utils/asset";
 import { formatDateDisplay } from "../../utils/date";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import { confirmAdminAction } from "../../utils/adminDialog";
 
 const formatDateInput = (value) => {
   if (!value) return "";
@@ -129,9 +130,13 @@ export default function AdminAlbumForm() {
 
   const handleSoftDelete = async () => {
     if (!id || !album) return;
-    const confirmed = window.confirm(
-      `Bạn có chắc muốn xóa mềm album "${album.title || id}"?`
-    );
+    const confirmed = await confirmAdminAction({
+      title: "Xóa mềm album",
+      message: `Bạn có chắc muốn xóa mềm album "${album.title || id}"?`,
+      confirmText: "Xóa mềm",
+      cancelText: "Hủy",
+      tone: "danger",
+    });
     if (!confirmed) return;
     try {
       await deleteAlbum(id);
@@ -146,7 +151,7 @@ export default function AdminAlbumForm() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-6 bg-[#121212] px-4 py-6 sm:px-8">
+    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
       <button
         onClick={() => navigate("/admin/albums")}
         className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
@@ -350,3 +355,4 @@ export default function AdminAlbumForm() {
     </div>
   );
 }
+

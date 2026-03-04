@@ -26,7 +26,6 @@ export default function AdminDashboard() {
       try {
         setLoading(true);
         const res = await getAdminOverview({ limit: 5 });
-        console.log(">>cehck res : ", res)
         const payload = res?.data?.data ?? res?.data ?? {};
         const resolvedOverview =
           payload.overview ?? payload.data?.overview ?? payload ?? null;

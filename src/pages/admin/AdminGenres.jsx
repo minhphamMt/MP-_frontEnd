@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   createGenre,
   deleteGenre,
@@ -6,6 +6,8 @@ import {
   updateGenre,
 } from "../../api/admin.api";
 import { FiPlus, FiRefreshCw, FiTrash2 } from "react-icons/fi";
+import Toast from "../../components/common/Toast";
+import { confirmAdminAction, promptAdminInput } from "../../utils/adminDialog";
 
 export default function AdminGenres() {
   const [genres, setGenres] = useState([]);
@@ -13,6 +15,7 @@ export default function AdminGenres() {
   const [newGenre, setNewGenre] = useState("");
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [toast, setToast] = useState({ title: "", message: "" });
 
   const loadGenres = async () => {
     try {
@@ -45,33 +48,44 @@ export default function AdminGenres() {
       loadGenres();
     } catch (error) {
       console.error("Create genre failed", error);
-      alert("Không thể tạo thể loại.");
+      setToast({ title: "Lỗi", message: "Không thể tạo thể loại." });
     }
   };
 
-  const handleRename = async (genre) => {
-    const nextName = window.prompt("Cập nhật tên thể loại:", genre.name);
-    if (!nextName || nextName.trim() === genre.name) return;
+    const handleRename = async (genre) => {
+    const nextName = await promptAdminInput({
+      title: "Cập nhật thể loại",
+      message: "Nhập tên thể loại mới",
+      placeholder: "Tên thể loại",
+      initialValue: genre.name,
+      confirmText: "Cập nhật",
+      cancelText: "Hủy",
+    });
+    if (!nextName?.trim() || nextName.trim() === genre.name) return;
     try {
       await updateGenre(genre.id, { name: nextName.trim() });
       loadGenres();
     } catch (error) {
       console.error("Update genre failed", error);
-      alert("Không thể cập nhật thể loại.");
+      setToast({ title: "Lỗi", message: "Không thể cập nhật thể loại." });
     }
   };
 
-  const handleDelete = async (genre) => {
-    const confirmed = window.confirm(
-      `Bạn có chắc muốn xoá mềm thể loại "${genre.name}"? Thể loại sẽ nằm trong thùng rác.`
-    );
+    const handleDelete = async (genre) => {
+    const confirmed = await confirmAdminAction({
+      title: "Xóa mềm thể loại",
+      message: `Bạn có chắc muốn xóa mềm thể loại "${genre.name}"? Thể loại sẽ nằm trong thùng rác.`,
+      confirmText: "Xóa mềm",
+      cancelText: "Hủy",
+      tone: "danger",
+    });
     if (!confirmed) return;
     try {
       await deleteGenre(genre.id);
       loadGenres();
     } catch (error) {
       console.error("Delete genre failed", error);
-      alert("Không thể xoá mềm thể loại.");
+      setToast({ title: "Lỗi", message: "Không thể xóa mềm thể loại." });
     }
   };
 
@@ -169,6 +183,11 @@ export default function AdminGenres() {
             ))}
         </div>
       </div>
+      <Toast
+        title={toast.title}
+        message={toast.message}
+        onClose={() => setToast({ title: "", message: "" })}
+      />
     </div>
   );
 }

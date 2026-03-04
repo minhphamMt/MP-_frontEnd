@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { FiCheckCircle, FiChevronLeft, FiRefreshCw, FiSlash } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
 import { approveSong, blockSong, listAdminSongs } from "../../api/admin.api";
 import { getSongById } from "../../api/song.api";
 import { resolveAssetUrl } from "../../utils/asset";
 import { toPlayableSong } from "../../utils/song";
+import { promptAdminInput } from "../../utils/adminDialog";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import Toast from "../../components/common/Toast";
 
 const statusBadge = (status) => {
   switch (status) {
@@ -37,6 +39,7 @@ export default function AdminSongReviewDetail() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [toast, setToast] = useState({ title: "", message: "" });
 
   const loadSongDetail = async () => {
     if (!id) {
@@ -111,37 +114,50 @@ export default function AdminSongReviewDetail() {
     return cover ? resolveAssetUrl(cover) : "";
   }, [song]);
 
-  const handleApprove = async () => {
+    const handleApprove = async () => {
     if (!song?.id) return;
     if (!songAudioUrl) {
-      alert("Bài hát chưa có file audio/mp3. Vui lòng kiểm tra trước khi duyệt.");
+      setToast({
+        title: "Thiếu dữ liệu",
+        message: "Bài hát chưa có file audio/mp3. Vui lòng kiểm tra trước khi duyệt.",
+      });
       return;
     }
 
     try {
       setSubmitting(true);
       await approveSong(song.id);
+      setToast({ title: "Thành công", message: "Đã duyệt bài hát." });
       await loadSongDetail();
     } catch (error) {
       console.error("Approve song failed", error);
-      alert("Không thể duyệt bài hát.");
+      setToast({ title: "Lỗi", message: "Không thể duyệt bài hát." });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleReject = async () => {
+    const handleReject = async () => {
     if (!song?.id) return;
-    const reason = window.prompt("Nhập lý do từ chối bài hát:");
-    if (!reason) return;
+
+    const reason = await promptAdminInput({
+      title: "Từ chối bài hát",
+      message: "Nhập lý do từ chối bài hát",
+      placeholder: "Nhập lý do...",
+      confirmText: "Từ chối",
+      cancelText: "Hủy",
+      tone: "danger",
+    });
+    if (!reason?.trim()) return;
 
     try {
       setSubmitting(true);
-      await blockSong(song.id, { reject_reason: reason });
+      await blockSong(song.id, { reject_reason: reason.trim() });
+      setToast({ title: "Thành công", message: "Đã từ chối bài hát." });
       await loadSongDetail();
     } catch (error) {
       console.error("Reject song failed", error);
-      alert("Không thể từ chối bài hát.");
+      setToast({ title: "Lỗi", message: "Không thể từ chối bài hát." });
     } finally {
       setSubmitting(false);
     }
@@ -280,6 +296,12 @@ export default function AdminSongReviewDetail() {
           </div>
         </>
       )}
+      <Toast
+        title={toast.title}
+        message={toast.message}
+        onClose={() => setToast({ title: "", message: "" })}
+      />
     </div>
   );
 }
+
