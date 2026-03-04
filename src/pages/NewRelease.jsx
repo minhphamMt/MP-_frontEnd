@@ -123,8 +123,8 @@ export default function NewRelease() {
   }, [hasMore, loading, loadingMore, songs.length]);
 
   return (
-    <div className="min-h-screen bg-[#121212] px-4 py-6 sm:px-8">
-      <div className="mb-6 rounded-3xl border border-white/5 bg-[#181818] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
+    <div className="user-page-shell min-h-screen px-4 py-6 sm:px-8">
+      <div className="user-surface mb-6 p-6">
         <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
           Bảng xếp hạng
         </p>
@@ -147,7 +147,7 @@ export default function NewRelease() {
 
       <div
         ref={sentinelRef}
-        className="mt-4 flex min-h-16 items-center justify-center rounded-2xl border border-white/5 bg-[#181818]/70 px-4 text-xs text-white/60"
+        className="user-surface mt-4 flex min-h-16 items-center justify-center px-4 text-xs text-white/60"
       >
         {statusText}
       </div>

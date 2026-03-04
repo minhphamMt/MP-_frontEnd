@@ -67,9 +67,9 @@ export default function Albums() {
      UI
      ======================= */
   return (
-     <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
+     <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
       {/* PAGE HEADER */}
-      <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+      <div className="user-surface p-6">
         <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
           Thư viện
         </p>
@@ -90,7 +90,7 @@ export default function Albums() {
           return (
             <div
               key={album.id || album.title}
-              className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
+              className="user-surface"
             >
               <SongTable
                 title={album.title || "Album"}
@@ -121,7 +121,7 @@ export default function Albums() {
         })}
 
         {!albums.length && (
-          <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+          <div className="user-surface">
             <SongTable
               title="Album nổi bật"
               subtitle="Không có album nào để hiển thị"

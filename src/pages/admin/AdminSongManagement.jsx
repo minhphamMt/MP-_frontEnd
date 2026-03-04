@@ -256,7 +256,7 @@ export default function AdminSongManagement() {
       id: `${album.id}`,
       label: `${album.id} - ${album.title || "Album"}${
         album.artist?.name || album.artist_name
-          ? ` Â· ${album.artist?.name || album.artist_name}`
+          ? ` · ${album.artist?.name || album.artist_name}`
           : ""
       }`,
     }));

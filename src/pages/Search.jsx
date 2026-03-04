@@ -34,10 +34,10 @@ const normalizeAlbum = (album) => ({
     album.artist_name ?? album.artist?.name ?? album.creator?.name ?? "",
 });
 const SEARCH_TABS = [
- { id: "all", label: "All" },
-  { id: "songs", label: "Songs" },
-  { id: "albums", label: "Albums" },
-  { id: "artists", label: "Artists" },
+  { id: "all", label: "Tất cả" },
+  { id: "songs", label: "Bài hát" },
+  { id: "albums", label: "Album" },
+  { id: "artists", label: "Nghệ sĩ" },
 ];
 
 export default function Search() {
@@ -147,7 +147,7 @@ export default function Search() {
   }, [keyword, user?.id]);
 
   return (
-    <div className="w-full max-w-full min-h-screen space-y-6 overflow-x-hidden bg-[#121212] px-3 py-5 pb-12 sm:space-y-8 sm:px-6 sm:py-6">
+    <div className="user-page-shell w-full max-w-full min-h-screen space-y-6 overflow-x-hidden px-3 py-5 pb-12 sm:space-y-8 sm:px-6 sm:py-6">
       <div className="flex flex-col gap-4">
         <div className="space-y-2">
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/50 sm:tracking-[0.25em]">
@@ -171,21 +171,21 @@ export default function Search() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                  isActive
-                    ? "bg-white text-black"
-                    : "bg-[#2a2a2a] text-white/80 md:hover:bg-[#333]"
-                }`}
-              >
-                {tab.label}
-              </button>
+                  className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                    isActive
+                      ? "bg-[#1db954] text-[#041409]"
+                      : "border border-white/15 bg-white/[0.05] text-white/80 md:hover:bg-white/[0.12]"
+                  }`}
+                >
+                  {tab.label}
+                </button>
             );
           })}
         </div>
       </div>
 
       {!!keyword && !loading && !hasResultsForTab && (
-        <div className="rounded-2xl border border-white/5 bg-[#181818] p-6 text-white/70">
+        <div className="user-surface p-6 text-white/70">
           Không tìm thấy kết quả phù hợp.
         </div>
       )}
@@ -196,9 +196,9 @@ export default function Search() {
             <div className="grid w-full max-w-full min-w-0 gap-6 lg:grid-cols-[1.05fr_1.95fr]">
               <div className="hidden lg:block">
                 <h2 className="mb-3 text-lg font-semibold text-white">
-                  Top result
+                  Kết quả nổi bật
                 </h2>
-                <div className="rounded-2xl border border-white/5 bg-[#181818] p-5 transition md:hover:bg-[#202020]">
+                <div className="user-surface p-5">
                   {topResult ? (
                     <div className="space-y-4">
                       {topResult.image ? (
@@ -239,8 +239,8 @@ export default function Search() {
               </div>
 
               <div className="min-w-0">
-                <h2 className="mb-3 text-lg font-semibold text-white">Songs</h2>
-                <div className="w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-2 sm:p-3">
+                <h2 className="mb-3 text-lg font-semibold text-white">Bài hát</h2>
+                  <div className="user-surface w-full max-w-full min-w-0 overflow-hidden p-2 sm:p-3">
                   {songs.length ? (
                     <div className="w-full min-w-0 space-y-1">
                       {songs.slice(0, 5).map((song) => (
@@ -259,8 +259,8 @@ export default function Search() {
 
           {activeTab === "songs" && (
             <div>
-              <h2 className="mb-3 text-lg font-semibold text-white">Songs</h2>
-              <div className="w-full max-w-full overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-3">
+              <h2 className="mb-3 text-lg font-semibold text-white">Bài hát</h2>
+              <div className="user-surface w-full max-w-full overflow-hidden p-3">
                 {songs.length ? (
                   <div className="space-y-1">
                     {songs.map((song) => (
@@ -280,7 +280,7 @@ export default function Search() {
 
       {!!artists.length && (activeTab === "all" || activeTab === "artists") && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-white">Artists</h2>
+          <h2 className="text-lg font-semibold text-white">Nghệ sĩ</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
             {artists.map((artist) => (
               <ArtistAlbumCard
@@ -295,7 +295,7 @@ export default function Search() {
 
       {!!albums.length && (activeTab === "all" || activeTab === "albums") && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-white">Albums</h2>
+          <h2 className="text-lg font-semibold text-white">Album</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
             {albums.map((album) => (
               <AlbumCard key={album.id} album={album} variant="library" />

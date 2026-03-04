@@ -18,6 +18,7 @@ export default function MainLayout() {
   const isArtistWorkspaceRoute = /^\/artist\/(dashboard|profile|albums|songs|trash)(\/|$)/.test(
     location.pathname
   );
+  const isUserRoute = !isAdminRoute && !isArtistWorkspaceRoute;
   const shouldShowPlayer = role !== "ARTIST" && role !== "ADMIN";
   const [authToastMessage, setAuthToastMessage] = useState("");
 
@@ -48,6 +49,8 @@ export default function MainLayout() {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (!isAdminRoute) return undefined;
+
     const backgroundEl = backgroundRef.current;
 
     const animejs = window.anime;
@@ -83,7 +86,7 @@ export default function MainLayout() {
       animejs.remove(blobs);
       animejs.remove(backgroundEl);
     };
-  }, []);
+  }, [isAdminRoute]);
 
   return (
     <div className="flex h-screen flex-col bg-[#000000] text-white">
@@ -101,12 +104,14 @@ export default function MainLayout() {
               ? "admin-main-surface bg-[radial-gradient(circle_at_top,_#1f1537_0%,_#111111_45%,_#0a0a0a_100%)]"
               : isArtistWorkspaceRoute
                 ? "artist-main-surface bg-[#0f1113]"
-                : "bg-[#121212]"
+                : "user-main-surface bg-[#0a0a0a]"
           }`}
         >
           <div
             ref={backgroundRef}
-            className="pointer-events-none absolute inset-0 overflow-hidden"
+            className={`pointer-events-none absolute inset-0 overflow-hidden ${
+              isAdminRoute ? "" : "hidden"
+            }`}
             aria-hidden="true"
           >
             <div
@@ -116,7 +121,7 @@ export default function MainLayout() {
                   ? "bg-violet-500/25"
                   : isArtistWorkspaceRoute
                     ? "hidden"
-                    : "bg-indigo-500/20"
+                    : "hidden"
               }`}
             />
             <div
@@ -126,7 +131,7 @@ export default function MainLayout() {
                   ? "bg-sky-500/20"
                   : isArtistWorkspaceRoute
                     ? "hidden"
-                    : "bg-fuchsia-500/20"
+                    : "hidden"
               }`}
             />
             <div
@@ -136,13 +141,19 @@ export default function MainLayout() {
                   ? "bg-purple-400/20"
                   : isArtistWorkspaceRoute
                     ? "hidden"
-                    : "bg-cyan-400/15"
+                    : "hidden"
               }`}
             />
           </div>
           <div
-            className={`relative z-10 ${isAdminRoute ? "admin-content" : ""} ${
-              isArtistWorkspaceRoute ? "artist-content" : ""
+            className={`relative z-10 ${
+              isAdminRoute
+                ? "admin-content"
+                : isArtistWorkspaceRoute
+                  ? "artist-content"
+                  : isUserRoute
+                    ? "user-content"
+                    : ""
             }`}
           >
             <Outlet />

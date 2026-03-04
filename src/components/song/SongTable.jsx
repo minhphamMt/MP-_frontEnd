@@ -7,23 +7,8 @@ import { resolveAssetUrl } from "../../utils/asset";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import OptimizedImage from "../common/OptimizedImage";
 
-export default function SongTable({
-  title,
-  subtitle,
-  songs,
-  loading,
-  onRefresh,
-  headerActions,
-}) {
-  const {
-    playSong,
-    pause,
-    resume,
-    currentSong,
-    isPlaying,
-    likedSongIds,
-    toggleLike,
-  } = usePlayerStore();
+export default function SongTable({ title, subtitle, songs, loading, onRefresh, headerActions }) {
+  const { playSong, pause, resume, currentSong, isPlaying, likedSongIds, toggleLike } = usePlayerStore();
 
   const handlePlaySong = async (song, queue) => {
     const playable = (await fetchPlayableSong(song, getSongById)) || song;
@@ -32,9 +17,7 @@ export default function SongTable({
     const normalizedId = normalizeSongId(playable);
     const updatedQueue = queue.map((item) => {
       const itemId = normalizeSongId(item);
-      return itemId && itemId === normalizedId
-        ? { ...item, ...playable }
-        : item;
+      return itemId && itemId === normalizedId ? { ...item, ...playable } : item;
     });
 
     if (normalizeSongId(currentSong) === normalizedId) {
@@ -51,34 +34,19 @@ export default function SongTable({
   const renderHeader = () => (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        {subtitle && (
-          <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-            {subtitle}
-          </p>
-        )}
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-1 rounded-full bg-gradient-to-b from-emerald-300 to-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.45)]" />
-          <h2 className="text-2xl font-extrabold text-white drop-shadow-sm">
-            {title}
-          </h2>
-        </div>
+        {subtitle && <p className="user-heading-label">{subtitle}</p>}
+        <h2 className="mt-1 text-2xl font-black text-white">{title}</h2>
       </div>
 
       <div className="flex items-center gap-2">
         {headerActions}
         {onRefresh && (
-          <button
-            onClick={onRefresh}
-            className="rounded-full border border-white/10 bg-[#1f1f1f] px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:bg-[#2a2a2a]"
-          >
+          <button onClick={onRefresh} className="user-btn-secondary px-4 py-2 text-xs font-semibold">
             Làm mới
           </button>
         )}
-        <button
-          onClick={playAll}
-          className="rounded-full bg-emerald-400 px-5 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300"
-        >
-          ▶ Phát tất cả
+        <button onClick={playAll} className="user-btn-primary px-5 py-2 text-xs font-semibold">
+          Phát tất cả
         </button>
       </div>
     </div>
@@ -86,7 +54,7 @@ export default function SongTable({
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-white/5 bg-[#181818] p-6 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+      <div className="user-page-shell p-6 text-sm text-white/60">
         Đang tải dữ liệu...
       </div>
     );
@@ -94,29 +62,26 @@ export default function SongTable({
 
   if (!songs.length) {
     return (
-      <div className="rounded-2xl border border-white/5 bg-[#181818] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+      <div className="user-page-shell p-6">
         {renderHeader()}
-        <div className="mt-4 text-sm text-white/60">
-          Không có bài hát để hiển thị.
-        </div>
+        <div className="mt-4 text-sm text-white/60">Không có bài hát để hiển thị.</div>
       </div>
     );
   }
 
   const rankingStyle = (order) => {
     if (order === 1) return "text-xl font-black text-amber-300 sm:text-2xl";
-    if (order === 2) return "text-xl font-black text-sky-200 sm:text-2xl";
+    if (order === 2) return "text-xl font-black text-emerald-200 sm:text-2xl";
     if (order === 3) return "text-xl font-black text-rose-200 sm:text-2xl";
     return "text-sm font-semibold text-white/60";
   };
 
   return (
-    <div className="rounded-3xl border border-white/5 bg-[#181818] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur">
+    <div className="user-page-shell p-6">
       {renderHeader()}
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-white/5 bg-[#121212] scrollbar-muted">
+      <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-[#121212] scrollbar-muted">
         <div className="min-w-0 xl:min-w-[640px]">
-          {/* Header */}
           <div className="hidden grid-cols-[48px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.35em] text-white/50 xl:grid">
             <span className="text-center">#</span>
             <span>Bài hát</span>
@@ -124,66 +89,43 @@ export default function SongTable({
             <span className="text-right">Thời gian</span>
           </div>
 
-          {/* Rows */}
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-white/10">
             {songs.map((song, index) => {
               const songId = normalizeSongId(song);
               const isActive = normalizeSongId(currentSong) === songId;
               const isLiked = songId && likedSongIds.includes(songId);
               const order = song.rank ?? index + 1;
-              const artistId =
-                song?.artist_id ?? song?.artist?.id ?? song?.artistId;
+              const artistId = song?.artist_id ?? song?.artist?.id ?? song?.artistId;
 
               return (
                 <div
                   key={song.id || index}
                   className={`group grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 text-sm transition xl:grid-cols-[48px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)] ${
-                    isActive
-                      ? "bg-gradient-to-r from-cyan-400/10 to-transparent"
-                      : "md:hover:bg-white/5"
+                    isActive ? "bg-emerald-400/10" : "md:hover:bg-white/[0.05]"
                   }`}
                 >
-                  {/* Rank */}
                   <div className="hidden justify-center xl:flex">
                     <span className={rankingStyle(order)}>{order}</span>
                   </div>
 
-                  {/* Song info */}
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md sm:h-12 sm:w-12">
-                        <OptimizedImage
-                        src={resolveAssetUrl(song.cover_url)}
-                        alt={song.title}
-                        className="h-full w-full object-cover"
-                      />
+                      <OptimizedImage src={resolveAssetUrl(song.cover_url)} alt={song.title} className="h-full w-full object-cover" />
                       <button
                         onClick={() => handlePlaySong(song, songs)}
                         className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition md:group-hover:opacity-100"
                       >
-                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1db954] text-black shadow-[0_8px_16px_rgba(29,185,84,0.35)]">
-                          {isActive && isPlaying ? (
-                            <FiPause className="text-sm" />
-                          ) : (
-                            <FiPlay className="ml-0.5 text-sm" />
-                          )}
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-300 text-black shadow-[0_8px_16px_rgba(52,211,153,0.35)]">
+                          {isActive && isPlaying ? <FiPause className="text-sm" /> : <FiPlay className="ml-0.5 text-sm" />}
                         </span>
                       </button>
                     </div>
 
                     <div className="min-w-0">
-                      <div
-                        className={`truncate font-medium ${
-                          isActive ? "text-cyan-300" : "text-white"
-                        }`}
-                      >
-                        {song.title}
-                      </div>
+                      <div className={`truncate font-medium ${isActive ? "text-emerald-300" : "text-white"}`}>{song.title}</div>
                       <div className="truncate text-xs text-white/60">
                         {artistId ? (
-                          <Link
-                            to={`/artist/${artistId}`}
-                            className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-                          >
+                          <Link to={`/artist/${artistId}`} className="inline-block transition md:hover:text-emerald-300 md:hover:underline">
                             {song.artist_name}
                           </Link>
                         ) : (
@@ -193,26 +135,20 @@ export default function SongTable({
                     </div>
                   </div>
 
-                  {/* Album */}
                   <div className="hidden truncate text-xs text-white/70 xl:block">
                     {song.album_id && song.album_title ? (
-                      <Link
-                        to={`/album/${song.album_id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="md:hover:underline"
-                      >
+                      <Link to={`/album/${song.album_id}`} onClick={(e) => e.stopPropagation()} className="md:hover:underline">
                         {song.album_title}
                       </Link>
                     ) : (
-                      song.album_title || "—"
+                      song.album_title || "-"
                     )}
                   </div>
 
-                  {/* Duration */}
                   <div className="hidden items-center justify-end gap-4 text-xs text-white/70 xl:flex">
                     <AddToPlaylistButton
                       song={song}
-                      triggerClassName="h-9 w-9 !border-white/20 !bg-white/5 md:hover:!bg-white/15"
+                      triggerClassName="h-9 w-9 !border-white/20 !bg-white/[0.06] md:hover:!bg-white/[0.14]"
                     />
                     <button
                       onClick={(e) => {
@@ -221,20 +157,18 @@ export default function SongTable({
                       }}
                       className={`flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 ${
                         isLiked
-                          ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
-                          : "border-white/20 text-white/60 md:hover:text-white md:hover:border-white/40"
+                          ? "border-rose-400/60 bg-rose-400/10 text-rose-300"
+                          : "border-white/20 text-white/60 md:hover:border-white/40 md:hover:text-white"
                       }`}
                     >
                       <FiHeart className="text-[16px]" />
                     </button>
-                    <span className="tabular-nums">
-                      {formatDuration(song.duration)}
-                    </span>
+                    <span className="tabular-nums">{formatDuration(song.duration)}</span>
                   </div>
                   <div className="flex shrink-0 items-center justify-end gap-2 xl:hidden">
                     <AddToPlaylistButton
                       song={song}
-                      triggerClassName="h-8 w-8 !border-white/20 !bg-white/5 md:hover:!bg-white/15"
+                      triggerClassName="h-8 w-8 !border-white/20 !bg-white/[0.06] md:hover:!bg-white/[0.14]"
                     />
                     <button
                       onClick={(e) => {
@@ -243,8 +177,8 @@ export default function SongTable({
                       }}
                       className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200 ${
                         isLiked
-                          ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
-                          : "border-white/20 text-white/60 md:hover:text-white md:hover:border-white/40"
+                          ? "border-rose-400/60 bg-rose-400/10 text-rose-300"
+                          : "border-white/20 text-white/60 md:hover:border-white/40 md:hover:text-white"
                       }`}
                     >
                       <FiHeart className="text-[14px]" />

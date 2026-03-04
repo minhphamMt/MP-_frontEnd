@@ -78,8 +78,8 @@ export default function LikedSongs() {
   };
 
   return (
-     <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+     <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
+      <div className="user-surface p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -96,7 +96,7 @@ export default function LikedSongs() {
           <button
             type="button"
             onClick={() => navigate("/playlists")}
-            className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/80 transition md:hover:border-white/40 md:hover:text-white"
+            className="user-btn-secondary px-4 py-2 text-sm font-semibold"
           >
             ← Quay lại thư viện
           </button>
@@ -105,7 +105,7 @@ export default function LikedSongs() {
 
       <section>
         {loading ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60 backdrop-blur">
+          <div className="user-surface p-6 text-sm text-white/60">
             Đang tải bài hát đã thích...
           </div>
         ) : (

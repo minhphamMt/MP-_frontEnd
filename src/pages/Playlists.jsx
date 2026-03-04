@@ -393,7 +393,7 @@ setToastTitle("Thành công");
   };
 
   return (
-<div className="min-h-screen space-y-10 bg-[#121212] px-4 py-6 sm:px-8">
+<div className="user-page-shell min-h-screen space-y-10 px-4 py-6 sm:px-8">
       <Toast
         title={toastTitle}
         message={toastMessage}
@@ -437,13 +437,13 @@ setToastTitle("Thành công");
           <input
             value={creatingName}
             onChange={(e) => setCreatingName(e.target.value)}
-            className="w-full rounded-full border border-white/10 bg-[#242424] px-4 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 sm:w-64"
+            className="user-input w-full rounded-full px-4 py-2 text-sm sm:w-64"
             placeholder="Tên playlist mới"
           />
           <button
             type="submit"
             disabled={saving}
-            className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-black transition md:hover:bg-white/90 active:scale-[0.98] disabled:opacity-60"
+            className="user-btn-primary px-5 py-2 text-sm font-semibold active:scale-[0.98] disabled:opacity-60"
           >
             Tạo playlist
           </button>
@@ -458,7 +458,7 @@ setToastTitle("Thành công");
             <button
               type="button"
               onClick={() => navigate("/library/followed-artists")}
-              className="text-sm font-semibold text-white/70 transition md:hover:text-white"
+              className="text-sm font-semibold text-white/70 transition md:hover:text-emerald-300"
             >
               Xem tất cả
             </button>
@@ -479,7 +479,7 @@ setToastTitle("Thành công");
             <button
               type="button"
               onClick={() => navigate("/library/liked-albums")}
-              className="text-sm font-semibold text-white/70 transition md:hover:text-white"
+              className="text-sm font-semibold text-white/70 transition md:hover:text-emerald-300"
             >
               Xem tất cả
             </button>
@@ -487,7 +487,7 @@ setToastTitle("Thành công");
         </div>
 
         {loadingLikedAlbums ? (
-          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
+          <div className="user-surface p-6 text-sm text-white/60">
             Đang tải album yêu thích...
           </div>
         ) : likedAlbums.length ? (
@@ -504,7 +504,7 @@ setToastTitle("Thành công");
             ))}
           </div>
         ) : (
-          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
+          <div className="user-surface p-6 text-sm text-white/60">
             Chưa có album nào được thích.
           </div>
         )}
@@ -517,14 +517,14 @@ setToastTitle("Thành công");
             <button
               type="button"
               onClick={() => navigate("/library/playlists")}
-              className="text-sm font-semibold text-white/70 transition md:hover:text-white"
+              className="text-sm font-semibold text-white/70 transition md:hover:text-emerald-300"
             >
               Xem tất cả
             </button>
           )}
         </div>
         {loadingPlaylists ? (
-          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
+          <div className="user-surface p-6 text-sm text-white/60">
             Đang tải playlist...
           </div>
         ) : playlists.length ? (
@@ -536,7 +536,7 @@ setToastTitle("Thành công");
             />
           </div>
         ) : (
-          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
+          <div className="user-surface p-6 text-sm text-white/60">
             Bạn chưa tạo playlist nào.
           </div>
         )}

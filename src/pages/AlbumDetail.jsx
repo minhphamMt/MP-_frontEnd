@@ -84,8 +84,8 @@ export default function AlbumDetail() {
      ======================= */
   if (loading) {
     return (
-       <div className="min-h-screen bg-[#121212] p-6 text-white/60">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+       <div className="user-page-shell min-h-screen p-6 text-white/60">
+        <div className="user-surface p-6">
           Đang tải album...
         </div>
       </div>
@@ -94,8 +94,8 @@ export default function AlbumDetail() {
 
   if (!album) {
     return (
-      <div className="min-h-screen bg-[#121212] p-6 text-white/60">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+      <div className="user-page-shell min-h-screen p-6 text-white/60">
+        <div className="user-surface p-6">
           Album không tồn tại
         </div>
       </div>
@@ -122,11 +122,11 @@ export default function AlbumDetail() {
   ].filter((item) => item.value);
 
   return (
-     <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
+     <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
       {/* ===== HERO ===== */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
+      <div className="user-surface relative overflow-hidden p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
         {/* GLOW */}
-        <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-purple-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-emerald-500/20 blur-3xl" />
 
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center">
           {/* COVER */}
@@ -154,7 +154,7 @@ export default function AlbumDetail() {
                   type="button"
                   onClick={() => artistId && navigate(`/artist/${artistId}`)}
                   disabled={!artistId}
-                  className="mt-1 text-sm text-white/70 transition md:hover:text-cyan-300 disabled:cursor-default disabled:hover:text-white/70"
+                  className="mt-1 text-sm text-white/70 transition md:hover:text-emerald-300 disabled:cursor-default disabled:hover:text-white/70"
                 >
                   {artistDisplayName}
                 </button>
@@ -169,7 +169,7 @@ export default function AlbumDetail() {
                 Tổng thời lượng: {formatTime(totalDuration)}
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1">
-                <FiCalendar className="text-cyan-200" />
+                <FiCalendar className="text-emerald-300" />
                 {formatDateDisplay(album.release_date)}
               </span>
             </div>
@@ -179,7 +179,7 @@ export default function AlbumDetail() {
                {canPlay ? (
                   <button
                     onClick={() => playSong(songs[0], songs)}
-                    className="rounded-full bg-gradient-to-r from-green-400 to-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900
+                    className="rounded-full border border-emerald-300/50 bg-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900
                              shadow-lg shadow-green-400/30 transition
                              md:hover:brightness-110 md:hover:scale-[1.05] active:scale-[0.97]"
                 >
@@ -212,8 +212,8 @@ export default function AlbumDetail() {
         </div>
       </div>
  {(artistDisplayName || artistInfoItems.length > 0) && (
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(59,130,246,0.18),transparent_45%)]" />
+        <div className="user-surface relative overflow-hidden p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+          <div className="pointer-events-none absolute inset-0 bg-white/[0.02]" />
           <div className="relative space-y-4">
             <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60">
               <span className="h-[1px] w-6 bg-white/30" />
@@ -224,7 +224,7 @@ export default function AlbumDetail() {
                 type="button"
                 onClick={() => artistId && navigate(`/artist/${artistId}`)}
                 disabled={!artistId}
-                className="text-lg font-semibold text-white transition md:hover:text-cyan-300 disabled:cursor-default disabled:hover:text-white"
+                className="text-lg font-semibold text-white transition md:hover:text-emerald-300 disabled:cursor-default disabled:hover:text-white"
               >
                 {artistDisplayName}
               </button>
@@ -248,7 +248,7 @@ export default function AlbumDetail() {
         </div>
       )}
       {/* ===== SONG LIST ===== */}
-         <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)] scrollbar-muted xl:overflow-x-auto">
+         <div className="user-surface overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] scrollbar-muted xl:overflow-x-auto">
        <div className="min-w-0 xl:min-w-[640px]">
           <div className="px-4 pt-4 text-sm font-semibold text-white xl:hidden">
             Danh sách bài hát
@@ -277,7 +277,7 @@ export default function AlbumDetail() {
                   onClick={canPlay ? () => playSong(song, songs) : undefined}
                   className={`group grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 transition xl:grid-cols-[60px_1fr_140px_100px] xl:gap-3 xl:px-5 ${
                     isActive
-                      ? "bg-gradient-to-r from-cyan-400/10 to-transparent"
+                      ? "bg-emerald-400/10"
                       : canPlay
                         ? "md:hover:bg-white/5 cursor-pointer"
                         : "cursor-default"
@@ -286,7 +286,7 @@ export default function AlbumDetail() {
                   {/* INDEX */}
                   <div className="hidden text-center text-sm font-semibold xl:block">
                     {isActive ? (
-                      <FiMusic className="mx-auto text-cyan-400" />
+                      <FiMusic className="mx-auto text-emerald-400" />
                     ) : (
                       <span className="text-white/70">{index + 1}</span>
                     )}
@@ -319,7 +319,7 @@ export default function AlbumDetail() {
                     <div className="min-w-0">
                       <div
                          className={`truncate text-sm font-semibold sm:text-base ${
-                          isActive ? "text-cyan-300" : "text-white"
+                          isActive ? "text-emerald-300" : "text-white"
                         }`}
                       >
                         {song.title}

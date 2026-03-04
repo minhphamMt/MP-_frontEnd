@@ -13,21 +13,18 @@ export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const displayName = user?.display_name || user?.email || "User";
-  const resolveAvatarUrl = (url) => resolveAssetUrl(url);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
       if (!menuRef.current || menuRef.current.contains(event.target)) return;
       setIsOpen(false);
     };
-
     const handleEscape = (event) => {
       if (event.key === "Escape") setIsOpen(false);
     };
 
     document.addEventListener("mousedown", handleOutsideClick);
     document.addEventListener("keydown", handleEscape);
-
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("keydown", handleEscape);
@@ -50,7 +47,7 @@ export default function UserMenu() {
       <button
         type="button"
         onClick={() => navigate("/login")}
-        className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition md:hover:border-white/40 md:hover:bg-white/20"
+        className="user-btn-secondary px-4 py-2 text-sm font-semibold"
       >
         Đăng nhập
       </button>
@@ -59,19 +56,18 @@ export default function UserMenu() {
 
   return (
     <div className="relative" ref={menuRef}>
-      {/* Avatar */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/10 text-sm font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/20"
-        aria-label="Mở hồ sơ cá nhân"
+        className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-[#1a1a1a] text-sm font-semibold text-white/85 transition md:hover:border-white/30 md:hover:bg-[#242424]"
+        aria-label="Mở hồ sơ"
         title={displayName}
         aria-expanded={isOpen}
         aria-haspopup="menu"
       >
         {user?.avatar_url ? (
           <OptimizedImage
-            src={resolveAvatarUrl(user.avatar_url)}
+            src={resolveAssetUrl(user.avatar_url)}
             alt={displayName}
             className="h-full w-full object-cover"
           />
@@ -80,16 +76,15 @@ export default function UserMenu() {
         )}
       </button>
 
-      {/* Dropdown */}
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 w-48 overflow-hidden rounded-2xl border border-white/10 bg-[#2b2433] text-sm text-white shadow-lg"
+          className="absolute right-0 mt-2 w-52 overflow-hidden rounded-2xl border border-white/15 bg-[#121212] p-1.5 text-sm text-white shadow-[0_20px_50px_rgba(0,0,0,0.45)]"
           role="menu"
         >
           <button
             type="button"
             onClick={handleNavigateProfile}
-            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition md:hover:bg-white/10"
+            className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition md:hover:bg-white/[0.08]"
             role="menuitem"
           >
             <span className="flex items-center gap-2">
@@ -101,10 +96,10 @@ export default function UserMenu() {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 px-4 py-3 text-left text-red-200 transition md:hover:bg-white/10"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-rose-100 transition md:hover:bg-rose-500/18"
             role="menuitem"
           >
-            <FiLogOut className="text-red-200" />
+            <FiLogOut className="text-rose-200" />
             Đăng xuất
           </button>
         </div>

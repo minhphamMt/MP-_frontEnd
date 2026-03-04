@@ -42,7 +42,7 @@ export default function FollowedArtists() {
   }, [user?.id, loadFollowedArtists, clearFollowedArtists]);
 
   return (
-    <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
+    <div className="user-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
       <header className="flex flex-col gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-[10px] uppercase tracking-[0.35em] text-white/50 sm:text-[11px]">
@@ -60,7 +60,7 @@ export default function FollowedArtists() {
         <button
           type="button"
           onClick={() => navigate("/playlists")}
-          className="self-start rounded-full border border-white/10 bg-[#181818] px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:bg-[#242424] sm:self-auto sm:text-sm"
+          className="user-btn-secondary self-start px-4 py-2 text-xs font-semibold sm:self-auto sm:text-sm"
         >
           ← Quay lại thư viện
         </button>
@@ -68,7 +68,7 @@ export default function FollowedArtists() {
 
       <section className="space-y-4">
         {loading ? (
-          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
+          <div className="user-surface p-6 text-sm text-white/60">
             Đang tải nghệ sĩ theo dõi...
           </div>
         ) : followedArtists.length ? (
@@ -78,7 +78,7 @@ export default function FollowedArtists() {
            gridClassName="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
           />
         ) : (
-          <div className="rounded-lg bg-[#181818] p-6 text-center text-sm text-white/60">
+          <div className="user-surface p-6 text-center text-sm text-white/60">
             Bạn chưa theo dõi nghệ sĩ nào.
             <br />
             Hãy khám phá và theo dõi nghệ sĩ bạn yêu thích 🎧

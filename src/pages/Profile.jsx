@@ -239,7 +239,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
+    <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
       <Toast
         title={toast.title}
         message={toast.message}
@@ -278,7 +278,7 @@ export default function Profile() {
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
-            <div className="rounded-full border border-fuchsia-300/40 bg-gradient-to-r from-fuchsia-500/25 to-violet-500/20 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-fuchsia-100 shadow-[0_8px_24px_rgba(192,132,252,0.35)]">
+            <div className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/90 shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
               {authUser?.role || "USER"}
             </div>
             <div className="rounded-full border border-emerald-300/40 bg-emerald-400/15 px-4 py-2 text-xs font-bold text-emerald-200 shadow-[0_8px_24px_rgba(16,185,129,0.35)]">
@@ -344,13 +344,13 @@ export default function Profile() {
 
             {/* <label className="space-y-2 text-sm text-white/70">
               <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                <FiCamera className="text-violet-300" /> Avatar URL
+                <FiCamera className="text-emerald-300" /> Avatar URL
               </span>
               <input
                 value={profile.avatar_url}
                 onChange={handleProfileChange("avatar_url")}
                 placeholder="https://..."
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-violet-400/60 focus:bg-white/10"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400/60 focus:bg-white/10"
               />
               <p className="text-xs text-white/45">
                 Dán đường dẫn ảnh để cập nhật avatar của bạn.
@@ -388,7 +388,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={!hasProfileChanges || loadingProfile}
-                className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-6 py-2 text-sm font-semibold text-white transition md:hover:from-violet-400 md:hover:to-fuchsia-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className="user-btn-primary px-6 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loadingProfile ? "Đang lưu..." : "Lưu thay đổi"}
               </button>
@@ -486,7 +486,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={loadingPassword}
-                className="w-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-2 text-sm font-semibold text-white transition md:hover:from-emerald-400 md:hover:to-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className="user-btn-primary w-full px-6 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loadingPassword ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
               </button>

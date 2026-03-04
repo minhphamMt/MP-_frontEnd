@@ -14,6 +14,7 @@ import SongCard from "../components/song/SongCard";
 import useAuthStore from "../store/auth.store";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { resolveAssetUrl } from "../utils/asset";
+import { FiChevronLeft, FiChevronRight, FiPlay } from "react-icons/fi";
 
 export default function Home() {
   const [artistAlbums, setArtistAlbums] = useState([]);
@@ -30,6 +31,7 @@ export default function Home() {
   const artistResumeRef = useRef(null);
   const newAlbumResumeRef = useRef(null);
   const currentSong = usePlayerStore((state) => state.currentSong);
+  const playSong = usePlayerStore((state) => state.playSong);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const mapSongPayload = useCallback((raw) => {
     if (!raw) return null;
@@ -295,7 +297,7 @@ export default function Home() {
      ======================= */
   if (loading) {
     return (
-        <div className="min-h-screen bg-[#121212] p-6">
+        <div className="user-page-shell min-h-screen p-6">
         <div className="rounded-3xl border border-[#242424] bg-[#181818] p-8 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           Đang tải trang chủ...
         </div>
@@ -306,11 +308,69 @@ export default function Home() {
   /* =======================
      UI
      ======================= */
+  const featuredSong = songs[0] || null;
+  const featuredCover =
+    resolveAssetUrl(featuredSong?.cover_url) ||
+    resolveAssetUrl(newAlbums?.[0]?.cover_url) ||
+    resolveAssetUrl(artistAlbums?.[0]?.cover_url) ||
+    "";
+
   return (
-      <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:space-y-14 sm:px-8">
+      <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:space-y-12 sm:px-8">
+      <section className="user-surface relative overflow-hidden p-6 sm:p-8">
+        {featuredCover ? (
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-30"
+            style={{ backgroundImage: `url(${featuredCover})` }}
+            aria-hidden
+          />
+        ) : null}
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-[#0b0b0b] via-[#0b0b0bcc] to-[#0b0b0b99]"
+          aria-hidden
+        />
+
+        <div className="relative z-10 max-w-2xl space-y-4">
+          <p className="user-heading-label">Featured Music</p>
+          <h1 className="text-3xl font-extrabold text-white sm:text-5xl">
+            {featuredSong?.title || "Khám phá âm nhạc mỗi ngày"}
+          </h1>
+          <p className="text-sm text-white/70 sm:text-base">
+            {featuredSong?.artist_name
+              ? `Từ ${featuredSong.artist_name}. Cập nhật nhanh những bài hát phù hợp gu nghe của bạn.`
+              : "Cập nhật nhanh những bài hát phù hợp gu nghe của bạn, với trải nghiệm nghe nhạc hiện đại và mượt mà."}
+          </p>
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <button
+              type="button"
+              disabled={!featuredSong}
+              onClick={() => featuredSong && playSong(featuredSong, songs)}
+              className="user-btn-primary inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold disabled:opacity-60"
+            >
+              <FiPlay />
+              <span>Nghe ngay</span>
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                const seedSongId =
+                  (await getRandomHistorySongId()) ||
+                  (await getLastPlayedSongId()) ||
+                  normalizeSongId(currentSong);
+                await loadRecommendations(seedSongId);
+              }}
+              disabled={recommendationLoading}
+              className="user-btn-secondary px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
+            >
+              {recommendationLoading ? "Đang làm mới..." : "Làm mới gợi ý"}
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* ===== SONG RECOMMEND ===== */}
       <Section
-        title="Dành cho bạn"
+        title="Made For You"
         subtitle="Gợi ý bài hát"
         action={
           <button
@@ -322,7 +382,7 @@ export default function Home() {
               await loadRecommendations(seedSongId);
             }}
             disabled={recommendationLoading}
-            className="rounded-full border border-white/10 bg-[#1f1f1f] px-3 py-1.5 text-[12px] font-semibold text-white/80 transition md:hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-2 sm:text-[13px]"
+            className="user-btn-secondary px-3 py-1.5 text-[12px] font-semibold disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-2 sm:text-[13px]"
           >
            {recommendationLoading ? "Đang làm mới..." : "Làm mới"}
           </button>
@@ -336,7 +396,7 @@ export default function Home() {
       </Section>
 
       {/* ===== ARTIST ALBUM ===== */}
-      <Section title="Album Nghệ Sĩ" subtitle="Tuyển tập nổi bật">
+      <Section title="Nghệ sĩ nổi bật" subtitle="Tuyển tập nổi bật">
         <div className="relative">
           <div
             ref={artistRailRef}
@@ -373,9 +433,9 @@ export default function Home() {
                   artistAlbums.length
                 );
               }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition md:hover:text-white sm:flex"
+              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#121212] text-white/80 shadow-lg transition md:hover:border-white/30 md:hover:text-white sm:flex"
             >
-              ‹
+              <FiChevronLeft />
             </button>
           </div>
 
@@ -390,9 +450,9 @@ export default function Home() {
                   artistAlbums.length
                 );
               }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition md:hover:text-white sm:flex"
+              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#121212] text-white/80 shadow-lg transition md:hover:border-white/30 md:hover:text-white sm:flex"
             >
-              ›
+              <FiChevronRight />
             </button>
           </div>
         </div>
@@ -429,9 +489,9 @@ export default function Home() {
                   newAlbums.length
                 );
               }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition md:hover:text-white sm:flex"
+              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#121212] text-white/80 shadow-lg transition md:hover:border-white/30 md:hover:text-white sm:flex"
             >
-              ‹
+              <FiChevronLeft />
             </button>
           </div>
 
@@ -446,9 +506,9 @@ export default function Home() {
                   newAlbums.length
                 );
               }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-white/80 shadow-lg ring-1 ring-white/10 transition md:hover:text-white sm:flex"
+              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#121212] text-white/80 shadow-lg transition md:hover:border-white/30 md:hover:text-white sm:flex"
             >
-              ›
+              <FiChevronRight />
             </button>
           </div>
         </div>

@@ -65,8 +65,8 @@ export default function SongDetail() {
 
   if (loading) {
     return (
-       <div className="min-h-screen bg-[#121212] p-6 text-white/70">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+       <div className="user-page-shell min-h-screen p-6 text-white/70">
+        <div className="user-surface p-6">
           Đang tải thông tin bài hát...
         </div>
       </div>
@@ -75,8 +75,8 @@ export default function SongDetail() {
 
   if (!song) {
     return (
-      <div className="min-h-screen bg-[#121212] p-6 text-white/70">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+      <div className="user-page-shell min-h-screen p-6 text-white/70">
+        <div className="user-surface p-6">
           Không tìm thấy bài hát.
         </div>
       </div>
@@ -98,11 +98,11 @@ export default function SongDetail() {
   };
 
   return (
-    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
+    <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
       {/* HERO */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[0_30px_90px_rgba(0,0,0,0.6)]">
+      <div className="user-surface relative overflow-hidden p-6 shadow-[0_30px_90px_rgba(0,0,0,0.6)]">
         {/* GLOW */}
-        <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl" />
+        <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-emerald-400/20 blur-3xl" />
 
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center">
           {/* COVER */}
@@ -115,7 +115,7 @@ export default function SongDetail() {
                   className="aspect-square w-full object-cover transition duration-500 md:hover:scale-105"
                 />
               ) : (
-                <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 text-4xl text-white/70">
+                <div className="flex aspect-square items-center justify-center bg-white/10 text-4xl text-white/70">
                   <FiMusic />
                 </div>
               )}
@@ -140,7 +140,7 @@ export default function SongDetail() {
                   disabled={!artistId}
                   className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm text-white/80 transition md:hover:bg-white/20 disabled:cursor-default disabled:opacity-70"
                 >
-                  <FiUser className="text-cyan-200" />
+                  <FiUser className="text-emerald-300" />
                   <span>{song.artist_name}</span>
                 </button>
               )}
@@ -161,7 +161,7 @@ export default function SongDetail() {
               )}
 
               <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                <FiClock className="text-cyan-200" />
+                <FiClock className="text-emerald-300" />
                 {formatDuration(song.duration)}
               </span>
             </div>
@@ -170,8 +170,8 @@ export default function SongDetail() {
             <div className="flex flex-wrap gap-3 pt-2">
               <button
                 onClick={handlePlay}
-                className="rounded-full bg-gradient-to-r from-cyan-400 to-blue-400 px-6 py-2 text-sm font-semibold text-slate-900
-                           shadow-lg shadow-cyan-500/30 transition
+                className="rounded-full border border-emerald-300/50 bg-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900
+                           shadow-lg shadow-emerald-500/30 transition
                            md:hover:brightness-110 md:hover:scale-[1.05] active:scale-[0.97]"
               >
                 {isActive && isPlaying ? "⏸ Tạm dừng" : "▶ Phát ngay"}
@@ -208,7 +208,7 @@ export default function SongDetail() {
       </div>
 
       {/* DETAILS */}
-      <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+      <div className="user-surface p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
         <h2 className="text-lg font-semibold text-white">Thông tin phát</h2>
 
         <div className="mt-4 grid grid-cols-1 gap-4 text-sm text-white/70 md:grid-cols-2">
@@ -229,7 +229,7 @@ export default function SongDetail() {
                   type="button"
                   onClick={goToArtist}
                   disabled={!artistId}
-                  className="transition md:hover:text-cyan-300 disabled:cursor-default disabled:hover:text-white"
+                  className="transition md:hover:text-emerald-300 disabled:cursor-default disabled:hover:text-white"
                 >
                   {song.artist_name}
                 </button>
@@ -249,7 +249,7 @@ export default function SongDetail() {
                   type="button"
                   onClick={goToAlbum}
                   disabled={!albumId}
-                  className="transition md:hover:text-cyan-300 disabled:cursor-default disabled:hover:text-white"
+                  className="transition md:hover:text-emerald-300 disabled:cursor-default disabled:hover:text-white"
                 >
                   {song.album_title}
                 </button>

@@ -60,9 +60,9 @@ export default function RegionChart() {
   if (!config) return null;
 
   return (
-    <div className="min-h-screen bg-[#121212] px-4 py-6 sm:px-8">
+    <div className="user-page-shell min-h-screen px-4 py-6 sm:px-8">
       {/* PAGE HEADER */}
-      <div className="mb-6 rounded-3xl border border-white/5 bg-[#181818] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
+      <div className="user-surface mb-6 p-6">
         <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
           Bảng xếp hạng
         </p>

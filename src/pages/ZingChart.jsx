@@ -1,846 +1,900 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaPlay, FaRegClock } from "react-icons/fa";
+import { FiExternalLink, FiRefreshCw, FiTrendingUp } from "react-icons/fi";
+import ReactECharts from "echarts-for-react";
 import {
   getRegionCharts,
   getWeeklyTopSeries,
   getWeeklyTopSongs,
 } from "../api/chart.api";
-import {
-  formatDuration,
-  filterPlayableSongs,
-  fetchPlayableSong,
-} from "../utils/song";
 import { getSongById } from "../api/song.api";
+import {
+  fetchPlayableSong,
+  filterPlayableSongs,
+  formatDuration,
+} from "../utils/song";
 import usePlayerStore from "../store/player.store";
-import Section from "../components/section/Section";
 import OptimizedImage from "../components/common/OptimizedImage";
+import { resolveAssetUrl } from "../utils/asset";
 
-const CHART_WIDTH = 820;
-const CHART_HEIGHT = 240;
-const CHART_PADDING_X = 24;
+const LINE_COLORS = ["#fbbf24", "#60a5fa", "#a78bfa", "#fb7185", "#f97316"];
 
-const formatWeeklyDate = (dateStr) => {
-  const parsed = dateStr ? new Date(dateStr) : null;
-  if (!parsed || Number.isNaN(parsed.getTime())) return dateStr || "";
-
-  return parsed.toLocaleDateString("vi-VN", {
-    weekday: "short",
-    day: "2-digit",
-    month: "2-digit",
-  });
-};
-
-const buildPath = (values, width, height, scaleMax, paddingX = 0) => {
-  if (!values.length) return "";
-
-  const maxValue = scaleMax ?? Math.max(...values);
-  const xStep =
-    values.length > 1 ? (width - paddingX * 2) / (values.length - 1) : width;
-
-  const points = values.map((value, idx) => {
-    const x = Math.round(paddingX + idx * xStep);
-    const y = Math.round(height - (value / (maxValue || 1)) * (height * 0.85));
-    return [x, Math.max(12, y)];
-  });
-
-  return points
-    .map((point, idx) => `${idx === 0 ? "M" : "L"}${point[0]},${point[1]}`)
-    .join(" ");
-};
-
-const colors = [
-  {
-    main: "#4dd1ff",
-    glow: "rgba(77, 209, 255, 0.15)",
-  },
-  {
-    main: "#ff6bca",
-    glow: "rgba(255, 107, 202, 0.12)",
-  },
-  {
-    main: "#6fff8c",
-    glow: "rgba(111, 255, 140, 0.12)",
-  },
-  {
-    main: "#ffd166",
-    glow: "rgba(255, 209, 102, 0.12)",
-  },
-  {
-    main: "#9b8cff",
-    glow: "rgba(155, 140, 255, 0.12)",
-  },
+const REGION_META = [
+  { key: "vietnam", title: "Việt Nam", link: "/zing-chart/region/vietnam" },
+  { key: "usuk", title: "US-UK", link: "/zing-chart/region/usuk" },
+  { key: "kpop", title: "K-Pop", link: "/zing-chart/region/kpop" },
 ];
 
-const sortByDate = (a, b) => {
-  const aTime = a.rawDate ? new Date(a.rawDate).getTime() : 0;
-  const bTime = b.rawDate ? new Date(b.rawDate).getTime() : 0;
-  return aTime - bTime;
+const toArray = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
+const formatWeeklyDate = (rawDate) => {
+  const parsed = rawDate ? new Date(rawDate) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) return rawDate || "";
+  return parsed.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+};
+
+const escapeHtml = (value = "") =>
+  String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+
+const formatCompactNumber = (value = 0) => {
+  const numeric = Number(value || 0);
+  if (numeric >= 1_000_000) return `${(numeric / 1_000_000).toFixed(1)}M`;
+  if (numeric >= 1_000) return `${(numeric / 1_000).toFixed(1)}K`;
+  return `${numeric}`;
+};
+
+const getRankTheme = (rank) => {
+  const map = {
+    1: {
+      number: "text-amber-300",
+      chip: "border-amber-300/45 bg-amber-500/15 text-amber-100",
+      bar: "bg-amber-300",
+      cover: "border-amber-300/55",
+      button:
+        "border-amber-300/60 bg-amber-400/20 text-amber-200 md:hover:bg-amber-400/35",
+      glow: "md:hover:border-amber-300/40 md:hover:bg-amber-500/8",
+    },
+    2: {
+      number: "text-sky-300",
+      chip: "border-sky-300/45 bg-sky-500/15 text-sky-100",
+      bar: "bg-sky-300",
+      cover: "border-sky-300/55",
+      button:
+        "border-sky-300/60 bg-sky-400/20 text-sky-200 md:hover:bg-sky-400/35",
+      glow: "md:hover:border-sky-300/40 md:hover:bg-sky-500/8",
+    },
+    3: {
+      number: "text-violet-300",
+      chip: "border-violet-300/45 bg-violet-500/15 text-violet-100",
+      bar: "bg-violet-300",
+      cover: "border-violet-300/55",
+      button:
+        "border-violet-300/60 bg-violet-400/20 text-violet-200 md:hover:bg-violet-400/35",
+      glow: "md:hover:border-violet-300/40 md:hover:bg-violet-500/8",
+    },
+    4: {
+      number: "text-rose-300",
+      chip: "border-rose-300/45 bg-rose-500/15 text-rose-100",
+      bar: "bg-rose-300",
+      cover: "border-rose-300/55",
+      button:
+        "border-rose-300/60 bg-rose-400/20 text-rose-200 md:hover:bg-rose-400/35",
+      glow: "md:hover:border-rose-300/40 md:hover:bg-rose-500/8",
+    },
+    5: {
+      number: "text-orange-300",
+      chip: "border-orange-300/45 bg-orange-500/15 text-orange-100",
+      bar: "bg-orange-300",
+      cover: "border-orange-300/55",
+      button:
+        "border-orange-300/60 bg-orange-400/20 text-orange-200 md:hover:bg-orange-400/35",
+      glow: "md:hover:border-orange-300/40 md:hover:bg-orange-500/8",
+    },
+  };
+  return (
+    map[rank] || {
+      number: "text-white/75",
+      chip: "border-white/20 bg-white/5 text-white/75",
+      bar: "bg-white/35",
+      cover: "border-white/20",
+      button:
+        "border-white/35 bg-white/10 text-white/80 md:hover:bg-white/20 md:hover:text-white",
+      glow: "md:hover:border-white/20 md:hover:bg-white/6",
+    }
+  );
 };
 
 export default function ZingChart() {
-  const [songs, setSongs] = useState([]);
-  const [weeklySongs, setWeeklySongs] = useState([]);
-  const [seriesData, setSeriesData] = useState([]);
-  const [loadingSeries, setLoadingSeries] = useState(true);
-  const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [hoverPosition, setHoverPosition] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [loadingWeekly, setLoadingWeekly] = useState(true);
-  const [loadingRegions, setLoadingRegions] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [weeklySongs, setWeeklySongs] = useState([]);
+  const [weeklySeries, setWeeklySeries] = useState([]);
+  const [isChartHovered, setIsChartHovered] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1280
+  );
+  const [syncedTrendHeight, setSyncedTrendHeight] = useState(null);
   const [regionCharts, setRegionCharts] = useState({
     vietnam: [],
     usuk: [],
     kpop: [],
   });
-  const [chartSize, setChartSize] = useState(null);
-   const [hoveredLineIndex, setHoveredLineIndex] = useState(null);
-  const { playSong } = usePlayerStore();
+  const weeklyListCardRef = useRef(null);
   const chartRef = useRef(null);
+  const autoHoverTimerRef = useRef(null);
+  const { playSong } = usePlayerStore();
 
-  const chartWidth = chartSize?.width || CHART_WIDTH;
-  const chartHeight = CHART_HEIGHT + 20;
-  const toArray = (payload) => {
-    if (Array.isArray(payload)) return payload;
-    if (Array.isArray(payload?.items)) return payload.items;
-    return [];
-  };
-  const loadChart = async () => {
+  const getSongCover = useCallback(
+    (song) =>
+      resolveAssetUrl(
+        song?.cover_url ||
+          song?.thumbnail_m ||
+          song?.thumbnail ||
+          song?.image_url ||
+          song?.image ||
+          ""
+      ),
+    []
+  );
+
+  const getSongMetric = useCallback(
+    (song) =>
+      Number(
+        song?.score ?? song?.weekly_play_count ?? song?.play_count ?? song?.plays ?? 0
+      ) || 0,
+    []
+  );
+
+  const loadChart = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setLoadingSeries(true);
-      setLoadingWeekly(true);
-      setLoadingRegions(true);
-
-      const [weeklyRes, regionRes, weeklySeriesRes] = await Promise.all([
+      const [weeklyRes, weeklySeriesRes, regionRes] = await Promise.all([
         getWeeklyTopSongs(),
-        getRegionCharts({ limit: 5 }),
         getWeeklyTopSeries(),
+        getRegionCharts({ limit: 5 }),
       ]);
 
-
-      const regionPayloadRaw = regionRes?.data?.data || regionRes?.data || {};
-      const normalizedRegions = {
-        vietnam: toArray(regionPayloadRaw.vietnam || regionPayloadRaw.vn),
-        usuk: toArray(regionPayloadRaw.usuk || regionPayloadRaw.us_uk),
-        kpop: toArray(regionPayloadRaw.kpop || regionPayloadRaw.k_pop),
-      };
-
-      setRegionCharts({
-        vietnam: filterPlayableSongs(normalizedRegions.vietnam),
-        usuk: filterPlayableSongs(normalizedRegions.usuk),
-        kpop: filterPlayableSongs(normalizedRegions.kpop),
-      });
-          const weeklyPayload = toArray(weeklyRes?.data?.data || weeklyRes?.data);
-      const weeklySeriesPayload = toArray(
+      const topWeekly = filterPlayableSongs(
+        toArray(weeklyRes?.data?.data || weeklyRes?.data)
+      ).slice(0, 5);
+      const seriesPayload = toArray(
         weeklySeriesRes?.data?.data || weeklySeriesRes?.data
       );
+      const regionPayloadRaw = regionRes?.data?.data || regionRes?.data || {};
+      const normalizedRegions = {
+        vietnam: filterPlayableSongs(
+          toArray(regionPayloadRaw.vietnam || regionPayloadRaw.vn)
+        ).slice(0, 5),
+        usuk: filterPlayableSongs(
+          toArray(regionPayloadRaw.usuk || regionPayloadRaw.us_uk)
+        ).slice(0, 5),
+        kpop: filterPlayableSongs(
+          toArray(regionPayloadRaw.kpop || regionPayloadRaw.k_pop)
+        ).slice(0, 5),
+      };
 
-      const normalizedWeekly = filterPlayableSongs(weeklyPayload).slice(0, 5);
-
-      const seriesMap = weeklySeriesPayload.reduce((acc, item) => {
-        const songId = item.song_id || item.songId || item.id;
-        if (!songId) return acc;
-
-         const rawDate = item.date || item.period_start || item.periodStart;
-        const plays = Number(item.play_count ?? item.plays ?? item.playCount ?? 0) || 0;
-
-        const formattedDate = formatWeeklyDate(rawDate);
-        const existing = acc[songId] || [];
-
-        acc[songId] = [
-          ...existing,
-          {
-            date: formattedDate,
-            rawDate,
-            plays,
-          },
-        ];
-
-        return acc;
-      }, {});
-
-      setWeeklySongs(normalizedWeekly);
-      setSongs(normalizedWeekly);
-      setSeriesData(
-        normalizedWeekly.map((song) => {
-          const weeklySeries = (seriesMap[song.id] || []).sort(sortByDate);
-
-          return {
-            song,
-            artist: song.artist_name || song.artist,
-            data: weeklySeries.map((point) => ({
-              date: point.date,
-              plays: point.plays,
-            })),
-          };
-        })
-      );
-    } catch (err) {
-      console.error("Load Zing Chart failed", err);
-      setSongs([]);
-      setSeriesData([]);
-      setRegionCharts({ vietnam: [], usuk: [], kpop: [] });
+      setWeeklySongs(topWeekly);
+      setWeeklySeries(seriesPayload);
+      setRegionCharts(normalizedRegions);
+    } catch (error) {
+      console.error("Load MinhChart failed", error);
       setWeeklySongs([]);
+      setWeeklySeries([]);
+      setRegionCharts({ vietnam: [], usuk: [], kpop: [] });
     } finally {
       setLoading(false);
-      setLoadingSeries(false);
-      setLoadingWeekly(false);
-      setLoadingRegions(false);
+      setRefreshing(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const handleResize = () => setViewportWidth(window.innerWidth);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     loadChart();
-  }, []);
-
-  const highlightedSeries = useMemo(() => seriesData.slice(0, 5), [seriesData]);
-  const weeklyColumns = useMemo(
-    () => [
-      {
-        title: "Việt Nam",
-        items: regionCharts.vietnam,
-        link: "/zing-chart/region/vietnam",
-      },
-      { title: "US-UK", items: regionCharts.usuk, link: "/zing-chart/region/usuk" },
-      { title: "K-Pop", items: regionCharts.kpop, link: "/zing-chart/region/kpop" },
-    ],
-    [regionCharts]
-  );
-
-  const chartLines = useMemo(() => {
-    const datasets = highlightedSeries
-      .filter((item) => Array.isArray(item.data) && item.data.length)
-      .map((item, index) => ({
-        song: item.song,
-        dataPoints: item.data,
-        color: colors[index % colors.length],
-      }));
-
-    if (!datasets.length) return [];
-
-    const scaleMax = Math.max(
-      ...datasets.flatMap((d) => d.dataPoints.map((p) => Number(p.plays) || 0)),
-      1
-    );
-
-    return datasets.map((dataset) => {
-   const TOTAL_POINTS = 7;
-
-const xStep =
-  TOTAL_POINTS > 1
-    ? (chartWidth - CHART_PADDING_X * 2) / (TOTAL_POINTS - 1)
-    : chartWidth;
-
-
-      const points = dataset.dataPoints.map((point, i) => {
-        const value = Number(point.plays) || 0;
-        const x = Math.round(CHART_PADDING_X + i * xStep);
-        const y = Math.round(
-          CHART_HEIGHT - (value / scaleMax) * (CHART_HEIGHT * 0.85)
-        );
-
-        return {
-          x,
-          y: Math.max(12, y),
-          value,
-          date: point.date,
-        };
-      });
-
-      return {
-        ...dataset,
-        points,
-        path: buildPath(
-          points.map((p) => p.value),
-          chartWidth,
-          CHART_HEIGHT,
-          scaleMax,
-          CHART_PADDING_X
-        ),
-        scaleMax,
-      };
-    });
-  }, [chartWidth, highlightedSeries]);
-
-  const activePoints = useMemo(() => {
-    if (hoveredIndex === null) return [];
-
-    return chartLines
-      .map((line, lineIdx) => {
-        const point = line.points?.[hoveredIndex];
-        if (!point) return null;
-
-        return {
-          ...point,
-          lineIdx,
-          line,
-        };
-      })
-      .filter(Boolean);
-  }, [chartLines, hoveredIndex]);
-
-  const crosshairPoint =
-  activePoints.find((point) => point.lineIdx === hoveredLineIndex) ||
-  activePoints[0];
-  const chartWidthPx = chartWidth;
-  const chartHeightPx = chartSize?.height || chartHeight;
-
-  const tooltipStyle = useMemo(() => {
-    if (!crosshairPoint) return null;
-
-    const widthRatio = chartWidthPx / chartWidth;
-    const heightRatio = chartHeightPx / chartHeight;
-    const pointX = hoverPosition?.x ?? crosshairPoint.x * widthRatio;
-    const pointY = hoverPosition?.y ?? crosshairPoint.y * heightRatio;
-    const preferLeft = pointX > chartWidthPx * 0.55;
-    const preferAbove = pointY > chartHeightPx * 0.45;
-    const tooltipWidth = Math.min(260, Math.max(140, chartWidthPx - 24));
-    const estimatedHeight = 40 + activePoints.length * 44;
-    const baseLeft = preferLeft ? pointX - 12 - tooltipWidth : pointX + 12;
-    const baseTop = preferAbove ? pointY - 12 - estimatedHeight : pointY + 12;
-    const maxLeft = Math.max(8, chartWidthPx - tooltipWidth - 8);
-    const maxTop = Math.max(8, chartHeightPx - estimatedHeight - 8);
-    const clampedLeft = Math.min(maxLeft, Math.max(8, baseLeft));
-    const clampedTop = Math.min(maxTop, Math.max(8, baseTop));
-
-    return {
-      left: `${clampedLeft}px`,
-      top: `${clampedTop}px`,
-      width: `${tooltipWidth}px`,
-    };
-  }, [
-    chartHeightPx,
-    chartWidth,
-    chartWidthPx,
-    crosshairPoint,
-    hoverPosition,
-    activePoints.length,
-  ]);
-
-  const handleChartHover = useCallback(
-    (event) => {
-      if (!chartLines.length || !chartLines[0]?.points?.length) return;
-
-      const bounds = event.currentTarget.getBoundingClientRect();
-      setChartSize({ width: bounds.width, height: bounds.height });
-
-      const scaleX = chartWidth / bounds.width;
-      setHoverPosition({
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top,
-      });
-
-      const offsetX = (event.clientX - bounds.left) * scaleX;
-      const usableX = Math.max(0, Math.min(chartWidth, offsetX));
-      const innerX = Math.max(
-        0,
-        Math.min(chartWidth - CHART_PADDING_X * 2, usableX - CHART_PADDING_X)
-      );
-
-      const xStep =
-        chartLines[0].points.length > 1
-          ? (chartWidth - CHART_PADDING_X * 2) / (chartLines[0].points.length - 1)
-          : chartWidth;
-
-      const rawIndex = Math.round(innerX / xStep);
-      const clampedIndex = Math.max(
-        0,
-        Math.min(chartLines[0].points.length - 1, rawIndex)
-      );
-
-      setHoveredIndex((prev) => (prev === clampedIndex ? prev : clampedIndex));
-    },
-    [chartLines, chartWidth]
-  );
+  }, [loadChart]);
 
   useEffect(() => {
-    const updateChartSize = () => {
-      if (!chartRef.current) return;
-      const rect = chartRef.current.getBoundingClientRect();
-      setChartSize({ width: rect.width, height: rect.height });
+    if (typeof window === "undefined") return undefined;
+    if (viewportWidth < 1280) {
+      setSyncedTrendHeight(null);
+      return undefined;
+    }
+
+    const target = weeklyListCardRef.current;
+    if (!target) return undefined;
+
+    const syncHeight = () => {
+      const nextHeight = Math.round(target.getBoundingClientRect().height || 0);
+      if (!nextHeight) return;
+      setSyncedTrendHeight((prev) => (prev === nextHeight ? prev : nextHeight));
     };
 
-    updateChartSize();
-    window.addEventListener("resize", updateChartSize);
-    return () => window.removeEventListener("resize", updateChartSize);
-  }, []);
+    syncHeight();
 
-  const getSongCover = (song) =>
-    song?.cover_url ||
-    song?.thumbnail_m ||
-    song?.thumbnail ||
-    song?.image_url ||
-    song?.image ||
-    "";
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", syncHeight);
+      return () => window.removeEventListener("resize", syncHeight);
+    }
 
-   const handlePlay = async (song, queue = songs) => {
-    const playable = (await fetchPlayableSong(song, getSongById)) || song;
-    if (!playable?.audio_url) return;
+    const observer = new ResizeObserver(() => {
+      syncHeight();
+    });
+    observer.observe(target);
 
-    const normalizedId = playable?.id;
-     const updatedQueue = queue.map((item) =>
-      item?.id === normalizedId ? { ...item, ...playable } : item
+    return () => observer.disconnect();
+  }, [viewportWidth, loading, weeklySongs]);
+
+  const weeklyLineData = useMemo(() => {
+    if (!weeklySongs.length || !weeklySeries.length) {
+      return { categories: [], series: [], minValue: 0, maxValue: 0 };
+    }
+
+    const allowedSongIds = new Set(weeklySongs.map((song) => song.id));
+    const groupedBySong = new Map();
+    const allDates = new Set();
+
+    weeklySeries.forEach((entry) => {
+      const songId = entry?.song_id || entry?.songId || entry?.id;
+      if (!allowedSongIds.has(songId)) return;
+      const rawDate = entry?.date || entry?.period_start || entry?.periodStart;
+      if (!rawDate) return;
+
+      const count =
+        Number(entry?.play_count ?? entry?.plays ?? entry?.playCount ?? 0) || 0;
+      const bySong = groupedBySong.get(songId) || new Map();
+      bySong.set(rawDate, count);
+      groupedBySong.set(songId, bySong);
+      allDates.add(rawDate);
+    });
+
+    const sortedDates = Array.from(allDates).sort(
+      (a, b) => new Date(a).getTime() - new Date(b).getTime()
     );
 
+    const allValues = [];
+    const series = weeklySongs.map((song, index) => {
+      const map = groupedBySong.get(song.id) || new Map();
+      const values = sortedDates.map((rawDate) => map.get(rawDate) || 0);
+      allValues.push(...values);
+      return {
+        name: song.title,
+        song,
+        color: LINE_COLORS[index % LINE_COLORS.length],
+        values,
+      };
+    });
+
+    const minValue = allValues.length ? Math.min(...allValues) : 0;
+    const maxValue = allValues.length ? Math.max(...allValues) : 0;
+
+    return {
+      categories: sortedDates.map((rawDate) => formatWeeklyDate(rawDate)),
+      series,
+      minValue,
+      maxValue,
+    };
+  }, [weeklySeries, weeklySongs]);
+
+  const isMobile = viewportWidth < 640;
+  const isTablet = viewportWidth < 1024;
+  const isVerySmall = viewportWidth < 460;
+  const isDesktopTwoColumn = viewportWidth >= 1280;
+  const showChartLegend = viewportWidth >= 1280;
+  const mobileLabelInterval = isMobile
+    ? Math.max(0, Math.ceil(weeklyLineData.categories.length / 4) - 1)
+    : 0;
+  const chartHeightClass = isMobile
+    ? "h-[238px]"
+    : isTablet
+      ? "h-[300px]"
+      : "h-[420px]";
+  const chartContainerClass =
+    isDesktopTwoColumn && syncedTrendHeight ? "h-full" : chartHeightClass;
+
+  const weeklyLineOption = useMemo(() => {
+    if (!weeklyLineData.categories.length || !weeklyLineData.series.length) {
+      return null;
+    }
+
+    const minBound = Math.max(0, Math.floor(weeklyLineData.minValue - 1));
+    const maxBound = Math.max(
+      minBound + 3,
+      Math.ceil(weeklyLineData.maxValue + 1)
+    );
+
+    return {
+      backgroundColor: "transparent",
+      color: weeklyLineData.series.map((item) => item.color),
+      animationDuration: isMobile ? 300 : 500,
+      grid: {
+        top: showChartLegend ? 58 : 24,
+        right: isMobile ? 10 : 20,
+        bottom: isMobile ? 30 : 40,
+        left: isMobile ? 36 : isTablet ? 46 : 56,
+      },
+      tooltip: {
+        trigger: "item",
+        confine: true,
+        backgroundColor: "transparent",
+        borderWidth: 0,
+        padding: 0,
+        formatter: (params) => {
+          const seriesItem = weeklyLineData.series?.[params.seriesIndex];
+          const song = seriesItem?.song || {};
+          const accentColor = seriesItem?.color || "#ffffff";
+          const cover = getSongCover(song);
+          const dateLabel = weeklyLineData.categories?.[params.dataIndex] || "";
+          const plays = Number(params.data || 0);
+          const artist = song?.artist_name || song?.artist || "Không rõ nghệ sĩ";
+          const title = song?.title || params.seriesName || "Bài hát";
+          const compactTooltip = isMobile;
+          const tooltipMinWidth = compactTooltip ? 168 : 250;
+          const tooltipMaxWidth = compactTooltip ? 198 : 290;
+          const tooltipRadius = compactTooltip ? 12 : 14;
+          const mediaSize = compactTooltip ? 36 : 50;
+          const headerGap = compactTooltip ? 8 : 10;
+          const headerPadding = compactTooltip ? "8px 9px" : "10px 12px";
+          const titleFontSize = compactTooltip ? 12 : 13;
+          const artistFontSize = compactTooltip ? 10 : 11;
+          const rowPadding = compactTooltip ? "7px 9px" : "9px 12px";
+          const rowFontSize = compactTooltip ? 10 : 11;
+
+          return `
+            <div style="
+              min-width:${tooltipMinWidth}px;
+              max-width:${tooltipMaxWidth}px;
+              border:1px solid rgba(255,255,255,.14);
+              border-radius:${tooltipRadius}px;
+              background:#101010;
+              box-shadow:${compactTooltip ? "0 10px 26px rgba(0,0,0,.55)" : "0 18px 45px rgba(0,0,0,.6)"};
+              overflow:hidden;
+            ">
+              <div style="display:flex;gap:${headerGap}px;padding:${headerPadding};border-bottom:1px solid rgba(255,255,255,.08)">
+                <div style="height:${mediaSize}px;width:${mediaSize}px;flex-shrink:0;overflow:hidden;border-radius:${compactTooltip ? 8 : 10}px;background:#1d1d1d">
+                  ${
+                    cover
+                      ? `<img src="${cover}" alt="${escapeHtml(
+                          title
+                        )}" style="height:100%;width:100%;object-fit:cover" />`
+                      : ""
+                  }
+                </div>
+                <div style="min-width:0">
+                  <div style="font-size:${titleFontSize}px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(
+                    title
+                  )}</div>
+                  <div style="margin-top:2px;font-size:${artistFontSize}px;color:rgba(255,255,255,.68);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(
+                    artist
+                  )}</div>
+                </div>
+              </div>
+              <div style="padding:${rowPadding};font-size:${rowFontSize}px;color:rgba(255,255,255,.76);display:flex;justify-content:space-between;gap:12px">
+                <span>Ngày ${escapeHtml(dateLabel)}</span>
+                <span style="font-weight:700;color:${accentColor}">${plays.toLocaleString(
+                  "vi-VN"
+                )} lượt</span>
+              </div>
+            </div>
+          `;
+        },
+      },
+      legend: showChartLegend
+        ? {
+            top: 0,
+            type: "scroll",
+            icon: "circle",
+            itemWidth: 9,
+            itemHeight: 9,
+            textStyle: { color: "rgba(255,255,255,0.72)", fontSize: 11 },
+          }
+        : { show: false },
+      xAxis: {
+        type: "category",
+        boundaryGap: false,
+        data: weeklyLineData.categories,
+        axisLine: { lineStyle: { color: "rgba(255,255,255,0.25)" } },
+        axisLabel: {
+          color: "rgba(255,255,255,0.62)",
+          fontSize: isMobile ? 10 : 11,
+          margin: isMobile ? 10 : 14,
+          interval: mobileLabelInterval,
+        },
+        axisTick: { show: false },
+      },
+      yAxis: {
+        type: "value",
+        min: minBound,
+        max: maxBound,
+        minInterval: 1,
+        splitNumber: isMobile ? 3 : 5,
+        axisLabel: {
+          color: "rgba(255,255,255,0.62)",
+          fontSize: isMobile ? 10 : 11,
+          formatter: (value) => value.toLocaleString("vi-VN"),
+        },
+        splitLine: {
+          lineStyle: { color: "rgba(255,255,255,0.1)", type: "dashed" },
+        },
+      },
+      series: weeklyLineData.series.map((item) => ({
+        name: item.name,
+        type: "line",
+        smooth: 0.3,
+        data: item.values,
+        symbol: "circle",
+        symbolSize: isMobile ? 5 : 8,
+        showSymbol: !isMobile,
+        lineStyle: {
+          width: isMobile ? 2.5 : 3.5,
+          color: item.color,
+          shadowColor: item.color,
+          shadowBlur: isMobile ? 4 : 10,
+        },
+        areaStyle: {
+          opacity: isMobile ? 0.08 : 0.12,
+          color: item.color,
+        },
+        itemStyle: {
+          color: item.color,
+          borderColor: "#ffffff",
+          borderWidth: 1.5,
+        },
+        emphasis: {
+          focus: "series",
+          scale: !isMobile,
+          itemStyle: { borderWidth: 2, borderColor: "#ffffff" },
+        },
+      })),
+    };
+  }, [
+    getSongCover,
+    isMobile,
+    isTablet,
+    mobileLabelInterval,
+    showChartLegend,
+    weeklyLineData,
+  ]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadChart();
+  };
+
+  const handleChartReady = useCallback((instance) => {
+    chartRef.current = instance || null;
+  }, []);
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    const hasSeries = weeklyLineData.series.length > 0;
+    const hasCategories = weeklyLineData.categories.length > 0;
+
+    if (
+      !chart ||
+      typeof chart.dispatchAction !== "function" ||
+      !hasSeries ||
+      !hasCategories ||
+      isChartHovered ||
+      loading
+    ) {
+      return undefined;
+    }
+
+    if (autoHoverTimerRef.current) {
+      clearInterval(autoHoverTimerRef.current);
+      autoHoverTimerRef.current = null;
+    }
+
+    let currentSeries = 0;
+    let currentPoint = 0;
+
+    const safeDispatch = (payload) => {
+      try {
+        chart.dispatchAction(payload);
+      } catch {
+        // Ignore ECharts dispatch errors to avoid crashing page render.
+      }
+    };
+
+    const downplayAll = () => {
+      weeklyLineData.series.forEach((_, seriesIndex) => {
+        safeDispatch({
+          type: "downplay",
+          seriesIndex,
+        });
+      });
+    };
+
+    const runStep = () => {
+      if (!chartRef.current || chartRef.current !== chart) return;
+      downplayAll();
+      safeDispatch({
+        type: "highlight",
+        seriesIndex: currentSeries,
+        dataIndex: currentPoint,
+      });
+      safeDispatch({
+        type: "showTip",
+        seriesIndex: currentSeries,
+        dataIndex: currentPoint,
+      });
+
+      currentPoint += 1;
+      if (currentPoint >= weeklyLineData.categories.length) {
+        currentPoint = 0;
+        currentSeries = (currentSeries + 1) % weeklyLineData.series.length;
+      }
+    };
+
+    runStep();
+    autoHoverTimerRef.current = setInterval(runStep, isMobile ? 1800 : 1400);
+
+    return () => {
+      if (autoHoverTimerRef.current) {
+        clearInterval(autoHoverTimerRef.current);
+        autoHoverTimerRef.current = null;
+      }
+      downplayAll();
+      safeDispatch({ type: "hideTip" });
+    };
+  }, [isChartHovered, isMobile, loading, weeklyLineData]);
+
+  useEffect(
+    () => () => {
+      if (autoHoverTimerRef.current) {
+        clearInterval(autoHoverTimerRef.current);
+        autoHoverTimerRef.current = null;
+      }
+    },
+    []
+  );
+
+  const handlePlay = async (song, queue) => {
+    const playable = (await fetchPlayableSong(song, getSongById)) || song;
+    if (!playable?.audio_url) return;
+    const normalizedId = playable?.id;
+    const updatedQueue = queue.map((item) =>
+      item?.id === normalizedId ? { ...item, ...playable } : item
+    );
     playSong(playable, updatedQueue);
   };
 
-  const renderRankItem = (song, idx) => {
-    const artistId = song?.artist_id ?? song?.artist?.id ?? song?.artistId;
-    const artistLabel = song?.artist_name || song?.artist || "";
-
-    return (
-      <div
-        key={song.id || idx}
-        onClick={() => handlePlay(song, weeklySongs)}
-        className="group grid grid-cols-[32px_minmax(0,3fr)_minmax(0,1fr)] items-center gap-3 rounded-xl px-3 py-2 text-sm transition md:hover:bg-white/5 cursor-pointer"
-      >
-      <div className="flex items-center justify-center text-lg font-semibold text-white/70 tabular-nums leading-none">
-        {song.rank ?? idx + 1}
-      </div>
-
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md border border-white/5 bg-[#242424]">
-          <OptimizedImage
-            src={getSongCover(song)}
-            alt={song.title}
-            className="h-full w-full object-cover"
-          />
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition md:group-hover:opacity-100">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[#0c0914] shadow-lg shadow-black/30">
-              <FaPlay size={12} />
-            </span>
-          </div>
-        </div>
-
-        <div className="min-w-0">
-          <div className="truncate font-medium text-white">{song.title}</div>
-          <div className="truncate text-xs text-white/60">
-            {artistId ? (
-              <Link
-                to={`/artist/${artistId}`}
-                onClick={(e) => e.stopPropagation()}
-                className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-              >
-                {artistLabel}
-              </Link>
-            ) : (
-              artistLabel
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-end gap-1 text-xs text-white/50">
-        <FaRegClock size={12} />
-        <span>{formatDuration(song.duration)}</span>
-      </div>
-      </div>
-    );
-  };
+  const topMetric = useMemo(() => {
+    const max = Math.max(...weeklySongs.map((song) => getSongMetric(song)), 0);
+    return max || 1;
+  }, [getSongMetric, weeklySongs]);
 
   return (
-     <div className="min-h-screen space-y-10 bg-[#121212] px-4 py-6 sm:px-8">
-      <Section
-        title="MChart"
-        subtitle="Dữ liệu tuần này"
-        action={
-          <div className="flex items-center gap-2 text-xs text-white/70">
-             <span className="flex items-center gap-2 rounded-full border border-white/10 bg-[#242424] px-3 py-1">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-              Live
-            </span>
-            <span className="hidden items-center gap-2 text-white/50 sm:flex">
-              <FaRegClock size={12} />
-              Cập nhật mỗi giờ
-            </span>
-            <button
-              onClick={loadChart}
-              className="rounded-full border border-white/10 bg-[#242424] px-3 py-1.5 text-[11px] font-semibold text-white/80 transition md:hover:bg-[#2a2a2a]"
-            >
-              Làm mới dữ liệu
-            </button>
+    <div className="user-page-shell min-h-screen w-full min-w-0 space-y-6 overflow-x-hidden px-4 py-6 pb-28 sm:space-y-8 sm:px-8 sm:pb-8">
+      <div className="user-surface w-full min-w-0 overflow-x-hidden p-4 sm:p-6">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3 sm:mb-5">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.28em] text-white/50">
+              Dữ liệu top nhạc trong tuần
+            </p>
+            <h1 className="mt-1 text-3xl font-black text-white sm:text-4xl">
+              MinhChart
+            </h1>
           </div>
-        }
-      >
-        <div className="flex w-full flex-col gap-6">
-         <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)] transition-all duration-300 md:hover:bg-[#1f1f1f]">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.08),_transparent_40%)]" />
-
-            <div className="relative mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="space-y-1">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">
-                  Bảng xếp hạng
-                </p>
-                <div className="flex items-center gap-2 text-lg font-semibold">
-                  <span className="text-white">Top 5 tuần</span>
-                  <span className="text-emerald-300">#Mchart</span>
-                </div>
-              </div>
-
-               <div className="rounded-full border border-white/10 bg-[#242424] px-3 py-1 text-[11px] text-white/70">
-               Cập nhật bảng xếp hạng tuần
-              </div>
-            </div>
-
-            {!loading && !songs.length && (
-              <div className="relative mb-4 rounded-xl border border-white/5 bg-[#242424] px-4 py-3 text-sm text-white/70">
-                Không có dữ liệu bảng xếp hạng để hiển thị. Hãy thử làm mới.
-              </div>
-            )}
-
-            <div className="flex flex-col gap-6 lg:flex-row">
-              {/* CHART */}
-               <div className="relative flex-1 overflow-hidden rounded-2xl border border-white/5 bg-[#121212] p-2 shadow-lg shadow-black/30 sm:overflow-visible">
-
-                <svg
-                  ref={chartRef}
-                  viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                  preserveAspectRatio="none"
-                  className="h-[220px] w-full sm:h-[300px] lg:h-[340px]"
-                  onMouseMove={handleChartHover}
-                  onMouseLeave={() => {
-                    setHoveredIndex(null);
-                    setHoverPosition(null);
-                    setHoveredLineIndex(null);
-                  }}
-                >
-                  <defs>
-                    {chartLines.map((line, idx) => (
-                      <linearGradient
-                        key={line.song.id || idx}
-                        id={`chart-fill-${idx}`}
-                        x1="0%"
-                        y1="0%"
-                        x2="0%"
-                        y2="100%"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor={line.color.main}
-                          stopOpacity="0.2"
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor={line.color.main}
-                          stopOpacity="0"
-                        />
-                      </linearGradient>
-                    ))}
-                  </defs>
-
-                  <g>
-                    {chartLines.map((line, idx) => {
-                      const isActive = hoveredLineIndex === idx;
-                      const dimmed = hoveredLineIndex !== null && !isActive;
-
-                      return (
-                      <path
-                        key={`shadow-${idx}`}
-                        d={line.path}
-                        fill="none"
-                        stroke={line.color.glow}
-                        strokeWidth={isActive ? 14 : 8}
-                        strokeLinecap="round"
-                        strokeOpacity={dimmed ? 0.2 : 1}
-                        className="cursor-pointer blur-sm transition-all duration-200"
-                        onMouseEnter={() => setHoveredLineIndex(idx)}
-                      />
-                   );
-                    })}
-                    {chartLines.map((line, idx) => {
-                      const isActive = hoveredLineIndex === idx;
-                      const dimmed = hoveredLineIndex !== null && !isActive;
-
-                      return (
-                      <path
-                        key={idx}
-                        d={line.path}
-                        fill="none"
-                        stroke={line.color.main}
-                        strokeWidth={isActive ? 5 : 3}
-                        strokeLinecap="round"
-                        strokeOpacity={dimmed ? 0.35 : 1}
-                        className="cursor-pointer transition-all duration-200"
-                        onMouseEnter={() => setHoveredLineIndex(idx)}
-                      />
-                     );
-                    })}
-                    {chartLines.map((line, idx) =>
-                      line.points.map((point, i) => (
-                        <circle
-                          key={`${idx}-${i}`}
-                          cx={point.x}
-                          cy={point.y}
-                          r={4}
-                          fill="#0b071a"
-                          stroke={line.color.main}
-                          strokeWidth={2}
-                          className="cursor-pointer"
-                          onMouseEnter={() => {
-                            setHoveredIndex(i);
-                            setHoveredLineIndex(idx);
-                          }}
-                        />
-                      ))
-                    )}
-
-                    {crosshairPoint && (
-                      <g>
-                        <line
-                          x1={crosshairPoint.x}
-                          y1={crosshairPoint.y}
-                          x2={crosshairPoint.x}
-                          y2={CHART_HEIGHT + 12}
-                          stroke="white"
-                          strokeOpacity={0.25}
-                          strokeWidth={1}
-                          strokeDasharray="4 4"
-                        />
-                        <circle
-                          cx={crosshairPoint.x}
-                          cy={crosshairPoint.y}
-                          r={7}
-                          fill="#0b071a"
-                          stroke={crosshairPoint.line.color.main}
-                          strokeWidth={3}
-                        />
-                      </g>
-                    )}
-                  </g>
-                </svg>
-
-                {crosshairPoint && activePoints.length > 0 && (
-                  <div
-                     className="pointer-events-none absolute left-0 top-0 z-20 rounded-2xl border border-white/10 bg-[#1f1f1f] px-3 py-2 text-[12px] shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
-                    style={tooltipStyle || undefined}
-                  >
-                    <div className="mb-2 text-[11px] text-white/60">
-                      {crosshairPoint.date}
-                    </div>
-                    <div className="min-w-[220px] space-y-2">
-                      {activePoints
-                        .slice()
-                        .sort((a, b) => b.value - a.value)
-                        .map((point, idx) => (
-                          <div
-                            key={`${point.line.song?.id || idx}-${point.x}`}
-                            className="flex items-center gap-3"
-                          >
-                            <div
-                              className="h-2 w-2 shrink-0 rounded-full"
-                              style={{ backgroundColor: point.line.color.main }}
-                            />
-                            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#242424]">
-                              <OptimizedImage
-                                src={getSongCover(point.line.song)}
-                                alt={point.line.song?.title}
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="max-w-[180px] truncate font-semibold text-white">
-                                {point.line.song?.title}
-                              </div>
-                              <div className="max-w-[180px] truncate text-xs text-white/60">
-                                {point.line.song?.artist_name}
-                              </div>
-                            </div>
-                            <div className="ml-auto text-sm font-semibold text-white/80">
-                              {point.value.toLocaleString("vi-VN")}
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                )}
-
-                {loadingSeries && (
-                 <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/60 text-sm text-white/70">
-                    Đang tải dữ liệu biểu đồ...
-                  </div>
-                )}
-                {!loadingSeries && !chartLines.length && (
-                   <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/70 text-sm text-white/70">
-                    Chưa có dữ liệu biểu đồ để hiển thị.
-                  </div>
-                )}
-              </div>
-
-              {/* WEEKLY LIST */}
-              <div className="relative w-full rounded-2xl border border-white/5 bg-[#181818] p-4 shadow-lg shadow-black/30 lg:w-[360px]">
-                <div className="mb-3 flex items-center justify-between px-1">
-                  <div className="text-sm font-semibold text-white/85">BXH tuần</div>
-                  <div className="text-xs text-white/60">Cập nhật mỗi thứ 2</div>
-                </div>
-                <div className="max-h-[260px] space-y-1 overflow-y-auto pr-1 scrollbar-muted">
-                                 {loadingWeekly && (
-                    <div className="px-2 text-sm text-white/60">Đang tải...</div>
-                  )}
-                  {!loadingWeekly && !weeklySongs.length && (
-                    <div className="px-2 text-sm text-white/60">Chưa có dữ liệu BXH.</div>
-                  )}
-                 {!loadingWeekly &&
-                    weeklySongs.map((song, idx) => renderRankItem(song, idx))}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              {highlightedSeries.map((item, idx) => {
-                const artistId =
-                  item.song?.artist_id ??
-                  item.song?.artist?.id ??
-                  item.song?.artistId;
-                const artistLabel =
-                  item.song?.artist_name || item.song?.artist || "";
-
-                return (
-                  <div
-                    key={item.song?.id || idx}
-                    className="group flex items-center gap-3 rounded-xl border border-white/5 bg-[#242424] px-3 py-2 transition-all duration-300 md:hover:-translate-y-0.5 md:hover:bg-[#2a2a2a] md:hover:shadow-lg md:hover:shadow-black/30"
-                  >
-                    <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/10 bg-[#1f1f1f]">
-                      <OptimizedImage
-                        src={getSongCover(item.song)}
-                        alt={item.song?.title}
-                        className="h-full w-full object-cover"
-                      />
-                      <span
-                        className="absolute inset-0"
-                        style={{
-                          boxShadow: `inset 0 0 0 2px ${
-                            colors[idx % colors.length].main
-                          }`,
-                        }}
-                      />
-                    </div>
-                    <div className="text-sm">
-                      <div className="max-w-[220px] truncate font-semibold text-white">
-                        {item.song?.title}
-                      </div>
-                      <div className="max-w-[220px] truncate text-white/60">
-                        {artistId ? (
-                          <Link
-                            to={`/artist/${artistId}`}
-                            className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-                          >
-                            {artistLabel}
-                          </Link>
-                        ) : (
-                          artistLabel
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="user-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold disabled:opacity-60"
+          >
+            <FiRefreshCw className={refreshing ? "animate-spin" : ""} />
+            {refreshing ? "Đang cập nhật..." : "Làm mới dữ liệu"}
+          </button>
         </div>
-      </Section>
 
-      <Section
-        title="BXH theo khu vực"
-        subtitle="Top 5 ca khúc nổi bật ở từng thị trường"
-        action={<span className="text-xs text-white/50">Cập nhật mỗi thứ 2</span>}
-      >
-        <div className="grid gap-4 lg:grid-cols-3">
-           {weeklyColumns.map((column) => (
-            <div
-              key={column.title}
-               className="group relative overflow-hidden rounded-2xl border border-white/5 bg-[#181818] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition-all duration-300 md:hover:-translate-y-1 md:hover:bg-[#202020]"
-            >
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.08),_transparent_35%)]" />
-
-              <div className="relative mb-4 flex items-center justify-between">
-                <div className="text-lg font-semibold text-white">
-                  {column.title}
-                </div>
-                {column.link && (
-                  <Link
-                    to={column.link}
-                   className="rounded-full border border-white/10 bg-[#242424] px-3 py-2 text-xs text-white/80 transition md:hover:bg-[#2a2a2a]"
-                  >
-                    Xem tất cả
-                  </Link>
-                )}
+        <div className="grid min-w-0 items-stretch gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,1fr)]">
+          <div
+            className="min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-[#121212] p-4 sm:p-5 xl:flex xl:flex-col"
+            style={
+              isDesktopTwoColumn && syncedTrendHeight
+                ? { height: `${syncedTrendHeight}px` }
+                : undefined
+            }
+          >
+            <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-white/50">
+                  Weekly Trend
+                </p>
+                <p className="truncate text-sm font-semibold text-white sm:text-base">
+                  Xu hướng top tuần
+                </p>
               </div>
+              <span
+                className={`inline-flex shrink-0 items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-white/70 ${
+                  isVerySmall ? "hidden" : ""
+                }`}
+              >
+                <FiTrendingUp className="text-sky-300" />
+                {weeklySongs.length} bài hát
+              </span>
+            </div>
 
-              <div className="relative space-y-3">
-                {loadingRegions && (
-                  <div className="text-sm text-white/60">Đang tải dữ liệu khu vực...</div>
-                )}
+            <div className="min-h-0 xl:flex-1">
+              {loading ? (
+                <div className={`${chartContainerClass} rounded-2xl border border-white/10 bg-[#101010] p-4 text-sm text-white/60`}>
+                  Đang tải biểu đồ...
+                </div>
+              ) : weeklyLineOption ? (
+                <div
+                  className={`${chartContainerClass} min-w-0 overflow-hidden`}
+                  onMouseEnter={() => setIsChartHovered(true)}
+                  onMouseLeave={() => setIsChartHovered(false)}
+                >
+                  <ReactECharts
+                    option={weeklyLineOption}
+                    style={{ height: "100%", width: "100%", minWidth: 0 }}
+                    onChartReady={handleChartReady}
+                    notMerge
+                    lazyUpdate
+                  />
+                </div>
+              ) : (
+                <div className={`${chartContainerClass} rounded-2xl border border-white/10 bg-[#101010] p-4 text-sm text-white/60`}>
+                  Chưa có dữ liệu biểu đồ.
+                </div>
+              )}
+            </div>
+          </div>
 
-                {!loadingRegions && !column.items.length && (
-                  <div className="text-sm text-white/60">Chưa có dữ liệu.</div>
-                )}
+          <div
+            ref={weeklyListCardRef}
+            className="min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-[#121212] p-4 sm:p-5"
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold text-white sm:text-lg">
+                Top 5 bài hát tuần
+              </h2>
+              <span className={`text-xs text-white/50 ${isVerySmall ? "hidden" : ""}`}>
+                Cập nhật mới
+              </span>
+            </div>
 
-                {!loadingRegions &&
-                  column.items.map((song, idx) => {
-                    const playable = Boolean(song.audio_url);
-                    const artistId =
-                      song?.artist_id ?? song?.artist?.id ?? song?.artistId;
-                    const artistLabel = song?.artist_name || song?.artist || "";
-                    return (
+            <div className="space-y-2.5">
+              {loading && (
+                <div className="text-sm text-white/60">Đang tải bảng xếp hạng...</div>
+              )}
+              {!loading && !weeklySongs.length && (
+                <div className="text-sm text-white/60">
+                  Chưa có dữ liệu bảng xếp hạng.
+                </div>
+              )}
+
+              {!loading &&
+                weeklySongs.map((song, index) => {
+                  const rank = index + 1;
+                  const artistId =
+                    song?.artist_id ?? song?.artist?.id ?? song?.artistId;
+                  const artistLabel = song?.artist_name || song?.artist || "";
+                  const theme = getRankTheme(rank);
+                  const metric = getSongMetric(song);
+                  const widthPercent = Math.max(
+                    8,
+                    Math.min(100, (metric / topMetric) * 100)
+                  );
+
+                  return (
+                    <div
+                      key={song.id || index}
+                      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-[#151515] px-3 py-2.5 transition-all duration-200 md:hover:-translate-y-0.5 ${theme.glow}`}
+                    >
+                      <div className="absolute bottom-0 left-0 h-[2px] bg-white/15" />
                       <div
-                        key={song.id || idx}
-                        onClick={() => handlePlay(song)}
-                          className={`group/item flex items-center gap-3 rounded-xl px-2 py-2 transition-all duration-300 md:hover:cursor-pointer ${
-                          playable
-                            ? "cursor-pointer md:hover:bg-white/10 md:hover:shadow-lg md:hover:shadow-black/20"
-                               : "cursor-not-allowed"
-                        }`}
-                      >
-                         <div className="flex w-8 shrink-0 items-center justify-center text-2xl font-black text-white/80 tabular-nums leading-none">
-                          {song.rank ?? idx + 1}
-                        </div>
+                        className={`absolute bottom-0 left-0 h-[2px] ${theme.bar}`}
+                        style={{ width: `${widthPercent}%` }}
+                      />
 
-                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/5 bg-[#242424] shadow-md shadow-black/25 transition group-hover/item:ring-2 group-hover/item:ring-emerald-400/60 group-hover/item:ring-offset-2 group-hover/item:ring-offset-[#121212]">
+                      <div className="relative flex items-center gap-3">
+                        <div
+                          className={`w-8 text-center text-lg font-black leading-none ${theme.number}`}
+                        >
+                          {rank}
+                        </div>
+                        <div
+                          className={`h-11 w-11 shrink-0 overflow-hidden rounded-lg border ${theme.cover}`}
+                        >
                           <OptimizedImage
                             src={getSongCover(song)}
                             alt={song.title}
-                            className="h-full w-full object-cover"
+                            className="h-full w-full object-cover transition duration-300 md:group-hover:scale-110"
                           />
-                           <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition duration-300 group-hover/item:opacity-100">
-                           <span className="rounded-full bg-white/90 p-2 text-[#0c0914] shadow-lg shadow-emerald-400/30">
-                              <FaPlay size={12} />
-                            </span>
-                          </div>
                         </div>
-
-                        <div className="min-w-0">
-                          <div className="truncate font-semibold text-white">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-white sm:text-base">
                             {song.title}
-                          </div>
-                          <div className="truncate text-xs text-white/60">
+                          </p>
+                          <p className="truncate text-xs text-white/60">
                             {artistId ? (
                               <Link
                                 to={`/artist/${artistId}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                                className="inline-block transition md:hover:text-white md:hover:underline"
                               >
                                 {artistLabel}
                               </Link>
                             ) : (
                               artistLabel
                             )}
-                          </div>
+                          </p>
                         </div>
 
-                        <div className="ml-auto flex items-center gap-1 text-xs text-white/50">
-                          <FaRegClock size={12} />
-                          <span>{formatDuration(song.duration)}</span>
-                        </div>
+                        <span
+                          className={`hidden rounded-full border px-2 py-0.5 text-[10px] font-semibold sm:inline-flex ${theme.chip}`}
+                        >
+                          {formatCompactNumber(metric)}
+                        </span>
+
+                        <span className="hidden items-center gap-1 text-xs text-white/55 sm:inline-flex">
+                          <FaRegClock size={11} />
+                          {formatDuration(song.duration)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handlePlay(song, weeklySongs)}
+                          className={`flex h-8 w-8 items-center justify-center rounded-full border transition md:hover:scale-105 ${theme.button}`}
+                          aria-label={`Phát ${song.title}`}
+                        >
+                          <FaPlay size={11} />
+                        </button>
                       </div>
-                    );
-                  })}
-              </div>
+                    </div>
+                  );
+                })}
             </div>
-          ))}
+          </div>
         </div>
-      </Section>
+      </div>
+
+      <div className="user-surface w-full min-w-0 overflow-x-hidden p-4 sm:p-6">
+        <div className="mb-4">
+          <p className="text-[11px] uppercase tracking-[0.24em] text-white/50">
+            Top 5 ca khúc nổi bật theo từng thị trường
+          </p>
+          <h2 className="mt-1 text-2xl font-black text-white sm:text-4xl">
+            BXH theo khu vực
+          </h2>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+          {REGION_META.map((region) => {
+            const songs = regionCharts[region.key] || [];
+            const topRegionMetric = Math.max(
+              ...songs.map((song) => getSongMetric(song)),
+              0
+            ) || 1;
+            return (
+              <div
+                key={region.key}
+                className="min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-[#121212] p-4 sm:p-5"
+              >
+                <div className="mb-4 flex min-w-0 items-center justify-between gap-2">
+                  <h3 className="min-w-0 truncate text-xl font-black text-white sm:text-2xl">
+                    {region.title}
+                  </h3>
+                  <Link
+                    to={region.link}
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs text-white/75 transition md:hover:border-sky-300/45 md:hover:text-sky-300 ${
+                      isVerySmall ? "hidden" : ""
+                    }`}
+                  >
+                    Xem tất cả
+                    <FiExternalLink size={12} />
+                  </Link>
+                </div>
+
+                <div className="space-y-2.5">
+                  {loading && (
+                    <div className="text-sm text-white/60">
+                      Đang tải dữ liệu khu vực...
+                    </div>
+                  )}
+                  {!loading && !songs.length && (
+                    <div className="text-sm text-white/60">Chưa có dữ liệu.</div>
+                  )}
+
+                  {!loading &&
+                    songs.map((song, index) => {
+                      const rank = index + 1;
+                      const artistId =
+                        song?.artist_id ?? song?.artist?.id ?? song?.artistId;
+                      const artistLabel = song?.artist_name || song?.artist || "";
+                      const theme = getRankTheme(rank);
+                      const metric = getSongMetric(song);
+                      const widthPercent = Math.max(
+                        8,
+                        Math.min(100, (metric / topRegionMetric) * 100)
+                      );
+
+                      return (
+                        <div
+                          key={song.id || `${region.key}-${index}`}
+                          className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-[#151515] px-3 py-2.5 transition-all duration-200 md:hover:-translate-y-0.5 ${theme.glow}`}
+                        >
+                          <div className="absolute bottom-0 left-0 h-[2px] bg-white/15" />
+                          <div
+                            className={`absolute bottom-0 left-0 h-[2px] ${theme.bar}`}
+                            style={{ width: `${widthPercent}%` }}
+                          />
+                          <div className="relative flex items-center gap-3">
+                            <span
+                              className={`w-8 text-center text-lg font-black leading-none ${theme.number}`}
+                            >
+                              {rank}
+                            </span>
+                            <div
+                              className={`h-11 w-11 shrink-0 overflow-hidden rounded-lg border ${theme.cover}`}
+                            >
+                              <OptimizedImage
+                                src={getSongCover(song)}
+                                alt={song.title}
+                                className="h-full w-full object-cover transition duration-300 md:group-hover:scale-110"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-white sm:text-base">
+                                {song.title}
+                              </p>
+                              <p className="truncate text-xs text-white/60">
+                                {artistId ? (
+                                  <Link
+                                    to={`/artist/${artistId}`}
+                                    className="inline-block transition md:hover:text-white md:hover:underline"
+                                  >
+                                    {artistLabel}
+                                  </Link>
+                                ) : (
+                                  artistLabel
+                                )}
+                              </p>
+                            </div>
+                            <span
+                              className={`hidden rounded-full border px-2 py-0.5 text-[10px] font-semibold sm:inline-flex ${theme.chip}`}
+                            >
+                              {formatCompactNumber(metric)}
+                            </span>
+                            <span className="hidden items-center gap-1 text-xs text-white/55 sm:inline-flex">
+                              <FaRegClock size={11} />
+                              {formatDuration(song.duration)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handlePlay(song, songs)}
+                              className={`flex h-8 w-8 items-center justify-center rounded-full border transition md:hover:scale-105 ${theme.button}`}
+                              aria-label={`Phát ${song.title}`}
+                            >
+                              <FaPlay size={11} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

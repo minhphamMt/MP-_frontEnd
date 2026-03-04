@@ -53,7 +53,7 @@ export default function LikedAlbums() {
   }, [loadLikedAlbumsList]);
 
   return (
-     <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
+     <div className="user-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -70,7 +70,7 @@ export default function LikedAlbums() {
         <button
           type="button"
           onClick={() => navigate("/playlists")}
-          className="rounded-full border border-white/10 bg-[#181818] px-4 py-2 text-sm font-semibold text-white/80 transition md:hover:bg-[#242424]"
+          className="user-btn-secondary px-4 py-2 text-sm font-semibold"
         >
           ← Quay lại thư viện
         </button>
@@ -78,7 +78,7 @@ export default function LikedAlbums() {
 
       <section className="space-y-4">
         {loading ? (
-          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
+          <div className="user-surface p-6 text-sm text-white/60">
             Đang tải album yêu thích...
           </div>
         ) : likedAlbums.length ? (
@@ -92,7 +92,7 @@ export default function LikedAlbums() {
             ))}
           </div>
         ) : (
-          <div className="rounded-lg bg-[#181818] p-6 text-sm text-white/60">
+          <div className="user-surface p-6 text-sm text-white/60">
             Chưa có album nào được thích.
           </div>
         )}

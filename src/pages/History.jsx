@@ -188,8 +188,8 @@ export default function History() {
      ======================= */
   if (loading) {
     return (
-        <div className="min-h-screen bg-[#121212] px-4 py-6 sm:px-8">
-        <div className="rounded-3xl border border-[#242424] bg-[#181818] p-6 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+        <div className="user-page-shell min-h-screen px-4 py-6 sm:px-8">
+        <div className="user-surface p-6 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           Đang tải lịch sử...
         </div>
       </div>
@@ -198,8 +198,8 @@ export default function History() {
 
   if (!history.length) {
     return (
-      <div className="min-h-screen bg-[#121212] px-4 py-6 sm:px-8">
-        <div className="rounded-3xl border border-[#242424] bg-[#181818] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+      <div className="user-page-shell min-h-screen px-4 py-6 sm:px-8">
+        <div className="user-surface p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
             Thói quen
           </p>
@@ -218,8 +218,8 @@ export default function History() {
      UI
      ======================= */
   return (
-    <div className="min-h-screen space-y-6 bg-[#121212] px-4 py-6 sm:px-8">
-      <div className="rounded-3xl border border-[#242424] bg-[#181818] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
+    <div className="user-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
+      <div className="user-surface p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -234,14 +234,14 @@ export default function History() {
           </div>
           <button
             onClick={loadHistory}
-            className="rounded-full border border-white/10 bg-[#1f1f1f] px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:bg-[#2a2a2a]"
+            className="user-btn-secondary px-4 py-2 text-xs font-semibold"
           >
             Làm mới
           </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-3xl border border-[#242424] bg-[#181818] shadow-[0_30px_90px_rgba(0,0,0,0.55)] scrollbar-muted">
+      <div className="user-surface overflow-x-auto shadow-[0_30px_90px_rgba(0,0,0,0.55)] scrollbar-muted">
         <div className="min-w-0 xl:min-w-[720px]">
           <div className="hidden grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.35em] text-white/50 xl:grid">
             <span />
@@ -262,16 +262,14 @@ export default function History() {
                 <div
                   key={`${item.history_id || item.id}-${item.listened_at}`}
                   className={`group grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 text-sm transition xl:grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] ${
-                    isPlayingCurrent
-                      ? "bg-gradient-to-r from-cyan-400/10 to-transparent"
-                      : "md:hover:bg-white/5"
+                    isPlayingCurrent ? "bg-emerald-400/10" : "md:hover:bg-white/5"
                   }`}
                 >
                    <div className="hidden justify-center xl:flex">
                     <FiMusic
                       className={`transition ${
                         isPlayingCurrent
-                          ? "text-cyan-400"
+                          ? "text-emerald-400"
                           : "text-white/40 md:group-hover:text-white"
                       }`}
                     />
@@ -299,7 +297,7 @@ export default function History() {
                     <div className="min-w-0">
                       <div
                         className={`truncate font-medium ${
-                          isPlayingCurrent ? "text-cyan-300" : "text-white"
+                          isPlayingCurrent ? "text-emerald-300" : "text-white"
                         }`}
                       >
                         {item.title}
@@ -389,7 +387,7 @@ export default function History() {
           <button
             onClick={() => loadHistory(currentPage + 1, true)}
             disabled={loadingMore}
-            className="rounded-full border border-white/10 bg-white/5 px-5 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10 disabled:opacity-50"
+            className="user-btn-secondary px-5 py-2 text-xs font-semibold disabled:opacity-50"
           >
             {loadingMore ? "Đang tải thêm..." : "Tải thêm"}
           </button>

@@ -47,7 +47,7 @@ export default function PlayerBar() {
 
   if (!currentSong) {
     return (
-       <div className="border-t border-white/10 bg-[#181818] px-4 py-3">
+       <div className="border-t border-white/10 bg-[#000000] px-4 py-3">
         <span className="text-sm text-white/60">Chưa phát bài nào</span>
       </div>
     );
@@ -75,7 +75,7 @@ export default function PlayerBar() {
 
   return (
     <>
-      <div className="relative border-t border-white/10 bg-[#181818] shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+      <div className="relative border-t border-white/10 bg-[#000000] shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
 
         {/* ================= MOBILE MINI PLAYER ================= */}
         <div

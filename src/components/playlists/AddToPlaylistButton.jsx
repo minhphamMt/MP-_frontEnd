@@ -192,7 +192,7 @@ export default function AddToPlaylistButton({
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-xl rounded-3xl border border-white/10 bg-gradient-to-b from-[#1c1c1c] via-[#151515] to-[#101010] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.7)] backdrop-blur sm:max-w-2xl sm:p-8"
+              className="w-full max-w-xl rounded-3xl border border-white/10 bg-[#151515] p-6 text-white shadow-[0_30px_90px_rgba(0,0,0,0.7)] backdrop-blur sm:max-w-2xl sm:p-8"
             >
               <div className="mb-5 flex items-start justify-between gap-3 sm:mb-6">
                 <div className="space-y-1">
@@ -265,7 +265,7 @@ export default function AddToPlaylistButton({
                   <button
                     onClick={handleCreatePlaylist}
                     disabled={!newPlaylistName.trim() || saving}
-                    className="rounded-lg bg-gradient-to-r from-emerald-400 to-emerald-500 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/30 transition md:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-lg border border-emerald-300/50 bg-emerald-400 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/30 transition md:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Tạo playlist
                   </button>

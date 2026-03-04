@@ -345,13 +345,13 @@ const handleResultNavigate = async (item) => {
     try {
       await saveSearchHistory(nameToSave, user.id);
 
-      // ✅ UPDATE HISTORY NGAY (optimistic)
+      // Cập nhật lịch sử ngay trên UI (optimistic)
       setHistory((prev) => {
         const filtered = prev.filter(h => h.keyword !== nameToSave);
         return [
           { keyword: nameToSave, searched_at: new Date().toISOString() },
           ...filtered,
-        ].slice(0, 6); // giới hạn 6 item
+        ].slice(0, 6); // Giới hạn 6 mục
       });
     } catch (err) {
       console.error("Lưu lịch sử tìm kiếm thất bại", err);
@@ -456,7 +456,7 @@ const handleResultNavigate = async (item) => {
   };
 
   return (
-    <div className="relative z-500 w-full max-w-lg" ref={containerRef}>
+    <div className="relative z-500 w-full max-w-2xl" ref={containerRef}>
       <form onSubmit={handleSubmit} className="relative" key={defaultKeyword}>
         <FiSearch
           className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/70"
@@ -477,7 +477,7 @@ const handleResultNavigate = async (item) => {
               ? "Tìm kiếm nghệ sĩ, bài hát, album..."
               : "Tìm kiếm bài hát, nghệ sĩ, lời bài hát..."
           }
-          className="w-full rounded-full border border-[#2a2a2a] bg-[#1f1f1f] py-2.5 pl-12 pr-4 text-base text-white placeholder:text-white/50 shadow-[0_14px_40px_rgba(0,0,0,0.35)] outline-none transition focus:border-[#1db954] focus:bg-[#232323] sm:text-sm"
+          className="user-input rounded-full border-white/10 bg-[#1f1f1f] py-2.5 pl-12 pr-4 text-base text-white shadow-[0_10px_22px_rgba(0,0,0,0.34)] sm:text-sm"
         />
       </form>
 
@@ -489,8 +489,8 @@ const handleResultNavigate = async (item) => {
         className="max-h-[70vh] overflow-y-auto px-0 sm:max-h-none"
         ref={dropdownRef}
       >
-      <div className="rounded-2xl border border-[#2a2a2a] bg-[#181818] p-2 shadow-[0_30px_90px_rgba(0,0,0,0.65)] sm:p-4">
-        <div className="rounded-xl border border-white/5 bg-[#202020] p-2 shadow-inner shadow-black/20 sm:p-4">
+      <div className="user-surface rounded-2xl p-2 shadow-[0_24px_70px_rgba(0,0,0,0.65)] sm:p-4">
+        <div className="rounded-xl border border-white/10 bg-[#121212] p-2 shadow-inner shadow-black/20 sm:p-4">
           <div className="flex items-center justify-between gap-2 text-sm text-white/70">
             <div className="font-semibold text-white">Tìm kiếm nhanh</div>
             {keyword.trim() && (
@@ -506,19 +506,19 @@ const handleResultNavigate = async (item) => {
           </div>
 
           {keyword.trim() ? (
-            <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-[#1a1a1a] p-2 sm:p-3">
+            <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-[#181818] p-2 sm:p-3">
               <div className="hidden items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/60 sm:flex">
                 <FiHeadphones className="text-white/70" />
                 <span>Gợi ý kết quả</span>
                 {loading && (
-                  <span className="text-[11px] text-[#1db954]/80">
+                  <span className="text-[11px] text-[#1db954]">
                     Đang tìm...
                   </span>
                 )}
               </div>
 
               {!loading && !results.length && (
-                <div className="rounded-lg border border-white/10 bg-[#232323] px-3 py-2 text-sm text-white/70">
+                <div className="rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white/70">
                   Không tìm thấy gợi ý phù hợp.
                 </div>
               )}
@@ -527,14 +527,14 @@ const handleResultNavigate = async (item) => {
                 {results.map((item) => (
                   <div
                     key={`${item.type}-${item.id}`}
-                    className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-white transition md:hover:bg-[#2a2a2a] sm:gap-3 sm:px-3"
+                    className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-white transition md:hover:bg-white/[0.08] sm:gap-3 sm:px-3"
                   >
                     <button
                       type="button"
                       onClick={() => handleResultNavigate(item)}
                       className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     >
-                      <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/10 bg-[#2a2a2a] sm:h-12 sm:w-12">
+                      <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/10 bg-white/10 sm:h-12 sm:w-12">
                         {item.cover ? (
                           <OptimizedImage
                             src={resolveAssetUrl(item.cover)}
@@ -559,14 +559,14 @@ const handleResultNavigate = async (item) => {
                     </button>
 
                     <div className="flex items-center gap-1 text-[11px] uppercase tracking-[0.15em] text-white/60 sm:gap-2">
-                      <span className="hidden rounded-full bg-[#2a2a2a] px-2 py-1 text-white/70 sm:inline-flex">
+                      <span className="hidden rounded-full bg-white/10 px-2 py-1 text-white/70 sm:inline-flex">
                         {item.type}
                       </span>
                       {item.type === "song" && !isAdmin && (
                         <button
                           type="button"
                           onClick={() => handlePlaySong(item)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full border border-[#1db954]/60 bg-[#1db954]/20 text-[#1db954] transition md:hover:border-[#1ed760] md:hover:bg-[#1db954]/30 sm:h-9 sm:w-9"
+                          className="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-300/60 bg-emerald-400/20 text-emerald-300 transition md:hover:border-emerald-300 md:hover:bg-emerald-400/30 sm:h-9 sm:w-9"
                         >
                           <FiMusic />
                         </button>
@@ -577,19 +577,19 @@ const handleResultNavigate = async (item) => {
               </div>
             </div>
           ) : (
-            <div className="mt-3 space-y-3 rounded-xl border border-white/10 bg-[#1a1a1a] p-2 sm:p-3">
+            <div className="mt-3 space-y-3 rounded-xl border border-white/10 bg-[#181818] p-2 sm:p-3">
               <div className="hidden items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/60 sm:flex">
                 <FiClock />
                 <span>Lịch sử tìm kiếm</span>
                 {loading && (
-                  <span className="text-[11px] text-[#1db954]/80">
+                  <span className="text-[11px] text-[#1db954]">
                     Đang tải...
                   </span>
                 )}
               </div>
 
               {!history.length && (
-                <div className="rounded-lg border border-white/10 bg-[#232323] px-3 py-2 text-sm text-white/70">
+                <div className="rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white/70">
                   Bạn chưa có lịch sử tìm kiếm.
                 </div>
               )}
@@ -604,9 +604,9 @@ const handleResultNavigate = async (item) => {
                       type="button"
                       key={item.id || item.keyword}
                        onClick={() => handleSearch(item.keyword || "")}
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white transition md:hover:bg-[#2a2a2a]"
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white transition md:hover:bg-white/[0.08]"
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2a2a2a] text-white/70">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white/70">
                         <FiClock />
                       </div>
                       <div className="flex-1 truncate">{item.keyword}</div>
