@@ -408,7 +408,7 @@ export default function Login({ initialMode = "login" }) {
   );
 
   return (
-    <div className="flex min-h-dvh items-start justify-center overflow-y-auto bg-[#0b0b12] px-4 py-4 text-white sm:py-6 lg:items-center">
+    <div className="auth-scroll-shell flex items-start justify-center bg-[#0b0b12] px-4 py-4 text-white sm:py-6 lg:items-center">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-center">
         <motion.div
           className="relative w-full overflow-visible rounded-[28px] border border-white/10 bg-white/[0.03] shadow-[0_30px_100px_rgba(0,0,0,0.6)] lg:max-h-[calc(100dvh-2rem)] lg:overflow-hidden"

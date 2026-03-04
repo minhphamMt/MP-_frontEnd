@@ -1,4 +1,4 @@
-import { FiChevronLeft, FiChevronRight, FiMenu } from "react-icons/fi";
+﻿import { FiChevronLeft, FiChevronRight, FiMenu } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import SearchBox from "./SearchBox";
 import UserMenu from "./UserMenu";
@@ -14,7 +14,7 @@ export default function Header({ onMenuClick }) {
       <div className="relative flex items-center gap-2">
         <button
           onClick={onMenuClick}
-          className="group flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a] text-white/85 transition-all duration-200 md:hidden md:hover:border-white/20 md:hover:bg-[#242424] md:hover:text-white active:scale-95"
+          className="group flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a] text-white/85 transition-all duration-200 lg:hidden md:hover:border-white/20 md:hover:bg-[#242424] md:hover:text-white active:scale-95"
           title="Mở menu"
           aria-label="Mở menu"
         >
@@ -49,3 +49,4 @@ export default function Header({ onMenuClick }) {
     </header>
   );
 }
+

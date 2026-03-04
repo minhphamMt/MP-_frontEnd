@@ -1,4 +1,4 @@
-import { MdAlbum, MdExplore, MdHistory, MdLibraryMusic, MdPlaylistPlay } from "react-icons/md";
+﻿import { MdAlbum, MdExplore, MdHistory, MdLibraryMusic, MdPlaylistPlay } from "react-icons/md";
 import { FaChartLine } from "react-icons/fa";
 import { BsHeartFill, BsMusicNoteList } from "react-icons/bs";
 import { FiX } from "react-icons/fi";
@@ -17,16 +17,16 @@ export default function Sidebar({ isOpen, onClose }) {
   return (
     <>
       <div
-        className={`fixed inset-0 z-30 bg-black/70 transition-opacity duration-300 ease-out lg:hidden ${
-          isOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        className={`sidebar-overlay-motion fixed inset-0 z-30 bg-black/65 backdrop-blur-[2px] transition-[opacity,backdrop-filter] duration-300 ease-out lg:hidden ${
+          isOpen ? "opacity-100" : "pointer-events-none opacity-0 backdrop-blur-0"
         }`}
         onClick={onClose}
         aria-hidden
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex h-full w-[276px] flex-col overflow-hidden border-r border-white/10 bg-[#040404] text-white shadow-[0_26px_80px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-out lg:static lg:translate-x-0 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`sidebar-motion fixed inset-y-0 left-0 z-40 flex h-full w-[276px] sm:w-[304px] flex-col overflow-hidden border-r border-white/10 bg-[#040404] text-white shadow-[0_26px_80px_rgba(0,0,0,0.6)] will-change-transform transition-transform duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:static lg:translate-x-0 lg:duration-0 ${
+          isOpen ? "translate-x-0" : "-translate-x-[108%]"
         }`}
       >
         <div className="relative flex h-[72px] items-center justify-between border-b border-white/10 px-5">
@@ -75,3 +75,4 @@ export default function Sidebar({ isOpen, onClose }) {
     </>
   );
 }
+
