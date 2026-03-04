@@ -251,6 +251,137 @@ body {
   box-shadow: 0 18px 50px rgba(244, 63, 94, 0.15);
 }
 
+.artist-main-surface {
+  position: relative;
+  isolation: isolate;
+}
+
+.artist-main-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.artist-content {
+  font-family: "Segoe UI", "Noto Sans", sans-serif;
+}
+
+.artist-content .artist-page-shell {
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(17, 21, 24, 0.92);
+  backdrop-filter: blur(6px);
+}
+
+.artist-content .artist-glass {
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.artist-content .artist-soft-card {
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.artist-content .artist-kpi {
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.artist-content .artist-label {
+  font-size: 11px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.artist-content .artist-input,
+.artist-content .artist-select,
+.artist-content .artist-textarea {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(0, 0, 0, 0.34);
+  color: rgba(255, 255, 255, 0.86);
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.artist-content .artist-input,
+.artist-content .artist-select {
+  min-height: 44px;
+  padding: 0.62rem 0.95rem;
+}
+
+.artist-content .artist-textarea {
+  min-height: 120px;
+  padding: 0.85rem 0.95rem;
+  resize: vertical;
+}
+
+.artist-content .artist-input::placeholder,
+.artist-content .artist-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.43);
+}
+
+.artist-content .artist-input:focus,
+.artist-content .artist-select:focus,
+.artist-content .artist-textarea:focus {
+  border-color: rgba(16, 185, 129, 0.65);
+  background: rgba(0, 0, 0, 0.48);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.14);
+}
+
+.artist-content .artist-btn-primary {
+  border-radius: 9999px;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  background: #2fc28c;
+  color: #02140f;
+  font-weight: 700;
+  box-shadow: 0 16px 35px rgba(16, 185, 129, 0.32);
+}
+
+.artist-content .artist-btn-secondary {
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.artist-content .artist-btn-danger {
+  border-radius: 9999px;
+  border: 1px solid rgba(244, 63, 94, 0.52);
+  background: rgba(244, 63, 94, 0.16);
+  color: rgb(255, 228, 234);
+}
+
+.artist-content .artist-btn-primary,
+.artist-content .artist-btn-secondary,
+.artist-content .artist-btn-danger {
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .artist-content .artist-btn-primary:hover,
+  .artist-content .artist-btn-secondary:hover,
+  .artist-content .artist-btn-danger:hover {
+    transform: translateY(-1px);
+  }
+
+  .artist-content .artist-btn-secondary:hover {
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.13);
+  }
+
+  .artist-content .artist-btn-danger:hover {
+    border-color: rgba(251, 113, 133, 0.72);
+    background: rgba(244, 63, 94, 0.22);
+  }
+}
+
 /* Prevent iOS Safari from auto-zooming text inputs on focus */
 @supports (-webkit-touch-callout: none) {
   @media (max-width: 1024px) {

@@ -3,12 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FiArrowLeft, FiMusic, FiSave } from "react-icons/fi";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { getAlbums } from "../../api/album.api";
-import {
-  createSong,
-  getArtistSongs,
-  getSongById,
-  updateSong,
-} from "../../api/song.api";
+import { createSong, getArtistSongs, getSongById, updateSong } from "../../api/song.api";
 import { formatDuration } from "../../utils/song";
 import { getMyArtistProfile } from "../../api/artist.api";
 import { storage } from "../../utils/firebase";
@@ -44,9 +39,7 @@ export default function ArtistSongForm() {
       const audio = document.createElement("audio");
       audio.preload = "metadata";
       audio.onloadedmetadata = () => {
-        const value = Number.isFinite(audio.duration)
-          ? Math.round(audio.duration)
-          : null;
+        const value = Number.isFinite(audio.duration) ? Math.round(audio.duration) : null;
         URL.revokeObjectURL(fileUrl);
         resolve(value);
       };
@@ -60,9 +53,7 @@ export default function ArtistSongForm() {
 
   const uploadFileToFirebase = useCallback(async (file, folder) => {
     if (!file) return null;
-    const safeName = file.name
-      .replace(/\s+/g, "-")
-      .replace(/[^a-zA-Z0-9.-]/g, "");
+    const safeName = file.name.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9.-]/g, "");
     const fileName = `${Date.now()}-${crypto.randomUUID()}-${safeName}`;
     const fileRef = ref(storage, `${folder}/${fileName}`);
     await uploadBytes(fileRef, file, { contentType: file.type });
@@ -123,12 +114,7 @@ export default function ArtistSongForm() {
         album_id: song?.album_id ?? song?.album?.id ?? "",
         duration: song?.duration ?? null,
         cover_url: song?.cover_url ?? song?.cover ?? "",
-        audio_path:
-          song?.audio_path ||
-          song?.audio_url ||
-          song?.audio ||
-          song?.source ||
-          "",
+        audio_path: song?.audio_path || song?.audio_url || song?.audio || song?.source || "",
       });
     } catch (err) {
       console.error("Load song failed", err);
@@ -158,7 +144,7 @@ export default function ArtistSongForm() {
       setFormValues((prev) => ({ ...prev, duration }));
     } catch (err) {
       console.error("Extract duration failed", err);
-      setError("Không thể đọc thời lượng từ file audio. Hãy thử file mp3 khác.");
+      setError("Không thể đọc thời lượng từ file audio. Hãy thử file MP3 khác.");
     }
   };
 
@@ -199,7 +185,7 @@ export default function ArtistSongForm() {
       navigate("/artist/songs");
     } catch (err) {
       console.error("Save song failed", err);
-      setError("Lưu bài hát thất bại. Hãy thử lại nhé.");
+      setError("Lưu bài hát thất bại. Hãy thử lại.");
     } finally {
       setUploading(false);
       setLoading(false);
@@ -219,43 +205,38 @@ export default function ArtistSongForm() {
   }, [coverFile, coverPreview]);
 
   return (
-    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+    <div className="space-y-6">
+      <section className="artist-page-shell artist-glass p-6 sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-              Nghệ sĩ
-            </p>
-            <h1 className="mt-2 text-3xl font-extrabold text-white">
+            <p className="artist-label">Song Editor</p>
+            <h1 className="mt-2 text-3xl font-black text-white">
               {isEdit ? "Chỉnh sửa bài hát" : "Tạo bài hát mới"}
             </h1>
-            <p className="mt-2 text-sm text-white/60">
+            <p className="mt-2 text-sm text-white/65">
               {isEdit
-                ? "Cập nhật metadata cho bài hát của bạn."
-                : "Thêm bài hát mới vào kho nhạc nghệ sĩ."}
+                ? "Cập nhật metadata và file audio của bài hát."
+                : "Thêm bản nhạc mới vào kho phát hành nghệ sĩ."}
             </p>
           </div>
           <button
             type="button"
             onClick={() => navigate("/artist/songs")}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition md:hover:border-white/30 md:hover:bg-white/10"
+            className="artist-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm"
           >
             <FiArrowLeft />
             Quay lại danh sách
           </button>
         </div>
-      </div>
+      </section>
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]"
-      >
+      <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-6">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-            <h2 className="text-lg font-semibold text-white">Thông tin cơ bản</h2>
-            <div className="mt-6 space-y-4">
+          <section className="artist-page-shell artist-glass p-6">
+            <h2 className="text-lg font-semibold text-white">Thông tin bài hát</h2>
+            <div className="mt-5 space-y-4">
               <div>
-                <label className="text-sm text-white/70">
+                <label className="text-sm text-white/75">
                   Tên bài hát <span className="text-rose-300">*</span>
                 </label>
                 <input
@@ -263,18 +244,18 @@ export default function ArtistSongForm() {
                   value={formValues.title}
                   onChange={handleChange}
                   placeholder="Ví dụ: Hành trình mới"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-input mt-2"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-sm text-white/70">Album</label>
+                <label className="text-sm text-white/75">Album</label>
                 <select
                   name="album_id"
                   value={formValues.album_id}
                   onChange={handleChange}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-select mt-2"
                 >
                   <option value="">Chọn album (tùy chọn)</option>
                   {albums.map((album) => (
@@ -286,70 +267,64 @@ export default function ArtistSongForm() {
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-                <p className="text-sm text-white/70">Thời lượng bài hát (tự động)</p>
+                <p className="text-sm text-white/70">Thời lượng bài hát</p>
                 <p className="mt-1 text-sm font-semibold text-white">
                   {formValues.duration
                     ? formatDuration(formValues.duration)
-                    : "Sẽ tự tính sau khi upload file mp3/audio"}
+                    : "Sẽ tự động tính sau khi chọn file audio"}
                 </p>
                 <p className="mt-1 text-xs text-white/50">
-                  File nhạc sẽ upload thẳng Firebase, backend chỉ nhận URL + metadata.
+                  File âm thanh được upload lên Firebase Storage, backend lưu URL và metadata.
                 </p>
               </div>
 
               <div>
-                <label className="text-sm text-white/70">Ảnh bìa</label>
+                <label className="text-sm text-white/75">Ảnh bìa (URL)</label>
                 <input
                   name="cover_url"
                   value={formValues.cover_url}
                   onChange={handleChange}
                   placeholder="https://..."
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-input mt-2"
                 />
                 <div className="mt-3">
-                  <label className="text-xs text-white/50">
-                    Hoặc tải ảnh bìa lên Firebase (PNG/JPG)
-                  </label>
+                  <label className="text-xs text-white/55">Hoặc tải ảnh bìa từ máy (PNG/JPG)</label>
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(event) =>
-                      setCoverFile(event.target.files?.[0] || null)
-                    }
-                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 md:hover:border-white/20"
+                    onChange={(event) => setCoverFile(event.target.files?.[0] || null)}
+                    className="mt-2 block w-full rounded-2xl border border-dashed border-white/15 bg-black/25 px-4 py-3 text-xs text-white/75 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-sm text-white/70">Audio URL</label>
+                <label className="text-sm text-white/75">Audio URL</label>
                 <input
                   name="audio_path"
                   value={formValues.audio_path}
                   onChange={handleChange}
-                  placeholder="https://firebasestorage.googleapis.com/..."
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  placeholder="https://storage.googleapis.com/..."
+                  className="artist-input mt-2"
                 />
                 <div className="mt-3">
-                  <label className="text-xs text-white/50">
-                    Tải file nhạc lên Firebase Storage (MP3/WAV)
-                  </label>
+                  <label className="text-xs text-white/55">Hoặc tải file nhạc lên Firebase (MP3/WAV)</label>
                   <input
                     type="file"
                     accept="audio/*"
                     onChange={handleAudioFileChange}
-                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 md:hover:border-white/20"
+                    className="mt-2 block w-full rounded-2xl border border-dashed border-white/15 bg-black/25 px-4 py-3 text-xs text-white/75 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white"
                   />
                 </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+          <section className="artist-page-shell artist-glass p-6">
             <h2 className="text-lg font-semibold text-white">Xem trước</h2>
-            <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#181818]">
+            <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-[#111]">
               {coverPreview ? (
                 <OptimizedImage
                   src={coverPreview}
@@ -365,31 +340,30 @@ export default function ArtistSongForm() {
                 <h3 className="text-lg font-semibold text-white">
                   {formValues.title || "Tên bài hát"}
                 </h3>
-                <p className="text-sm text-white/60">
+                <p className="text-sm text-white/65">
                   {formValues.duration
                     ? `Thời lượng: ${formatDuration(formValues.duration)}`
                     : "Chưa có thời lượng"}
                 </p>
                 {(formValues.audio_path || audioFile) && (
-                  <p className="text-xs text-white/50">
-                    {audioFile ? "Đã chọn file audio mới" : "Đã có file audio"}
+                  <p className="text-xs text-white/55">
+                    {audioFile ? "Đã chọn file audio mới" : "Đã có audio URL"}
                   </p>
                 )}
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+          <section className="artist-page-shell artist-glass p-6">
             {error && (
-              <div className="mb-4 rounded-2xl border border-rose-400/40 bg-rose-500/10 p-3 text-sm text-rose-200">
+              <div className="mb-4 rounded-2xl border border-rose-400/40 bg-rose-500/10 p-3 text-sm text-rose-100">
                 {error}
               </div>
             )}
-
             <button
               type="submit"
               disabled={loading || uploading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1db954] px-5 py-3 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition md:hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-70"
+              className="artist-btn-primary inline-flex w-full items-center justify-center gap-2 px-5 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"
             >
               <FiSave />
               {loading || uploading
@@ -398,7 +372,7 @@ export default function ArtistSongForm() {
                   ? "Lưu thay đổi"
                   : "Tạo bài hát"}
             </button>
-          </div>
+          </section>
         </div>
       </form>
     </div>

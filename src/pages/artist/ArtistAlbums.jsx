@@ -5,6 +5,7 @@ import useAuthStore from "../../store/auth.store";
 import { deleteAlbum, getAlbums } from "../../api/album.api";
 import ArtistAlbumTile from "../../components/artist/ArtistAlbumTile";
 import { getMyArtistProfile } from "../../api/artist.api";
+import { confirmAdminAction } from "../../utils/adminDialog";
 
 export default function ArtistAlbums() {
   const navigate = useNavigate();
@@ -64,16 +65,25 @@ export default function ArtistAlbums() {
   const filteredAlbums = useMemo(() => {
     if (!keyword) return albums;
     const lowerKeyword = keyword.toLowerCase();
-    return albums.filter((album) =>
-      (album?.title || "").toLowerCase().includes(lowerKeyword)
-    );
+    return albums.filter((album) => (album?.title || "").toLowerCase().includes(lowerKeyword));
   }, [albums, keyword]);
+
+  const stats = useMemo(() => {
+    const total = albums.length;
+    const approved = albums.filter((item) => item?.status === "approved").length;
+    const pending = albums.filter((item) => item?.status === "pending").length;
+    return { total, approved, pending };
+  }, [albums]);
 
   const handleDelete = async (albumId) => {
     if (!albumId) return;
-    const confirmed = window.confirm(
-      "Bạn chắc chắn muốn xoá mềm album này? Album sẽ nằm trong thùng rác."
-    );
+    const confirmed = await confirmAdminAction({
+      title: "Xóa mềm album",
+      message: "Album sẽ được chuyển vào thùng rác. Bạn có muốn tiếp tục không?",
+      confirmText: "Xóa mềm",
+      cancelText: "Hủy",
+      tone: "danger",
+    });
     if (!confirmed) return;
 
     try {
@@ -85,59 +95,61 @@ export default function ArtistAlbums() {
   };
 
   return (
-    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+    <div className="space-y-6">
+      <section className="artist-page-shell artist-glass p-6 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-              Nghệ sĩ
-            </p>
-            <h1 className="mt-2 text-3xl font-extrabold text-white">
-              Quản lý album
-            </h1>
-            <p className="mt-2 text-sm text-white/60">
-              Cập nhật thông tin album, theo dõi phát hành và thêm nội dung mới.
+            <p className="artist-label">Albums</p>
+            <h1 className="mt-2 text-3xl font-black text-white">Quản lý album</h1>
+            <p className="mt-2 text-sm text-white/65">
+              Theo dõi toàn bộ album, trạng thái phát hành và cập nhật nội dung nhanh.
             </p>
           </div>
           <button
             type="button"
             onClick={() => navigate("/artist/albums/new")}
-            className="inline-flex items-center gap-2 rounded-full bg-[#1db954] px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition md:hover:translate-y-[-1px]"
+            className="artist-btn-primary inline-flex items-center gap-2 px-5 py-2.5 text-sm"
           >
             <FiPlus />
             Tạo album mới
           </button>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <div className="relative w-full max-w-md">
+        <div className="mt-6 grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+          <div className="relative">
             <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
             <input
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
-              placeholder="Tìm theo tên album"
-              className="w-full rounded-full border border-white/10 bg-black/30 py-2.5 pl-11 pr-4 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+              placeholder="Tìm theo tên album..."
+              className="artist-input rounded-full pl-11 pr-4"
             />
           </div>
-          <span className="text-sm text-white/50">
-            {filteredAlbums.length} album
-          </span>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70">
+              Tổng: {stats.total}
+            </span>
+            <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-emerald-100">
+              Đã duyệt: {stats.approved}
+            </span>
+            <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-amber-100">
+              Chờ duyệt: {stats.pending}
+            </span>
+          </div>
         </div>
-      </div>
+      </section>
 
       {loading && (
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/60">
-          Đang tải danh sách album...
-        </div>
+        <div className="artist-soft-card p-5 text-sm text-white/70">Đang tải danh sách album...</div>
       )}
 
       {!loading && !filteredAlbums.length && (
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/60">
-          Chưa có album nào. Hãy tạo album đầu tiên của bạn.
+        <div className="artist-soft-card p-5 text-sm text-white/70">
+          Không tìm thấy album phù hợp. Hãy thử từ khóa khác hoặc tạo album mới.
         </div>
       )}
 
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {filteredAlbums.map((album) => (
           <ArtistAlbumTile
             key={album.id}
@@ -147,7 +159,7 @@ export default function ArtistAlbums() {
             onDelete={() => handleDelete(album.id)}
           />
         ))}
-      </div>
+      </section>
     </div>
   );
 }

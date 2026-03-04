@@ -15,6 +15,9 @@ export default function MainLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const role = useAuthStore((state) => state.role);
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isArtistWorkspaceRoute = /^\/artist\/(dashboard|profile|albums|songs|trash)(\/|$)/.test(
+    location.pathname
+  );
   const shouldShowPlayer = role !== "ARTIST" && role !== "ADMIN";
   const [authToastMessage, setAuthToastMessage] = useState("");
 
@@ -96,7 +99,9 @@ export default function MainLayout() {
           className={`scrollbar-page relative flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 ${
             isAdminRoute
               ? "admin-main-surface bg-[radial-gradient(circle_at_top,_#1f1537_0%,_#111111_45%,_#0a0a0a_100%)]"
-              : "bg-[#121212]"
+              : isArtistWorkspaceRoute
+                ? "artist-main-surface bg-[#0f1113]"
+                : "bg-[#121212]"
           }`}
         >
           <div
@@ -107,23 +112,39 @@ export default function MainLayout() {
             <div
               data-blob
               className={`absolute -top-24 -left-20 h-72 w-72 rounded-full blur-3xl ${
-                isAdminRoute ? "bg-violet-500/25" : "bg-indigo-500/20"
+                isAdminRoute
+                  ? "bg-violet-500/25"
+                  : isArtistWorkspaceRoute
+                    ? "hidden"
+                    : "bg-indigo-500/20"
               }`}
             />
             <div
               data-blob
               className={`absolute top-24 right-0 h-80 w-80 rounded-full blur-3xl ${
-                isAdminRoute ? "bg-sky-500/20" : "bg-fuchsia-500/20"
+                isAdminRoute
+                  ? "bg-sky-500/20"
+                  : isArtistWorkspaceRoute
+                    ? "hidden"
+                    : "bg-fuchsia-500/20"
               }`}
             />
             <div
               data-blob
               className={`absolute bottom-12 left-1/3 h-64 w-64 rounded-full blur-3xl ${
-                isAdminRoute ? "bg-purple-400/20" : "bg-cyan-400/15"
+                isAdminRoute
+                  ? "bg-purple-400/20"
+                  : isArtistWorkspaceRoute
+                    ? "hidden"
+                    : "bg-cyan-400/15"
               }`}
             />
           </div>
-          <div className={`relative z-10 ${isAdminRoute ? "admin-content" : ""}`}>
+          <div
+            className={`relative z-10 ${isAdminRoute ? "admin-content" : ""} ${
+              isArtistWorkspaceRoute ? "artist-content" : ""
+            }`}
+          >
             <Outlet />
           </div>
         </main>

@@ -2,11 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiSave, FiUser } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
-import {
-  getMyArtistProfile,
-  updateArtist,
-  uploadArtistAvatar,
-} from "../../api/artist.api";
+import { getMyArtistProfile, updateArtist, uploadArtistAvatar } from "../../api/artist.api";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../../components/common/OptimizedImage";
 
@@ -26,7 +22,6 @@ export default function ArtistProfile() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
-
 
   const [artistId, setArtistId] = useState(null);
   const [formValues, setFormValues] = useState(emptyForm);
@@ -59,7 +54,7 @@ export default function ArtistProfile() {
     } finally {
       setLoading(false);
     }
-   }, []);
+  }, []);
 
   useEffect(() => {
     loadArtist();
@@ -112,7 +107,7 @@ export default function ArtistProfile() {
       }
     } catch (err) {
       console.error("Update artist profile failed", err);
-      setError("Cập nhật hồ sơ thất bại. Hãy thử lại nhé.");
+      setError("Cập nhật hồ sơ thất bại. Hãy thử lại.");
     } finally {
       setSaving(false);
     }
@@ -151,7 +146,7 @@ export default function ArtistProfile() {
       }
     } catch (err) {
       console.error("Upload artist avatar failed", err);
-      setError("Tải avatar thất bại. Hãy thử lại nhé.");
+      setError("Tải avatar thất bại. Hãy thử lại.");
     } finally {
       setUploadingAvatar(false);
       event.target.value = "";
@@ -165,50 +160,41 @@ export default function ArtistProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#121212] p-6 text-white/70">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          Đang tải hồ sơ nghệ sĩ...
-        </div>
+      <div className="artist-soft-card p-5 text-sm text-white/70">
+        Đang tải hồ sơ nghệ sĩ...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+    <div className="space-y-6">
+      <section className="artist-page-shell artist-glass p-6 sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-              Nghệ sĩ
-            </p>
-            <h1 className="mt-2 text-3xl font-extrabold text-white">
-              Hồ sơ nghệ sĩ
-            </h1>
-            <p className="mt-2 text-sm text-white/60">
-              Cập nhật thông tin công khai để người nghe hiểu rõ về bạn.
+            <p className="artist-label">Profile</p>
+            <h1 className="mt-2 text-3xl font-black text-white">Hồ sơ nghệ sĩ</h1>
+            <p className="mt-2 text-sm text-white/65">
+              Cập nhật thông tin công khai giúp người nghe nhận diện thương hiệu của bạn.
             </p>
           </div>
           <button
             type="button"
             onClick={() => navigate("/artist/dashboard")}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition md:hover:border-white/30 md:hover:bg-white/10"
+            className="artist-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm"
           >
             <FiArrowLeft />
             Quay lại tổng quan
           </button>
         </div>
-      </div>
+      </section>
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]"
-      >
+      <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="space-y-6">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+          <section className="artist-page-shell artist-glass p-6">
             <h2 className="text-lg font-semibold text-white">Thông tin chung</h2>
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
-                <label className="text-sm text-white/70">
+                <label className="text-sm text-white/75">
                   Tên nghệ sĩ <span className="text-rose-300">*</span>
                 </label>
                 <input
@@ -216,128 +202,111 @@ export default function ArtistProfile() {
                   value={formValues.name}
                   onChange={handleChange}
                   placeholder="Ví dụ: Minh Phạm"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-input mt-2"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-sm text-white/70">Nghệ danh</label>
+                <label className="text-sm text-white/75">Nghệ danh</label>
                 <input
                   name="alias"
                   value={formValues.alias}
                   onChange={handleChange}
                   placeholder="Alias"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-input mt-2"
                 />
               </div>
 
               <div>
-                <label className="text-sm text-white/70">Tên thật</label>
+                <label className="text-sm text-white/75">Tên thật</label>
                 <input
                   name="realname"
                   value={formValues.realname}
                   onChange={handleChange}
                   placeholder="Họ và tên"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-input mt-2"
                 />
               </div>
 
               <div>
-                <label className="text-sm text-white/70">Ngày sinh</label>
+                <label className="text-sm text-white/75">Ngày sinh</label>
                 <input
                   type="date"
                   name="birthday"
                   value={formValues.birthday}
                   onChange={handleChange}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-input mt-2"
                 />
               </div>
 
               <div>
-                <label className="text-sm text-white/70">Quốc gia</label>
+                <label className="text-sm text-white/75">Quốc gia</label>
                 <input
                   name="national"
                   value={formValues.national}
                   onChange={handleChange}
                   placeholder="Việt Nam"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-input mt-2"
                 />
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-            <h2 className="text-lg font-semibold text-white">
-              Hình ảnh & giới thiệu
-            </h2>
-            <div className="mt-6 space-y-4">
+          <section className="artist-page-shell artist-glass p-6">
+            <h2 className="text-lg font-semibold text-white">Hình ảnh và giới thiệu</h2>
+            <div className="mt-5 space-y-4">
               <div>
-                <label className="text-sm text-white/70">Avatar</label>
+                <label className="text-sm text-white/75">Avatar (URL)</label>
                 <input
                   name="avatar_url"
                   value={formValues.avatar_url}
                   onChange={handleChange}
                   placeholder="https://..."
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-input mt-2"
                 />
                 <div className="mt-3">
-                  <label className="text-xs text-white/50">
-                    Tải avatar từ máy (PNG/JPG)
-                  </label>
+                  <label className="text-xs text-white/55">Hoặc tải avatar từ máy (PNG/JPG)</label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleAvatarUpload}
                     disabled={uploadingAvatar}
-                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 md:hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="mt-2 block w-full rounded-2xl border border-dashed border-white/15 bg-black/25 px-4 py-3 text-xs text-white/75 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white disabled:cursor-not-allowed disabled:opacity-70"
                   />
                 </div>
               </div>
 
-              {/* <div>
-                <label className="text-sm text-white/70">Ảnh bìa</label>
-                <input
-                  name="cover_url"
-                  value={formValues.cover_url}
-                  onChange={handleChange}
-                  placeholder="https://..."
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
-                />
-              </div> */}
-
               <div>
-                <label className="text-sm text-white/70">
-                  Mô tả ngắn
-                </label>
+                <label className="text-sm text-white/75">Mô tả ngắn</label>
                 <textarea
                   name="short_bio"
                   value={formValues.short_bio}
                   onChange={handleChange}
                   rows={3}
                   placeholder="Giới thiệu ngắn gọn..."
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-textarea mt-2"
                 />
               </div>
 
               <div>
-                <label className="text-sm text-white/70">Tiểu sử</label>
+                <label className="text-sm text-white/75">Tiểu sử</label>
                 <textarea
                   name="bio"
                   value={formValues.bio}
                   onChange={handleChange}
                   rows={6}
                   placeholder="Chia sẻ câu chuyện về bạn..."
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-textarea mt-2"
                 />
               </div>
             </div>
-          </div>
+          </section>
         </div>
 
         <div className="space-y-6">
-          <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-            <div className="relative h-44 w-full overflow-hidden">
+          <section className="artist-page-shell artist-glass overflow-hidden">
+            <div className="relative h-48 w-full overflow-hidden">
               {coverPreview ? (
                 <OptimizedImage
                   src={coverPreview}
@@ -345,7 +314,7 @@ export default function ArtistProfile() {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center bg-gradient-to-br from-white/10 to-white/5 text-3xl text-white/50">
+                <div className="flex h-full items-center justify-center bg-gradient-to-br from-emerald-700/25 to-black text-3xl text-white/50">
                   <FiUser />
                 </div>
               )}
@@ -355,27 +324,27 @@ export default function ArtistProfile() {
               <h3 className="text-lg font-semibold text-white">
                 {formValues.name || "Tên nghệ sĩ"}
               </h3>
-              <p className="text-sm text-white/60">
-                {formValues.short_bio || "Chưa có giới thiệu ngắn."}
+              <p className="text-sm text-white/65">
+                {formValues.short_bio || "Chưa có mô tả ngắn."}
               </p>
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+          <section className="artist-page-shell artist-glass p-6">
             {error && (
-              <div className="mb-4 rounded-2xl border border-rose-400/40 bg-rose-500/10 p-3 text-sm text-rose-200">
+              <div className="mb-4 rounded-2xl border border-rose-400/40 bg-rose-500/10 p-3 text-sm text-rose-100">
                 {error}
               </div>
             )}
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1db954] px-5 py-3 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition md:hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-70"
+              className="artist-btn-primary inline-flex w-full items-center justify-center gap-2 px-5 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"
             >
               <FiSave />
               {saving ? "Đang lưu..." : "Lưu thay đổi"}
             </button>
-          </div>
+          </section>
         </div>
       </form>
     </div>

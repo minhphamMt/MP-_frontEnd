@@ -1,4 +1,5 @@
 import {
+  FiBarChart2,
   FiDisc,
   FiGrid,
   FiShield,
@@ -16,6 +17,7 @@ export default function AdminSidebar() {
     <div className="space-y-4">
       <SidebarSection title="Tổng quan">
         <SidebarItem to="/admin/dashboard" icon={FiGrid} label="Dashboard" />
+        <SidebarItem to="/admin/analytics" icon={FiBarChart2} label="Thống kê" />
         <SidebarItem to="/admin/search" icon={FiShield} label="Global Search" />
       </SidebarSection>
 

@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiArrowLeft, FiSave } from "react-icons/fi";
-import {
-  createAlbum,
-  getAlbumById,
-  updateAlbum,
-} from "../../api/album.api";
+import { createAlbum, getAlbumById, updateAlbum } from "../../api/album.api";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../../components/common/OptimizedImage";
 
@@ -36,9 +32,7 @@ export default function ArtistAlbumForm() {
         const album = res?.data?.data || res?.data;
         setFormValues({
           title: album?.title || "",
-          release_date: album?.release_date
-            ? album.release_date.split("T")[0]
-            : "",
+          release_date: album?.release_date ? album.release_date.split("T")[0] : "",
           cover_url: album?.cover_url || "",
           zing_album_id: album?.zing_album_id || "",
         });
@@ -51,7 +45,7 @@ export default function ArtistAlbumForm() {
     };
 
     loadAlbum();
-   }, [id, isEdit]);
+  }, [id, isEdit]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -76,7 +70,7 @@ export default function ArtistAlbumForm() {
         zing_album_id: formValues.zing_album_id || null,
       };
 
-       if (coverFile) {
+      if (coverFile) {
         const formData = new FormData();
         formData.append("cover", coverFile);
         Object.entries(payload).forEach(([key, value]) => {
@@ -96,14 +90,14 @@ export default function ArtistAlbumForm() {
       navigate("/artist/albums");
     } catch (err) {
       console.error("Save album failed", err);
-      setError("Lưu album thất bại. Hãy thử lại nhé.");
+      setError("Lưu album thất bại. Hãy thử lại.");
     } finally {
       setLoading(false);
     }
   };
 
   const coverPreview = useMemo(() => {
-     if (coverFile) {
+    if (coverFile) {
       return URL.createObjectURL(coverFile);
     }
     return formValues.cover_url ? resolveAssetUrl(formValues.cover_url) : null;
@@ -115,43 +109,38 @@ export default function ArtistAlbumForm() {
   }, [coverFile, coverPreview]);
 
   return (
-    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+    <div className="space-y-6">
+      <section className="artist-page-shell artist-glass p-6 sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-              Nghệ sĩ
-            </p>
-            <h1 className="mt-2 text-3xl font-extrabold text-white">
+            <p className="artist-label">Album Editor</p>
+            <h1 className="mt-2 text-3xl font-black text-white">
               {isEdit ? "Chỉnh sửa album" : "Tạo album mới"}
             </h1>
-            <p className="mt-2 text-sm text-white/60">
+            <p className="mt-2 text-sm text-white/65">
               {isEdit
-                ? "Cập nhật thông tin album của bạn."
-                : "Điền thông tin để phát hành album mới."}
+                ? "Cập nhật metadata và hình ảnh bìa album."
+                : "Điền thông tin để khởi tạo album mới."}
             </p>
           </div>
           <button
             type="button"
             onClick={() => navigate("/artist/albums")}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition md:hover:border-white/30 md:hover:bg-white/10"
+            className="artist-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm"
           >
             <FiArrowLeft />
             Quay lại danh sách
           </button>
         </div>
-      </div>
+      </section>
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]"
-      >
+      <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr]">
         <div className="space-y-6">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+          <section className="artist-page-shell artist-glass p-6">
             <h2 className="text-lg font-semibold text-white">Thông tin cơ bản</h2>
-            <div className="mt-6 space-y-4">
+            <div className="mt-5 space-y-4">
               <div>
-                <label className="text-sm text-white/70">
+                <label className="text-sm text-white/75">
                   Tên album <span className="text-rose-300">*</span>
                 </label>
                 <input
@@ -159,68 +148,63 @@ export default function ArtistAlbumForm() {
                   value={formValues.title}
                   onChange={handleChange}
                   placeholder="Ví dụ: Bầu trời đêm"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-input mt-2"
                   required
                 />
               </div>
+
               <div>
-                <label className="text-sm text-white/70">Ngày phát hành</label>
+                <label className="text-sm text-white/75">Ngày phát hành</label>
                 <input
                   name="release_date"
                   type="date"
                   value={formValues.release_date}
                   onChange={handleChange}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-input mt-2"
                 />
               </div>
 
               <div>
-                <label className="text-sm text-white/70">Ảnh bìa</label>
+                <label className="text-sm text-white/75">Ảnh bìa (URL)</label>
                 <input
                   name="cover_url"
                   value={formValues.cover_url}
                   onChange={handleChange}
                   placeholder="https://..."
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
+                  className="artist-input mt-2"
                 />
-                 <div className="mt-3">
-                  <label className="text-xs text-white/50">
-                    Hoặc tải ảnh bìa (PNG/JPG)
-                  </label>
+                <div className="mt-3">
+                  <label className="text-xs text-white/55">Hoặc tải ảnh từ máy (PNG/JPG)</label>
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(event) =>
-                      setCoverFile(event.target.files?.[0] || null)
-                    }
-                    className="mt-2 w-full rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 md:hover:border-white/20"
+                    onChange={(event) => setCoverFile(event.target.files?.[0] || null)}
+                    className="mt-2 block w-full rounded-2xl border border-dashed border-white/15 bg-black/25 px-4 py-3 text-xs text-white/75 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white"
                   />
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+          <section className="artist-page-shell artist-glass p-6">
             <h2 className="text-lg font-semibold text-white">Thông tin nâng cao</h2>
-            <div className="mt-6 space-y-4">
-              <div>
-                <label className="text-sm text-white/70">Zing album ID</label>
-                <input
-                  name="zing_album_id"
-                  value={formValues.zing_album_id}
-                  onChange={handleChange}
-                  placeholder="Zing album id"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/80 outline-none transition focus:border-white/30 focus:bg-black/40"
-                />
-              </div>
+            <div className="mt-5">
+              <label className="text-sm text-white/75">Zing album ID</label>
+              <input
+                name="zing_album_id"
+                value={formValues.zing_album_id}
+                onChange={handleChange}
+                placeholder="Mã định danh từ nguồn ngoài (nếu có)"
+                className="artist-input mt-2"
+              />
             </div>
-          </div>
+          </section>
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+          <section className="artist-page-shell artist-glass p-6">
             <h2 className="text-lg font-semibold text-white">Xem trước</h2>
-            <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#181818]">
+            <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-[#111]">
               {coverPreview ? (
                 <OptimizedImage
                   src={coverPreview}
@@ -233,38 +217,31 @@ export default function ArtistAlbumForm() {
                 </div>
               )}
               <div className="space-y-2 p-4">
-                <h3 className="text-lg font-semibold text-white">
-                  {formValues.title || "Tên album"}
-                </h3>
-                <p className="text-sm text-white/60">
+                <h3 className="text-lg font-semibold text-white">{formValues.title || "Tên album"}</h3>
+                <p className="text-sm text-white/65">
                   {formValues.release_date
                     ? `Phát hành: ${formValues.release_date}`
                     : "Chưa có ngày phát hành"}
                 </p>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+          <section className="artist-page-shell artist-glass p-6">
             {error && (
-              <div className="mb-4 rounded-2xl border border-rose-400/40 bg-rose-500/10 p-3 text-sm text-rose-200">
+              <div className="mb-4 rounded-2xl border border-rose-400/40 bg-rose-500/10 p-3 text-sm text-rose-100">
                 {error}
               </div>
             )}
-
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1db954] px-5 py-3 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition md:hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-70"
+              className="artist-btn-primary inline-flex w-full items-center justify-center gap-2 px-5 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"
             >
               <FiSave />
-              {loading
-                ? "Đang lưu..."
-                : isEdit
-                  ? "Lưu thay đổi"
-                  : "Tạo album"}
+              {loading ? "Đang lưu..." : isEdit ? "Lưu thay đổi" : "Tạo album"}
             </button>
-          </div>
+          </section>
         </div>
       </form>
     </div>

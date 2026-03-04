@@ -2,10 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiArrowUpRight,
+  FiClock,
   FiDisc,
   FiHeadphones,
   FiPlus,
-  FiTrendingUp,
   FiUser,
 } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
@@ -31,7 +31,7 @@ export default function ArtistDashboard() {
     user?.email ||
     "Nghệ sĩ";
 
-    useEffect(() => {
+  useEffect(() => {
     const loadArtistProfile = async () => {
       if (artistProfile?.id || user?.artist_id) return;
       try {
@@ -54,22 +54,26 @@ export default function ArtistDashboard() {
     loadArtistProfile();
   }, [artistProfile?.id, updateUser, user, user?.artist_id]);
 
-  const loadAlbums = useCallback(async () => {
+  const loadDashboardData = useCallback(async () => {
     if (!artistId) {
       setLoading(false);
       return;
     }
     try {
       setLoading(true);
-      const res = await getAlbums({ artist_id: artistId, limit: 12 });
-      const data = res?.data?.data || [];
-      setAlbums(Array.isArray(data) ? data : []);
-      const songsRes = await getArtistSongs(artistId);
+      const [albumsRes, songsRes] = await Promise.all([
+        getAlbums({ artist_id: artistId, limit: 12 }),
+        getArtistSongs(artistId),
+      ]);
+
+      const albumData = albumsRes?.data?.data || [];
+      setAlbums(Array.isArray(albumData) ? albumData : []);
+
       const payload = songsRes?.data?.data || songsRes?.data || {};
       const list = payload?.songs || payload?.data || payload || [];
       setSongs(Array.isArray(list) ? list : []);
     } catch (error) {
-      console.error("Load artist albums failed", error);
+      console.error("Load artist dashboard failed", error);
       setAlbums([]);
       setSongs([]);
     } finally {
@@ -78,135 +82,130 @@ export default function ArtistDashboard() {
   }, [artistId]);
 
   useEffect(() => {
-    loadAlbums();
-  }, [loadAlbums]);
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const stats = useMemo(() => {
     const totalAlbums = albums.length;
     const totalSongs = songs.length;
+    const pendingSongs = songs.filter((song) => song?.status === "pending").length;
     const newestAlbum = albums[0]?.title || "Chưa có album";
 
-    return { totalAlbums, totalSongs, newestAlbum };
+    return { totalAlbums, totalSongs, pendingSongs, newestAlbum };
   }, [albums, songs]);
 
   const latestAlbums = albums.slice(0, 3);
 
   return (
-    <div className="min-h-screen space-y-8 bg-[#121212] px-4 py-6 sm:px-8">
-      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-          <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-            Nghệ sĩ
-          </p>
-          <h1 className="mt-2 text-3xl font-extrabold text-white sm:text-4xl">
-            {artistName}
-          </h1>
-          <p className="mt-3 max-w-xl text-sm text-white/60">
-            Theo dõi hiệu suất album, cập nhật phát hành mới và quản lý nội dung
-            dành riêng cho nghệ sĩ.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
+    <div className="space-y-6">
+      <section className="artist-page-shell artist-glass overflow-hidden p-6 sm:p-8">
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div>
+            <p className="artist-label">Artist Workspace</p>
+            <h1 className="mt-3 text-3xl font-black text-white sm:text-4xl">
+              Xin chào, {artistName}
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm text-white/70">
+              Theo dõi hiệu suất phát hành, quản lý album và bài hát trong một giao diện
+              thống nhất dành cho nghệ sĩ.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/artist/albums/new")}
+                className="artist-btn-primary inline-flex items-center gap-2 px-5 py-2.5 text-sm"
+              >
+                <FiPlus />
+                Tạo album mới
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/artist/songs/new")}
+                className="artist-btn-secondary inline-flex items-center gap-2 px-5 py-2.5 text-sm"
+              >
+                <FiHeadphones />
+                Thêm bài hát
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/artist/profile")}
+                className="artist-btn-secondary inline-flex items-center gap-2 px-5 py-2.5 text-sm"
+              >
+                <FiUser />
+                Cập nhật hồ sơ
+              </button>
+            </div>
+          </div>
+
+          <div className="artist-soft-card p-5 sm:p-6">
+            <p className="text-xs uppercase tracking-[0.24em] text-white/55">Album mới nhất</p>
+            <h3 className="mt-3 text-2xl font-bold text-white">{stats.newestAlbum}</h3>
+            <p className="mt-2 text-sm text-white/60">
+              Duy trì lịch phát hành ổn định để tăng độ phủ và lượt nghe.
+            </p>
             <button
               type="button"
               onClick={() => navigate("/artist/albums")}
-              className="inline-flex items-center gap-2 rounded-full bg-[#1db954] px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-[#1db954]/40 transition md:hover:translate-y-[-1px]"
+              className="artist-btn-secondary mt-5 inline-flex items-center gap-2 px-4 py-2 text-sm"
             >
-              Quản lý album
+              Đi tới quản lý album
               <FiArrowUpRight />
             </button>
-            <button
-              type="button"
-              onClick={() => navigate("/artist/albums/new")}
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
-            >
-              <FiPlus />
-              Tạo album mới
-            </button>
-             <button
-              type="button"
-              onClick={() => navigate("/artist/profile")}
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
-            >
-              <FiUser />
-              Cập nhật hồ sơ
-            </button>
           </div>
         </div>
+      </section>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_25px_60px_rgba(0,0,0,0.4)]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-white/50">
-                  Album
-                </p>
-                <h3 className="mt-2 text-2xl font-semibold text-white">
-                  {stats.totalAlbums}
-                </h3>
-              </div>
-              <span className="rounded-2xl bg-emerald-500/15 p-3 text-emerald-200">
-                <FiDisc className="text-xl" />
-              </span>
-            </div>
-            <p className="mt-3 text-sm text-white/60">
-              Tổng số album đã xuất bản.
-            </p>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <article className="artist-kpi p-5">
+          <p className="text-xs uppercase tracking-[0.24em] text-white/55">Tổng album</p>
+          <div className="mt-3 flex items-center justify-between">
+            <h3 className="text-3xl font-bold text-white">{stats.totalAlbums}</h3>
+            <span className="rounded-xl bg-emerald-400/20 p-3 text-emerald-100">
+              <FiDisc className="text-lg" />
+            </span>
           </div>
-
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_25px_60px_rgba(0,0,0,0.4)]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-white/50">
-                  Bài hát
-                </p>
-                <h3 className="mt-2 text-2xl font-semibold text-white">
-                  {stats.totalSongs}
-                </h3>
-              </div>
-              <span className="rounded-2xl bg-sky-500/15 p-3 text-sky-200">
-                <FiHeadphones className="text-xl" />
-              </span>
-            </div>
-            <p className="mt-3 text-sm text-white/60">
-              Tổng số bài hát trong các album.
-            </p>
+        </article>
+        <article className="artist-kpi p-5">
+          <p className="text-xs uppercase tracking-[0.24em] text-white/55">Tổng bài hát</p>
+          <div className="mt-3 flex items-center justify-between">
+            <h3 className="text-3xl font-bold text-white">{stats.totalSongs}</h3>
+            <span className="rounded-xl bg-cyan-400/20 p-3 text-cyan-100">
+              <FiHeadphones className="text-lg" />
+            </span>
           </div>
-
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_25px_60px_rgba(0,0,0,0.4)]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-white/50">
-                  Album mới nhất
-                </p>
-                <h3 className="mt-2 text-lg font-semibold text-white">
-                  {stats.newestAlbum}
-                </h3>
-              </div>
-              <span className="rounded-2xl bg-fuchsia-500/15 p-3 text-fuchsia-200">
-                <FiTrendingUp className="text-xl" />
-              </span>
-            </div>
-            <p className="mt-3 text-sm text-white/60">
-              Theo dõi bản phát hành gần nhất.
-            </p>
+        </article>
+        <article className="artist-kpi p-5">
+          <p className="text-xs uppercase tracking-[0.24em] text-white/55">Chờ duyệt</p>
+          <div className="mt-3 flex items-center justify-between">
+            <h3 className="text-3xl font-bold text-white">{stats.pendingSongs}</h3>
+            <span className="rounded-xl bg-amber-400/20 p-3 text-amber-100">
+              <FiClock className="text-lg" />
+            </span>
           </div>
-        </div>
-      </div>
+        </article>
+        <article className="artist-kpi p-5">
+          <p className="text-xs uppercase tracking-[0.24em] text-white/55">Hành động nhanh</p>
+          <button
+            type="button"
+            onClick={() => navigate("/artist/songs")}
+            className="artist-btn-secondary mt-3 inline-flex w-full items-center justify-center gap-2 px-4 py-2 text-sm"
+          >
+            Quản lý bài hát
+            <FiArrowUpRight />
+          </button>
+        </article>
+      </section>
 
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <section className="artist-page-shell artist-glass p-6">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-              Album gần đây
-            </p>
-            <h2 className="mt-2 text-2xl font-bold text-white">
-              Hoạt động mới nhất
-            </h2>
+            <p className="artist-label">Recent Albums</p>
+            <h2 className="mt-2 text-2xl font-bold text-white">Phát hành gần đây</h2>
           </div>
           <button
             type="button"
             onClick={() => navigate("/artist/albums")}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition md:hover:border-white/30 md:hover:bg-white/10"
+            className="artist-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm"
           >
             Xem tất cả
             <FiArrowUpRight />
@@ -214,14 +213,12 @@ export default function ArtistDashboard() {
         </div>
 
         {loading && (
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/60">
-            Đang tải dữ liệu album...
-          </div>
+          <div className="artist-soft-card p-5 text-sm text-white/70">Đang tải dữ liệu...</div>
         )}
 
         {!loading && !latestAlbums.length && (
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/60">
-            Bạn chưa có album nào. Hãy tạo album mới để bắt đầu.
+          <div className="artist-soft-card p-5 text-sm text-white/70">
+            Bạn chưa có album nào. Hãy tạo album đầu tiên để bắt đầu phát hành.
           </div>
         )}
 

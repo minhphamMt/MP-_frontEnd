@@ -26,6 +26,7 @@ export default function AddToPlaylistButton({
   triggerClassName = "",
   triggerLabel,
   variant = "icon",
+  disabled = false,
 }) {
   const [open, setOpen] = useState(false);
   const [playlists, setPlaylists] = useState([]);
@@ -164,18 +165,21 @@ export default function AddToPlaylistButton({
       <button
         onClick={(e) => {
           e.stopPropagation();
+          if (disabled) return;
           if (!isAuthenticated) {
             emitAuthRequired();
             return;
           }
           setOpen(true);
         }}
+        disabled={disabled}
         className={clsx(
            "flex items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/80 transition md:hover:border-white/30 md:hover:bg-white/15",
           variant === "icon" ? "h-9 w-9 p-0" : "gap-2 px-3 py-2 text-xs",
+          disabled && "cursor-not-allowed opacity-60 md:hover:border-white/15 md:hover:bg-white/5",
           triggerClassName
         )}
-        title="Thêm vào playlist"
+        title={disabled ? "Nghệ sĩ chỉ có thể xem tại trang này" : "Thêm vào playlist"}
       >
         {triggerLabel || renderTriggerContent()}
       </button>
