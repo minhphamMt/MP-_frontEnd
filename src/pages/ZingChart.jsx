@@ -127,6 +127,7 @@ export default function ZingChart() {
     typeof window !== "undefined" ? window.innerWidth : 1280
   );
   const [syncedRowsHeight, setSyncedRowsHeight] = useState(null);
+  const [chartReadyVersion, setChartReadyVersion] = useState(0);
   const [regionCharts, setRegionCharts] = useState({
     vietnam: [],
     usuk: [],
@@ -137,7 +138,57 @@ export default function ZingChart() {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const autoHoverTimerRef = useRef(null);
+  const chartResizeTimersRef = useRef([]);
+  const chartSettleIntervalRef = useRef(null);
   const { playSong } = usePlayerStore();
+
+  const clearQueuedChartResizes = useCallback(() => {
+    if (!chartResizeTimersRef.current.length) return;
+    chartResizeTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+    chartResizeTimersRef.current = [];
+  }, []);
+
+  const queueChartResizes = useCallback(() => {
+    clearQueuedChartResizes();
+    const delays = [0, 80, 180, 320, 520, 900, 1400];
+    chartResizeTimersRef.current = delays.map((delay) =>
+      setTimeout(() => {
+        const chart = chartRef.current;
+        if (!chart || typeof chart.resize !== "function") return;
+        try {
+          chart.resize();
+        } catch {
+          // Ignore resize errors from stale chart instances.
+        }
+      }, delay)
+    );
+  }, [clearQueuedChartResizes]);
+
+  const stopChartSettleResizeLoop = useCallback(() => {
+    if (!chartSettleIntervalRef.current) return;
+    clearInterval(chartSettleIntervalRef.current);
+    chartSettleIntervalRef.current = null;
+  }, []);
+
+  const startChartSettleResizeLoop = useCallback(() => {
+    stopChartSettleResizeLoop();
+    let ticks = 0;
+    const maxTicks = 30;
+    chartSettleIntervalRef.current = setInterval(() => {
+      ticks += 1;
+      const chart = chartRef.current;
+      if (chart && typeof chart.resize === "function") {
+        try {
+          chart.resize();
+        } catch {
+          // Ignore resize errors from stale chart instances.
+        }
+      }
+      if (ticks >= maxTicks) {
+        stopChartSettleResizeLoop();
+      }
+    }, 200);
+  }, [stopChartSettleResizeLoop]);
 
   const getSongCover = useCallback(
     (song) =>
@@ -496,20 +547,21 @@ export default function ZingChart() {
 
   const handleChartReady = useCallback((instance) => {
     chartRef.current = instance || null;
-    if (instance && typeof instance.resize === "function") {
-      requestAnimationFrame(() => {
-        try {
-          instance.resize();
-        } catch {
-          // Ignore resize errors from stale chart instances.
-        }
-      });
+    if (instance) {
+      setChartReadyVersion((prev) => prev + 1);
+      queueChartResizes();
+      startChartSettleResizeLoop();
     }
-  }, []);
+  }, [queueChartResizes, startChartSettleResizeLoop]);
 
   useEffect(() => {
     const chart = chartRef.current;
-    if (!chart || typeof chart.resize !== "function" || !weeklyLineOption) {
+    if (
+      !chart ||
+      typeof chart.resize !== "function" ||
+      !weeklyLineOption ||
+      !chartReadyVersion
+    ) {
       return undefined;
     }
 
@@ -535,6 +587,7 @@ export default function ZingChart() {
       clearTimeout(timer);
     };
   }, [
+    chartReadyVersion,
     weeklyLineOption,
     syncedRowsHeight,
     viewportWidth,
@@ -579,6 +632,8 @@ export default function ZingChart() {
     }
 
     safeResize();
+    queueChartResizes();
+    startChartSettleResizeLoop();
 
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
@@ -590,7 +645,15 @@ export default function ZingChart() {
         document.removeEventListener("visibilitychange", safeResize);
       }
     };
-  }, [weeklyLineOption, syncedRowsHeight, viewportWidth, loading]);
+  }, [
+    chartReadyVersion,
+    weeklyLineOption,
+    syncedRowsHeight,
+    viewportWidth,
+    loading,
+    queueChartResizes,
+    startChartSettleResizeLoop,
+  ]);
 
   useEffect(() => {
     const chart = chartRef.current;
@@ -673,8 +736,10 @@ export default function ZingChart() {
         clearInterval(autoHoverTimerRef.current);
         autoHoverTimerRef.current = null;
       }
+      clearQueuedChartResizes();
+      stopChartSettleResizeLoop();
     },
-    []
+    [clearQueuedChartResizes, stopChartSettleResizeLoop]
   );
 
   const handlePlay = async (song, queue) => {
