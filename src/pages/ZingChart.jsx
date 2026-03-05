@@ -134,6 +134,7 @@ export default function ZingChart() {
   });
   const weeklyListCardRef = useRef(null);
   const weeklyRowsRef = useRef(null);
+  const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const autoHoverTimerRef = useRef(null);
   const { playSong } = usePlayerStore();
@@ -543,6 +544,56 @@ export default function ZingChart() {
 
   useEffect(() => {
     const chart = chartRef.current;
+    const container = chartContainerRef.current;
+
+    if (!chart || typeof chart.resize !== "function" || !container) {
+      return undefined;
+    }
+
+    let rafId = 0;
+    const safeResize = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        try {
+          chart.resize();
+        } catch {
+          // Ignore resize errors from stale chart instances.
+        }
+      });
+    };
+
+    let observer = null;
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(() => {
+        safeResize();
+      });
+      observer.observe(container);
+    } else if (typeof window !== "undefined") {
+      window.addEventListener("resize", safeResize);
+    }
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("load", safeResize);
+      window.addEventListener("pageshow", safeResize);
+      document.addEventListener("visibilitychange", safeResize);
+    }
+
+    safeResize();
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      if (observer) observer.disconnect();
+      if (typeof window !== "undefined") {
+        window.removeEventListener("resize", safeResize);
+        window.removeEventListener("load", safeResize);
+        window.removeEventListener("pageshow", safeResize);
+        document.removeEventListener("visibilitychange", safeResize);
+      }
+    };
+  }, [weeklyLineOption, syncedRowsHeight, viewportWidth, loading]);
+
+  useEffect(() => {
+    const chart = chartRef.current;
     const hasSeries = weeklyLineData.series.length > 0;
     const hasCategories = weeklyLineData.categories.length > 0;
 
@@ -690,6 +741,7 @@ export default function ZingChart() {
             <div className="min-h-0 xl:flex-1">
               {loading ? (
                 <div
+                  ref={chartContainerRef}
                   className={`${chartHeightClass} rounded-2xl border border-white/10 bg-[#101010] p-4 text-sm text-white/60`}
                   style={chartContainerStyle}
                 >
@@ -697,6 +749,7 @@ export default function ZingChart() {
                 </div>
               ) : weeklyLineOption ? (
                 <div
+                  ref={chartContainerRef}
                   className={`${chartHeightClass} min-w-0 overflow-hidden`}
                   style={chartContainerStyle}
                   onMouseEnter={() => setIsChartHovered(true)}
@@ -712,6 +765,7 @@ export default function ZingChart() {
                 </div>
               ) : (
                 <div
+                  ref={chartContainerRef}
                   className={`${chartHeightClass} rounded-2xl border border-white/10 bg-[#101010] p-4 text-sm text-white/60`}
                   style={chartContainerStyle}
                 >
