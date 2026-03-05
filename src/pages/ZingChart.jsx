@@ -794,12 +794,10 @@ export default function ZingChart() {
                   </h3>
                   <Link
                     to={region.link}
-                    className={`inline-flex shrink-0 items-center gap-1 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs text-white/75 transition md:hover:border-sky-300/45 md:hover:text-sky-300 ${
-                      isVerySmall ? "hidden" : ""
-                    }`}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/20 bg-white/5 px-2.5 py-1 text-[11px] whitespace-nowrap text-white/75 transition md:hover:border-sky-300/45 md:hover:text-sky-300 sm:px-3 sm:text-xs"
                   >
                     Xem tất cả
-                    <FiExternalLink size={12} />
+                    <FiExternalLink size={12} className="hidden sm:inline-block" />
                   </Link>
                 </div>
 
