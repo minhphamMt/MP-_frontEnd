@@ -6,6 +6,24 @@
   color-scheme: dark;
 }
 
+html {
+  font-size: 15px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media (max-width: 1280px) {
+  html {
+    font-size: 14.5px;
+  }
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
 * {
   scrollbar-width: none;
   -ms-overflow-style: none;

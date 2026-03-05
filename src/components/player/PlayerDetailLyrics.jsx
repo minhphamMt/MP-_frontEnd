@@ -84,7 +84,7 @@ export default function PlayerDetailLyrics({
   return (
     <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden">
       {lyricsState.loading && (
-        <p className="rounded-xl border-[0.5px] border-slate-500/34 bg-white/[0.04] px-3 py-2 text-sm text-white/65">Đang tải lời bài hát...</p>
+        <p className="rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2 text-sm text-white/65">Đang tải lời bài hát...</p>
       )}
       {lyricsState.error && (
         <p className="rounded-xl border border-red-300/30 bg-red-400/10 px-3 py-2 text-sm text-red-200">{lyricsState.error}</p>
@@ -92,7 +92,7 @@ export default function PlayerDetailLyrics({
       {!lyricsState.loading &&
         !lyricsState.error &&
         lyricsState.items.length === 0 && (
-          <p className="rounded-xl border-[0.5px] border-slate-500/34 bg-white/[0.04] px-3 py-2 text-sm text-white/55">Bài hát chưa có lời.</p>
+          <p className="rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2 text-sm text-white/55">Bài hát chưa có lời.</p>
         )}
 
       {!lyricsState.loading &&
@@ -120,8 +120,8 @@ export default function PlayerDetailLyrics({
                     group block w-full rounded-xl border px-3 py-2 text-left transition
                     ${
                       isLineActive
-                        ? "border-slate-400/42 bg-white/[0.14] text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)]"
-                        : "border-transparent text-white/62 md:hover:border-slate-500/34 md:hover:bg-white/[0.05] md:hover:text-white/86"
+                        ? "border-emerald-300/45 bg-emerald-400/14 text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)]"
+                        : "border-transparent text-white/62 md:hover:border-white/15 md:hover:bg-white/[0.05] md:hover:text-white/86"
                     }
                   `}
                 >

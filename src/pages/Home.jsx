@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { FiChevronLeft, FiChevronRight, FiClock, FiPlay, FiRefreshCw } from "react-icons/fi";
 import { getAlbums } from "../api/album.api";
 import { getMyHistory } from "../api/history.api";
 import { getArtistCollections } from "../api/artist.api";
-import {
-  getColdStartRecommendations,
-  getRecommendations,
-} from "../api/recommendation.api";
+import { getWeeklyTopSongs } from "../api/chart.api";
+import { getRecommendations, getColdStartRecommendations } from "../api/recommendation.api";
 import { getSongById } from "../api/song.api";
 import AlbumCard from "../components/album/AlbumCard";
 import ArtistAlbumCard from "../components/album/ArtistAlbumCard";
@@ -13,14 +13,75 @@ import Section from "../components/section/Section";
 import SongCard from "../components/song/SongCard";
 import useAuthStore from "../store/auth.store";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
+import { filterPlayableSongs, fetchPlayableSong, toPlayableSong } from "../utils/song";
 import { resolveAssetUrl } from "../utils/asset";
-import { FiChevronLeft, FiChevronRight, FiPlay } from "react-icons/fi";
+
+const HISTORY_LIMIT = 10;
+const TOP_WEEK_COLORS = ["#fbbf24", "#60a5fa", "#a78bfa", "#fb7185", "#f97316"];
+
+const toList = (raw) =>
+  Array.isArray(raw)
+    ? raw
+    : Array.isArray(raw?.items)
+      ? raw.items
+      : Array.isArray(raw?.data)
+        ? raw.data
+        : [];
+
+const formatRelativeTime = (timestamp) => {
+  if (!timestamp) return "Mới đây";
+  const diffMs = Date.now() - new Date(timestamp).getTime();
+  const mins = Math.max(1, Math.floor(diffMs / (1000 * 60)));
+  if (mins < 60) return `${mins} phút trước`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+  return `${Math.floor(hours / 24)} ngày trước`;
+};
+
+const progressPercent = (item, fallbackDuration = 0) => {
+  const ratio = Number(item?.progress_ratio ?? item?.progress_percent ?? item?.progress ?? 0);
+  if (ratio > 0) return Math.min(100, Math.max(0, Math.round(ratio > 1 ? ratio : ratio * 100)));
+
+  const listened = Number(item?.listened_seconds ?? item?.current_time ?? item?.position ?? 0) || 0;
+  const duration = Number(item?.duration ?? item?.song?.duration ?? fallbackDuration ?? 0) || 0;
+  if (!listened || !duration) return 0;
+  return Math.min(100, Math.max(0, Math.round((listened / duration) * 100)));
+};
+
+const dedupeSongIds = (items = []) => {
+  const seen = new Set();
+  return items.filter((item) => {
+    const id = normalizeSongId(item);
+    if (id === null || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+};
+
+const normalizeRecommendedIds = (items = []) =>
+  items
+    .map((item, index) => ({
+      id: item?.songId ?? item?.song_id ?? item?.id ?? item,
+      score: Number(item?.score ?? item?.similarity_score ?? 0),
+      index,
+    }))
+    .filter((item) => item.id)
+    .sort((a, b) => (b.score !== a.score ? b.score - a.score : a.index - b.index))
+    .reduce((acc, item) => {
+      const key = String(item.id);
+      if (!acc.includes(key)) acc.push(key);
+      return acc;
+    }, []);
 
 export default function Home() {
   const [artistAlbums, setArtistAlbums] = useState([]);
   const [newAlbums, setNewAlbums] = useState([]);
   const [songs, setSongs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [continueSongs, setContinueSongs] = useState([]);
+  const [weeklyTop, setWeeklyTop] = useState([]);
+  const [loadingHome, setLoadingHome] = useState(true);
+  const [continueLoading, setContinueLoading] = useState(false);
+  const [chartLoading, setChartLoading] = useState(false);
   const [recommendationLoading, setRecommendationLoading] = useState(false);
 
   const ranRef = useRef(false);
@@ -30,117 +91,70 @@ export default function Home() {
   const newAlbumTimerRef = useRef(null);
   const artistResumeRef = useRef(null);
   const newAlbumResumeRef = useRef(null);
+
   const currentSong = usePlayerStore((state) => state.currentSong);
   const playSong = usePlayerStore((state) => state.playSong);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const mapSongPayload = useCallback((raw) => {
-    if (!raw) return null;
 
-    return {
-      id: raw.id,
-      title: raw.title,
-      artist_name: raw.artist_name || raw.artist?.name || "",
-      duration: raw.duration,
-      cover_url: resolveAssetUrl(raw.cover_url),
-      album_id: raw.album?.id || raw.album_id,
-      album_title: raw.album?.title || raw.album_title,
-      audio_url: `${import.meta.env.VITE_API_BASE_URL}${raw.audio_path}`,
-    };
-  }, []);
+  const fetchSongsByIds = useCallback(async (ids = [], limit = 9) => {
+    const queue = ids.filter(Boolean);
+    const collected = [];
 
-  const fetchSongsByIds = useCallback(
-    async (ids = [], limit = 9) => {
-      const maxCount = Number(limit) > 0 ? Number(limit) : 9;
-      const queue = ids.filter(Boolean);
-      const collected = [];
+    for (let index = 0; index < queue.length; index += 6) {
+      if (collected.length >= limit) break;
+      const chunk = queue.slice(index, index + 6);
+      const results = await Promise.allSettled(chunk.map((id) => getSongById(id)));
 
-      for (let index = 0; index < queue.length; index += 6) {
-        if (collected.length >= maxCount) break;
-
-        const chunk = queue.slice(index, index + 6);
-        const results = await Promise.allSettled(chunk.map((id) => getSongById(id)));
-
-        for (const result of results) {
-          if (result.status !== "fulfilled") continue;
-          const song = mapSongPayload(result.value?.data?.data);
-          if (!song) continue;
-          collected.push(song);
-          if (collected.length >= maxCount) break;
-        }
-      }
-
-      return collected;
-    },
-    [mapSongPayload]
-  );
-
-  const fetchRecommendedSongs = useCallback(async (seedSongId) => {
-    const normalizeRecommendedIds = (items = []) =>
-      items
-        .map((item, index) => ({
-          id: item?.songId ?? item?.song_id ?? item?.id ?? item,
-          score: Number(item?.score ?? item?.similarity_score ?? 0),
-          index,
-        }))
-        .filter((item) => item.id)
-        .sort((a, b) => {
-          if (b.score !== a.score) return b.score - a.score;
-          return a.index - b.index;
-        })
-        .reduce((acc, item) => {
-          const songId = String(item.id);
-          if (!acc.includes(songId)) acc.push(songId);
-          return acc;
-        }, []);
-
-    const recRes = seedSongId
-      ? await getRecommendations(seedSongId)
-      : await getColdStartRecommendations(30);
-    const primaryItems = recRes?.data?.data || recRes?.data || [];
-    const selectedIds = normalizeRecommendedIds(primaryItems);
-
-    if (selectedIds.length < 9) {
-      const fallbackRes = await getColdStartRecommendations(50);
-      const fallbackItems = fallbackRes?.data?.data || fallbackRes?.data || [];
-      for (const id of normalizeRecommendedIds(fallbackItems)) {
-        if (!selectedIds.includes(id)) selectedIds.push(id);
-        if (selectedIds.length >= 30) break;
+      for (const result of results) {
+        if (result.status !== "fulfilled") continue;
+        const song = toPlayableSong(result.value?.data?.data || result.value?.data || {});
+        if (!song?.id) continue;
+        collected.push(song);
+        if (collected.length >= limit) break;
       }
     }
 
-    return fetchSongsByIds(selectedIds, 9);
-  }, [fetchSongsByIds]);
+    return dedupeSongIds(collected).slice(0, limit);
+  }, []);
+
+  const fetchRecommendedSongs = useCallback(
+    async (seedSongId) => {
+      const recRes = seedSongId ? await getRecommendations(seedSongId) : await getColdStartRecommendations(30);
+      const selectedIds = normalizeRecommendedIds(recRes?.data?.data || recRes?.data || []);
+
+      if (selectedIds.length < 9) {
+        const fallbackRes = await getColdStartRecommendations(50);
+        for (const id of normalizeRecommendedIds(fallbackRes?.data?.data || fallbackRes?.data || [])) {
+          if (!selectedIds.includes(id)) selectedIds.push(id);
+          if (selectedIds.length >= 30) break;
+        }
+      }
+
+      return fetchSongsByIds(selectedIds, 9);
+    },
+    [fetchSongsByIds]
+  );
 
   const getLastPlayedSongId = useCallback(async () => {
     if (!isAuthenticated) return null;
-
     try {
       const historyRes = await getMyHistory({ limit: 1 });
-      const payload = historyRes?.data?.data ?? historyRes?.data ?? {};
-      const items = Array.isArray(payload)
-        ? payload
-        : payload?.items ?? historyRes?.data?.items ?? [];
-      return normalizeSongId(items?.[0]?.song || items?.[0]);
-    } catch (error) {
-      console.warn("Load last played song for recommendations failed", error);
+      const first = toList(historyRes?.data?.data ?? historyRes?.data)?.[0];
+      return normalizeSongId(first?.song || first);
+    } catch {
       return null;
     }
   }, [isAuthenticated]);
 
-  const getRandomHistorySongId = useCallback(async (limit = 20) => {
+  const getRandomHistorySongId = useCallback(async () => {
     if (!isAuthenticated) return null;
-
     try {
-      const historyRes = await getMyHistory({ limit });
-      const payload = historyRes?.data?.data ?? historyRes?.data ?? {};
-      const items = Array.isArray(payload)
-        ? payload
-        : payload?.items ?? historyRes?.data?.items ?? [];
+      const historyRes = await getMyHistory({ limit: 20 });
+      const items = toList(historyRes?.data?.data ?? historyRes?.data);
       if (!items.length) return null;
       const randomItem = items[Math.floor(Math.random() * items.length)];
       return normalizeSongId(randomItem?.song || randomItem);
-    } catch (error) {
-      console.warn("Load random history song for recommendations failed", error);
+    } catch {
       return null;
     }
   }, [isAuthenticated]);
@@ -149,8 +163,7 @@ export default function Home() {
     async (seedSongId, { silent = false } = {}) => {
       if (!silent) setRecommendationLoading(true);
       try {
-        const recommended = await fetchRecommendedSongs(seedSongId);
-        setSongs(recommended);
+        setSongs(await fetchRecommendedSongs(seedSongId));
       } catch (error) {
         console.error("Load recommendations error:", error);
       } finally {
@@ -159,42 +172,75 @@ export default function Home() {
     },
     [fetchRecommendedSongs]
   );
-  
-  /* =======================
-     LOAD HOME (GIỮ NGUYÊN)
-     ======================= */
+
   const loadHome = useCallback(async () => {
     try {
-      setLoading(true);
+      setLoadingHome(true);
 
       const [artistRes, albumRes] = await Promise.all([
         getArtistCollections({ limit: 20 }),
-        getAlbums({
-          limit: 20,
-          sort: "release_date",
-          order: "desc",
-        }),
+        getAlbums({ limit: 20, sort: "release_date", order: "desc" }),
       ]);
-      setArtistAlbums(artistRes?.data?.data || []);
-      setNewAlbums(albumRes?.data?.data || []);
 
-      setLoading(false);
+      setArtistAlbums(toList(artistRes?.data?.data || artistRes?.data));
+      setNewAlbums(toList(albumRes?.data?.data || albumRes?.data));
 
-      const seedSongId = isAuthenticated
-        ? (await getLastPlayedSongId()) || normalizeSongId(currentSong)
-        : null;
-      loadRecommendations(seedSongId, { silent: true });
-    } catch (err) {
-      console.error("Load home error:", err);
+      if (isAuthenticated) {
+        setContinueLoading(true);
+        const historyRes = await getMyHistory({ limit: HISTORY_LIMIT });
+        const historyItems = toList(historyRes?.data?.data ?? historyRes?.data);
+
+        const normalized = dedupeSongIds(
+          historyItems
+            .map((item) => {
+              const song = toPlayableSong(item?.song || item);
+              if (!song?.id) return null;
+              return {
+                ...song,
+                listened_at: item?.listened_at || item?.listen_time || item?.created_at,
+                progressPercent: progressPercent(item, song.duration),
+              };
+            })
+            .filter(Boolean)
+        ).slice(0, 8);
+
+        setContinueSongs(normalized);
+        setContinueLoading(false);
+      } else {
+        setContinueSongs([]);
+      }
+
+      setChartLoading(true);
+      const topRes = await getWeeklyTopSongs();
+      const rawTop = toList(topRes?.data?.data || topRes?.data);
+      const metricMap = new Map(
+        rawTop.map((item) => [
+          String(item?.id ?? item?.song_id ?? item?.songId ?? ""),
+          Number(item?.weekly_play_count ?? item?.play_count ?? item?.score ?? 0),
+        ])
+      );
+
+      setWeeklyTop(
+        filterPlayableSongs(rawTop)
+          .slice(0, 5)
+          .map((song, index) => ({
+            ...song,
+            rank: index + 1,
+            metric: metricMap.get(String(song.id)) || Number(song?.play_count || 0),
+          }))
+      );
+      setChartLoading(false);
+
+      const seed = isAuthenticated ? (await getLastPlayedSongId()) || normalizeSongId(currentSong) : null;
+      await loadRecommendations(seed, { silent: true });
+    } catch (error) {
+      console.error("Load home error:", error);
     } finally {
-      setLoading(false);
+      setLoadingHome(false);
+      setContinueLoading(false);
+      setChartLoading(false);
     }
-  }, [
-    currentSong,
-    getLastPlayedSongId,
-    isAuthenticated,
-    loadRecommendations,
-  ]);
+  }, [currentSong, getLastPlayedSongId, isAuthenticated, loadRecommendations]);
 
   useEffect(() => {
     if (ranRef.current) return;
@@ -202,39 +248,27 @@ export default function Home() {
     loadHome();
   }, [loadHome]);
 
-  /* =======================
-     AUTO SCROLL (GIỮ NGUYÊN)
-     ======================= */
   const scrollForwardWithLoop = useCallback((ref, distance) => {
     const node = ref.current;
     if (!node) return;
-
     const maxScroll = node.scrollWidth - node.clientWidth;
     if (maxScroll <= 0) return;
-
-   const atEnd = Math.abs(node.scrollLeft - maxScroll) < 2;
-    if (atEnd) {
-      node.scrollTo({ left: 0, behavior: "smooth" });
-       return;
-    }
-      const target = Math.min(node.scrollLeft + distance, maxScroll);
-    node.scrollTo({ left: target, behavior: "smooth" });
+    const atEnd = Math.abs(node.scrollLeft - maxScroll) < 2;
+    node.scrollTo({
+      left: atEnd ? 0 : Math.min(node.scrollLeft + distance, maxScroll),
+      behavior: "smooth",
+    });
   }, []);
 
   const scrollByAmount = (ref, direction = 1) => {
     const node = ref.current;
     if (!node) return;
-
     const amount = node.clientWidth * 0.7;
-  const maxScroll = node.scrollWidth - node.clientWidth;
-
-    if (direction > 0) {
-      const target = Math.min(node.scrollLeft + amount, maxScroll);
-      node.scrollTo({ left: target, behavior: "smooth" });
-    } else {
-      const target = Math.max(node.scrollLeft - amount, 0);
-      node.scrollTo({ left: target, behavior: "smooth" });
-    }
+    const maxScroll = node.scrollWidth - node.clientWidth;
+    node.scrollTo({
+      left: direction > 0 ? Math.min(node.scrollLeft + amount, maxScroll) : Math.max(node.scrollLeft - amount, 0),
+      behavior: "smooth",
+    });
   };
 
   const clearResumeTimeout = (resumeRef) => {
@@ -248,14 +282,11 @@ export default function Home() {
     (ref, timerRef, itemCount) => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (!ref.current || itemCount < 2) return;
-
-      const step = () => {
+      timerRef.current = setInterval(() => {
         const node = ref.current;
         if (!node) return;
         scrollForwardWithLoop(ref, node.clientWidth * 0.65);
-      };
-
-      timerRef.current = setInterval(step, 3500);
+      }, 3500);
     },
     [scrollForwardWithLoop]
   );
@@ -270,10 +301,7 @@ export default function Home() {
   const pauseAndResumeAutoScroll = (ref, timerRef, resumeRef, itemCount) => {
     pauseAutoScroll(timerRef);
     clearResumeTimeout(resumeRef);
-
-    resumeRef.current = setTimeout(() => {
-      startAutoScroll(ref, timerRef, itemCount);
-    }, 1200);
+    resumeRef.current = setTimeout(() => startAutoScroll(ref, timerRef, itemCount), 1200);
   };
 
   useEffect(() => {
@@ -292,22 +320,6 @@ export default function Home() {
     };
   }, [newAlbums, startAutoScroll]);
 
-  /* =======================
-     LOADING
-     ======================= */
-  if (loading) {
-    return (
-        <div className="user-page-shell min-h-screen p-6">
-        <div className="rounded-3xl border border-[#242424] bg-[#181818] p-8 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-          Đang tải trang chủ...
-        </div>
-      </div>
-    );
-  }
-
-  /* =======================
-     UI
-     ======================= */
   const featuredSong = songs[0] || null;
   const featuredCover =
     resolveAssetUrl(featuredSong?.cover_url) ||
@@ -315,8 +327,41 @@ export default function Home() {
     resolveAssetUrl(artistAlbums?.[0]?.cover_url) ||
     "";
 
+  const reasonById = useMemo(() => {
+    const map = new Map();
+    const currentArtist = (currentSong?.artist_name || "").toLowerCase();
+
+    songs.forEach((song, index) => {
+      const id = normalizeSongId(song);
+      if (id === null) return;
+
+      const artist = (song?.artist_name || "").toLowerCase();
+      let reason = "Khớp với gu nghe gần đây";
+
+      if (currentArtist && artist && currentArtist === artist) reason = "Cùng nghệ sĩ với bài vừa nghe";
+      else if (index <= 2) reason = "Đang nổi bật trong tuần";
+      else if (song?.album_title) reason = `Từ album ${song.album_title}`;
+
+      map.set(id, reason);
+    });
+
+    return map;
+  }, [currentSong?.artist_name, songs]);
+
+  const continueQueue = useMemo(() => continueSongs.map((song) => ({ ...song })), [continueSongs]);
+  const weeklyQueue = useMemo(() => weeklyTop.map((song) => ({ ...song })), [weeklyTop]);
+  const maxTopMetric = Math.max(...weeklyTop.map((song) => Number(song?.metric || 0)), 1);
+
+  const refreshRecommendations = async () => {
+    const seedSongId =
+      (await getRandomHistorySongId()) ||
+      (await getLastPlayedSongId()) ||
+      normalizeSongId(currentSong);
+    await loadRecommendations(seedSongId);
+  };
+
   return (
-      <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:space-y-12 sm:px-8">
+    <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:space-y-12 sm:px-8">
       <section className="user-surface relative overflow-hidden p-6 sm:p-8">
         {featuredCover ? (
           <div
@@ -325,21 +370,28 @@ export default function Home() {
             aria-hidden
           />
         ) : null}
-        <div
-          className="absolute inset-0 bg-gradient-to-r from-[#0b0b0b] via-[#0b0b0bcc] to-[#0b0b0b99]"
-          aria-hidden
-        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0b0b0b] via-[#0b0b0bcc] to-[#0b0b0b99]" aria-hidden />
 
         <div className="relative z-10 max-w-2xl space-y-4">
-          <p className="user-heading-label">Featured Music</p>
-          <h1 className="text-3xl font-extrabold text-white sm:text-5xl">
-            {featuredSong?.title || "Khám phá âm nhạc mỗi ngày"}
-          </h1>
-          <p className="text-sm text-white/70 sm:text-base">
-            {featuredSong?.artist_name
-              ? `Từ ${featuredSong.artist_name}. Cập nhật nhanh những bài hát phù hợp gu nghe của bạn.`
-              : "Cập nhật nhanh những bài hát phù hợp gu nghe của bạn, với trải nghiệm nghe nhạc hiện đại và mượt mà."}
-          </p>
+          {loadingHome && !featuredSong ? (
+            <div className="space-y-3">
+              <div className="h-3 w-32 animate-pulse rounded-full bg-white/15" />
+              <div className="h-9 w-[70%] animate-pulse rounded-lg bg-white/20" />
+            </div>
+          ) : (
+            <>
+              <p className="user-heading-label">BÀI NHẠC NỔI BẬT</p>
+              <h1 className="text-3xl font-extrabold text-white sm:text-5xl">
+                {featuredSong?.title || "Khám phá âm nhạc mỗi ngày"}
+              </h1>
+              <p className="text-sm text-white/70 sm:text-base">
+                {featuredSong?.artist_name
+                  ? `Từ ${featuredSong.artist_name}. Cập nhật nhanh những bài hát phù hợp gu nghe của bạn.`
+                  : "Luồng gợi ý được làm mới theo lịch sử nghe để bạn khám phá nhạc nhanh hơn."}
+              </p>
+            </>
+          )}
+
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               type="button"
@@ -352,103 +404,247 @@ export default function Home() {
             </button>
             <button
               type="button"
-              onClick={async () => {
-                const seedSongId =
-                  (await getRandomHistorySongId()) ||
-                  (await getLastPlayedSongId()) ||
-                  normalizeSongId(currentSong);
-                await loadRecommendations(seedSongId);
-              }}
+              onClick={refreshRecommendations}
               disabled={recommendationLoading}
-              className="user-btn-secondary px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
+              className="user-btn-secondary inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
             >
+              <FiRefreshCw className={recommendationLoading ? "animate-spin" : ""} />
               {recommendationLoading ? "Đang làm mới..." : "Làm mới gợi ý"}
             </button>
           </div>
         </div>
       </section>
 
-      {/* ===== SONG RECOMMEND ===== */}
       <Section
-        title="Made For You"
+        title="Tiếp tục nghe"
+        subtitle="Theo hoạt động của bạn"
+        action={
+          isAuthenticated ? (
+            <Link to="/history" className="user-btn-secondary px-3 py-1.5 text-[12px] font-semibold">
+              Xem lịch sử
+            </Link>
+          ) : null
+        }
+      >
+        {!isAuthenticated ? (
+          <div className="rounded-2xl border border-white/10 bg-[#151515] p-4 text-sm text-white/70">
+            Đăng nhập để lưu tiến độ nghe và tiếp tục bài hát mọi lúc.
+            <Link to="/login" className="ml-2 font-semibold text-emerald-300 md:hover:underline">
+              Đăng nhập ngay
+            </Link>
+          </div>
+        ) : continueLoading ? (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <div key={idx} className="rounded-2xl border border-white/10 bg-[#151515] p-3">
+                <div className="h-14 animate-pulse rounded-xl bg-white/10" />
+              </div>
+            ))}
+          </div>
+        ) : !continueSongs.length ? (
+          <div className="rounded-2xl border border-white/10 bg-[#151515] p-4 text-sm text-white/70">
+            Chưa có bài nào để tiếp tục nghe.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {continueSongs.map((song) => (
+              <article
+                key={song.id}
+                className="group rounded-2xl border border-white/10 bg-[#151515] p-3 transition md:hover:border-white/20 md:hover:bg-[#1a1a1a]"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl">
+                    <img
+                      src={resolveAssetUrl(song.cover_url)}
+                      alt={song.title}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-white">{song.title}</p>
+                    <p className="truncate text-xs text-white/60">{song.artist_name}</p>
+                    <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-white/50">
+                      <FiClock size={11} />
+                      {formatRelativeTime(song.listened_at)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const playable = (await fetchPlayableSong(song, getSongById)) || song;
+                      if (playable?.id) playSong(playable, continueQueue);
+                    }}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-300/45 bg-emerald-500/20 text-emerald-200 transition md:hover:scale-105 md:hover:bg-emerald-500/35"
+                    aria-label={`Phát ${song.title}`}
+                  >
+                    <FiPlay size={14} />
+                  </button>
+                </div>
+                <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-emerald-300"
+                    style={{ width: `${Math.max(6, song.progressPercent || 0)}%` }}
+                  />
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      <Section
+        title="Dành cho bạn"
         subtitle="Gợi ý bài hát"
         action={
           <button
-            onClick={async () => {
-              const seedSongId =
-                (await getRandomHistorySongId()) ||
-                (await getLastPlayedSongId()) ||
-                normalizeSongId(currentSong);
-              await loadRecommendations(seedSongId);
-            }}
+            onClick={refreshRecommendations}
             disabled={recommendationLoading}
-            className="user-btn-secondary px-3 py-1.5 text-[12px] font-semibold disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-2 sm:text-[13px]"
+            className="user-btn-secondary inline-flex items-center gap-2 px-3 py-1.5 text-[12px] font-semibold disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:text-[13px]"
           >
-           {recommendationLoading ? "Đang làm mới..." : "Làm mới"}
+            <FiRefreshCw className={recommendationLoading ? "animate-spin" : ""} />
+            {recommendationLoading ? "Đang làm mới..." : "Làm mới"}
           </button>
         }
       >
-         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
-          {songs.map((song) => (
-            <SongCard key={song.id} song={song} queue={songs} />
-          ))}
-        </div>
+        {recommendationLoading && !songs.length ? (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="h-28 animate-pulse rounded-2xl border border-white/10 bg-[#151515]" />
+            ))}
+          </div>
+        ) : !songs.length ? (
+          <div className="rounded-2xl border border-white/10 bg-[#151515] p-4 text-sm text-white/70">
+            Chưa có bài hát phù hợp, hãy làm mới gợi ý.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+            {songs.map((song) => (
+              <div key={song.id} className="space-y-1.5">
+                <SongCard song={song} queue={songs} />
+                {/* <p className="px-1 text-xs text-white/55">
+                  {reasonById.get(normalizeSongId(song)) || "Gợi ý theo sở thích gần đây"}
+                </p> */}
+              </div>
+            ))}
+          </div>
+        )}
       </Section>
 
-      {/* ===== ARTIST ALBUM ===== */}
+      <Section
+        title="Top tuần"
+        subtitle="Xu hướng nổi bật"
+        action={
+          <Link to="/zing-chart" className="user-btn-secondary px-3 py-1.5 text-[12px] font-semibold">
+            Mở MChart
+          </Link>
+        }
+      >
+        {chartLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, idx) => (
+              <div key={idx} className="h-14 animate-pulse rounded-xl border border-white/10 bg-[#151515]" />
+            ))}
+          </div>
+        ) : !weeklyTop.length ? (
+          <div className="rounded-2xl border border-white/10 bg-[#151515] p-4 text-sm text-white/70">
+            Chưa có dữ liệu top tuần.
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {weeklyTop.map((song, index) => {
+              const accentColor = TOP_WEEK_COLORS[index % TOP_WEEK_COLORS.length];
+              return (
+                <article
+                  key={song.id}
+                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#151515] p-3 transition md:hover:border-white/20 md:hover:bg-[#1a1a1a]"
+                  style={{ boxShadow: `inset 2px 0 0 ${accentColor}` }}
+                >
+                  <div className="absolute bottom-0 left-0 h-[2px] w-full bg-white/10" />
+                  <div
+                    className="absolute bottom-0 left-0 h-[2px]"
+                    style={{
+                      width: `${Math.min(100, (Number(song.metric || 0) / maxTopMetric) * 100)}%`,
+                      backgroundColor: accentColor,
+                    }}
+                  />
+                  <div className="relative flex items-center gap-3">
+                    <span className="w-7 text-center text-lg font-black" style={{ color: accentColor }}>
+                      {song.rank}
+                    </span>
+                    <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-white/15">
+                      <img
+                        src={resolveAssetUrl(song.cover_url)}
+                        alt={song.title}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-white sm:text-base">{song.title}</p>
+                      <p className="truncate text-xs text-white/60">{song.artist_name}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const playable = (await fetchPlayableSong(song, getSongById)) || song;
+                        if (playable?.id) playSong(playable, weeklyQueue);
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border transition md:hover:scale-105"
+                      style={{
+                        borderColor: `${accentColor}99`,
+                        backgroundColor: `${accentColor}22`,
+                        color: accentColor,
+                      }}
+                      aria-label={`Phát ${song.title}`}
+                    >
+                      <FiPlay size={14} />
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </Section>
+
       <Section title="Nghệ sĩ nổi bật" subtitle="Tuyển tập nổi bật">
         <div className="relative">
           <div
             ref={artistRailRef}
             onMouseEnter={() => pauseAutoScroll(artistTimerRef)}
-            onMouseLeave={() =>
-              startAutoScroll(
-                artistRailRef,
-                artistTimerRef,
-                artistAlbums.length
-              )
-            }
+            onMouseLeave={() => startAutoScroll(artistRailRef, artistTimerRef, artistAlbums.length)}
             className="flex gap-4 overflow-x-auto pb-2 pr-10 scroll-smooth scrollbar-hidden"
           >
-            {artistAlbums.map((artist) => (
-  <div
-                key={artist.artist_id}
-                className="w-44 shrink-0 sm:w-60 lg:w-64"
-              >
-                <ArtistAlbumCard artist={artist} />
-              </div>
-            ))}
-
+            {loadingHome && !artistAlbums.length
+              ? Array.from({ length: 4 }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="h-60 w-44 shrink-0 animate-pulse rounded-2xl border border-white/10 bg-[#151515] sm:w-60 lg:w-64"
+                  />
+                ))
+              : artistAlbums.map((artist) => (
+                  <div key={artist.artist_id} className="w-44 shrink-0 sm:w-60 lg:w-64">
+                    <ArtistAlbumCard artist={artist} />
+                  </div>
+                ))}
           </div>
-
-          {/* CONTROLS */}
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1">
             <button
               onClick={() => {
                 scrollByAmount(artistRailRef, -1);
-                pauseAndResumeAutoScroll(
-                  artistRailRef,
-                  artistTimerRef,
-                  artistResumeRef,
-                  artistAlbums.length
-                );
+                pauseAndResumeAutoScroll(artistRailRef, artistTimerRef, artistResumeRef, artistAlbums.length);
               }}
               className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#121212] text-white/80 shadow-lg transition md:hover:border-white/30 md:hover:text-white sm:flex"
             >
               <FiChevronLeft />
             </button>
           </div>
-
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1">
             <button
               onClick={() => {
                 scrollByAmount(artistRailRef, 1);
-                pauseAndResumeAutoScroll(
-                  artistRailRef,
-                  artistTimerRef,
-                  artistResumeRef,
-                  artistAlbums.length
-                );
+                pauseAndResumeAutoScroll(artistRailRef, artistTimerRef, artistResumeRef, artistAlbums.length);
               }}
               className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#121212] text-white/80 shadow-lg transition md:hover:border-white/30 md:hover:text-white sm:flex"
             >
@@ -458,53 +654,39 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* ===== NEW ALBUM ===== */}
       <Section title="Album mới phát hành" subtitle="Ra mắt gần đây">
         <div className="relative">
           <div
             ref={newAlbumRailRef}
             onMouseEnter={() => pauseAutoScroll(newAlbumTimerRef)}
-            onMouseLeave={() =>
-              startAutoScroll(
-                newAlbumRailRef,
-                newAlbumTimerRef,
-                newAlbums.length
-              )
-            }
+            onMouseLeave={() => startAutoScroll(newAlbumRailRef, newAlbumTimerRef, newAlbums.length)}
             className="flex gap-4 overflow-x-auto pb-2 pr-10 scroll-smooth scrollbar-hidden"
           >
-            {newAlbums.map((album) => (
-              <AlbumCard key={album.id} album={album} />
-            ))}
+            {loadingHome && !newAlbums.length
+              ? Array.from({ length: 4 }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="h-60 w-44 shrink-0 animate-pulse rounded-2xl border border-white/10 bg-[#151515] sm:w-60 lg:w-64"
+                  />
+                ))
+              : newAlbums.map((album) => <AlbumCard key={album.id} album={album} />)}
           </div>
-
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1">
             <button
               onClick={() => {
                 scrollByAmount(newAlbumRailRef, -1);
-                pauseAndResumeAutoScroll(
-                  newAlbumRailRef,
-                  newAlbumTimerRef,
-                  newAlbumResumeRef,
-                  newAlbums.length
-                );
+                pauseAndResumeAutoScroll(newAlbumRailRef, newAlbumTimerRef, newAlbumResumeRef, newAlbums.length);
               }}
               className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#121212] text-white/80 shadow-lg transition md:hover:border-white/30 md:hover:text-white sm:flex"
             >
               <FiChevronLeft />
             </button>
           </div>
-
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1">
             <button
               onClick={() => {
                 scrollByAmount(newAlbumRailRef, 1);
-                pauseAndResumeAutoScroll(
-                  newAlbumRailRef,
-                  newAlbumTimerRef,
-                  newAlbumResumeRef,
-                  newAlbums.length
-                );
+                pauseAndResumeAutoScroll(newAlbumRailRef, newAlbumTimerRef, newAlbumResumeRef, newAlbums.length);
               }}
               className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#121212] text-white/80 shadow-lg transition md:hover:border-white/30 md:hover:text-white sm:flex"
             >

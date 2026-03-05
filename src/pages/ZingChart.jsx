@@ -123,13 +123,14 @@ export default function ZingChart() {
   const [viewportWidth, setViewportWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1280
   );
-  const [syncedTrendHeight, setSyncedTrendHeight] = useState(null);
+  const [syncedRowsHeight, setSyncedRowsHeight] = useState(null);
   const [regionCharts, setRegionCharts] = useState({
     vietnam: [],
     usuk: [],
     kpop: [],
   });
   const weeklyListCardRef = useRef(null);
+  const weeklyRowsRef = useRef(null);
   const chartRef = useRef(null);
   const autoHoverTimerRef = useRef(null);
   const { playSong } = usePlayerStore();
@@ -213,17 +214,17 @@ export default function ZingChart() {
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
     if (viewportWidth < 1280) {
-      setSyncedTrendHeight(null);
+      setSyncedRowsHeight(null);
       return undefined;
     }
 
-    const target = weeklyListCardRef.current;
+    const target = weeklyRowsRef.current;
     if (!target) return undefined;
 
     const syncHeight = () => {
       const nextHeight = Math.round(target.getBoundingClientRect().height || 0);
       if (!nextHeight) return;
-      setSyncedTrendHeight((prev) => (prev === nextHeight ? prev : nextHeight));
+      setSyncedRowsHeight((prev) => (prev === nextHeight ? prev : nextHeight));
     };
 
     syncHeight();
@@ -239,7 +240,7 @@ export default function ZingChart() {
     observer.observe(target);
 
     return () => observer.disconnect();
-  }, [viewportWidth, loading, weeklySongs]);
+  }, [viewportWidth, loading, weeklySongs, regionCharts]);
 
   const weeklyLineData = useMemo(() => {
     if (!weeklySongs.length || !weeklySeries.length) {
@@ -305,8 +306,8 @@ export default function ZingChart() {
     : isTablet
       ? "h-[300px]"
       : "h-[420px]";
-  const chartContainerClass =
-    isDesktopTwoColumn && syncedTrendHeight ? "h-full" : chartHeightClass;
+  const chartContainerStyle =
+    isDesktopTwoColumn && syncedRowsHeight ? { height: `${syncedRowsHeight}px` } : undefined;
 
   const weeklyLineOption = useMemo(() => {
     if (!weeklyLineData.categories.length || !weeklyLineData.series.length) {
@@ -590,7 +591,7 @@ export default function ZingChart() {
               Dữ liệu top nhạc trong tuần
             </p>
             <h1 className="mt-1 text-3xl font-black text-white sm:text-4xl">
-              MinhChart
+              MChart
             </h1>
           </div>
           <button
@@ -604,14 +605,9 @@ export default function ZingChart() {
           </button>
         </div>
 
-        <div className="grid min-w-0 items-stretch gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,1fr)]">
+        <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,1fr)]">
           <div
             className="min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-[#121212] p-4 sm:p-5 xl:flex xl:flex-col"
-            style={
-              isDesktopTwoColumn && syncedTrendHeight
-                ? { height: `${syncedTrendHeight}px` }
-                : undefined
-            }
           >
             <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
               <div className="min-w-0">
@@ -634,12 +630,16 @@ export default function ZingChart() {
 
             <div className="min-h-0 xl:flex-1">
               {loading ? (
-                <div className={`${chartContainerClass} rounded-2xl border border-white/10 bg-[#101010] p-4 text-sm text-white/60`}>
+                <div
+                  className={`${chartHeightClass} rounded-2xl border border-white/10 bg-[#101010] p-4 text-sm text-white/60`}
+                  style={chartContainerStyle}
+                >
                   Đang tải biểu đồ...
                 </div>
               ) : weeklyLineOption ? (
                 <div
-                  className={`${chartContainerClass} min-w-0 overflow-hidden`}
+                  className={`${chartHeightClass} min-w-0 overflow-hidden`}
+                  style={chartContainerStyle}
                   onMouseEnter={() => setIsChartHovered(true)}
                   onMouseLeave={() => setIsChartHovered(false)}
                 >
@@ -652,7 +652,10 @@ export default function ZingChart() {
                   />
                 </div>
               ) : (
-                <div className={`${chartContainerClass} rounded-2xl border border-white/10 bg-[#101010] p-4 text-sm text-white/60`}>
+                <div
+                  className={`${chartHeightClass} rounded-2xl border border-white/10 bg-[#101010] p-4 text-sm text-white/60`}
+                  style={chartContainerStyle}
+                >
                   Chưa có dữ liệu biểu đồ.
                 </div>
               )}
@@ -672,7 +675,7 @@ export default function ZingChart() {
               </span>
             </div>
 
-            <div className="space-y-2.5">
+            <div ref={weeklyRowsRef} className="space-y-2.5">
               {loading && (
                 <div className="text-sm text-white/60">Đang tải bảng xếp hạng...</div>
               )}

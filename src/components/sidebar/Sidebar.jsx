@@ -53,15 +53,15 @@ export default function Sidebar({ isOpen, onClose }) {
             <>
               <SidebarSection>
                 <SidebarItem to="/" icon={MdExplore} label="Khám phá" />
-                <SidebarItem to="/zing-chart" icon={FaChartLine} label="MinhChart" />
+                <SidebarItem to="/zing-chart" icon={FaChartLine} label="MChart" />
                 <SidebarItem to="/new-release" icon={BsMusicNoteList} label="Nhạc mới" />
                 <SidebarItem to="/top-50" icon={MdLibraryMusic} label="Top 50" />
               </SidebarSection>
 
               {isAuthenticated && (
-                <SidebarSection title="Thư viện">
+                <SidebarSection title="Tổng hợp">
                   <SidebarItem to="/history" icon={MdHistory} label="Nghe gần đây" />
-                  <SidebarItem to="/playlists" icon={MdPlaylistPlay} label="Tổng hợp" />
+                  <SidebarItem to="/playlists" icon={MdPlaylistPlay} label="Thư viện" />
                   <SidebarItem to="/library/liked-songs" icon={BsHeartFill} label="Bài hát yêu thích" />
                   <SidebarItem to="/library/playlists" icon={MdPlaylistPlay} label="Playlist đã tạo" />
                   <SidebarItem to="/library/liked-albums" icon={MdAlbum} label="Album đã thích" />

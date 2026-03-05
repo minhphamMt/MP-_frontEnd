@@ -31,11 +31,11 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
         onClick={() => playAt(realIndex)}
         className={`
           group relative flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition
-          ring-1 ring-black/22 backdrop-blur-md
+          backdrop-blur-md
            ${
             isCurrent
-              ? "border-[#38d982]/55 bg-[#1db954]/14 shadow-[0_14px_28px_rgba(20,120,72,0.26)]"
-              : "border-slate-500/35 bg-white/[0.04] md:hover:border-slate-400/45 md:hover:bg-white/[0.08]"
+              ? "border-emerald-300/55 bg-emerald-400/12 shadow-[0_14px_28px_rgba(20,120,72,0.26)]"
+              : "border-white/10 bg-white/[0.03] md:hover:border-white/20 md:hover:bg-white/[0.07]"
           }
           ${isPlayed ? "opacity-55" : ""}
         `}
@@ -56,12 +56,12 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
               {song.title}
             </div>
             {label ? (
-              <span className="shrink-0 rounded-full border-[0.5px] border-slate-500/34 bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/72">
+              <span className="shrink-0 rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/72">
                 {label}
               </span>
             ) : null}
              {isCurrent ? (
-              <span className="shrink-0 rounded-full border border-[#38d982]/35 bg-[#1db954]/20 px-2 py-0.5 text-[10px] font-semibold text-[#66e8a1]">
+              <span className="shrink-0 rounded-full border border-emerald-300/40 bg-emerald-400/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-100">
                 Đang phát
               </span>
             ) : null}
@@ -85,7 +85,7 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
   };
 
   return (
-    <div className="mt-4 flex-1 min-h-0 space-y-6 overflow-y-auto pr-1">
+    <div className="mt-4 flex-1 min-h-0 space-y-6 overflow-y-auto pr-1 scrollbar-hidden">
       {played.length ? (
         <div className="space-y-2.5">
           {played.map((song, idx) => (

@@ -248,17 +248,16 @@ export default function PlayerDetail({ isOpen, onClose }) {
   );
   const panelSurfaceStyle = cover
     ? {
-        backgroundImage: `linear-gradient(160deg, rgba(15, 20, 31, 0.64), rgba(6, 10, 18, 0.76)), radial-gradient(circle at 16% -10%, rgba(255, 255, 255, 0.14), transparent 48%), url(${cover})`,
+        backgroundImage: `linear-gradient(165deg, rgba(7, 7, 7, 0.82), rgba(10, 14, 12, 0.74)), radial-gradient(circle at 84% 8%, rgba(29, 185, 84, 0.18), transparent 42%), url(${cover})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundBlendMode: "normal, screen, overlay",
+        backgroundBlendMode: "normal, normal, overlay",
       }
     : {
-        backgroundImage:
-          "linear-gradient(160deg, rgba(15,20,31,0.66), rgba(6,10,18,0.78))",
+        backgroundImage: "linear-gradient(165deg, rgba(8,8,8,0.9), rgba(11,15,13,0.82))",
       };
   const panelSurfaceClass =
-    "border-[0.5px] border-[#2a3140]/90 bg-slate-900/42 shadow-[0_30px_70px_rgba(2,8,18,0.58)] ring-1 ring-black/46 backdrop-blur-[30px]";
+    "border border-white/10 bg-[#101010]/82 shadow-[0_26px_60px_rgba(0,0,0,0.56)] backdrop-blur-2xl";
   const artistId =
     currentSong?.artist_id ??
     currentSong?.artist?.id ??
@@ -275,8 +274,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
       }}
       className={`flex h-10 w-10 items-center justify-center rounded-full transition active:scale-95 ${
         likedSongIds.includes(normalizeSongId(currentSong))
-          ? "border border-[#33d17a]/55 bg-[#1db954]/24 text-[#66e79d] shadow-[0_0_24px_rgba(29,185,84,0.3)]"
-          : "border-[0.5px] border-[#2a3140]/82 bg-white/[0.06] text-white/80 md:hover:bg-white/12"
+          ? "border border-emerald-300/55 bg-emerald-400/20 text-emerald-100 shadow-[0_0_24px_rgba(29,185,84,0.3)]"
+          : "border border-white/15 bg-white/[0.06] text-white/80 md:hover:bg-white/12"
       }`}
       aria-label="Yêu thích"
     >
@@ -349,7 +348,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
         {/* Phone: đĩa tròn */}
         <div className="relative flex items-center justify-center sm:hidden">
           <div
-            className="overflow-hidden rounded-full border-[0.5px] border-slate-500/32 bg-white/5 shadow-[0_30px_90px_rgba(4,10,20,0.62)]"
+            className="overflow-hidden rounded-full border border-white/12 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,0.62)]"
             style={{
               // ✅ co theo màn hình điện thoại để không lẹm
               width: "clamp(210px, 70vw, 320px)",
@@ -446,8 +445,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
             onClick={toggleShuffle}
             className={`flex h-10 w-10 items-center justify-center rounded-full border transition sm:h-11 sm:w-11 ${
               shuffle
-                ? "border-[#37d880]/60 bg-[#1db954]/22 text-[#5ce297] shadow-[0_0_22px_rgba(29,185,84,0.28)]"
-                : "border-[#2a3140]/82 bg-white/[0.05] text-white/65 md:hover:bg-white/12 md:hover:text-white/90"
+                ? "border-emerald-300/60 bg-emerald-400/20 text-emerald-100 shadow-[0_0_22px_rgba(29,185,84,0.28)]"
+                : "border-white/15 bg-white/[0.05] text-white/65 md:hover:bg-white/12 md:hover:text-white/90"
             }`}
             aria-label="Trộn"
           >
@@ -456,7 +455,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           <button
             onClick={playPrev}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2a3140]/82 bg-white/[0.05] text-white/80 transition md:hover:bg-white/12 md:hover:text-white sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/[0.05] text-white/80 transition md:hover:bg-white/12 md:hover:text-white sm:h-11 sm:w-11"
             aria-label="Bài trước"
           >
             <FaBackwardStep />
@@ -472,7 +471,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           <button
             onClick={playNext}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2a3140]/82 bg-white/[0.05] text-white/80 transition md:hover:bg-white/12 md:hover:text-white sm:h-11 sm:w-11"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/[0.05] text-white/80 transition md:hover:bg-white/12 md:hover:text-white sm:h-11 sm:w-11"
             aria-label="Bài tiếp"
           >
             <FaForwardStep />
@@ -482,8 +481,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
             onClick={toggleRepeatMode}
             className={`relative flex h-10 w-10 items-center justify-center rounded-full border transition sm:h-11 sm:w-11 ${
               repeatMode !== "off"
-                ? "border-[#37d880]/60 bg-[#1db954]/22 text-[#5ce297] shadow-[0_0_22px_rgba(29,185,84,0.28)]"
-                : "border-[#2a3140]/82 bg-white/[0.05] text-white/65 md:hover:bg-white/12 md:hover:text-white/90"
+                ? "border-emerald-300/60 bg-emerald-400/20 text-emerald-100 shadow-[0_0_22px_rgba(29,185,84,0.28)]"
+                : "border-white/15 bg-white/[0.05] text-white/65 md:hover:bg-white/12 md:hover:text-white/90"
             }`}
             aria-label="Lặp"
           >
@@ -502,12 +501,12 @@ export default function PlayerDetail({ isOpen, onClose }) {
         <div className="flex items-center justify-end gap-2 md:gap-3">
           <AddToPlaylistButton
             song={currentSong}
-            triggerClassName="h-10 w-10 border-[0.5px] border-[#2a3140]/82 bg-white/[0.06] text-white/80 md:hover:bg-white/14"
+            triggerClassName="h-10 w-10 border border-white/15 bg-white/[0.06] text-white/80 md:hover:bg-white/14"
           />
 
           <button
             onClick={toggleMute}
-            className="hidden h-10 w-10 items-center justify-center rounded-full border border-[#2a3140]/82 bg-white/[0.05] text-lg text-white/75 transition md:inline-flex md:hover:bg-white/12 md:hover:text-white"
+            className="hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/[0.05] text-lg text-white/75 transition md:inline-flex md:hover:bg-white/12 md:hover:text-white"
             aria-label="Tắt/Mở tiếng"
           >
             {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
@@ -535,7 +534,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       <div className="mt-3 flex items-center gap-3 px-1 md:hidden">
         <button
           onClick={toggleMute}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#2a3140]/82 bg-white/[0.05] text-base text-white/78 transition active:scale-95"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/[0.05] text-base text-white/78 transition active:scale-95"
           aria-label="Tắt/Mở tiếng"
         >
           {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
@@ -581,7 +580,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     >
       {/* BACKDROP */}
       <div
-        className="absolute inset-0 bg-[#04070f]/40"
+        className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
         onMouseDown={(e) => {
           if (e.target !== e.currentTarget) return;
           if (backdropReady) onClose?.();
@@ -591,25 +590,15 @@ export default function PlayerDetail({ isOpen, onClose }) {
       {/* BG IMAGE (isolated layer) */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute inset-[-20%] opacity-[0.62] blur-[95px]"
+          className="absolute inset-[-20%] opacity-[0.28] blur-[100px]"
           style={{
             backgroundImage: `url(${cover})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            filter: "saturate(1.42) brightness(0.5) contrast(1.08)",
+            filter: "saturate(1.15) brightness(0.42) contrast(1.04)",
           }}
         />
-        <div
-          className="absolute inset-[-26%] opacity-[0.26] blur-[140px]"
-          style={{
-            backgroundImage: `url(${cover})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            filter: "saturate(1.7) hue-rotate(-8deg) brightness(0.55)",
-            transform: "scale(1.07)",
-          }}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_12%,rgba(137,240,196,0.16),transparent_42%),radial-gradient(circle_at_82%_80%,rgba(74,164,255,0.16),transparent_46%),linear-gradient(160deg,rgba(5,8,16,0.34),rgba(1,3,8,0.72))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(29,185,84,0.18),transparent_40%),linear-gradient(165deg,rgba(5,6,6,0.38),rgba(2,3,3,0.86))]" />
       </div>
 
       {/* CONTENT */}
@@ -625,8 +614,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
               z-20
               flex h-9 w-9 items-center justify-center lg:hidden
               rounded-xl
-              border-[0.5px] border-[#2a3140]/88
-              bg-black/35
+              border border-white/15
+              bg-black/45
               text-base text-white/85
               shadow-[0_12px_30px_rgba(0,0,0,0.42)]
               transition md:hover:bg-black/60 md:hover:text-white
@@ -668,7 +657,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             >
               {/* Tabs + close */}
               <div className="flex items-center gap-2">
-                <div className="flex flex-1 items-center gap-2 rounded-full border-[0.5px] border-[#2a3140]/82 bg-black/30 p-1">
+                <div className="flex flex-1 items-center gap-2 rounded-full border border-white/15 bg-black/30 p-1">
                   {[
                     { id: "queue", label: "Danh sách phát" },
                     { id: "lyrics", label: "Lời bài hát" },
@@ -679,7 +668,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
                       onClick={() => setActiveTab(tab.id)}
                       className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold transition sm:text-sm ${
                         activeTab === tab.id
-                          ? "bg-white/95 text-slate-900 shadow-[0_8px_18px_rgba(0,0,0,0.18)]"
+                          ? "border border-emerald-300/60 bg-emerald-400/22 text-emerald-100 shadow-[0_8px_18px_rgba(29,185,84,0.24)]"
                           : "text-white/72 md:hover:bg-white/8 md:hover:text-white"
                       }`}
                     >
@@ -691,7 +680,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[0.5px] border-[#2a3140]/88 bg-black/36 text-white/85 shadow-[0_12px_28px_rgba(0,0,0,0.4)] transition md:hover:bg-black/58 md:hover:text-white"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/85 shadow-[0_12px_28px_rgba(0,0,0,0.4)] transition md:hover:bg-black/58 md:hover:text-white"
                   aria-label="Đóng"
                 >
                   <span className="-mt-[1px] text-lg leading-none">✕</span>
@@ -722,7 +711,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           {/* Mobile/tablet swipe layout */}
           <div className="mt-3 flex min-h-0 flex-1 flex-col overflow-hidden lg:hidden">
-            <div className="mb-4 flex items-center justify-center gap-2 overflow-x-auto rounded-full border-[0.5px] border-[#2a3140]/82 bg-black/24 px-2 py-1 text-xs text-white/60 sm:mb-3 sm:px-1">
+            <div className="mb-4 flex items-center justify-center gap-2 overflow-x-auto rounded-full border border-white/15 bg-black/24 px-2 py-1 text-xs text-white/60 sm:mb-3 sm:px-1">
               {[
                 { id: "lyrics", label: "Lời bài hát" },
                 { id: "now", label: "Đang phát" },
@@ -740,7 +729,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
                   }}
                   className={`rounded-full px-3 py-1.5 font-medium transition ${
                     mobileTab === tab.id
-                      ? "bg-white/92 text-slate-900 shadow-[0_8px_16px_rgba(0,0,0,0.18)]"
+                      ? "border border-emerald-300/60 bg-emerald-400/22 text-emerald-100 shadow-[0_8px_16px_rgba(29,185,84,0.24)]"
                       : "text-white/62 md:hover:bg-white/8 md:hover:text-white/85"
                   }`}
                 >
