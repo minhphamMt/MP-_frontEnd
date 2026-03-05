@@ -1,9 +1,9 @@
 import { FiHeart, FiPause, FiPlay, FiRadio } from "react-icons/fi";
-import { Link } from "react-router-dom";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
+import ArtistNames from "../artist/ArtistNames";
 
 export default function SongCard({ song, queue }) {
   const { playSong, pause, resume, currentSong, isPlaying, likedSongIds, toggleLike } = usePlayerStore();
@@ -11,7 +11,6 @@ export default function SongCard({ song, queue }) {
   const normalizedId = normalizeSongId(song);
   const isActive = normalizeSongId(currentSong) === normalizedId;
   const isLiked = normalizedId !== null && likedSongIds.includes(normalizedId);
-  const artistId = song?.artist_id ?? song?.artist?.id ?? song?.artistId;
 
   const handlePlay = (e) => {
     e.stopPropagation();
@@ -60,17 +59,11 @@ export default function SongCard({ song, queue }) {
             {song.title}
           </div>
           <div className="truncate text-xs text-white/70 sm:text-sm">
-            {artistId ? (
-              <Link
-                to={`/artist/${artistId}`}
-                onClick={(e) => e.stopPropagation()}
-                className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-              >
-                {song.artist_name}
-              </Link>
-            ) : (
-              song.artist_name
-            )}
+            <ArtistNames
+              item={song}
+              stopPropagation
+              linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+            />
           </div>
         </div>
 

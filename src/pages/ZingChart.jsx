@@ -14,9 +14,11 @@ import {
   filterPlayableSongs,
   formatDuration,
 } from "../utils/song";
+import { getArtistLabel } from "../utils/artist";
 import usePlayerStore from "../store/player.store";
 import OptimizedImage from "../components/common/OptimizedImage";
 import { resolveAssetUrl } from "../utils/asset";
+import ArtistNames from "../components/artist/ArtistNames";
 
 const LINE_COLORS = ["#fbbf24", "#60a5fa", "#a78bfa", "#fb7185", "#f97316"];
 
@@ -343,7 +345,7 @@ export default function ZingChart() {
           const cover = getSongCover(song);
           const dateLabel = weeklyLineData.categories?.[params.dataIndex] || "";
           const plays = Number(params.data || 0);
-          const artist = song?.artist_name || song?.artist || "Không rõ nghệ sĩ";
+          const artist = getArtistLabel(song, "Không rõ nghệ sĩ");
           const title = song?.title || params.seriesName || "Bài hát";
           const compactTooltip = isMobile;
           const tooltipMinWidth = compactTooltip ? 168 : 250;
@@ -688,9 +690,6 @@ export default function ZingChart() {
               {!loading &&
                 weeklySongs.map((song, index) => {
                   const rank = index + 1;
-                  const artistId =
-                    song?.artist_id ?? song?.artist?.id ?? song?.artistId;
-                  const artistLabel = song?.artist_name || song?.artist || "";
                   const theme = getRankTheme(rank);
                   const metric = getSongMetric(song);
                   const widthPercent = Math.max(
@@ -729,16 +728,11 @@ export default function ZingChart() {
                             {song.title}
                           </p>
                           <p className="truncate text-xs text-white/60">
-                            {artistId ? (
-                              <Link
-                                to={`/artist/${artistId}`}
-                                className="inline-block transition md:hover:text-white md:hover:underline"
-                              >
-                                {artistLabel}
-                              </Link>
-                            ) : (
-                              artistLabel
-                            )}
+                            <ArtistNames
+                              item={song}
+                              fallback="Nghệ sĩ"
+                              linkClassName="inline-block transition md:hover:text-white md:hover:underline"
+                            />
                           </p>
                         </div>
 
@@ -817,9 +811,6 @@ export default function ZingChart() {
                   {!loading &&
                     songs.map((song, index) => {
                       const rank = index + 1;
-                      const artistId =
-                        song?.artist_id ?? song?.artist?.id ?? song?.artistId;
-                      const artistLabel = song?.artist_name || song?.artist || "";
                       const theme = getRankTheme(rank);
                       const metric = getSongMetric(song);
                       const widthPercent = Math.max(
@@ -857,16 +848,11 @@ export default function ZingChart() {
                                 {song.title}
                               </p>
                               <p className="truncate text-xs text-white/60">
-                                {artistId ? (
-                                  <Link
-                                    to={`/artist/${artistId}`}
-                                    className="inline-block transition md:hover:text-white md:hover:underline"
-                                  >
-                                    {artistLabel}
-                                  </Link>
-                                ) : (
-                                  artistLabel
-                                )}
+                                <ArtistNames
+                                  item={song}
+                                  fallback="Nghệ sĩ"
+                                  linkClassName="inline-block transition md:hover:text-white md:hover:underline"
+                                />
                               </p>
                             </div>
                             <span

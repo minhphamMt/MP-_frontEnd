@@ -25,7 +25,7 @@ export default function Sidebar({ isOpen, onClose }) {
       />
 
       <aside
-        className={`sidebar-motion fixed inset-y-0 left-0 z-40 flex h-full w-[276px] sm:w-[304px] flex-col overflow-hidden border-r border-white/10 bg-[#040404] text-white shadow-[0_26px_80px_rgba(0,0,0,0.6)] will-change-transform transition-transform duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:static lg:translate-x-0 lg:duration-0 ${
+        className={`sidebar-motion fixed inset-y-0 left-0 z-40 flex h-full w-[276px] sm:w-[304px] lg:w-[246px] xl:w-[258px] flex-col overflow-hidden border-r border-white/10 bg-[#040404] text-white shadow-[0_26px_80px_rgba(0,0,0,0.6)] will-change-transform transition-transform duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:static lg:translate-x-0 lg:duration-0 ${
           isOpen ? "translate-x-0" : "-translate-x-[108%]"
         }`}
       >
@@ -75,4 +75,3 @@ export default function Sidebar({ isOpen, onClose }) {
     </>
   );
 }
-

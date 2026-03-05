@@ -1,7 +1,7 @@
 import { memo, useMemo } from "react";
-import { Link } from "react-router-dom";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
+import ArtistNames from "../artist/ArtistNames";
 
 function PlayerDetailQueue({ queue, currentIndex, playAt }) {
   const played = useMemo(() => {
@@ -21,9 +21,6 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
     const sCover = resolveAssetUrl(song.cover || song.cover_url || song.image);
     const realIndex = queue.findIndex((q) => q === song);
     const isCurrent = realIndex === currentIndex;
-    const artistId = song?.artist_id ?? song?.artist?.id ?? song?.artistId;
-    const artistLabel = song?.artist?.name || song?.artist_name || "";
-
     return (
       <button
         key={song.id || idx}
@@ -67,17 +64,12 @@ function PlayerDetailQueue({ queue, currentIndex, playAt }) {
             ) : null}
           </div>
           <div className="mt-1 text-[11px] text-white/62 sm:text-xs line-clamp-2">
-            {artistId ? (
-              <Link
-                to={`/artist/${artistId}`}
-                onClick={(e) => e.stopPropagation()}
-                className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-              >
-                {artistLabel}
-              </Link>
-            ) : (
-              artistLabel
-            )}
+            <ArtistNames
+              item={song}
+              stopPropagation
+              fallback="Nghệ sĩ"
+              linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+            />
           </div>
         </div>
       </button>

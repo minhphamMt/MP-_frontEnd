@@ -1,4 +1,5 @@
 import { resolveAssetUrl } from "./asset";
+import { getArtistLabel, getPrimaryArtistId, normalizeArtists } from "./artist";
 
 export const formatDuration = (s = 0) => {
   const total = Number.isFinite(Number(s)) ? Math.max(0, Math.round(Number(s))) : 0;
@@ -42,30 +43,30 @@ export const toPlayableSong = (rawInput = {}) => {
     import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
   const source = raw.song ?? raw;
 
-const audioPath =
-  resolveAudioUrl(
-    source.audio_url ||
-    source.audioUrl ||
-    source.audio ||
-    source.streaming_url ||
-    source.stream_url ||
-    source.streamUrl ||
-    source.source_url ||
-    source.source ||
-    source.url ||
-    raw.audio_url ||
-    raw.audioUrl ||
-    raw.audio ||
-    raw.streaming_url ||
-    raw.stream_url ||
-    raw.streamUrl ||
-    raw.source_url ||
-    raw.source ||
-    raw.url,
-    baseUrl
-  ) ||
-  resolveAudioUrl(source.audio_path, baseUrl) ||
-  resolveAudioUrl(raw.audio_path, baseUrl);
+  const audioPath =
+    resolveAudioUrl(
+      source.audio_url ||
+        source.audioUrl ||
+        source.audio ||
+        source.streaming_url ||
+        source.stream_url ||
+        source.streamUrl ||
+        source.source_url ||
+        source.source ||
+        source.url ||
+        raw.audio_url ||
+        raw.audioUrl ||
+        raw.audio ||
+        raw.streaming_url ||
+        raw.stream_url ||
+        raw.streamUrl ||
+        raw.source_url ||
+        raw.source ||
+        raw.url,
+      baseUrl
+    ) ||
+    resolveAudioUrl(source.audio_path, baseUrl) ||
+    resolveAudioUrl(raw.audio_path, baseUrl);
 
   const cover =
     source.cover_url ||
@@ -84,6 +85,10 @@ const audioPath =
     raw.album?.cover_url ||
     "";
 
+  const artists = normalizeArtists({ ...raw, ...source });
+  const artistName = getArtistLabel({ ...raw, ...source }) || "";
+  const artistId = getPrimaryArtistId({ ...raw, ...source });
+
   return {
     id:
       source.id ??
@@ -94,21 +99,9 @@ const audioPath =
       raw.songId ??
       raw._id,
     title: source.title ?? source.name ?? raw.title ?? raw.name ?? "Không rõ",
-    artist_name:
-      source.artist_name ??
-      source.artistName ??
-      source.artist?.name ??
-      raw.artist_name ??
-      raw.artistName ??
-      raw.artist?.name ??
-      "",
-    artist_id:
-      source.artist_id ??
-      source.artistId ??
-      source.artist?.id ??
-      raw.artist_id ??
-      raw.artistId ??
-      raw.artist?.id,
+    artist_name: artistName,
+    artist_id: artistId,
+    artists,
     duration: source.duration ?? source.length ?? raw.duration ?? raw.length ?? 0,
     cover_url: resolveAssetUrl(cover, baseUrl),
     album_id: source.album_id ?? source.albumId ?? source.album?.id,

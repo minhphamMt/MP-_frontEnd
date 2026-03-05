@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { FiCalendar, FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import { getAlbumById } from "../api/album.api";
 import useAlbumLikeStore, {
@@ -11,6 +11,9 @@ import { resolveAssetUrl } from "../utils/asset";
 import useAuthStore from "../store/auth.store";
 import { formatDateDisplay } from "../utils/date";
 import OptimizedImage from "../components/common/OptimizedImage";
+import { getArtistLabel, getPrimaryArtistId, normalizeArtists } from "../utils/artist";
+import ArtistNames from "../components/artist/ArtistNames";
+import { toPlayableSong } from "../utils/song";
 
 const formatTime = (s = 0) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -50,16 +53,28 @@ export default function AlbumDetail() {
       setAlbum(data);
 
       setSongs(
-        (data.songs || []).map((s) => ({
-          id: s.id,
-          title: s.title,
-          artist_name: s.artist_name || s.artist?.name || "",
-          artist_id:
-            s.artist_id || s.artist?.id || data.artist_id || data.artist?.id,
-          duration: s.duration,
-          cover_url: s.cover_url,
-          audio_url: `${import.meta.env.VITE_API_BASE_URL}${s.audio_path}`,
-        }))
+        (data.songs || []).map((s) => {
+          const fallbackArtists = normalizeArtists({
+            artist_id: s.artist_id || s.artist?.id || data.artist_id || data.artist?.id,
+            artist_name:
+              s.artist_name ||
+              s.artist?.name ||
+              data.artist_name ||
+              data.artist?.name ||
+              "",
+          });
+
+          const artists = normalizeArtists({ ...s, artists: s.artists || fallbackArtists });
+
+          return toPlayableSong({
+            ...s,
+            artist_name: getArtistLabel({ ...s, artists }, ""),
+            artist_id: getPrimaryArtistId({ ...s, artists }),
+            artists,
+            album_id: s.album_id ?? data.id,
+            album_title: s.album_title ?? data.title,
+          });
+        })
       );
     } catch (err) {
       console.error("Load album detail error:", err);
@@ -105,7 +120,7 @@ export default function AlbumDetail() {
   /* =======================
      UI
      ======================= */
-      const artistMeta = album?.artist || {};
+  const artistMeta = album?.artist || {};
   const artistDisplayName =
     album?.artist_name || artistMeta?.name || artistMeta?.alias;
   const artistId = album?.artist_id || artistMeta?.id;
@@ -267,10 +282,6 @@ export default function AlbumDetail() {
               const songId = normalizeSongId(song);
               const isActive = normalizeSongId(currentSong) === songId;
               const isLiked = songId && likedSongIds.includes(songId);
-              const artistId =
-                song.artist_id || album?.artist_id || album?.artist?.id;
-              const artistLabel =
-                song.artist_name || artistDisplayName || "Nghệ sĩ";
               return (
                 <div
                   key={song.id}
@@ -325,17 +336,12 @@ export default function AlbumDetail() {
                         {song.title}
                       </div>
                         <div className="hidden truncate text-xs text-white/60 xl:block">
-                          {artistId ? (
-                            <Link
-                              to={`/artist/${artistId}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-                            >
-                              {artistLabel}
-                            </Link>
-                          ) : (
-                            artistLabel
-                          )}
+                          <ArtistNames
+                            item={song}
+                            stopPropagation
+                            fallback={artistDisplayName || "Nghệ sĩ"}
+                            linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                          />
                         </div>
                     </div>
                   </div>

@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
+import ArtistNames from "../artist/ArtistNames";
 
 export default function PlaylistSuggestions({
   songs = [],
@@ -39,9 +39,6 @@ export default function PlaylistSuggestions({
         )}
 
         {songs.map((song) => {
-          const artistId = song?.artist_id ?? song?.artist?.id ?? song?.artistId;
-          const artistLabel = song?.artist_name || song?.artist || "";
-
           return (
             <div
               key={song.id}
@@ -69,16 +66,12 @@ export default function PlaylistSuggestions({
                     {song.title}
                   </p>
                   <p className="truncate text-xs text-white/60">
-                    {artistId ? (
-                      <Link
-                        to={`/artist/${artistId}`}
-                        className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-                      >
-                        {artistLabel}
-                      </Link>
-                    ) : (
-                      artistLabel
-                    )}
+                    <ArtistNames
+                      item={song}
+                      stopPropagation
+                      linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                      fallback="Nghệ sĩ"
+                    />
                   </p>
                 </div>
               </div>

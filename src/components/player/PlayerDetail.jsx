@@ -10,13 +10,13 @@ import {
   FaVolumeXmark,
 } from "react-icons/fa6";
 import { FiHeart } from "react-icons/fi";
-import { Link } from "react-router-dom";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
 import PlayerDetailLyrics from "./PlayerDetailLyrics";
 import PlayerDetailQueue from "./PlayerDetailQueue";
 import OptimizedImage from "../common/OptimizedImage";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
+import ArtistNames from "../artist/ArtistNames";
 
 /* ================= utils ================= */
 const formatTime = (sec = 0) => {
@@ -296,13 +296,6 @@ export default function PlayerDetail({ isOpen, onClose }) {
       };
   const panelSurfaceClass =
     "border border-white/10 bg-[#101010]/82 shadow-[0_26px_60px_rgba(0,0,0,0.56)] backdrop-blur-2xl";
-  const artistId =
-    currentSong?.artist_id ??
-    currentSong?.artist?.id ??
-    currentSong?.artistId;
-  const artistLabel =
-    currentSong?.artist?.name || currentSong?.artist_name || "Unknown";
-
   const likeButton = (
     <button
       type="button"
@@ -368,16 +361,11 @@ export default function PlayerDetail({ isOpen, onClose }) {
               {currentSong.title}
             </h3>
             <p className="mt-2.5 overflow-hidden text-[clamp(0.98rem,1.7vw,1.35rem)] font-medium leading-snug tracking-wide text-emerald-300/90 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-              {artistId ? (
-                <Link
-                  to={`/artist/${artistId}`}
-                  className="transition md:hover:text-emerald-300"
-                >
-                  {artistLabel}
-                </Link>
-              ) : (
-                artistLabel
-              )}
+              <ArtistNames
+                item={currentSong}
+                fallback="Unknown"
+                linkClassName="transition md:hover:text-emerald-300"
+              />
             </p>
           </div>
 
@@ -420,16 +408,11 @@ export default function PlayerDetail({ isOpen, onClose }) {
           {currentSong.title}
         </h3>
         <p className="mx-auto mt-1 max-w-[95%] overflow-hidden text-xs text-white/75 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-          {artistId ? (
-            <Link
-              to={`/artist/${artistId}`}
-              className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-            >
-              {artistLabel}
-            </Link>
-          ) : (
-            artistLabel
-          )}
+          <ArtistNames
+            item={currentSong}
+            fallback="Unknown"
+            linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+          />
         </p>
       </div>
 
@@ -687,16 +670,11 @@ export default function PlayerDetail({ isOpen, onClose }) {
               {currentSong.title}
             </h2>
             <p className="text-xs text-white/60 sm:text-sm">
-              {artistId ? (
-                <Link
-                  to={`/artist/${artistId}`}
-                  className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-                >
-                  {artistLabel}
-                </Link>
-              ) : (
-                artistLabel
-              )}
+              <ArtistNames
+                item={currentSong}
+                fallback="Unknown"
+                linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+              />
             </p>
           </div>
 

@@ -11,6 +11,7 @@ import {
 import { resolveAssetUrl } from "../utils/asset";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 import OptimizedImage from "../components/common/OptimizedImage";
+import ArtistNames from "../components/artist/ArtistNames";
 
 export default function SongDetail() {
   const { id } = useParams();
@@ -86,12 +87,7 @@ export default function SongDetail() {
   const songId = normalizeSongId(song);
   const isActive = normalizeSongId(currentSong) === songId;
   const isLiked = songId && likedSongIds.includes(songId);
-  const artistId = song.artist_id;
   const albumId = song.album_id;
-
-  const goToArtist = () => {
-    if (artistId) navigate(`/artist/${artistId}`);
-  };
 
   const goToAlbum = () => {
     if (albumId) navigate(`/album/${albumId}`);
@@ -133,17 +129,15 @@ export default function SongDetail() {
                 {song.title}
               </h1>
 
-              {song.artist_name && (
-                <button
-                  type="button"
-                  onClick={goToArtist}
-                  disabled={!artistId}
-                  className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm text-white/80 transition md:hover:bg-white/20 disabled:cursor-default disabled:opacity-70"
-                >
-                  <FiUser className="text-emerald-300" />
-                  <span>{song.artist_name}</span>
-                </button>
-              )}
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm text-white/80">
+                <FiUser className="text-emerald-300" />
+                <ArtistNames
+                  item={song}
+                  stopPropagation
+                  className="truncate"
+                  linkClassName="transition md:hover:text-emerald-300 md:hover:underline"
+                />
+              </div>
             </div>
 
             {/* META */}
@@ -224,18 +218,12 @@ export default function SongDetail() {
               Nghệ sĩ
             </div>
             <div className="mt-1 text-white">
-              {song.artist_name ? (
-                <button
-                  type="button"
-                  onClick={goToArtist}
-                  disabled={!artistId}
-                  className="transition md:hover:text-emerald-300 disabled:cursor-default disabled:hover:text-white"
-                >
-                  {song.artist_name}
-                </button>
-              ) : (
-                "Không rõ"
-              )}
+              <ArtistNames
+                item={song}
+                fallback="Không rõ"
+                stopPropagation
+                linkClassName="transition md:hover:text-emerald-300 md:hover:underline"
+              />
             </div>
           </div>
 

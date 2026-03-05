@@ -13,11 +13,11 @@ import {
 } from "react-icons/hi2";
 import { RiRepeat2Fill } from "react-icons/ri";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import PlayerDetail from "./PlayerDetail";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
+import ArtistNames from "../artist/ArtistNames";
 
 const formatTime = (t = 0) =>
   `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
@@ -60,13 +60,6 @@ export default function PlayerBar() {
   const volumePercent = Math.round((volume ?? 0) * 100);
   const displayVolumePercent = muted ? 0 : volumePercent;
   const volumeGradient = `linear-gradient(to right, #1db954 ${displayVolumePercent}%, rgba(255,255,255,0.2) ${displayVolumePercent}%)`;
-  const artistId =
-    currentSong?.artist_id ??
-    currentSong?.artist?.id ??
-    currentSong?.artistId;
-  const artistLabel =
-    currentSong?.artist_name || currentSong?.artist?.name || "";
-
   const handleVolumeChange = (value) => {
     const next = Math.round(Number(value));
     if (muted && next > 0) toggleMute();
@@ -99,17 +92,11 @@ export default function PlayerBar() {
               {currentSong.title}
             </div>
             <div className="truncate text-xs text-white/60">
-              {artistId ? (
-                <Link
-                  to={`/artist/${artistId}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-                >
-                  {artistLabel}
-                </Link>
-              ) : (
-                artistLabel
-              )}
+              <ArtistNames
+                item={currentSong}
+                stopPropagation
+                linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+              />
             </div>
           </div>
 
@@ -183,16 +170,10 @@ export default function PlayerBar() {
                 {currentSong.title}
               </div>
               <div className="truncate text-sm text-white/60">
-                {artistId ? (
-                  <Link
-                    to={`/artist/${artistId}`}
-                    className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-                  >
-                    {artistLabel}
-                  </Link>
-                ) : (
-                  artistLabel
-                )}
+                <ArtistNames
+                  item={currentSong}
+                  linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                />
               </div>
             </div>
             <button

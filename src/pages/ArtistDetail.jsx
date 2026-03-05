@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import api from "../api/axios";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import FollowArtistButton from "../components/artist/FollowArtistButton";
+import ArtistNames from "../components/artist/ArtistNames";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 import { resolveAssetUrl } from "../utils/asset";
 import { formatDateDisplay } from "../utils/date";
 import OptimizedImage from "../components/common/OptimizedImage";
+import { getArtistLabel, getPrimaryArtistId, normalizeArtists } from "../utils/artist";
+import { toPlayableSong } from "../utils/song";
 
 const formatTime = (s = 0) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -73,12 +76,23 @@ const renderBioHtml = (bio = "") => {
       }
 
       setSongs(
-        songList.map((s) => ({
-          ...s,
-          artist_name: artistData?.name || artistData?.alias || "",
-          artist_id: artistData?.id ?? id,
-          audio_url: `${import.meta.env.VITE_API_BASE_URL}${s.audio_path}`,
-        }))
+        songList.map((s) => {
+          const fallbackArtists = normalizeArtists({
+            artist_id: artistData?.id ?? id,
+            artist_name: artistData?.name || artistData?.alias || "",
+          });
+          const artists = normalizeArtists({ ...s, artists: s.artists || fallbackArtists });
+
+          return toPlayableSong({
+            ...s,
+            artist_name: getArtistLabel(
+              { ...s, artists },
+              artistData?.name || artistData?.alias || ""
+            ),
+            artist_id: getPrimaryArtistId({ ...s, artists }),
+            artists,
+          });
+        })
       );
     } catch (err) {
       console.error("Load artist error", err);
@@ -274,9 +288,6 @@ const renderBioHtml = (bio = "") => {
               const songId = normalizeSongId(song);
               const isActive = normalizeSongId(currentSong) === songId;
               const isLiked = songId && likedSongIds.includes(songId);
-              const artistId = song.artist_id || id;
-              const artistLabel =
-                song.artist_name || artist?.name || "Nghệ sĩ";
 
               return (
                 <div
@@ -328,17 +339,12 @@ const renderBioHtml = (bio = "") => {
                         {song.title}
                       </div>
                         <div className="hidden truncate text-xs text-white/60 xl:block">
-                          {artistId ? (
-                            <Link
-                              to={`/artist/${artistId}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-                            >
-                              {artistLabel}
-                            </Link>
-                          ) : (
-                            artistLabel
-                          )}
+                          <ArtistNames
+                            item={song}
+                            stopPropagation
+                            fallback={artist?.name || "Nghệ sĩ"}
+                            linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                          />
                         </div>
                     </div>
                   </div>

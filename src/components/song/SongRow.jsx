@@ -1,15 +1,15 @@
-import { Link } from "react-router-dom";
 import { FiPlay, FiPause } from "react-icons/fi";
+import { Link } from "react-router-dom";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { formatDuration } from "../../utils/song";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
+import ArtistNames from "../artist/ArtistNames";
 
 export default function SongRow({ song, queue }) {
   const { playSong, currentSong, isPlaying } = usePlayerStore();
 
   const isActive = normalizeSongId(currentSong) === normalizeSongId(song);
-  const artistId = song?.artist_id ?? song?.artist?.id ?? song?.artistId;
 
   const handlePlay = (e) => {
     e.stopPropagation();
@@ -45,17 +45,12 @@ export default function SongRow({ song, queue }) {
           <span className="block w-full truncate">{song.title}</span>
         </div>
         <div className="flex min-w-0 max-w-full items-center gap-1 overflow-hidden text-xs text-white/60">
-          {artistId ? (
-            <Link
-              to={`/artist/${artistId}`}
-              onClick={(e) => e.stopPropagation()}
-              className="min-w-0 truncate text-white/70 transition md:hover:text-emerald-300 md:hover:underline"
-            >
-              {song.artist_name}
-            </Link>
-          ) : (
-            <span className="truncate">{song.artist_name}</span>
-          )}
+          <ArtistNames
+            item={song}
+            stopPropagation
+            className="min-w-0 truncate text-white/70"
+            linkClassName="min-w-0 truncate text-white/70 transition md:hover:text-emerald-300 md:hover:underline"
+          />
 
           {song.album_id && song.album_title && (
             <>

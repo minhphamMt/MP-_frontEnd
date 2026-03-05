@@ -9,30 +9,39 @@ import { saveSearchHistory } from "../api/search.api";
 import useAuthStore from "../store/auth.store";
 import { resolveAssetUrl } from "../utils/asset";
 import OptimizedImage from "../components/common/OptimizedImage";
+import { getArtistLabel } from "../utils/artist";
 
-const normalizeArtist = (artist) => ({
-  ...artist,
-  artist_id: artist.artist_id ?? artist.id,
-  artist_name: artist.artist_name ?? artist.name ?? artist.title,
-  cover_url:
-    artist.cover_url ||
-    artist.avatar_url ||
-    artist.avatar ||
-    artist.image_url ||
-    artist.thumbnail_m ||
-    artist.thumbnail ||
-    artist.image ||
-    artist.cover,
-  song_count:
-    artist.song_count ?? artist.track_count ?? artist.songs_count ?? 0,
-});
+const normalizeArtist = (artist) => {
+  if (!artist || typeof artist !== "object") return null;
+  return {
+    ...artist,
+    artist_id: artist.artist_id ?? artist.id,
+    artist_name: artist.artist_name ?? artist.name ?? artist.title,
+    cover_url:
+      artist.cover_url ||
+      artist.avatar_url ||
+      artist.avatar ||
+      artist.image_url ||
+      artist.thumbnail_m ||
+      artist.thumbnail ||
+      artist.image ||
+      artist.cover,
+    song_count:
+      artist.song_count ?? artist.track_count ?? artist.songs_count ?? 0,
+  };
+};
 
-const normalizeAlbum = (album) => ({
-  ...album,
-  title: album.title ?? album.name,
-  artist_name:
-    album.artist_name ?? album.artist?.name ?? album.creator?.name ?? "",
-});
+const normalizeAlbum = (album) => {
+  if (!album || typeof album !== "object") return null;
+  return {
+    ...album,
+    title: album.title ?? album.name,
+    artist_name: getArtistLabel(
+      album,
+      album.artist_name ?? album.artist?.name ?? album.creator?.name ?? ""
+    ),
+  };
+};
 const SEARCH_TABS = [
   { id: "all", label: "Tất cả" },
   { id: "songs", label: "Bài hát" },
@@ -123,8 +132,8 @@ export default function Search() {
         const rawAlbums = Array.isArray(items?.albums) ? items.albums : [];
 
         setSongs(filterPlayableSongs(rawSongs));
-        setArtists(rawArtists.map(normalizeArtist));
-        setAlbums(rawAlbums.map(normalizeAlbum));
+        setArtists(rawArtists.map(normalizeArtist).filter(Boolean));
+        setAlbums(rawAlbums.map(normalizeAlbum).filter(Boolean));
 
         if (user?.id) {
           try {

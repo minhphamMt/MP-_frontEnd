@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getAlbumById, getAlbums } from "../api/album.api";
 import SongTable from "../components/song/SongTable";
 import { filterPlayableSongs } from "../utils/song";
+import { getArtistLabel } from "../utils/artist";
 import useAlbumLikeStore, {
   normalizeAlbumId,
 } from "../store/album-like.store";
@@ -30,7 +31,10 @@ export default function Albums() {
         ...album,
         songs: filterPlayableSongs(songs),
         title: album.title || data?.title,
-        artist_name: album.artist_name || data?.artist_name,
+        artist_name: getArtistLabel(
+          album,
+          album.artist_name || data?.artist_name || data?.artist?.name || ""
+        ),
       };
     } catch (err) {
       console.error("Load album detail failed", err);
@@ -96,7 +100,7 @@ export default function Albums() {
                 title={album.title || "Album"}
                 subtitle={
                   album.artist_name
-                    ? `${album.artist_name} ¬∑ ${album.songs.length} b√†i h√°t`
+                    ? `${getArtistLabel(album, album.artist_name)} ∑ ${album.songs.length} b‡i h·t`
                     : `${album.songs.length} b√†i h√°t`
                 }
                 songs={album.songs || []}
@@ -135,3 +139,4 @@ export default function Albums() {
     </div>
   );
 }
+

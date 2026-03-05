@@ -9,12 +9,14 @@ import { getRecommendations, getColdStartRecommendations } from "../api/recommen
 import { getSongById } from "../api/song.api";
 import AlbumCard from "../components/album/AlbumCard";
 import ArtistAlbumCard from "../components/album/ArtistAlbumCard";
+import ArtistNames from "../components/artist/ArtistNames";
 import Section from "../components/section/Section";
 import SongCard from "../components/song/SongCard";
 import useAuthStore from "../store/auth.store";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { filterPlayableSongs, fetchPlayableSong, toPlayableSong } from "../utils/song";
 import { resolveAssetUrl } from "../utils/asset";
+import { getArtistLabel } from "../utils/artist";
 
 const HISTORY_LIMIT = 10;
 const TOP_WEEK_COLORS = ["#fbbf24", "#60a5fa", "#a78bfa", "#fb7185", "#f97316"];
@@ -329,13 +331,13 @@ export default function Home() {
 
   const reasonById = useMemo(() => {
     const map = new Map();
-    const currentArtist = (currentSong?.artist_name || "").toLowerCase();
+    const currentArtist = getArtistLabel(currentSong, "").toLowerCase();
 
     songs.forEach((song, index) => {
       const id = normalizeSongId(song);
       if (id === null) return;
 
-      const artist = (song?.artist_name || "").toLowerCase();
+      const artist = getArtistLabel(song, "").toLowerCase();
       let reason = "Khớp với gu nghe gần đây";
 
       if (currentArtist && artist && currentArtist === artist) reason = "Cùng nghệ sĩ với bài vừa nghe";
@@ -346,7 +348,7 @@ export default function Home() {
     });
 
     return map;
-  }, [currentSong?.artist_name, songs]);
+  }, [currentSong, songs]);
 
   const continueQueue = useMemo(() => continueSongs.map((song) => ({ ...song })), [continueSongs]);
   const weeklyQueue = useMemo(() => weeklyTop.map((song) => ({ ...song })), [weeklyTop]);
@@ -463,7 +465,12 @@ export default function Home() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-white">{song.title}</p>
-                    <p className="truncate text-xs text-white/60">{song.artist_name}</p>
+                    <ArtistNames
+                      item={song}
+                      stopPropagation
+                      className="truncate text-xs text-white/60"
+                      linkClassName="transition md:hover:text-emerald-300 md:hover:underline"
+                    />
                     <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-white/50">
                       <FiClock size={11} />
                       {formatRelativeTime(song.listened_at)}
@@ -582,7 +589,12 @@ export default function Home() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-white sm:text-base">{song.title}</p>
-                      <p className="truncate text-xs text-white/60">{song.artist_name}</p>
+                      <ArtistNames
+                        item={song}
+                        stopPropagation
+                        className="truncate text-xs text-white/60"
+                        linkClassName="transition md:hover:text-emerald-300 md:hover:underline"
+                      />
                     </div>
                     <button
                       type="button"

@@ -6,6 +6,7 @@ import { getSongById } from "../../api/song.api";
 import { resolveAssetUrl } from "../../utils/asset";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import OptimizedImage from "../common/OptimizedImage";
+import ArtistNames from "../artist/ArtistNames";
 
 export default function SongTable({ title, subtitle, songs, loading, onRefresh, headerActions }) {
   const { playSong, pause, resume, currentSong, isPlaying, likedSongIds, toggleLike } = usePlayerStore();
@@ -95,8 +96,6 @@ export default function SongTable({ title, subtitle, songs, loading, onRefresh, 
               const isActive = normalizeSongId(currentSong) === songId;
               const isLiked = songId && likedSongIds.includes(songId);
               const order = song.rank ?? index + 1;
-              const artistId = song?.artist_id ?? song?.artist?.id ?? song?.artistId;
-
               return (
                 <div
                   key={song.id || index}
@@ -124,13 +123,11 @@ export default function SongTable({ title, subtitle, songs, loading, onRefresh, 
                     <div className="min-w-0">
                       <div className={`truncate font-medium ${isActive ? "text-emerald-300" : "text-white"}`}>{song.title}</div>
                       <div className="truncate text-xs text-white/60">
-                        {artistId ? (
-                          <Link to={`/artist/${artistId}`} className="inline-block transition md:hover:text-emerald-300 md:hover:underline">
-                            {song.artist_name}
-                          </Link>
-                        ) : (
-                          song.artist_name
-                        )}
+                        <ArtistNames
+                          item={song}
+                          stopPropagation
+                          linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                        />
                       </div>
                     </div>
                   </div>

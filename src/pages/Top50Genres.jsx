@@ -5,6 +5,7 @@ import { getTop50ByGenres } from "../api/chart.api";
 import { filterPlayableSongs } from "../utils/song";
 import { resolveAssetUrl } from "../utils/asset";
 import OptimizedImage from "../components/common/OptimizedImage";
+import { normalizeArtists } from "../utils/artist";
 
 /* ================= utils ================= */
 const normalizeTopGenres = (payload) => {
@@ -20,8 +21,11 @@ const normalizeTopGenres = (payload) => {
 
 const getArtistPreview = (songs) => {
   const names = songs
-    .map((song) => song.artist_name)
-    .filter(Boolean)
+    .flatMap((song) =>
+      normalizeArtists(song)
+        .map((artist) => artist.name)
+        .filter(Boolean)
+    )
     .filter((name, index, self) => self.indexOf(name) === index);
 
   if (!names.length) return "Nhiều nghệ sĩ";

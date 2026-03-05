@@ -3,11 +3,12 @@ import { getMyHistory } from "../api/history.api";
 import { getSongById } from "../api/song.api";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { fetchPlayableSong } from "../utils/song";
+import { getArtistLabel, getPrimaryArtistId, normalizeArtists } from "../utils/artist";
 import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
-import { Link } from "react-router-dom";
 import { resolveAssetUrl } from "../utils/asset";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 import OptimizedImage from "../components/common/OptimizedImage";
+import ArtistNames from "../components/artist/ArtistNames";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const DEFAULT_LIMIT = 20;
@@ -46,13 +47,17 @@ const normalizeHistoryItem = (item) => {
   const album = song?.album || {};
 
   const audioPath = song?.audio_path || song?.audioPath;
-  const artistName = song?.artist_name || artist?.name || song?.artist;
+  const artists = normalizeArtists(song);
+  const artistName = getArtistLabel(song, artist?.name || song?.artist || "");
+  const artistId = getPrimaryArtistId(song);
 
   return {
     ...song,
     history_id: item?.id || item?.history_id || song?.history_id,
     listened_at: item?.listened_at || song?.listen_time || song?.listened_at,
     artist_name: artistName,
+    artists,
+    artist_id: artistId,
     album_id: song?.album_id || album?.id,
     album_title: song?.album_title || album?.title,
     audio_url:
@@ -255,8 +260,6 @@ export default function History() {
             {history.map((item) => {
               const isPlayingCurrent =
                 normalizeSongId(currentSong) === normalizeSongId(item);
-              const artistId =
-                item?.artist_id ?? item?.artist?.id ?? item?.artistId;
 
               return (
                 <div
@@ -303,16 +306,12 @@ export default function History() {
                         {item.title}
                       </div>
                       <div className="truncate text-xs text-white/60">
-                        {artistId ? (
-                          <Link
-                            to={`/artist/${artistId}`}
-                            className="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-                          >
-                            {item.artist_name}
-                          </Link>
-                        ) : (
-                          item.artist_name
-                        )}
+                        <ArtistNames
+                          item={item}
+                          stopPropagation
+                          fallback="Nghệ sĩ"
+                          linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                        />
                       </div>
                     </div>
                   </div>

@@ -5,6 +5,9 @@ import useAlbumLikeStore, { normalizeAlbumId } from "../../store/album-like.stor
 import usePlayerStore from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
+import { getArtistLabel, getPrimaryArtistId, normalizeArtists } from "../../utils/artist";
+import { toPlayableSong } from "../../utils/song";
+import ArtistNames from "../artist/ArtistNames";
 
 export default function AlbumCard({ album, variant = "rail" }) {
   const navigate = useNavigate();
@@ -24,14 +27,22 @@ export default function AlbumCard({ album, variant = "rail" }) {
       const data = res?.data?.data;
       if (!data || !data.songs?.length) return;
 
-      const songs = data.songs.map((s) => ({
-        id: s.id,
-        title: s.title,
-        artist_name: s.artist_name || s.artist?.name || "",
-        duration: s.duration,
-        cover_url: s.cover_url,
-        audio_url: `${import.meta.env.VITE_API_BASE_URL}${s.audio_path}`,
-      }));
+      const songs = data.songs.map((s) => {
+        const fallbackArtists = normalizeArtists({
+          artist_id: s.artist_id || s.artist?.id || data.artist_id || data.artist?.id,
+          artist_name: s.artist_name || s.artist?.name || data.artist_name || data.artist?.name || "",
+        });
+        const artists = normalizeArtists({ ...s, artists: s.artists || fallbackArtists });
+
+        return toPlayableSong({
+          ...s,
+          artist_name: getArtistLabel({ ...s, artists }, ""),
+          artist_id: getPrimaryArtistId({ ...s, artists }),
+          artists,
+          album_id: s.album_id ?? data.id,
+          album_title: s.album_title ?? data.title,
+        });
+      });
 
       playSong(songs[0], songs);
     } catch (err) {
@@ -92,7 +103,12 @@ export default function AlbumCard({ album, variant = "rail" }) {
 
         <div className="flex items-center gap-2 text-xs text-white/70 sm:text-sm">
           <FiMusic className="shrink-0 text-white/60" />
-          <span className="truncate">{album.artist_name || album.artist?.name || ""}</span>
+          <ArtistNames
+            item={album}
+            className="truncate"
+            linkClassName="transition md:hover:text-emerald-300 md:hover:underline"
+            fallback={album.artist_name || album.artist?.name || ""}
+          />
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { getLikedSongs } from "../api/like.api";
 import { getRecommendations } from "../api/recommendation.api";
 import { getSongById, recordSongPlay } from "../api/song.api";
 import { fetchPlayableSong, toPlayableSong } from "../utils/song";
+import { getArtistLabel } from "../utils/artist";
 import useAuthStore from "./auth.store";
 import { emitAuthRequired } from "../utils/authPrompt";
 
@@ -98,7 +99,7 @@ const syncMediaSession = () => {
   if (currentSong) {
     mediaSession.metadata = new MediaMetadata({
       title: currentSong.title || "Không rõ",
-      artist: currentSong.artist_name || "Unknown Artist",
+      artist: getArtistLabel(currentSong, "Unknown Artist"),
       album: currentSong.album_title || "",
       artwork: resolveMediaArtwork(currentSong),
     });

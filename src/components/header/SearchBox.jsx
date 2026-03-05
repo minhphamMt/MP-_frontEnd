@@ -5,6 +5,7 @@ import { getSearchHistory, searchEntities } from "../../api/search.api";
 import { searchAdmin } from "../../api/admin.api";
 import { getSongById } from "../../api/song.api";
 import { fetchPlayableSong, toPlayableSong } from "../../utils/song";
+import { getArtistLabel } from "../../utils/artist";
 import usePlayerStore from "../../store/player.store";
 import { saveSearchHistory } from "../../api/search.api";
 import useAuthStore from "../../store/auth.store";
@@ -196,6 +197,7 @@ export default function SearchBox() {
                 item.highlight?.artist_name ||
                 item.artist_name ||
                 item.artist?.name ||
+                getArtistLabel(item, "") ||
                 item.owner?.name ||
                 item.owner_name ||
                 item.email ||
@@ -240,7 +242,8 @@ export default function SearchBox() {
           secondaryLabel:
             item.highlight?.artist_name ||
             item.artist_name ||
-            item.artist?.name,
+            item.artist?.name ||
+            getArtistLabel(item, ""),
           cover:
             item.cover_url ||
             item.thumbnail ||
