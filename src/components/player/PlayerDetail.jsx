@@ -60,8 +60,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const [activeTab, setActiveTab] = useState("queue");
   const [mobileTab, setMobileTab] = useState("now");
+  const [isCarouselSwipeLocked, setIsCarouselSwipeLocked] = useState(false);
   const carouselRef = useRef(null);
   const scrollRafRef = useRef(null);
+  const unlockSwipeTimerRef = useRef(null);
   const lastRecommendationSeedRef = useRef(null);
 
   /* ================= animation ================= */
@@ -127,6 +129,9 @@ export default function PlayerDetail({ isOpen, onClose }) {
     return () => {
       if (scrollRafRef.current) {
         cancelAnimationFrame(scrollRafRef.current);
+      }
+      if (unlockSwipeTimerRef.current) {
+        clearTimeout(unlockSwipeTimerRef.current);
       }
     };
   }, []);
@@ -224,8 +229,41 @@ export default function PlayerDetail({ isOpen, onClose }) {
     doSeek(seekValue);
   };
 
+  const lockCarouselSwipe = () => {
+    if (unlockSwipeTimerRef.current) {
+      clearTimeout(unlockSwipeTimerRef.current);
+      unlockSwipeTimerRef.current = null;
+    }
+    setIsCarouselSwipeLocked(true);
+  };
+
+  const unlockCarouselSwipe = () => {
+    if (unlockSwipeTimerRef.current) {
+      clearTimeout(unlockSwipeTimerRef.current);
+    }
+    unlockSwipeTimerRef.current = setTimeout(() => {
+      setIsCarouselSwipeLocked(false);
+      unlockSwipeTimerRef.current = null;
+    }, 80);
+  };
+
   const focusRangeInteraction = (e) => {
     e.stopPropagation();
+  };
+
+  const handleSliderInteractionStart = (e) => {
+    focusRangeInteraction(e);
+    lockCarouselSwipe();
+  };
+
+  const handleSliderInteractionMove = (e) => {
+    focusRangeInteraction(e);
+    lockCarouselSwipe();
+  };
+
+  const handleSliderInteractionEnd = (e) => {
+    focusRangeInteraction(e);
+    unlockCarouselSwipe();
   };
 
   /* ================= playback ================= */
@@ -404,11 +442,16 @@ export default function PlayerDetail({ isOpen, onClose }) {
             max={total || 0}
             step={0.1}
             value={Math.min(displayedTime, total || 0)}
-            onPointerDownCapture={focusRangeInteraction}
-            onPointerMoveCapture={focusRangeInteraction}
-            onTouchStartCapture={focusRangeInteraction}
-            onTouchMoveCapture={focusRangeInteraction}
-            onMouseDownCapture={focusRangeInteraction}
+            onPointerDownCapture={handleSliderInteractionStart}
+            onPointerMoveCapture={handleSliderInteractionMove}
+            onPointerUpCapture={handleSliderInteractionEnd}
+            onPointerCancelCapture={handleSliderInteractionEnd}
+            onTouchStartCapture={handleSliderInteractionStart}
+            onTouchMoveCapture={handleSliderInteractionMove}
+            onTouchEndCapture={handleSliderInteractionEnd}
+            onTouchCancelCapture={handleSliderInteractionEnd}
+            onMouseDownCapture={handleSliderInteractionStart}
+            onMouseUpCapture={handleSliderInteractionEnd}
             onPointerDown={onSeekStart}
             onPointerUp={onSeekCommit}
             onPointerCancel={onSeekCommit}
@@ -516,16 +559,22 @@ export default function PlayerDetail({ isOpen, onClose }) {
             min={0}
             max={1}
             step={0.01}
-            value={muted ? 0 : volume}
-            onPointerDownCapture={focusRangeInteraction}
-            onPointerMoveCapture={focusRangeInteraction}
-            onTouchStartCapture={focusRangeInteraction}
-            onTouchMoveCapture={focusRangeInteraction}
-            onMouseDownCapture={focusRangeInteraction}
+            value={volume}
+            onPointerDownCapture={handleSliderInteractionStart}
+            onPointerMoveCapture={handleSliderInteractionMove}
+            onPointerUpCapture={handleSliderInteractionEnd}
+            onPointerCancelCapture={handleSliderInteractionEnd}
+            onTouchStartCapture={handleSliderInteractionStart}
+            onTouchMoveCapture={handleSliderInteractionMove}
+            onTouchEndCapture={handleSliderInteractionEnd}
+            onTouchCancelCapture={handleSliderInteractionEnd}
+            onMouseDownCapture={handleSliderInteractionStart}
+            onMouseUpCapture={handleSliderInteractionEnd}
+            onInput={(e) => handleVolumeChange(e.target.value)}
             onChange={(e) => handleVolumeChange(e.target.value)}
             className="player-detail-range hidden h-2 w-32 cursor-pointer md:block"
             style={{
-              "--range-progress": `${(muted ? 0 : volume) * 100}%`,
+              "--range-progress": `${volume * 100}%`,
             }}
           />
         </div>
@@ -545,16 +594,22 @@ export default function PlayerDetail({ isOpen, onClose }) {
             min={0}
             max={1}
             step={0.01}
-            value={muted ? 0 : volume}
-            onPointerDownCapture={focusRangeInteraction}
-            onPointerMoveCapture={focusRangeInteraction}
-            onTouchStartCapture={focusRangeInteraction}
-            onTouchMoveCapture={focusRangeInteraction}
-            onMouseDownCapture={focusRangeInteraction}
+            value={volume}
+            onPointerDownCapture={handleSliderInteractionStart}
+            onPointerMoveCapture={handleSliderInteractionMove}
+            onPointerUpCapture={handleSliderInteractionEnd}
+            onPointerCancelCapture={handleSliderInteractionEnd}
+            onTouchStartCapture={handleSliderInteractionStart}
+            onTouchMoveCapture={handleSliderInteractionMove}
+            onTouchEndCapture={handleSliderInteractionEnd}
+            onTouchCancelCapture={handleSliderInteractionEnd}
+            onMouseDownCapture={handleSliderInteractionStart}
+            onMouseUpCapture={handleSliderInteractionEnd}
+            onInput={(e) => handleVolumeChange(e.target.value)}
             onChange={(e) => handleVolumeChange(e.target.value)}
             className="player-detail-range h-2.5 w-full cursor-pointer"
             style={{
-              "--range-progress": `${(muted ? 0 : volume) * 100}%`,
+              "--range-progress": `${volume * 100}%`,
             }}
           />
         </div>
@@ -763,6 +818,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 pb-3 sm:pb-6
                 scrollbar-hidden
               "
+              style={{
+                overflowX: isCarouselSwipeLocked ? "hidden" : "auto",
+                scrollSnapType: isCarouselSwipeLocked ? "none" : undefined,
+              }}
             >
               {/* Lyrics slide */}
               <div className="flex min-h-0 w-full min-w-[100%] snap-center overflow-hidden">
