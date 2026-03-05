@@ -126,6 +126,7 @@ export default function ZingChart() {
   const [viewportWidth, setViewportWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1280
   );
+  const [chartBoxSize, setChartBoxSize] = useState({ width: 0, height: 0 });
   const [syncedRowsHeight, setSyncedRowsHeight] = useState(null);
   const [chartReadyVersion, setChartReadyVersion] = useState(0);
   const [regionCharts, setRegionCharts] = useState({
@@ -275,6 +276,45 @@ export default function ZingChart() {
   }, []);
 
   useEffect(() => {
+    const container = chartContainerRef.current;
+    if (!container) return undefined;
+
+    const measure = () => {
+      const rect = container.getBoundingClientRect();
+      const nextWidth = Math.round(rect.width || 0);
+      const nextHeight = Math.round(rect.height || 0);
+      if (!nextWidth || !nextHeight) return;
+
+      setChartBoxSize((prev) =>
+        prev.width === nextWidth && prev.height === nextHeight
+          ? prev
+          : { width: nextWidth, height: nextHeight }
+      );
+    };
+
+    measure();
+
+    let observer = null;
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(() => {
+        measure();
+      });
+      observer.observe(container);
+    }
+
+    window.addEventListener("resize", measure);
+    window.addEventListener("load", measure);
+    window.addEventListener("pageshow", measure);
+
+    return () => {
+      if (observer) observer.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("load", measure);
+      window.removeEventListener("pageshow", measure);
+    };
+  }, []);
+
+  useEffect(() => {
     loadChart();
   }, [loadChart]);
 
@@ -375,6 +415,7 @@ export default function ZingChart() {
       : "h-[420px]";
   const chartContainerStyle =
     isDesktopTwoColumn && syncedRowsHeight ? { height: `${syncedRowsHeight}px` } : undefined;
+  const chartMountKey = `${chartBoxSize.width}x${chartBoxSize.height}-${weeklyLineData.categories.length}-${isMobile ? "m" : "d"}`;
 
   const weeklyLineOption = useMemo(() => {
     if (!weeklyLineData.categories.length || !weeklyLineData.series.length) {
@@ -803,39 +844,35 @@ export default function ZingChart() {
               </span>
             </div>
 
-            <div className="min-h-0 xl:flex-1">
+            <div
+              ref={chartContainerRef}
+              className={`${chartHeightClass} min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#101010]`}
+              style={chartContainerStyle}
+              onMouseEnter={() => {
+                if (weeklyLineOption) setIsChartHovered(true);
+              }}
+              onMouseLeave={() => {
+                if (weeklyLineOption) setIsChartHovered(false);
+              }}
+            >
               {loading ? (
-                <div
-                  ref={chartContainerRef}
-                  className={`${chartHeightClass} rounded-2xl border border-white/10 bg-[#101010] p-4 text-sm text-white/60`}
-                  style={chartContainerStyle}
-                >
-                  Đang tải biểu đồ...
-                </div>
+                <div className="p-4 text-sm text-white/60">Đang tải biểu đồ...</div>
               ) : weeklyLineOption ? (
-                <div
-                  ref={chartContainerRef}
-                  className={`${chartHeightClass} min-w-0 overflow-hidden`}
-                  style={chartContainerStyle}
-                  onMouseEnter={() => setIsChartHovered(true)}
-                  onMouseLeave={() => setIsChartHovered(false)}
-                >
+                chartBoxSize.width > 0 && chartBoxSize.height > 0 ? (
                   <ReactECharts
+                    key={chartMountKey}
                     option={weeklyLineOption}
                     style={{ height: "100%", width: "100%", minWidth: 0 }}
                     onChartReady={handleChartReady}
+                    autoResize={false}
                     notMerge
                     lazyUpdate
                   />
-                </div>
+                ) : (
+                  <div className="p-4 text-sm text-white/60">Đang khởi tạo biểu đồ...</div>
+                )
               ) : (
-                <div
-                  ref={chartContainerRef}
-                  className={`${chartHeightClass} rounded-2xl border border-white/10 bg-[#101010] p-4 text-sm text-white/60`}
-                  style={chartContainerStyle}
-                >
-                  Chưa có dữ liệu biểu đồ.
-                </div>
+                <div className="p-4 text-sm text-white/60">Chưa có dữ liệu biểu đồ.</div>
               )}
             </div>
           </div>
