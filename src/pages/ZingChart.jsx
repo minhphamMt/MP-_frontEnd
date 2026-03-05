@@ -495,7 +495,51 @@ export default function ZingChart() {
 
   const handleChartReady = useCallback((instance) => {
     chartRef.current = instance || null;
+    if (instance && typeof instance.resize === "function") {
+      requestAnimationFrame(() => {
+        try {
+          instance.resize();
+        } catch {
+          // Ignore resize errors from stale chart instances.
+        }
+      });
+    }
   }, []);
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart || typeof chart.resize !== "function" || !weeklyLineOption) {
+      return undefined;
+    }
+
+    let rafA = 0;
+    let rafB = 0;
+    const safeResize = () => {
+      try {
+        chart.resize();
+      } catch {
+        // Ignore resize errors from stale chart instances.
+      }
+    };
+
+    rafA = requestAnimationFrame(() => {
+      safeResize();
+      rafB = requestAnimationFrame(safeResize);
+    });
+    const timer = setTimeout(safeResize, 120);
+
+    return () => {
+      if (rafA) cancelAnimationFrame(rafA);
+      if (rafB) cancelAnimationFrame(rafB);
+      clearTimeout(timer);
+    };
+  }, [
+    weeklyLineOption,
+    syncedRowsHeight,
+    viewportWidth,
+    loading,
+    weeklySongs.length,
+  ]);
 
   useEffect(() => {
     const chart = chartRef.current;
