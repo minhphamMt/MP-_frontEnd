@@ -124,6 +124,50 @@ export const filterPlayableSongs = (list = []) =>
     .map((item) => toPlayableSong(item))
      .filter((song) => song.id);
 
+const songArtistHydrationCache = new Map();
+
+const resolveSongId = (song = {}) =>
+  song?.id ?? song?.song_id ?? song?.songId ?? song?._id ?? null;
+
+export const hydrateSongArtists = async (songs = [], fetchById) => {
+  if (!Array.isArray(songs) || !songs.length || typeof fetchById !== "function") {
+    return songs;
+  }
+
+  const uniqueIds = [...new Set(songs.map((song) => resolveSongId(song)).filter(Boolean))];
+
+  await Promise.all(
+    uniqueIds.map(async (songId) => {
+      if (songArtistHydrationCache.has(songId)) return;
+
+      try {
+        const res = await fetchById(songId);
+        const payload = res?.data?.data || res?.data || null;
+        const normalized = payload ? toPlayableSong(payload) : null;
+        songArtistHydrationCache.set(songId, normalized);
+      } catch {
+        songArtistHydrationCache.set(songId, null);
+      }
+    })
+  );
+
+  return songs.map((song) => {
+    const songId = resolveSongId(song);
+    const hydrated = songId ? songArtistHydrationCache.get(songId) : null;
+    if (!hydrated) return song;
+
+    return {
+      ...song,
+      artist_name: hydrated.artist_name || song.artist_name,
+      artist_id: hydrated.artist_id ?? song.artist_id,
+      artists:
+        Array.isArray(hydrated.artists) && hydrated.artists.length
+          ? hydrated.artists
+          : song.artists,
+    };
+  });
+};
+
 export const fetchPlayableSong = async (song, fetchById) => {
   if (!song) return null;
   if (song.audio_url) return song;

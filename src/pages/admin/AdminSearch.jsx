@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { searchAdmin } from "../../api/admin.api";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import { getArtistLabel } from "../../utils/artist";
 
 const SEARCH_TABS = [
   { id: "all", label: "Tất cả" },
@@ -95,10 +96,10 @@ const getResultImage = (item, type) => {
 
 const getSecondaryLabel = (item, type) => {
   if (type === "song") {
-    return item.artist_name || item.artist?.name || item.album_title;
+    return getArtistLabel(item, item.artist_name || item.artist?.name || "") || item.album_title;
   }
   if (type === "album") {
-    return item.artist_name || item.artist?.name || item.release_date;
+    return getArtistLabel(item, item.artist_name || item.artist?.name || "") || item.release_date;
   }
   if (type === "artist") {
     return item.alias || item.realname || item.national;

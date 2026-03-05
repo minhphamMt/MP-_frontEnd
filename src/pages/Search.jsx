@@ -71,7 +71,7 @@ export default function Search() {
       return {
         type: "Song",
         title: songs[0].title,
-        subtitle: songs[0].artist_name,
+        subtitle: getArtistLabel(songs[0], songs[0].artist_name || ""),
         image: songs[0].cover_url,
       };
     }

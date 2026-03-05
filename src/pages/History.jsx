@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { getMyHistory } from "../api/history.api";
 import { getSongById } from "../api/song.api";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
-import { fetchPlayableSong } from "../utils/song";
+import { fetchPlayableSong, hydrateSongArtists } from "../utils/song";
 import { getArtistLabel, getPrimaryArtistId, normalizeArtists } from "../utils/artist";
 import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import { resolveAssetUrl } from "../utils/asset";
@@ -125,9 +125,10 @@ export default function History() {
         const res = await getMyHistory({ page, limit: DEFAULT_LIMIT });
         const { items, meta: resMeta } = extractHistoryPayload(res);
         const normalized = items.map(normalizeHistoryItem);
+        const hydrated = await hydrateSongArtists(normalized, getSongById);
 
         setHistory((prev) => {
-          const combined = append ? [...prev, ...normalized] : normalized;
+          const combined = append ? [...prev, ...hydrated] : hydrated;
           return dedupeHistoryItems(combined);
         });
         setMeta(resMeta || { page, limit: DEFAULT_LIMIT });

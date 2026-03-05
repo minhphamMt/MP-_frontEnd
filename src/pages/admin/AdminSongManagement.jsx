@@ -14,6 +14,7 @@ import useAuthStore from "../../store/auth.store";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import Toast from "../../components/common/Toast";
 import { confirmAdminAction } from "../../utils/adminDialog";
+import { getArtistLabel } from "../../utils/artist";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tất cả" },
@@ -255,8 +256,8 @@ export default function AdminSongManagement() {
     const mapped = albums.map((album) => ({
       id: `${album.id}`,
       label: `${album.id} - ${album.title || "Album"}${
-        album.artist?.name || album.artist_name
-          ? ` · ${album.artist?.name || album.artist_name}`
+        getArtistLabel(album, album.artist?.name || album.artist_name || "")
+          ? ` · ${getArtistLabel(album, album.artist?.name || album.artist_name || "")}`
           : ""
       }`,
     }));
@@ -412,7 +413,9 @@ export default function AdminSongManagement() {
                     </p>
                   </div>
                 </div>
-                <span className="hidden lg:block">{song.artist_name || "-"}</span>
+                <span className="hidden lg:block">
+                  {getArtistLabel(song, song.artist_name || "") || "-"}
+                </span>
                 <span className="hidden text-xs text-white/60 lg:block">
                   {normalizeGenreValue(song.genres).join(", ") || "-"}
                 </span>
@@ -651,4 +654,3 @@ export default function AdminSongManagement() {
     </div>
   );
 }
-

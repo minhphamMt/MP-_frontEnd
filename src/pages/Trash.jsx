@@ -13,6 +13,7 @@ import {
   restoreSong,
 } from "../api/trash.api";
 import { confirmAdminAction } from "../utils/adminDialog";
+import { getArtistLabel } from "../utils/artist";
 
 const formatDateTime = (value) => {
   if (!value) return "Chưa rõ";
@@ -40,9 +41,13 @@ export default function Trash() {
         renderCells: (song) => [
           <>
             <p className="text-white">{song.title}</p>
-            <p className="text-xs text-white/50">{song.artist_name || "Chưa có nghệ sĩ"}</p>
+            <p className="text-xs text-white/50">
+              {getArtistLabel(song, song.artist_name || "Chưa có nghệ sĩ")}
+            </p>
           </>,
-          <span className="text-xs text-white/60">{song.artist_name || "-"}</span>,
+          <span className="text-xs text-white/60">
+            {getArtistLabel(song, song.artist_name || "") || "-"}
+          </span>,
           <span className="text-xs text-white/60">{formatDateTime(song.deleted_at)}</span>,
         ],
       },
@@ -54,9 +59,13 @@ export default function Trash() {
         renderCells: (album) => [
           <>
             <p className="text-white">{album.title}</p>
-            <p className="text-xs text-white/50">{album.artist_name || "Chưa có nghệ sĩ"}</p>
+            <p className="text-xs text-white/50">
+              {getArtistLabel(album, album.artist_name || "Chưa có nghệ sĩ")}
+            </p>
           </>,
-          <span className="text-xs text-white/60">{album.artist_name || "-"}</span>,
+          <span className="text-xs text-white/60">
+            {getArtistLabel(album, album.artist_name || "") || "-"}
+          </span>,
           <span className="text-xs text-white/60">{formatDateTime(album.deleted_at)}</span>,
         ],
       },

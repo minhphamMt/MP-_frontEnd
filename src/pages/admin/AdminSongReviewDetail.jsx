@@ -8,6 +8,7 @@ import { toPlayableSong } from "../../utils/song";
 import { promptAdminInput } from "../../utils/adminDialog";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import Toast from "../../components/common/Toast";
+import { getArtistLabel } from "../../utils/artist";
 
 const statusBadge = (status) => {
   switch (status) {
@@ -215,7 +216,7 @@ export default function AdminSongReviewDetail() {
                 <h1 className="text-2xl font-bold text-white">{song.title || "-"}</h1>
                 <p>
                   <span className="text-white/50">Nghệ sĩ:</span>{" "}
-                  {song.artist_name || song.artist?.name || "-"}
+                  {getArtistLabel(song, song.artist_name || song.artist?.name || "") || "-"}
                 </p>
                 <p>
                   <span className="text-white/50">Album:</span> {song.album_title || "Single"}

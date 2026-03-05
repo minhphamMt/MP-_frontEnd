@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getRegionCharts } from "../api/chart.api";
+import { getSongById } from "../api/song.api";
 import SongTable from "../components/song/SongTable";
-import { filterPlayableSongs } from "../utils/song";
+import { filterPlayableSongs, hydrateSongArtists } from "../utils/song";
 
 const REGION_CONFIG = {
   vietnam: {
@@ -38,8 +39,10 @@ export default function RegionChart() {
       const res = await getRegionCharts({ limit: 50 });
       const payload = res?.data?.data || res?.data || {};
       const list = payload[normalizedRegion] || [];
+      const playable = filterPlayableSongs(list);
+      const hydrated = await hydrateSongArtists(playable, getSongById);
 
-      setSongs(filterPlayableSongs(list));
+      setSongs(hydrated);
     } catch (err) {
       console.error("Load region chart failed", err);
       setSongs([]);

@@ -4,7 +4,12 @@ import { getLikedSongs } from "../api/like.api";
 import { getSongById } from "../api/song.api";
 import LikedSongsSection from "../components/playlists/LikedSongsSection";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
-import { fetchPlayableSong, filterPlayableSongs, toPlayableSong } from "../utils/song";
+import {
+  fetchPlayableSong,
+  filterPlayableSongs,
+  hydrateSongArtists,
+  toPlayableSong,
+} from "../utils/song";
 
 const getData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
 
@@ -44,7 +49,8 @@ export default function LikedSongs() {
       const payload = getData(res);
       const songs = extractSongsFromResponse(payload);
       const playable = filterPlayableSongs(songs.map((song) => toPlayableSong(song)));
-      setLikedSongs(playable);
+      const hydrated = await hydrateSongArtists(playable, getSongById);
+      setLikedSongs(hydrated);
     } catch (err) {
       console.error("Load liked songs failed", err);
       setLikedSongs([]);

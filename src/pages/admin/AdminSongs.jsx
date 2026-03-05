@@ -7,6 +7,7 @@ import { toPlayableSong } from "../../utils/song";
 import { promptAdminInput } from "../../utils/adminDialog";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import Toast from "../../components/common/Toast";
+import { getArtistLabel } from "../../utils/artist";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tất cả" },
@@ -222,7 +223,9 @@ export default function AdminSongs() {
                     )}
                   </div>
                 </div>
-                <span className="hidden lg:block">{song.artist_name || "-"}</span>
+                <span className="hidden lg:block">
+                  {getArtistLabel(song, song.artist_name || "") || "-"}
+                </span>
                 <span className={`hidden text-xs font-semibold lg:block ${statusBadge(song.status)}`}>
                   {song.status || "-"}
                 </span>

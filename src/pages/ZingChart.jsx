@@ -13,6 +13,7 @@ import {
   fetchPlayableSong,
   filterPlayableSongs,
   formatDuration,
+  hydrateSongArtists,
 } from "../utils/song";
 import { getArtistLabel } from "../utils/artist";
 import usePlayerStore from "../store/player.store";
@@ -186,9 +187,21 @@ export default function ZingChart() {
         ).slice(0, 5),
       };
 
-      setWeeklySongs(topWeekly);
+      const [hydratedWeekly, hydratedVietnam, hydratedUsuk, hydratedKpop] =
+        await Promise.all([
+          hydrateSongArtists(topWeekly, getSongById),
+          hydrateSongArtists(normalizedRegions.vietnam, getSongById),
+          hydrateSongArtists(normalizedRegions.usuk, getSongById),
+          hydrateSongArtists(normalizedRegions.kpop, getSongById),
+        ]);
+
+      setWeeklySongs(hydratedWeekly);
       setWeeklySeries(seriesPayload);
-      setRegionCharts(normalizedRegions);
+      setRegionCharts({
+        vietnam: hydratedVietnam,
+        usuk: hydratedUsuk,
+        kpop: hydratedKpop,
+      });
     } catch (error) {
       console.error("Load MinhChart failed", error);
       setWeeklySongs([]);

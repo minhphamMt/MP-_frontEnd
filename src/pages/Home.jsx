@@ -323,6 +323,10 @@ export default function Home() {
   }, [newAlbums, startAutoScroll]);
 
   const featuredSong = songs[0] || null;
+  const featuredArtistLabel = getArtistLabel(
+    featuredSong,
+    featuredSong?.artist_name || ""
+  );
   const featuredCover =
     resolveAssetUrl(featuredSong?.cover_url) ||
     resolveAssetUrl(newAlbums?.[0]?.cover_url) ||
@@ -387,8 +391,8 @@ export default function Home() {
                 {featuredSong?.title || "Khám phá âm nhạc mỗi ngày"}
               </h1>
               <p className="text-sm text-white/70 sm:text-base">
-                {featuredSong?.artist_name
-                  ? `Từ ${featuredSong.artist_name}. Cập nhật nhanh những bài hát phù hợp gu nghe của bạn.`
+                {featuredArtistLabel
+                  ? `Từ ${featuredArtistLabel}. Cập nhật nhanh những bài hát phù hợp gu nghe của bạn.`
                   : "Luồng gợi ý được làm mới theo lịch sử nghe để bạn khám phá nhạc nhanh hơn."}
               </p>
             </>

@@ -6,6 +6,7 @@ import { resolveAssetUrl } from "../../utils/asset";
 import { formatDateDisplay } from "../../utils/date";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import { confirmAdminAction } from "../../utils/adminDialog";
+import { getArtistLabel } from "../../utils/artist";
 
 const getSongCover = (song) =>
   song?.cover_url || song?.cover || song?.thumbnail || song?.image;
@@ -139,7 +140,9 @@ export default function AdminAlbumDetail() {
                 </p>
                 <p>
                   <span className="text-white/60">Nghệ sĩ:</span>{" "}
-                  <span className="text-white">{album.artist?.name || album.artist_name || "-"}</span>
+                  <span className="text-white">
+                    {getArtistLabel(album, album.artist?.name || album.artist_name || "") || "-"}
+                  </span>
                 </p>
                 <p>
                   <span className="text-white/60">Ngày phát hành:</span>{" "}
@@ -180,7 +183,7 @@ export default function AdminAlbumDetail() {
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-white">{song.title}</p>
                       <p className="truncate text-xs text-white/50">
-                        {song.artist_name || album.artist?.name || album.artist_name || "-"}
+                        {getArtistLabel(song, album.artist?.name || album.artist_name || "") || "-"}
                       </p>
                     </div>
                   </div>

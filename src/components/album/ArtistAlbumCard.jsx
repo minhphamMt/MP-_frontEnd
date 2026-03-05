@@ -5,6 +5,7 @@ import usePlayerStore from "../../store/player.store";
 import FollowArtistButton from "../artist/FollowArtistButton";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
+import { getArtistLabel } from "../../utils/artist";
 
 export default function ArtistAlbumCard({ artist, variant = "grid" }) {
   const navigate = useNavigate();
@@ -32,7 +33,8 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
       const songs = songList.map((s) => ({
         id: s.id,
         title: s.title,
-        artist_name: artistData?.name || artist.artist_name,
+        artist_name: getArtistLabel(s, artistData?.name || artist.artist_name || ""),
+        artists: s.artists,
         duration: s.duration,
         cover_url: s.cover_url,
         audio_url: `${import.meta.env.VITE_API_BASE_URL}${s.audio_path}`,

@@ -6,6 +6,7 @@ import { resolveAssetUrl } from "../../utils/asset";
 import { formatDateDisplay } from "../../utils/date";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import { confirmAdminAction } from "../../utils/adminDialog";
+import { getArtistLabel } from "../../utils/artist";
 
 const formatDateInput = (value) => {
   if (!value) return "";
@@ -212,7 +213,7 @@ export default function AdminAlbumForm() {
                       <p>
                         <span className="text-white/60">Nghệ sĩ:</span>{" "}
                         <span className="text-white">
-                          {album?.artist?.name || album?.artist_name || "-"}
+                          {getArtistLabel(album, album?.artist?.name || album?.artist_name || "") || "-"}
                         </span>
                       </p>
                       <p>
@@ -317,7 +318,7 @@ export default function AdminAlbumForm() {
                         <div className="min-w-0">
                           <p className="truncate font-semibold text-white">{song.title}</p>
                           <p className="truncate text-xs text-white/50">
-                            {song.artist_name || album.artist?.name || album.artist_name || "-"}
+                            {getArtistLabel(song, album.artist?.name || album.artist_name || "") || "-"}
                           </p>
                         </div>
                       </div>

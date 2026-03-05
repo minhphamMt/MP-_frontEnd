@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { FiChevronLeft } from "react-icons/fi";
 import { getTop50ByGenres } from "../api/chart.api";
+import { getSongById } from "../api/song.api";
 import SongTable from "../components/song/SongTable";
-import { filterPlayableSongs } from "../utils/song";
+import { filterPlayableSongs, hydrateSongArtists } from "../utils/song";
 
 /* ================= utils ================= */
 const findGenreEntry = (payload, genreId) => {
@@ -45,7 +46,17 @@ export default function Top50GenreDetail() {
       setLoading(true);
       const res = await getTop50ByGenres();
       const payload = res?.data?.data || res?.data || [];
-      setEntry(findGenreEntry(payload, id));
+      const found = findGenreEntry(payload, id);
+      if (!found) {
+        setEntry(null);
+        return;
+      }
+
+      const hydratedSongs = await hydrateSongArtists(found.songs, getSongById);
+      setEntry({
+        ...found,
+        songs: hydratedSongs,
+      });
     } catch (error) {
       console.error("Load top 50 genre detail failed", error);
       setEntry(null);

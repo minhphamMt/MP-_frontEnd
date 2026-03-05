@@ -15,6 +15,7 @@ import { GridComponent, TooltipComponent, LegendComponent } from "echarts/compon
 import { SVGRenderer } from "echarts/renderers";
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import { getAdminOverview, getReportCharts } from "../../api/admin.api";
+import { getArtistLabel } from "../../utils/artist";
 
 echarts.use([
   GridComponent,
@@ -694,7 +695,7 @@ export default function AdminAnalytics() {
       const score = safeNumber(song?.score) || array.length - index;
       return {
         label: song?.title || `Bài hát #${index + 1}`,
-        artist: song?.artist_name || "Nghệ sĩ",
+        artist: getArtistLabel(song, song?.artist_name || "") || "Nghệ sĩ",
         value: score,
       };
     });
