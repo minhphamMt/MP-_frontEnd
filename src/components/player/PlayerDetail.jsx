@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  FaBackwardStep,
+  FaForwardStep,
   FaPause,
   FaPlay,
-  FaForwardStep,
-  FaBackwardStep,
-  FaShuffle,
   FaRepeat,
+  FaShuffle,
   FaVolumeHigh,
   FaVolumeXmark,
 } from "react-icons/fa6";
@@ -18,7 +18,6 @@ import OptimizedImage from "../common/OptimizedImage";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import ArtistNames from "../artist/ArtistNames";
 
-/* ================= utils ================= */
 const formatTime = (sec = 0) => {
   const s = Math.max(0, Math.floor(sec || 0));
   const m = Math.floor(s / 60);
@@ -29,7 +28,6 @@ const formatTime = (sec = 0) => {
 const ANIM_MS = 450;
 const ANIM_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
-/* ================= component ================= */
 export default function PlayerDetail({ isOpen, onClose }) {
   const {
     currentSong,
@@ -61,17 +59,22 @@ export default function PlayerDetail({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState("queue");
   const [mobileTab, setMobileTab] = useState("now");
   const [isCarouselSwipeLocked, setIsCarouselSwipeLocked] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [phase, setPhase] = useState("closed");
+  const [backdropReady, setBackdropReady] = useState(false);
+  const [songSlideClass, setSongSlideClass] = useState("");
+  const [isSeeking, setIsSeeking] = useState(false);
+  const [seekValue, setSeekValue] = useState(0);
+  const [fallbackDuration, setFallbackDuration] = useState(0);
+
+  const phaseRef = useRef("closed");
+  const audioRef = useRef(null);
   const carouselRef = useRef(null);
   const scrollRafRef = useRef(null);
   const unlockSwipeTimerRef = useRef(null);
+  const prevIndexRef = useRef(currentIndex);
   const lastRecommendationSeedRef = useRef(null);
 
-  /* ================= animation ================= */
-  const [mounted, setMounted] = useState(false);
-  const [phase, setPhase] = useState("closed"); // closed | enter | open | exit
-  const [backdropReady, setBackdropReady] = useState(false);
-
-  const phaseRef = useRef("closed");
   useEffect(() => {
     phaseRef.current = phase;
   }, [phase]);
@@ -85,22 +88,19 @@ export default function PlayerDetail({ isOpen, onClose }) {
       return () => clearTimeout(t);
     }
 
-    if (!isOpen) {
-      setBackdropReady(false);
-      setPhase((prev) => (prev === "closed" ? "closed" : "exit"));
-    }
+    setBackdropReady(false);
+    setPhase((prev) => (prev === "closed" ? "closed" : "exit"));
+    return undefined;
   }, [isOpen]);
 
-  // ✅ Lock body scroll so overlay never scrolls the page behind
   useEffect(() => {
-    if (!mounted) return;
-    if (typeof document === "undefined") return;
+    if (!mounted) return undefined;
+    if (typeof document === "undefined") return undefined;
 
     const prevOverflow = document.body.style.overflow;
     const prevPaddingRight = document.body.style.paddingRight;
 
     if (isOpen) {
-      // avoid layout shift when scrollbar disappears
       const scrollbarW =
         window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = "hidden";
@@ -114,15 +114,18 @@ export default function PlayerDetail({ isOpen, onClose }) {
   }, [mounted, isOpen]);
 
   useEffect(() => {
-    if (!mounted || !isOpen) return;
-    if (typeof window === "undefined") return;
+    if (!mounted || !isOpen) return undefined;
+    if (typeof window === "undefined") return undefined;
     const mq = window.matchMedia("(max-width: 1023px)");
-    if (!mq.matches) return;
+    if (!mq.matches) return undefined;
+
     const el = carouselRef.current;
-    if (!el) return;
-    const width = el.clientWidth;
+    if (!el) return undefined;
+
+    const width = el.clientWidth || 1;
     el.scrollTo({ left: width, behavior: "auto" });
     setMobileTab("now");
+    return undefined;
   }, [mounted, isOpen]);
 
   useEffect(() => {
@@ -138,13 +141,14 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   useEffect(() => {
     const seedId = normalizeSongId(currentSong);
-    if (!seedId) return;
-    if (recommendationLoading) return;
-    if (queue.length > currentIndex + 1) return;
-    if (lastRecommendationSeedRef.current === seedId) return;
+    if (!seedId) return undefined;
+    if (recommendationLoading) return undefined;
+    if (queue.length > currentIndex + 1) return undefined;
+    if (lastRecommendationSeedRef.current === seedId) return undefined;
 
     lastRecommendationSeedRef.current = seedId;
     let active = true;
+
     appendRecommendationsToQueue().then((appended) => {
       if (!appended && active) {
         lastRecommendationSeedRef.current = null;
@@ -163,41 +167,29 @@ export default function PlayerDetail({ isOpen, onClose }) {
   ]);
 
   const handleAnimEnd = () => {
-    const p = phaseRef.current;
-    if (p === "enter") setPhase("open");
-    if (p === "exit") {
+    const currentPhase = phaseRef.current;
+    if (currentPhase === "enter") setPhase("open");
+    if (currentPhase === "exit") {
       setMounted(false);
       setPhase("closed");
     }
   };
 
-  /* ===== song switch animation (ADD) ===== */
-  const [songSlideClass, setSongSlideClass] = useState("");
-  const prevIndexRef = useRef(currentIndex);
-
   useEffect(() => {
     if (prevIndexRef.current === currentIndex) return;
 
-    if (currentIndex > prevIndexRef.current) {
-      setSongSlideClass("song-slide-next");
-    } else {
-      setSongSlideClass("song-slide-prev");
-    }
-
+    setSongSlideClass(
+      currentIndex > prevIndexRef.current ? "song-slide-next" : "song-slide-prev"
+    );
     prevIndexRef.current = currentIndex;
 
     const t = setTimeout(() => setSongSlideClass(""), 380);
     return () => clearTimeout(t);
   }, [currentIndex]);
 
-  /* ================= seek logic (GIỮ NGUYÊN) ================= */
-  const [isSeeking, setIsSeeking] = useState(false);
-  const [seekValue, setSeekValue] = useState(0);
-  const [fallbackDuration, setFallbackDuration] = useState(0);
-  const audioRef = useRef(null);
-
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted) return undefined;
+
     const audioEl = document.querySelector("audio");
     audioRef.current = audioEl;
 
@@ -207,7 +199,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
     syncDuration();
     audioEl?.addEventListener("loadedmetadata", syncDuration);
-    return () => audioEl?.removeEventListener("loadedmetadata", syncDuration);
+
+    return () => {
+      audioEl?.removeEventListener("loadedmetadata", syncDuration);
+    };
   }, [mounted, currentSong]);
 
   const total = Number(duration || fallbackDuration || 0) || 0;
@@ -217,8 +212,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
     if (!isSeeking) setSeekValue(displayedTime);
   }, [displayedTime, isSeeking]);
 
-  const doSeek = (t) => {
-    const time = Math.max(0, Math.min(total, Number(t) || 0));
+  const doSeek = (nextTime) => {
+    const time = Math.max(0, Math.min(total, Number(nextTime) || 0));
     seek?.(time);
   };
 
@@ -266,16 +261,13 @@ export default function PlayerDetail({ isOpen, onClose }) {
     unlockCarouselSwipe();
   };
 
-  /* ================= playback ================= */
   const togglePlay = () => {
     isPlaying ? pause() : resume();
   };
 
   const handleVolumeChange = (value) => {
     const next = Number(value);
-    if (muted && next > 0) {
-      toggleMute();
-    }
+    if (muted && next > 0) toggleMute();
     setVolume(next);
   };
 
@@ -284,29 +276,70 @@ export default function PlayerDetail({ isOpen, onClose }) {
   const cover = resolveAssetUrl(
     currentSong.cover || currentSong.cover_url || currentSong.image
   );
-  const panelSurfaceStyle = cover
-    ? {
-        backgroundImage: `linear-gradient(165deg, rgba(7, 7, 7, 0.82), rgba(10, 14, 12, 0.74)), radial-gradient(circle at 84% 8%, rgba(29, 185, 84, 0.18), transparent 42%), url(${cover})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundBlendMode: "normal, normal, overlay",
-      }
-    : {
-        backgroundImage: "linear-gradient(165deg, rgba(8,8,8,0.9), rgba(11,15,13,0.82))",
-      };
-  const panelSurfaceClass =
-    "border border-white/10 bg-[#101010]/82 shadow-[0_26px_60px_rgba(0,0,0,0.56)] backdrop-blur-2xl";
+  const currentSongId = normalizeSongId(currentSong);
+  const normalizedIndex = Number.isFinite(currentIndex) ? currentIndex : 0;
+  const queueCount = Array.isArray(queue) ? queue.length : 0;
+  const safeQueueSize = Math.max(queueCount, normalizedIndex + 1, 1);
+  const queuePosition = Math.min(
+    safeQueueSize,
+    Math.max(normalizedIndex + 1, 1)
+  );
+  const modeLabel = shuffle
+    ? "Trộn"
+    : repeatMode === "one"
+    ? "Lặp 1"
+    : repeatMode === "all"
+    ? "Lặp hàng đợi"
+    : "Bình thường";
+  const metaCards = [
+    { label: "Vị trí", value: `${queuePosition}/${safeQueueSize}` },
+    { label: "Thời lượng", value: total > 0 ? formatTime(total) : "--:--" },
+    { label: "Chế độ", value: modeLabel },
+  ];
+  const tabs = [
+    { id: "queue", label: "Danh sách phát" },
+    { id: "lyrics", label: "Lời bài hát" },
+  ];
+  const mobileTabs = [
+    { id: "queue", label: "Danh sách phát" },
+    { id: "now", label: "Đang phát" },
+    { id: "lyrics", label: "Lời bài hát" },
+  ];
+  const activeTabTitle =
+    activeTab === "queue" ? "Danh sách phát" : "Lời bài hát";
+  const activeTabDescription =
+    activeTab === "queue"
+      ? queueCount
+        ? `${queueCount} bài trong hàng đợi`
+        : "Hàng đợi hiện chưa có bài hát nào"
+      : "Lời bài hát chạy theo thời gian phát";
+  const animateClass =
+    phase === "enter"
+      ? "player-detail-anim-in"
+      : phase === "exit"
+      ? "player-detail-anim-out"
+      : "";
+  const stableClass =
+    phase === "open" || phase === "enter"
+      ? "translate-y-0 opacity-100"
+      : "translate-y-full opacity-0";
+  const glassPanelClass = "player-detail-glass";
+  const softButtonClass =
+    "flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.07] text-white/82 transition active:scale-95 md:hover:bg-white/[0.12] md:hover:text-white";
+  const pillClass =
+    "rounded-full bg-white/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/66 sm:text-[11px]";
+  const isLiked = likedSongIds.includes(currentSongId);
+
   const likeButton = (
     <button
       type="button"
       onClick={() => {
-        const songId = normalizeSongId(currentSong);
-        if (songId) toggleLike(songId);
+        if (currentSongId) toggleLike(currentSongId);
       }}
-      className={`flex h-10 w-10 items-center justify-center rounded-full transition active:scale-95 ${
-        likedSongIds.includes(normalizeSongId(currentSong))
-          ? "border border-emerald-300/55 bg-emerald-400/20 text-emerald-100 shadow-[0_0_24px_rgba(29,185,84,0.3)]"
-          : "border border-white/15 bg-white/[0.06] text-white/80 md:hover:bg-white/12"
+      className={`flex h-11 w-11 items-center justify-center rounded-full transition active:scale-95 ${
+        isLiked
+          ? "bg-emerald-400/18 text-emerald-100 shadow-[0_0_22px_rgba(29,185,84,0.24)]"
+          : "bg-white/[0.07] text-white/80 md:hover:bg-white/[0.12]"
       }`}
       aria-label="Yêu thích"
     >
@@ -314,456 +347,410 @@ export default function PlayerDetail({ isOpen, onClose }) {
     </button>
   );
 
-  const animateClass =
-    phase === "enter"
-      ? "player-detail-anim-in"
-      : phase === "exit"
-      ? "player-detail-anim-out"
-      : "";
-
-  const stableClass =
-    phase === "open" || phase === "enter"
-      ? "translate-y-0 opacity-100"
-      : "translate-y-full opacity-0";
-
   const detailPanel = (
-  <div
-    className={`flex w-full flex-1 min-h-0 flex-col overflow-hidden rounded-[2rem] p-4 sm:p-6 ${panelSurfaceClass} ${songSlideClass}`}
-    style={panelSurfaceStyle}
-  >
-    {/* ✅ KHÔNG SCROLL ở panel này để không mất controls */}
-    <div className="flex min-h-0 flex-1 flex-col">
-      {/* ================== ALBUM (auto scale) ================== */}
-      <div className="flex min-h-0 items-center justify-center py-0.5 sm:flex-1 sm:py-0">
-        {/* Desktop/Laptop/Tablet landscape: ảnh chữ nhật */}
+    <div
+      className={`${glassPanelClass} flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[26px] p-4 sm:p-5 lg:p-6`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={pillClass}>
+            {isPlaying ? "Đang phát" : "Tạm dừng"}
+          </span>
+          <span className="rounded-full bg-white/[0.05] px-3 py-1 text-[11px] text-white/56">
+            {safeQueueSize} bài trong hàng đợi
+          </span>
+        </div>
+        <span className="rounded-full bg-white/[0.05] px-3 py-1 text-[11px] text-white/56">
+          {modeLabel}
+        </span>
+      </div>
+
+      <div className="mt-4 flex min-h-0 flex-1 flex-col gap-6">
         <div
-          className="
-            relative hidden w-full items-center gap-8
-            sm:flex
-          "
-          style={{
-            // ✅ tự co theo màn hình: không chiếm hết làm mất controls
-            height: "clamp(180px, 38vh, 320px)",
-          }}
+          className={`grid min-h-0 flex-1 content-center gap-5 md:grid-cols-[minmax(190px,260px)_minmax(0,1fr)] md:items-center lg:grid-cols-[minmax(220px,320px)_minmax(0,1fr)] xl:grid-cols-[minmax(240px,360px)_minmax(0,1fr)] xl:gap-8 ${songSlideClass}`}
         >
-          <div className="relative z-10 h-full w-[min(42%,336px)] overflow-hidden rounded-3xl ring-1 ring-black/28 shadow-[0_28px_70px_rgba(8,14,28,0.52)]">
-            {cover && (
-              <OptimizedImage
-                src={cover}
-                alt={currentSong.title}
-                className="h-full w-full object-cover"
-              />
-            )}
+          <div className="relative mx-auto w-full max-w-[220px] sm:max-w-[260px] md:max-w-none">
+            <div
+              className="pointer-events-none absolute -inset-4 rounded-[34px] opacity-60 blur-3xl"
+              style={{
+                background:
+                  "radial-gradient(circle at 40% 30%, rgba(255,255,255,0.14), transparent 34%), radial-gradient(circle at 65% 72%, rgba(242,178,90,0.16), transparent 42%)",
+              }}
+            />
+            <div className="relative aspect-square overflow-hidden rounded-[28px] bg-black/28 shadow-[0_26px_80px_rgba(0,0,0,0.42)]">
+              {cover ? (
+                <OptimizedImage
+                  src={cover}
+                  alt={currentSong.title}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,#2f2f2f,#111)] text-sm uppercase tracking-[0.32em] text-white/50">
+                  No cover
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="relative z-10 min-w-0 flex-1">
-            <h3 className="max-w-full overflow-hidden text-[clamp(1.6rem,3.2vw,3.15rem)] font-semibold leading-[1.08] tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
+          <div className="min-w-0 text-center md:text-left">
+            <h2 className="overflow-hidden text-[clamp(2.1rem,8vw,5rem)] font-semibold leading-[0.94] tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
               {currentSong.title}
-            </h3>
-            <p className="mt-2.5 overflow-hidden text-[clamp(0.98rem,1.7vw,1.35rem)] font-medium leading-snug tracking-wide text-emerald-300/90 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+            </h2>
+            <div className="mt-3 overflow-hidden text-sm font-medium text-white/78 sm:text-base lg:text-xl [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
               <ArtistNames
                 item={currentSong}
                 fallback="Unknown"
-                linkClassName="transition md:hover:text-emerald-300"
+                linkClassName="transition md:hover:text-white"
               />
-            </p>
-          </div>
+            </div>
 
+            <div className="mt-5 grid grid-cols-3 gap-2.5 sm:gap-3">
+              {metaCards.map((card) => (
+                <div
+                  key={card.label}
+                  className="rounded-[20px] bg-white/[0.04] px-3 py-3 text-left backdrop-blur-xl"
+                >
+                  <div className="text-[10px] uppercase tracking-[0.26em] text-white/42">
+                    {card.label}
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-white sm:text-base">
+                    {card.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Phone: đĩa tròn */}
-        <div className="relative flex items-center justify-center sm:hidden">
-          <div
-            className="overflow-hidden rounded-full border border-white/12 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,0.62)]"
-            style={{
-              // ✅ co theo màn hình điện thoại để không lẹm
-              width: "clamp(210px, 70vw, 320px)",
-              height: "clamp(210px, 70vw, 320px)",
-            }}
-          >
-            {cover && (
-              <OptimizedImage
-                src={cover}
-                alt={currentSong.title}
-                className={`player-detail-disc h-full w-full object-cover ${
-                  isPlaying ? "is-playing" : ""
-                }`}
+        <div className="mt-auto rounded-[24px] bg-black/18 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)] backdrop-blur-2xl sm:p-5">
+          <div className="space-y-2">
+            <div className="-my-2 px-1 py-2">
+              <input
+                type="range"
+              min={0}
+              max={total || 0}
+              step={0.1}
+              value={Math.min(displayedTime, total || 0)}
+              onPointerDownCapture={handleSliderInteractionStart}
+              onPointerMoveCapture={handleSliderInteractionMove}
+              onPointerUpCapture={handleSliderInteractionEnd}
+              onPointerCancelCapture={handleSliderInteractionEnd}
+              onTouchStartCapture={handleSliderInteractionStart}
+              onTouchMoveCapture={handleSliderInteractionMove}
+              onTouchEndCapture={handleSliderInteractionEnd}
+              onTouchCancelCapture={handleSliderInteractionEnd}
+              onMouseDownCapture={handleSliderInteractionStart}
+              onMouseUpCapture={handleSliderInteractionEnd}
+              onPointerDown={onSeekStart}
+              onPointerUp={onSeekCommit}
+              onPointerCancel={onSeekCommit}
+                onMouseDown={onSeekStart}
+                onTouchStart={onSeekStart}
+                onChange={onSeekChange}
+                onMouseUp={onSeekCommit}
+                onTouchEnd={onSeekCommit}
+                className="player-detail-range h-2.5 w-full cursor-pointer"
+                style={{
+                  "--range-progress": `${
+                    total > 0 ? (Math.min(displayedTime, total) / total) * 100 : 0
+                  }%`,
+                }}
               />
-            )}
+            </div>
+            <div className="flex items-center justify-between px-1 text-[11px] text-white/64 sm:text-xs">
+              <span>{formatTime(displayedTime)}</span>
+              <span>{formatTime(total)}</span>
+            </div>
           </div>
 
-          {/* subtle glow */}
-          <div
-            className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-2xl opacity-40"
-            style={{
-              background:
-                "radial-gradient(circle, rgba(29,185,84,.35), transparent 60%)",
-            }}
-          />
+          <div className="mt-5 grid gap-4 xl:grid-cols-[auto_1fr_minmax(0,220px)] xl:items-center">
+            <div className="flex items-center justify-center gap-2 xl:justify-start">
+              {likeButton}
+              <AddToPlaylistButton
+                song={currentSong}
+                triggerClassName="h-11 w-11 bg-white/[0.07] text-white/82 md:hover:bg-white/[0.12]"
+              />
+            </div>
+
+            <div className="flex items-center justify-center gap-2.5 text-lg sm:gap-3 sm:text-xl">
+              <button
+                onClick={toggleShuffle}
+                className={`${softButtonClass} ${
+                  shuffle
+                    ? "bg-emerald-400/18 text-emerald-100 shadow-[0_0_22px_rgba(29,185,84,0.18)]"
+                    : ""
+                }`}
+                aria-label="Trộn"
+              >
+                <FaShuffle />
+              </button>
+
+              <button
+                onClick={playPrev}
+                className={softButtonClass}
+                aria-label="Bài trước"
+              >
+                <FaBackwardStep />
+              </button>
+
+              <button
+                onClick={togglePlay}
+                className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_28%,#9dfabd,#4ad67f_55%,#249956)] text-2xl text-[#062512] shadow-[0_0_42px_rgba(75,220,126,0.52)] transition active:scale-95 sm:h-[4.5rem] sm:w-[4.5rem]"
+                aria-label="Phát hoặc tạm dừng"
+              >
+                {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
+              </button>
+
+              <button
+                onClick={playNext}
+                className={softButtonClass}
+                aria-label="Bài tiếp"
+              >
+                <FaForwardStep />
+              </button>
+
+              <button
+                onClick={toggleRepeatMode}
+                className={`${softButtonClass} ${
+                  repeatMode !== "off"
+                    ? "bg-emerald-400/18 text-emerald-100 shadow-[0_0_22px_rgba(29,185,84,0.18)]"
+                    : ""
+                }`}
+                aria-label="Lặp lại"
+              >
+                <span className="relative inline-flex">
+                  <FaRepeat />
+                  {repeatMode === "one" && (
+                    <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
+                      1
+                    </span>
+                  )}
+                </span>
+              </button>
+            </div>
+
+            <div className="flex min-w-0 items-center gap-3">
+              <button
+                onClick={toggleMute}
+                className={softButtonClass}
+                aria-label="Tắt hoặc mở tiếng"
+              >
+                {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={volume}
+                onPointerDownCapture={handleSliderInteractionStart}
+                onPointerMoveCapture={handleSliderInteractionMove}
+                onPointerUpCapture={handleSliderInteractionEnd}
+                onPointerCancelCapture={handleSliderInteractionEnd}
+                onTouchStartCapture={handleSliderInteractionStart}
+                onTouchMoveCapture={handleSliderInteractionMove}
+                onTouchEndCapture={handleSliderInteractionEnd}
+                onTouchCancelCapture={handleSliderInteractionEnd}
+                onMouseDownCapture={handleSliderInteractionStart}
+                onMouseUpCapture={handleSliderInteractionEnd}
+                onInput={(e) => handleVolumeChange(e.target.value)}
+                onChange={(e) => handleVolumeChange(e.target.value)}
+                className="player-detail-range h-2.5 min-w-0 flex-1 cursor-pointer"
+                style={{
+                  "--range-progress": `${volume * 100}%`,
+                }}
+              />
+              <span className="w-10 text-right text-[11px] text-white/48 sm:text-xs">
+                {Math.round(volume * 100)}%
+              </span>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  );
 
-      <div className="mt-3 text-center sm:hidden">
-        <h3 className="mx-auto max-w-[95%] overflow-hidden text-[clamp(1.1rem,5.2vw,1.55rem)] font-semibold leading-tight tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
-          {currentSong.title}
-        </h3>
-        <p className="mx-auto mt-1 max-w-[95%] overflow-hidden text-xs text-white/75 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-          <ArtistNames
-            item={currentSong}
-            fallback="Unknown"
-            linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-          />
+  const sidePanel = (
+    <div
+      className={`${glassPanelClass} flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[26px] p-3 sm:p-4`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-white/42 sm:text-[11px]">
+            Khám phá
+          </p>
+          <h3 className="mt-2 text-lg font-semibold text-white sm:text-xl">
+            {activeTabTitle}
+          </h3>
+          <p className="mt-1 text-xs text-white/54 sm:text-sm">
+            {activeTabDescription}
+          </p>
+        </div>
+        <span className="rounded-full bg-white/[0.05] px-3 py-1 text-[11px] text-white/54">
+          {activeTab === "queue" ? `${queueCount} bài` : "Sync"}
+        </span>
+      </div>
+
+      <div className="mt-4 flex items-center gap-1.5 rounded-full bg-black/24 p-1">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold transition sm:text-sm ${
+              activeTab === tab.id
+                ? "bg-white/[0.09] text-white shadow-[0_8px_18px_rgba(255,255,255,0.06)]"
+                : "text-white/70 md:hover:bg-white/[0.06] md:hover:text-white"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4 min-h-0 flex-1 overflow-hidden rounded-[22px] bg-black/16 backdrop-blur-xl">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden px-3 py-3 sm:px-4">
+          {activeTab === "queue" ? (
+            <PlayerDetailQueue
+              queue={queue}
+              currentIndex={normalizedIndex}
+              playAt={playAt}
+            />
+          ) : (
+            <PlayerDetailLyrics
+              currentSong={currentSong}
+              displayedTime={displayedTime}
+              isActive={activeTab === "lyrics"}
+              onSeek={doSeek}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const scrollToMobileTab = (tabId) => {
+    const el = carouselRef.current;
+    if (!el) return;
+
+    const tabIndex = mobileTabs.findIndex((tab) => tab.id === tabId);
+    if (tabIndex < 0) return;
+
+    const width = el.clientWidth || 1;
+    el.scrollTo({ left: width * tabIndex, behavior: "smooth" });
+    setMobileTab(tabId);
+  };
+
+  const mobileQueuePanel = (
+    <div
+      className={`${glassPanelClass} flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[26px] p-4`}
+    >
+      <div className="min-w-0">
+        <h3 className="text-xl font-semibold text-white">Danh sách phát</h3>
+        <p className="mt-1 text-sm text-white/52">
+          {queueCount ? `${queueCount} bài trong hàng đợi` : "Hàng đợi hiện đang trống"}
         </p>
       </div>
 
-      {/* ================== SEEK ================== */}
-      <div className="mt-2.5 space-y-2 sm:mt-4">
-        <div className="-my-2 px-1 py-2 sm:-my-1 sm:px-2 sm:py-1">
-          <input
-            type="range"
-            min={0}
-            max={total || 0}
-            step={0.1}
-            value={Math.min(displayedTime, total || 0)}
-            onPointerDownCapture={handleSliderInteractionStart}
-            onPointerMoveCapture={handleSliderInteractionMove}
-            onPointerUpCapture={handleSliderInteractionEnd}
-            onPointerCancelCapture={handleSliderInteractionEnd}
-            onTouchStartCapture={handleSliderInteractionStart}
-            onTouchMoveCapture={handleSliderInteractionMove}
-            onTouchEndCapture={handleSliderInteractionEnd}
-            onTouchCancelCapture={handleSliderInteractionEnd}
-            onMouseDownCapture={handleSliderInteractionStart}
-            onMouseUpCapture={handleSliderInteractionEnd}
-            onPointerDown={onSeekStart}
-            onPointerUp={onSeekCommit}
-            onPointerCancel={onSeekCommit}
-            onMouseDown={onSeekStart}
-            onTouchStart={onSeekStart}
-            onChange={onSeekChange}
-            onMouseUp={onSeekCommit}
-            onTouchEnd={onSeekCommit}
-            className="player-detail-range h-2.5 w-full cursor-pointer"
-            style={{
-              "--range-progress": `${
-                total > 0 ? (Math.min(displayedTime, total) / total) * 100 : 0
-              }%`,
-            }}
+      <div className="mt-4 min-h-0 flex-1 overflow-hidden rounded-[22px] bg-black/16 backdrop-blur-xl">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden px-3 py-3">
+          <PlayerDetailQueue
+            queue={queue}
+            currentIndex={normalizedIndex}
+            playAt={playAt}
           />
         </div>
-
-        <div className="flex items-center justify-between px-1 text-[11px] text-white/70 sm:px-2 sm:text-xs">
-          <span>{formatTime(displayedTime)}</span>
-          <span>{formatTime(total)}</span>
-        </div>
-      </div>
-
-      {/* ================== CONTROLS BAR (always visible) ================== */}
-      <div className="mt-2.5 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:mt-4">
-        {/* Like: luôn bên trái */}
-        <div className="flex items-center justify-start">
-          {likeButton}
-        </div>
-
-        {/* Controls: luôn center */}
-        <div className="flex items-center justify-center gap-3 text-lg sm:gap-4 sm:text-xl">
-          <button
-            onClick={toggleShuffle}
-            className={`flex h-10 w-10 items-center justify-center rounded-full border transition sm:h-11 sm:w-11 ${
-              shuffle
-                ? "border-emerald-300/60 bg-emerald-400/20 text-emerald-100 shadow-[0_0_22px_rgba(29,185,84,0.28)]"
-                : "border-white/15 bg-white/[0.05] text-white/65 md:hover:bg-white/12 md:hover:text-white/90"
-            }`}
-            aria-label="Trộn"
-          >
-            <FaShuffle />
-          </button>
-
-          <button
-            onClick={playPrev}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/[0.05] text-white/80 transition md:hover:bg-white/12 md:hover:text-white sm:h-11 sm:w-11"
-            aria-label="Bài trước"
-          >
-            <FaBackwardStep />
-          </button>
-
-          <button
-            onClick={togglePlay}
-            className="relative flex h-14 w-14 items-center justify-center rounded-full border border-[#7df3af]/55 bg-[radial-gradient(circle_at_32%_28%,#8ef9bb,#42d57b_58%,#249956)] text-2xl text-[#062512] shadow-[0_0_48px_rgba(75,220,126,0.58)] transition active:scale-95 sm:h-16 sm:w-16"
-            aria-label="Phát/Tạm dừng"
-          >
-            {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
-          </button>
-
-          <button
-            onClick={playNext}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/[0.05] text-white/80 transition md:hover:bg-white/12 md:hover:text-white sm:h-11 sm:w-11"
-            aria-label="Bài tiếp"
-          >
-            <FaForwardStep />
-          </button>
-
-          <button
-            onClick={toggleRepeatMode}
-            className={`relative flex h-10 w-10 items-center justify-center rounded-full border transition sm:h-11 sm:w-11 ${
-              repeatMode !== "off"
-                ? "border-emerald-300/60 bg-emerald-400/20 text-emerald-100 shadow-[0_0_22px_rgba(29,185,84,0.28)]"
-                : "border-white/15 bg-white/[0.05] text-white/65 md:hover:bg-white/12 md:hover:text-white/90"
-            }`}
-            aria-label="Lặp"
-          >
-            <span className="relative inline-flex">
-              <FaRepeat />
-              {repeatMode === "one" && (
-                <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
-                  1
-                </span>
-              )}
-            </span>
-          </button>
-        </div>
-
-        {/* Right actions: Add to playlist (always visible) + volume (md+) */}
-        <div className="flex items-center justify-end gap-2 md:gap-3">
-          <AddToPlaylistButton
-            song={currentSong}
-            triggerClassName="h-10 w-10 border border-white/15 bg-white/[0.06] text-white/80 md:hover:bg-white/14"
-          />
-
-          <button
-            onClick={toggleMute}
-            className="hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/[0.05] text-lg text-white/75 transition md:inline-flex md:hover:bg-white/12 md:hover:text-white"
-            aria-label="Tắt/Mở tiếng"
-          >
-            {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
-          </button>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume}
-            onPointerDownCapture={handleSliderInteractionStart}
-            onPointerMoveCapture={handleSliderInteractionMove}
-            onPointerUpCapture={handleSliderInteractionEnd}
-            onPointerCancelCapture={handleSliderInteractionEnd}
-            onTouchStartCapture={handleSliderInteractionStart}
-            onTouchMoveCapture={handleSliderInteractionMove}
-            onTouchEndCapture={handleSliderInteractionEnd}
-            onTouchCancelCapture={handleSliderInteractionEnd}
-            onMouseDownCapture={handleSliderInteractionStart}
-            onMouseUpCapture={handleSliderInteractionEnd}
-            onInput={(e) => handleVolumeChange(e.target.value)}
-            onChange={(e) => handleVolumeChange(e.target.value)}
-            className="player-detail-range hidden h-2 w-32 cursor-pointer md:block"
-            style={{
-              "--range-progress": `${volume * 100}%`,
-            }}
-          />
-        </div>
-      </div>
-
-      <div className="mt-3 flex items-center gap-3 px-1 md:hidden">
-        <button
-          onClick={toggleMute}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/[0.05] text-base text-white/78 transition active:scale-95"
-          aria-label="Tắt/Mở tiếng"
-        >
-          {muted || volume === 0 ? <FaVolumeXmark /> : <FaVolumeHigh />}
-        </button>
-        <div className="-my-2 flex-1 py-2">
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume}
-            onPointerDownCapture={handleSliderInteractionStart}
-            onPointerMoveCapture={handleSliderInteractionMove}
-            onPointerUpCapture={handleSliderInteractionEnd}
-            onPointerCancelCapture={handleSliderInteractionEnd}
-            onTouchStartCapture={handleSliderInteractionStart}
-            onTouchMoveCapture={handleSliderInteractionMove}
-            onTouchEndCapture={handleSliderInteractionEnd}
-            onTouchCancelCapture={handleSliderInteractionEnd}
-            onMouseDownCapture={handleSliderInteractionStart}
-            onMouseUpCapture={handleSliderInteractionEnd}
-            onInput={(e) => handleVolumeChange(e.target.value)}
-            onChange={(e) => handleVolumeChange(e.target.value)}
-            className="player-detail-range h-2.5 w-full cursor-pointer"
-            style={{
-              "--range-progress": `${volume * 100}%`,
-            }}
-          />
-        </div>
-        <FaVolumeHigh className="text-base text-white/60" aria-hidden="true" />
       </div>
     </div>
-  </div>
-);
+  );
 
+  const mobileLyricsPanel = (
+    <div
+      className={`${glassPanelClass} flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[26px] p-4`}
+    >
+      <div className="min-w-0">
+        <h3 className="text-xl font-semibold text-white">Lời bài hát</h3>
+        <p className="mt-1 text-sm text-white/52">Vuốt để chuyển trang, chạm để tua</p>
+      </div>
 
+      <div className="mt-4 min-h-0 flex-1 overflow-hidden rounded-[22px] bg-black/16 backdrop-blur-xl">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden px-3 py-3">
+          <PlayerDetailLyrics
+            currentSong={currentSong}
+            displayedTime={displayedTime}
+            isActive={mobileTab === "lyrics"}
+            onSeek={doSeek}
+          />
+        </div>
+      </div>
+    </div>
+  );
 
-  /* ================= render ================= */
   return (
     <div
-        className={`player-detail-shell fixed inset-0 z-[999] h-[100svh] max-h-[100svh]
-      overflow-hidden text-white ${stableClass} ${animateClass}`}
+      className={`player-detail-shell fixed inset-0 z-[999] h-[100svh] max-h-[100svh] overflow-hidden text-white ${stableClass} ${animateClass}`}
       style={{
         animationDuration: `${ANIM_MS}ms`,
         animationTimingFunction: ANIM_EASE,
-        paddingBottom: "env(safe-area-inset-bottom)", // ✅ iOS safe area
+        paddingBottom: "env(safe-area-inset-bottom)",
       }}
       onAnimationEnd={handleAnimEnd}
     >
-      {/* BACKDROP */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/48 backdrop-blur-[2px]"
         onMouseDown={(e) => {
           if (e.target !== e.currentTarget) return;
           if (backdropReady) onClose?.();
         }}
       />
 
-      {/* BG IMAGE (isolated layer) */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute inset-[-20%] opacity-[0.28] blur-[100px]"
-          style={{
-            backgroundImage: `url(${cover})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            filter: "saturate(1.15) brightness(0.42) contrast(1.04)",
-          }}
+          className="absolute inset-[-12%] scale-110 opacity-[0.7] blur-[120px]"
+          style={
+            cover
+              ? {
+                  backgroundImage: `url(${cover})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  filter: "saturate(1.02) brightness(0.48) contrast(1.01)",
+                }
+              : {
+                  background:
+                    "radial-gradient(circle at 30% 20%, rgba(229,162,84,0.14), transparent 35%), radial-gradient(circle at 70% 30%, rgba(255,255,255,0.12), transparent 28%), linear-gradient(160deg, rgba(8,10,10,0.96), rgba(4,4,5,0.92))",
+                }
+          }
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(29,185,84,0.18),transparent_40%),linear-gradient(165deg,rgba(5,6,6,0.38),rgba(2,3,3,0.86))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_84%_14%,rgba(228,164,90,0.08),transparent_30%),linear-gradient(135deg,rgba(6,8,7,0.68),rgba(2,2,4,0.92))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.14),rgba(0,0,0,0.48))]" />
       </div>
 
-      {/* CONTENT */}
-      {/* ✅ h-full + min-h-0 để flex con không “lèm” */}
       <div className="relative z-10 h-full w-full overflow-hidden">
-        <div className="relative mx-auto flex h-full w-full min-h-0 max-w-[1360px] flex-col overflow-hidden px-3 pt-[calc(env(safe-area-inset-top)+8px)] pb-3 sm:px-6 sm:pt-7 sm:pb-7">
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="
-              absolute
-              right-3 top-[calc(env(safe-area-inset-top)+8px)]
-              z-20
-              flex h-9 w-9 items-center justify-center lg:hidden
-              rounded-xl
-              border border-white/15
-              bg-black/45
-              text-base text-white/85
-              shadow-[0_12px_30px_rgba(0,0,0,0.42)]
-              transition md:hover:bg-black/60 md:hover:text-white
-              sm:right-6 sm:top-6 sm:h-10 sm:w-10
-            "
-            aria-label="Đóng"
-          >
-            <span className="-mt-[1px]">✕</span>
-          </button>
+        <button
+          onClick={onClose}
+          className="absolute right-3 top-[calc(env(safe-area-inset-top)+10px)] z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/30 text-base text-white/86 shadow-[0_10px_22px_rgba(0,0,0,0.26)] transition md:hover:bg-black/44 md:hover:text-white sm:right-5 sm:top-5 sm:h-10 sm:w-10 sm:text-lg lg:right-7 lg:top-6"
+          aria-label="Đóng"
+        >
+          <span className="-mt-[1px] leading-none">×</span>
+        </button>
 
-          {/* Title */}
-          <div className="mt-4 hidden flex-col items-center gap-1 text-center sm:mt-6 lg:hidden sm:flex">
-            <h2 className="max-w-[min(90vw,780px)] overflow-hidden text-[clamp(1.05rem,3vw,1.7rem)] font-semibold leading-tight tracking-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
-              {currentSong.title}
-            </h2>
-            <p className="text-xs text-white/60 sm:text-sm">
-              <ArtistNames
-                item={currentSong}
-                fallback="Unknown"
-                linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-              />
-            </p>
+        <div className="flex h-full min-h-0 flex-col px-3 pb-3 pt-[calc(env(safe-area-inset-top)+10px)] sm:px-5 sm:pb-5 sm:pt-5 lg:px-7 lg:pt-6">
+          <div className="hidden flex-1 lg:grid lg:min-h-0 lg:grid-cols-[minmax(0,1.18fr)_minmax(300px,380px)] lg:gap-5 xl:grid-cols-[minmax(0,1.24fr)_420px]">
+            <div className="min-h-0">{detailPanel}</div>
+            <div className="min-h-0">{sidePanel}</div>
           </div>
 
-          {/* Main grid */}
-          {/* Desktop layout */}
-          <div className="mt-5 hidden min-h-0 flex-1 gap-6 overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_40%] xl:grid-cols-[minmax(0,1fr)_38%]">
-            {detailPanel}
-
-            {/* RIGHT */}
-            <div
-              className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] p-4 sm:p-6 ${panelSurfaceClass}`}
-              style={panelSurfaceStyle}
-            >
-              {/* Tabs + close */}
-              <div className="flex items-center gap-2">
-                <div className="flex flex-1 items-center gap-2 rounded-full border border-white/15 bg-black/30 p-1">
-                  {[
-                    { id: "queue", label: "Danh sách phát" },
-                    { id: "lyrics", label: "Lời bài hát" },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex-1 rounded-full px-3 py-2 text-xs font-semibold transition sm:text-sm ${
-                        activeTab === tab.id
-                          ? "border border-emerald-300/60 bg-emerald-400/22 text-emerald-100 shadow-[0_8px_18px_rgba(29,185,84,0.24)]"
-                          : "text-white/72 md:hover:bg-white/8 md:hover:text-white"
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/85 shadow-[0_12px_28px_rgba(0,0,0,0.4)] transition md:hover:bg-black/58 md:hover:text-white"
-                  aria-label="Đóng"
-                >
-                  <span className="-mt-[1px] text-lg leading-none">✕</span>
-                </button>
-              </div>
-
-              {/* ✅ only this area scrolls */}
-              <div className="min-h-0 flex-1 overflow-y-auto mt-4">
-                {activeTab === "queue" && (
-                  <PlayerDetailQueue
-                    queue={queue}
-                    currentIndex={currentIndex}
-                    playAt={playAt}
-                  />
-                )}
-
-                {activeTab === "lyrics" && (
-                  <PlayerDetailLyrics
-                    currentSong={currentSong}
-                    displayedTime={displayedTime}
-                    isActive={activeTab === "lyrics"}
-                    onSeek={doSeek}
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile/tablet swipe layout */}
-          <div className="mt-3 flex min-h-0 flex-1 flex-col overflow-hidden lg:hidden">
-            <div className="mb-4 flex items-center justify-center gap-2 overflow-x-auto rounded-full border border-white/15 bg-black/24 px-2 py-1 text-xs text-white/60 sm:mb-3 sm:px-1">
-              {[
-                { id: "lyrics", label: "Lời bài hát" },
-                { id: "now", label: "Đang phát" },
-                { id: "queue", label: "Danh sách phát" },
-              ].map((tab, index) => (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-12 sm:pt-14 lg:hidden">
+            <div className="mb-3 flex items-center gap-2 rounded-full bg-black/22 p-1">
+              {mobileTabs.map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => {
-                    const el = carouselRef.current;
-                    if (!el) return;
-                    const width = el.clientWidth;
-                    el.scrollTo({ left: width * index, behavior: "smooth" });
-                    setMobileTab(tab.id);
-                  }}
-                  className={`rounded-full px-3 py-1.5 font-medium transition ${
+                  onClick={() => scrollToMobileTab(tab.id)}
+                  className={`flex-1 rounded-full px-3 py-2 text-[11px] font-semibold transition ${
                     mobileTab === tab.id
-                      ? "border border-emerald-300/60 bg-emerald-400/22 text-emerald-100 shadow-[0_8px_16px_rgba(29,185,84,0.24)]"
-                      : "text-white/62 md:hover:bg-white/8 md:hover:text-white/85"
+                      ? "bg-white/[0.1] text-white"
+                      : "text-white/58"
                   }`}
                 >
                   {tab.label}
@@ -778,85 +765,33 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 scrollRafRef.current = requestAnimationFrame(() => {
                   const el = carouselRef.current;
                   if (!el) return;
+
                   const width = el.clientWidth || 1;
                   const index = Math.round(el.scrollLeft / width);
-                  const next =
-                    index === 0 ? "lyrics" : index === 1 ? "now" : "queue";
+                  const next = mobileTabs[index]?.id || "now";
                   setMobileTab(next);
                   scrollRafRef.current = null;
                 });
               }}
-              className="
-                flex flex-1 min-h-0
-                w-full
-                snap-x snap-mandatory
-                gap-0
-                overflow-x-auto
-                overflow-y-hidden
-                pb-3 sm:pb-6
-                scrollbar-hidden
-              "
+              className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden scrollbar-hidden"
               style={{
                 overflowX: isCarouselSwipeLocked ? "hidden" : "auto",
                 scrollSnapType: isCarouselSwipeLocked ? "none" : undefined,
               }}
             >
-              {/* Lyrics slide */}
-              <div className="flex min-h-0 w-full min-w-[100%] snap-center overflow-hidden">
-                <div
-                  className={`flex min-h-0 flex-1 flex-col rounded-3xl p-5 overflow-hidden ${panelSurfaceClass}`}
-                  style={panelSurfaceStyle}
-                >
-                  <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
-                    Lời bài hát
-                  </div>
-
-                  {/* ✅ only lyrics area scrolls */}
-                  <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
-                    <PlayerDetailLyrics
-                      currentSong={currentSong}
-                      displayedTime={displayedTime}
-                      isActive={mobileTab === "lyrics"}
-                      onSeek={doSeek}
-                    />
-                  </div>
-                </div>
+              <div className="flex min-h-0 w-full min-w-full snap-center overflow-hidden">
+                {mobileQueuePanel}
               </div>
-
-              {/* Now playing slide */}
-              <div className="flex min-h-0 w-full min-w-[100%] snap-center overflow-hidden">
+              <div className="flex min-h-0 w-full min-w-full snap-center overflow-hidden">
                 {detailPanel}
               </div>
-
-              {/* Queue slide */}
-              <div className="flex min-h-0 w-full min-w-[100%] snap-center overflow-hidden">
-                <div
-                  className={`flex min-h-0 flex-1 flex-col rounded-3xl p-5 overflow-hidden ${panelSurfaceClass}`}
-                  style={panelSurfaceStyle}
-                >
-                  <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
-                    Danh sách phát
-                  </div>
-
-                  {/* ✅ only queue area scrolls */}
-                  <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
-                    <PlayerDetailQueue
-                      queue={queue}
-                      currentIndex={currentIndex}
-                      playAt={playAt}
-                    />
-                  </div>
-                </div>
+              <div className="flex min-h-0 w-full min-w-full snap-center overflow-hidden">
+                {mobileLyricsPanel}
               </div>
             </div>
           </div>
-
-          {/* ✅ optional extra safe bottom spacing */}
-          <div className="h-2" />
         </div>
       </div>
     </div>
   );
 }
-
-

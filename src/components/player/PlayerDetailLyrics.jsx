@@ -18,6 +18,8 @@ export default function PlayerDetailLyrics({
 
   useEffect(() => {
     const songId = normalizeSongId(currentSong);
+    lastLyricIndexRef.current = -1;
+
     if (!songId) {
       setLyricsState({ items: [], loading: false, error: null });
       return;
@@ -45,35 +47,32 @@ export default function PlayerDetailLyrics({
 
   const lyricIndex = useMemo(() => {
     if (!lyricsState.items.length) return -1;
+
     const ms = Math.floor(displayedTime * 1000);
+    let active = -1;
+
     for (let i = 0; i < lyricsState.items.length; i += 1) {
       const item = lyricsState.items[i];
       const start = Number(item?.start_time ?? item?.startTime ?? 0);
-      const end = Number(item?.end_time ?? item?.endTime ?? 0);
-      const nextItem = lyricsState.items[i + 1];
-      const nextStart = Number(
-        nextItem?.start_time ?? nextItem?.startTime ?? Number.POSITIVE_INFINITY
-      );
 
-      if (ms >= start && (end ? ms <= end : ms < nextStart)) {
-        return i;
-      }
+      if (ms >= start) active = i;
+      else break;
     }
-    return -1;
+
+    return active;
   }, [displayedTime, lyricsState.items]);
 
   useEffect(() => {
     if (!isActive) return;
     if (lyricIndex < 0 || lastLyricIndexRef.current === lyricIndex) return;
+
     const container = lyricsContainerRef.current;
-    const line = container?.querySelector(
-      `[data-lyric-index="${lyricIndex}"]`
-    );
-    if (line) {
-      line.scrollIntoView({ behavior: "smooth", block: "center" });
-      lastLyricIndexRef.current = lyricIndex;
-    }
-  }, [lyricIndex, isActive]);
+    const line = container?.querySelector(`[data-lyric-index="${lyricIndex}"]`);
+    if (!line) return;
+
+    line.scrollIntoView({ behavior: "smooth", block: "center" });
+    lastLyricIndexRef.current = lyricIndex;
+  }, [isActive, lyricIndex]);
 
   const handleLyricClick = (item) => {
     const startMs = Number(item?.start_time ?? item?.startTime ?? 0);
@@ -82,68 +81,68 @@ export default function PlayerDetailLyrics({
   };
 
   return (
-    <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden">
-      {lyricsState.loading && (
-        <p className="rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2 text-sm text-white/65">Đang tải lời bài hát...</p>
-      )}
-      {lyricsState.error && (
-        <p className="rounded-xl border border-red-300/30 bg-red-400/10 px-3 py-2 text-sm text-red-200">{lyricsState.error}</p>
-      )}
-      {!lyricsState.loading &&
-        !lyricsState.error &&
-        lyricsState.items.length === 0 && (
-          <p className="rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2 text-sm text-white/55">Bài hát chưa có lời.</p>
-        )}
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      {lyricsState.loading ? (
+        <div className="text-sm text-white/56">Đang tải lời bài hát...</div>
+      ) : null}
+
+      {lyricsState.error ? (
+        <div className="text-sm text-red-100/90">{lyricsState.error}</div>
+      ) : null}
 
       {!lyricsState.loading &&
-        !lyricsState.error &&
-        lyricsState.items.length > 0 && (
-          <div
-            ref={lyricsContainerRef}
-            className="
-              mt-3 flex-1 space-y-1.5 overflow-y-auto pr-2
-              text-sm sm:text-base
-              leading-relaxed
-              scrollbar-hidden
-            "
-          >
-            {lyricsState.items.map((item, index) => {
-              const isLineActive = index === lyricIndex;
+      !lyricsState.error &&
+      lyricsState.items.length === 0 ? (
+        <div className="text-sm text-white/48">Bài hát chưa có lời.</div>
+      ) : null}
 
-              return (
-                <button
-                  key={item.id || index}
-                  type="button"
-                  data-lyric-index={index}
-                  onClick={() => handleLyricClick(item)}
-                  className={`
-                    group block w-full rounded-xl border px-3 py-2 text-left transition
-                    ${
-                      isLineActive
-                        ? "border-emerald-300/45 bg-emerald-400/14 text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)]"
-                        : "border-transparent text-white/62 md:hover:border-white/15 md:hover:bg-white/[0.05] md:hover:text-white/86"
-                    }
-                  `}
+      {!lyricsState.loading &&
+      !lyricsState.error &&
+      lyricsState.items.length > 0 ? (
+        <div
+          ref={lyricsContainerRef}
+          className="mt-1 flex-1 space-y-2 overflow-y-auto pr-1 scrollbar-hidden"
+        >
+          {lyricsState.items.map((item, index) => {
+            const isLineActive = index === lyricIndex;
+
+            return (
+              <button
+                key={item.id || `${index}-${item.text}`}
+                type="button"
+                data-lyric-index={index}
+                onClick={() => handleLyricClick(item)}
+                className={`relative block w-full px-1 py-1.5 text-left transition ${
+                  isLineActive
+                    ? "translate-x-2 text-white"
+                    : "text-white/40 md:hover:text-white/60"
+                }`}
+              >
+                {isLineActive ? (
+                  <span className="absolute left-0 top-1/2 h-7 w-[3px] -translate-y-1/2 rounded-full bg-white/85" />
+                ) : null}
+                <span
+                  className={`block leading-[1.75] transition ${
+                    isLineActive
+                      ? "text-[1.04rem] font-semibold sm:text-[1.1rem]"
+                      : "text-[0.95rem] sm:text-[1rem]"
+                  }`}
+                  style={
+                    isLineActive
+                      ? {
+                          color: "rgba(255,255,255,0.98)",
+                          textShadow: "0 0 28px rgba(255,255,255,0.14)",
+                        }
+                      : undefined
+                  }
                 >
-                  <span
-                    className={`
-                      block transition
-                      ${
-                        isLineActive
-                          ? "text-[15px] sm:text-[1.05rem] font-semibold"
-                          : "text-[13px] sm:text-[15px]"
-                      }
-                    `}
-                  >
-                    {item.text}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+                  {item.text}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 }
-
-
