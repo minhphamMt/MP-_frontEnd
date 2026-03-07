@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FiClock, FiDisc, FiHeart, FiMusic, FiPlus, FiUser } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
 import { getSongById } from "../api/song.api";
+import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import {
   fetchPlayableSong,
@@ -14,6 +15,7 @@ import OptimizedImage from "../components/common/OptimizedImage";
 import ArtistNames from "../components/artist/ArtistNames";
 
 export default function SongDetail() {
+  useEnsureLikedSongsLoaded();
   const { id } = useParams();
   const navigate = useNavigate();
   const [song, setSong] = useState(null);
@@ -68,7 +70,7 @@ export default function SongDetail() {
     return (
        <div className="user-page-shell min-h-screen p-6 text-white/70">
         <div className="user-surface p-6">
-          Đang tải thông tin bài hát...
+          Äang táº£i thÃ´ng tin bÃ i hÃ¡t...
         </div>
       </div>
     );
@@ -78,7 +80,7 @@ export default function SongDetail() {
     return (
       <div className="user-page-shell min-h-screen p-6 text-white/70">
         <div className="user-surface p-6">
-          Không tìm thấy bài hát.
+          KhÃ´ng tÃ¬m tháº¥y bÃ i hÃ¡t.
         </div>
       </div>
     );
@@ -123,7 +125,7 @@ export default function SongDetail() {
           <div className="flex-1 space-y-5">
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-[0.35em] text-white/50">
-                Bài hát
+                BÃ i hÃ¡t
               </p>
                <h1 className="text-2xl font-extrabold leading-tight text-white sm:text-3xl">
                 {song.title}
@@ -168,7 +170,7 @@ export default function SongDetail() {
                            shadow-lg shadow-emerald-500/30 transition
                            md:hover:brightness-110 md:hover:scale-[1.05] active:scale-[0.97]"
               >
-                {isActive && isPlaying ? "⏸ Tạm dừng" : "▶ Phát ngay"}
+                {isActive && isPlaying ? "â¸ Táº¡m dá»«ng" : "â–¶ PhÃ¡t ngay"}
               </button>
 
               <AddToPlaylistButton
@@ -177,7 +179,7 @@ export default function SongDetail() {
                 triggerLabel={
                   <span className="flex items-center gap-2 font-semibold">
                     <FiPlus />
-                    <span>Thêm vào thư viện</span>
+                    <span>ThÃªm vÃ o thÆ° viá»‡n</span>
                   </span>
                 }
                 triggerClassName="rounded-full border border-white/15 bg-white/5 px-6 py-2 text-sm text-white/80 transition md:hover:bg-white/10"
@@ -194,7 +196,7 @@ export default function SongDetail() {
                 }`}
               >
                 <FiHeart className={isLiked ? "text-rose-300" : ""} />
-                {isLiked ? "Đã thích" : "Yêu thích"}
+                {isLiked ? "ÄÃ£ thÃ­ch" : "YÃªu thÃ­ch"}
               </button>
             </div>
           </div>
@@ -203,24 +205,24 @@ export default function SongDetail() {
 
       {/* DETAILS */}
       <div className="user-surface p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-        <h2 className="text-lg font-semibold text-white">Thông tin phát</h2>
+        <h2 className="text-lg font-semibold text-white">ThÃ´ng tin phÃ¡t</h2>
 
         <div className="mt-4 grid grid-cols-1 gap-4 text-sm text-white/70 md:grid-cols-2">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="text-xs uppercase tracking-[0.25em] text-white/50">
-              Tiêu đề
+              TiÃªu Ä‘á»
             </div>
             <div className="mt-1 text-white">{song.title}</div>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="text-xs uppercase tracking-[0.25em] text-white/50">
-              Nghệ sĩ
+              Nghá»‡ sÄ©
             </div>
             <div className="mt-1 text-white">
               <ArtistNames
                 item={song}
-                fallback="Không rõ"
+                fallback="KhÃ´ng rÃµ"
                 stopPropagation
                 linkClassName="transition md:hover:text-emerald-300 md:hover:underline"
               />
@@ -242,14 +244,14 @@ export default function SongDetail() {
                   {song.album_title}
                 </button>
               ) : (
-                "Đang cập nhật"
+                "Äang cáº­p nháº­t"
               )}
             </div>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="text-xs uppercase tracking-[0.25em] text-white/50">
-              Thời lượng
+              Thá»i lÆ°á»£ng
             </div>
             <div className="mt-1 text-white">
               {formatDuration(song.duration)}

@@ -36,6 +36,7 @@ export default function LikedSongs() {
     resume,
     currentSong,
     isPlaying,
+    setLikedSongIds,
     likedSongIds,
     toggleLike,
   } = usePlayerStore();
@@ -49,6 +50,7 @@ export default function LikedSongs() {
       const payload = getData(res);
       const songs = extractSongsFromResponse(payload);
       const playable = filterPlayableSongs(songs.map((song) => toPlayableSong(song)));
+      setLikedSongIds(playable);
       const hydrated = await hydrateSongArtists(playable, getSongById);
       setLikedSongs(hydrated);
     } catch (err) {
@@ -57,7 +59,7 @@ export default function LikedSongs() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setLikedSongIds]);
 
   useEffect(() => {
     loadLikedSongsList();
@@ -89,13 +91,13 @@ export default function LikedSongs() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-              Thư viện
+              ThÆ° viá»‡n
             </p>
             <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-              Bài hát đã thích
+              BÃ i hÃ¡t Ä‘Ã£ thÃ­ch
             </h1>
             <p className="text-sm text-white/60">
-              {likedSongs.length} bài hát được lưu
+              {likedSongs.length} bÃ i hÃ¡t Ä‘Æ°á»£c lÆ°u
             </p>
           </div>
 
@@ -104,7 +106,7 @@ export default function LikedSongs() {
             onClick={() => navigate("/playlists")}
             className="user-btn-secondary px-4 py-2 text-sm font-semibold"
           >
-            ← Quay lại thư viện
+            â† Quay láº¡i thÆ° viá»‡n
           </button>
         </div>
       </div>
@@ -112,7 +114,7 @@ export default function LikedSongs() {
       <section>
         {loading ? (
           <div className="user-surface p-6 text-sm text-white/60">
-            Đang tải bài hát đã thích...
+            Äang táº£i bÃ i hÃ¡t Ä‘Ã£ thÃ­ch...
           </div>
         ) : (
           <LikedSongsSection

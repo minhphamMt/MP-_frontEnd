@@ -1,6 +1,7 @@
 import { FiDisc, FiHeart, FiMusic, FiPlay } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { getAlbumById } from "../../api/album.api";
+import { useEnsureLikedAlbumsLoaded } from "../../hooks/useEnsureLibraryState";
 import useAlbumLikeStore, { normalizeAlbumId } from "../../store/album-like.store";
 import usePlayerStore from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
@@ -10,6 +11,7 @@ import { toPlayableSong } from "../../utils/song";
 import ArtistNames from "../artist/ArtistNames";
 
 export default function AlbumCard({ album, variant = "rail" }) {
+  useEnsureLikedAlbumsLoaded();
   const navigate = useNavigate();
   const playSong = usePlayerStore((s) => s.playSong);
   const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);

@@ -49,6 +49,7 @@ export default function Playlists() {
   const [toastMessage, setToastMessage] = useState("");
   const [toastTitle, setToastTitle] = useState("");
   const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
+  const setLikedAlbumIds = useAlbumLikeStore((s) => s.setLikedAlbumIds);
   const user = useAuthStore((s) => s.user);
   useEffect(() => {
   setLikedAlbums((prev) =>
@@ -73,6 +74,7 @@ export default function Playlists() {
     resume,
     currentSong,
     isPlaying,
+    setLikedSongIds,
     likedSongIds,
     toggleLike,
   } = usePlayerStore();
@@ -294,6 +296,7 @@ useEffect(() => {
       const playable = filterPlayableSongs(
         songs.map((song) => toPlayableSong(song))
       );
+      setLikedSongIds(playable);
       setLikedSongs(playable);
     } catch (err) {
       console.error("Load liked songs failed", err);
@@ -301,7 +304,7 @@ useEffect(() => {
     } finally {
       setLoadingLikedSongs(false);
     }
-  }, []);
+  }, [setLikedSongIds]);
  const loadLikedAlbumsList = useCallback(async () => {
     if (!user?.id) {
       setLikedAlbums([]);
@@ -313,6 +316,7 @@ useEffect(() => {
       const res = await getLikedAlbums();
       const payload = getData(res);
       const albums = Array.isArray(payload) ? payload : payload?.albums || [];
+      setLikedAlbumIds(albums);
       const hydrated = albums.map((album) => ({
         ...album,
         artist_name: album?.artist?.name || album?.artist_name || "",
@@ -324,7 +328,7 @@ useEffect(() => {
     } finally {
       setLoadingLikedAlbums(false);
     }
-  }, [user?.id]);
+  }, [setLikedAlbumIds, user?.id]);
 
   useEffect(() => {
     loadPlaylists();
@@ -345,8 +349,8 @@ useEffect(() => {
           .toLowerCase() === normalizedName
     );
     if (duplicate) {
-      setToastTitle("Thông báo");
-      setToastMessage(`Playlist "${trimmedName}" đã tồn tại.`);
+      setToastTitle("ThÃ´ng bÃ¡o");
+      setToastMessage(`Playlist "${trimmedName}" Ä‘Ã£ tá»“n táº¡i.`);
       return;
     }
 
@@ -357,9 +361,9 @@ useEffect(() => {
 
       setPlaylists((prev) => [playlist, ...prev]);
       setCreatingName("");
-setToastTitle("Thành công");
+setToastTitle("ThÃ nh cÃ´ng");
       setToastMessage(
-        `Đã tạo playlist "${playlist?.title || playlist?.name || trimmedName}"`
+        `ÄÃ£ táº¡o playlist "${playlist?.title || playlist?.name || trimmedName}"`
       );
       if (playlist?.id) {
         setTimeout(() => navigate(`/playlists/${playlist.id}`), 800);
@@ -413,19 +417,19 @@ setToastTitle("Thành công");
                 className="h-full w-full object-cover"
               />
             ) : (
-              <span>{user?.display_name?.[0]?.toUpperCase() || "♪"}</span>
+              <span>{user?.display_name?.[0]?.toUpperCase() || "â™ª"}</span>
             )}
           </div>
 
           <div>
             <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-              Thư viện
+              ThÆ° viá»‡n
             </p>
             <h1 className="text-2xl font-semibold text-white sm:text-3xl">
-              Playlist của bạn
+              Playlist cá»§a báº¡n
             </h1>
             <p className="text-sm text-white/60">
-              Nghệ sĩ theo dõi & playlist tự tạo
+              Nghá»‡ sÄ© theo dÃµi & playlist tá»± táº¡o
             </p>
           </div>
         </div>
@@ -438,14 +442,14 @@ setToastTitle("Thành công");
             value={creatingName}
             onChange={(e) => setCreatingName(e.target.value)}
             className="user-input w-full rounded-full px-4 py-2 text-sm sm:w-64"
-            placeholder="Tên playlist mới"
+            placeholder="TÃªn playlist má»›i"
           />
           <button
             type="submit"
             disabled={saving}
             className="user-btn-primary px-5 py-2 text-sm font-semibold active:scale-[0.98] disabled:opacity-60"
           >
-            Tạo playlist
+            Táº¡o playlist
           </button>
         </form>
       </div>
@@ -453,14 +457,14 @@ setToastTitle("Thành công");
       {/* ARTISTS */}
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-white">Nghệ sĩ theo dõi</h2>
+          <h2 className="text-lg font-semibold text-white">Nghá»‡ sÄ© theo dÃµi</h2>
           {showAllArtists && (
             <button
               type="button"
               onClick={() => navigate("/library/followed-artists")}
               className="text-sm font-semibold text-white/70 transition md:hover:text-emerald-300"
             >
-              Xem tất cả
+              Xem táº¥t cáº£
             </button>
           )}
         </div>
@@ -474,21 +478,21 @@ setToastTitle("Thành công");
       {/* LIKED ALBUMS */}
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-white">Album đã thích</h2>
+          <h2 className="text-lg font-semibold text-white">Album Ä‘Ã£ thÃ­ch</h2>
           {showAllAlbums && (
             <button
               type="button"
               onClick={() => navigate("/library/liked-albums")}
               className="text-sm font-semibold text-white/70 transition md:hover:text-emerald-300"
             >
-              Xem tất cả
+              Xem táº¥t cáº£
             </button>
           )}
         </div>
 
         {loadingLikedAlbums ? (
           <div className="user-surface p-6 text-sm text-white/60">
-            Đang tải album yêu thích...
+            Äang táº£i album yÃªu thÃ­ch...
           </div>
         ) : likedAlbums.length ? (
           <div
@@ -505,7 +509,7 @@ setToastTitle("Thành công");
           </div>
         ) : (
           <div className="user-surface p-6 text-sm text-white/60">
-            Chưa có album nào được thích.
+            ChÆ°a cÃ³ album nÃ o Ä‘Æ°á»£c thÃ­ch.
           </div>
         )}
       </section>
@@ -519,13 +523,13 @@ setToastTitle("Thành công");
               onClick={() => navigate("/library/playlists")}
               className="text-sm font-semibold text-white/70 transition md:hover:text-emerald-300"
             >
-              Xem tất cả
+              Xem táº¥t cáº£
             </button>
           )}
         </div>
         {loadingPlaylists ? (
           <div className="user-surface p-6 text-sm text-white/60">
-            Đang tải playlist...
+            Äang táº£i playlist...
           </div>
         ) : playlists.length ? (
            <div ref={playlistListRef}>
@@ -537,7 +541,7 @@ setToastTitle("Thành công");
           </div>
         ) : (
           <div className="user-surface p-6 text-sm text-white/60">
-            Bạn chưa tạo playlist nào.
+            Báº¡n chÆ°a táº¡o playlist nÃ o.
           </div>
         )}
       </section>

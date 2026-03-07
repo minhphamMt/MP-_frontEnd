@@ -25,6 +25,7 @@ export default function SearchBox() {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [hasFocus, setHasFocus] = useState(false);
+  const [historyLoadedForUserId, setHistoryLoadedForUserId] = useState(null);
 
   const { playSong } = usePlayerStore();
   const user = useAuthStore((state) => state.user);
@@ -90,26 +91,40 @@ export default function SearchBox() {
   }, [location.pathname]);
 
   useEffect(() => {
+    setHistory([]);
+    setHistoryLoadedForUserId(null);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!open || keyword.trim() || !user?.id) return undefined;
+    if (historyLoadedForUserId === user.id) return undefined;
+
+    let active = true;
+
     const loadHistory = async () => {
-        if (!user?.id) {
-        setHistory([]);
-        return;
-      }
       try {
         const res = await getSearchHistory({ limit: 6, userId: user.id });
         const payload = res?.data?.data ?? res?.data ?? {};
         const items = Array.isArray(payload)
           ? payload
           : payload?.items ?? res?.data?.items ?? [];
+
+        if (!active) return;
         setHistory(items);
+        setHistoryLoadedForUserId(user.id);
       } catch (err) {
+        if (!active) return;
         console.error("Search history error", err);
         setHistory([]);
       }
     };
 
     loadHistory();
-  }, [user?.id]);
+
+    return () => {
+      active = false;
+    };
+  }, [historyLoadedForUserId, keyword, open, user?.id]);
 
   const fetchSuggestions = useCallback(async (term) => {
     const trimmed = term.trim();

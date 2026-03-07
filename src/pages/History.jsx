@@ -1,23 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import { getMyHistory } from "../api/history.api";
 import { getSongById } from "../api/song.api";
-import usePlayerStore, { normalizeSongId } from "../store/player.store";
-import { fetchPlayableSong, hydrateSongArtists } from "../utils/song";
-import { getArtistLabel, getPrimaryArtistId, normalizeArtists } from "../utils/artist";
-import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
-import { resolveAssetUrl } from "../utils/asset";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
-import OptimizedImage from "../components/common/OptimizedImage";
 import ArtistNames from "../components/artist/ArtistNames";
+import OptimizedImage from "../components/common/OptimizedImage";
+import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
+import usePlayerStore, { normalizeSongId } from "../store/player.store";
+import { resolveAssetUrl } from "../utils/asset";
+import { getArtistLabel, getPrimaryArtistId, normalizeArtists } from "../utils/artist";
+import { fetchPlayableSong, hydrateSongArtists } from "../utils/song";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const DEFAULT_LIMIT = 20;
 
 const formatRelativeTime = (timestamp) => {
   if (!timestamp) return "";
+
   const listenedDate = new Date(timestamp);
   const diffMs = Date.now() - listenedDate.getTime();
-
   const minutes = Math.floor(diffMs / (1000 * 60));
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
@@ -99,57 +100,44 @@ const formatDuration = (durationInSeconds) => {
 };
 
 export default function History() {
+  useEnsureLikedSongsLoaded();
+
   const [history, setHistory] = useState([]);
   const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const {
-    playSong,
-    likedSongIds,
-    toggleLike,
-    currentSong,
-    isPlaying,
-  } = usePlayerStore();
+  const { playSong, likedSongIds, toggleLike, currentSong, isPlaying } =
+    usePlayerStore();
 
+  const loadHistory = useCallback(async (page = 1, append = false) => {
+    if (append) setLoadingMore(true);
+    else setLoading(true);
 
-  /* =======================
-     LOAD HISTORY (GIỮ NGUYÊN)
-     ======================= */
-  const loadHistory = useCallback(
-    async (page = 1, append = false) => {
-      if (append) setLoadingMore(true);
-      else setLoading(true);
+    try {
+      const res = await getMyHistory({ page, limit: DEFAULT_LIMIT });
+      const { items, meta: resMeta } = extractHistoryPayload(res);
+      const normalized = items.map(normalizeHistoryItem);
+      const hydrated = await hydrateSongArtists(normalized, getSongById);
 
-      try {
-        const res = await getMyHistory({ page, limit: DEFAULT_LIMIT });
-        const { items, meta: resMeta } = extractHistoryPayload(res);
-        const normalized = items.map(normalizeHistoryItem);
-        const hydrated = await hydrateSongArtists(normalized, getSongById);
-
-        setHistory((prev) => {
-          const combined = append ? [...prev, ...hydrated] : hydrated;
-          return dedupeHistoryItems(combined);
-        });
-        setMeta(resMeta || { page, limit: DEFAULT_LIMIT });
-      } catch (err) {
-        console.error("Load listening history error", err);
-      } finally {
-        if (append) setLoadingMore(false);
-        else setLoading(false);
-      }
-    },
-    []
-  );
+      setHistory((prev) => {
+        const combined = append ? [...prev, ...hydrated] : hydrated;
+        return dedupeHistoryItems(combined);
+      });
+      setMeta(resMeta || { page, limit: DEFAULT_LIMIT });
+    } catch (err) {
+      console.error("Load listening history error", err);
+    } finally {
+      if (append) setLoadingMore(false);
+      else setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
 
-  const queue = useMemo(
-    () => history.map((item) => ({ ...item })),
-    [history]
-  );
+  const queue = useMemo(() => history.map((item) => ({ ...item })), [history]);
 
   const handlePlaySong = async (item) => {
     const playable = (await fetchPlayableSong(item, getSongById)) || item;
@@ -189,12 +177,9 @@ export default function History() {
     [meta]
   );
 
-  /* =======================
-     LOADING / EMPTY
-     ======================= */
   if (loading) {
     return (
-        <div className="user-page-shell min-h-screen px-4 py-6 sm:px-8">
+      <div className="user-page-shell min-h-screen px-4 py-6 sm:px-8">
         <div className="user-surface p-6 text-sm text-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           Đang tải lịch sử...
         </div>
@@ -209,9 +194,7 @@ export default function History() {
           <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">
             Thói quen
           </p>
-          <h1 className="mt-1 text-2xl font-bold text-white">
-            Nghe gần đây
-          </h1>
+          <h1 className="mt-1 text-2xl font-bold text-white">Nghe gần đây</h1>
           <div className="mt-2 text-sm text-white/60">
             Bạn chưa nghe bài hát nào.
           </div>
@@ -220,9 +203,6 @@ export default function History() {
     );
   }
 
-  /* =======================
-     UI
-     ======================= */
   return (
     <div className="user-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
       <div className="user-surface p-6 shadow-[0_20px_70px_rgba(0,0,0,0.45)]">
@@ -269,7 +249,7 @@ export default function History() {
                     isPlayingCurrent ? "bg-emerald-400/10" : "md:hover:bg-white/5"
                   }`}
                 >
-                   <div className="hidden justify-center xl:flex">
+                  <div className="hidden justify-center xl:flex">
                     <FiMusic
                       className={`transition ${
                         isPlayingCurrent
@@ -278,6 +258,7 @@ export default function History() {
                       }`}
                     />
                   </div>
+
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md">
                       <OptimizedImage
@@ -298,6 +279,7 @@ export default function History() {
                         </span>
                       </button>
                     </div>
+
                     <div className="min-w-0">
                       <div
                         className={`truncate font-medium ${
@@ -335,7 +317,7 @@ export default function History() {
                       }}
                       className={`flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 ${
                         likedSongIds.includes(normalizeSongId(item))
-                          ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
+                          ? "border-red-400/60 bg-red-400/10 text-red-400 scale-105"
                           : "border-white/20 text-white/60 md:hover:text-white md:hover:border-white/40"
                       }`}
                     >
@@ -364,7 +346,7 @@ export default function History() {
                       }}
                       className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200 ${
                         likedSongIds.includes(normalizeSongId(item))
-                          ? "border-red-400/60 text-red-400 bg-red-400/10 scale-105"
+                          ? "border-red-400/60 bg-red-400/10 text-red-400 scale-105"
                           : "border-white/20 text-white/60 md:hover:text-white md:hover:border-white/40"
                       }`}
                     >
@@ -381,7 +363,6 @@ export default function History() {
         </div>
       </div>
 
-      {/* LOAD MORE */}
       {hasMore && (
         <div className="flex justify-center pt-2">
           <button

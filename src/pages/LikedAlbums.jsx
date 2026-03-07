@@ -10,6 +10,7 @@ const getData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
 export default function LikedAlbums() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const setLikedAlbumIds = useAlbumLikeStore((s) => s.setLikedAlbumIds);
   const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
   const [likedAlbums, setLikedAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +36,7 @@ export default function LikedAlbums() {
       const res = await getLikedAlbums();
       const payload = getData(res);
       const albums = Array.isArray(payload) ? payload : payload?.albums || [];
+      setLikedAlbumIds(albums);
       const hydrated = albums.map((album) => ({
         ...album,
         artist_name: album?.artist?.name || album?.artist_name || "",
@@ -46,7 +48,7 @@ export default function LikedAlbums() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [setLikedAlbumIds, user?.id]);
 
   useEffect(() => {
     loadLikedAlbumsList();
@@ -57,13 +59,13 @@ export default function LikedAlbums() {
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-            Thư viện
+            ThÆ° viá»‡n
           </p>
           <h1 className="text-2xl font-semibold text-white sm:text-3xl">
-            Album đã thích
+            Album Ä‘Ã£ thÃ­ch
           </h1>
           <p className="text-sm text-white/60">
-            {likedAlbums.length} album được lưu
+            {likedAlbums.length} album Ä‘Æ°á»£c lÆ°u
           </p>
         </div>
 
@@ -72,14 +74,14 @@ export default function LikedAlbums() {
           onClick={() => navigate("/playlists")}
           className="user-btn-secondary px-4 py-2 text-sm font-semibold"
         >
-          ← Quay lại thư viện
+          â† Quay láº¡i thÆ° viá»‡n
         </button>
       </header>
 
       <section className="space-y-4">
         {loading ? (
           <div className="user-surface p-6 text-sm text-white/60">
-            Đang tải album yêu thích...
+            Äang táº£i album yÃªu thÃ­ch...
           </div>
         ) : likedAlbums.length ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -93,7 +95,7 @@ export default function LikedAlbums() {
           </div>
         ) : (
           <div className="user-surface p-6 text-sm text-white/60">
-            Chưa có album nào được thích.
+            ChÆ°a cÃ³ album nÃ o Ä‘Æ°á»£c thÃ­ch.
           </div>
         )}
       </section>

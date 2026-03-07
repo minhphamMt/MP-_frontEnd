@@ -1,3 +1,4 @@
+import { useEnsureLikedSongsLoaded } from "../../hooks/useEnsureLibraryState";
 import { FiHeart, FiPause, FiPlay, FiRadio } from "react-icons/fi";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
@@ -6,6 +7,7 @@ import OptimizedImage from "../common/OptimizedImage";
 import ArtistNames from "../artist/ArtistNames";
 
 export default function SongCard({ song, queue }) {
+  useEnsureLikedSongsLoaded();
   const { playSong, pause, resume, currentSong, isPlaying, likedSongIds, toggleLike } = usePlayerStore();
 
   const normalizedId = normalizeSongId(song);

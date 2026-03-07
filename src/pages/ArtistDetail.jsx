@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import api from "../api/axios";
+import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import FollowArtistButton from "../components/artist/FollowArtistButton";
 import ArtistNames from "../components/artist/ArtistNames";
@@ -16,6 +17,7 @@ const formatTime = (s = 0) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
 export default function ArtistDetail() {
+  useEnsureLikedSongsLoaded();
   const { id } = useParams();
   const [songs, setSongs] = useState([]);
   const [artist, setArtist] = useState(null);
@@ -45,7 +47,7 @@ const renderBioHtml = (bio = "") => {
 };
 
   /* =======================
-     LOAD ARTIST (GIỮ NGUYÊN)
+     LOAD ARTIST (GIá»® NGUYÃŠN)
      ======================= */
   const loadArtist = useCallback(async () => {
     try {
@@ -61,7 +63,7 @@ const renderBioHtml = (bio = "") => {
         if (artistData) {
         setArtist({
           id: artistData.id,
-          name: artistData.name || artistData.alias || "Nghệ sĩ",
+          name: artistData.name || artistData.alias || "Nghá»‡ sÄ©",
           alias: artistData.alias,
           realname: artistData.realname,
           birthday: artistData.birthday,
@@ -117,20 +119,20 @@ const renderBioHtml = (bio = "") => {
     return (
        <div className="user-page-shell min-h-screen p-6 text-white/60">
         <div className="user-surface p-6">
-          Đang tải nghệ sĩ...
+          Äang táº£i nghá»‡ sÄ©...
         </div>
       </div>
     );
   }
  const coverUrl = resolveAssetUrl(artist?.cover || artist?.avatar);
   const artistInfoItems = [
-    { label: "Nghệ danh", value: artist?.alias },
-    { label: "Tên thật", value: artist?.realname },
+    { label: "Nghá»‡ danh", value: artist?.alias },
+    { label: "TÃªn tháº­t", value: artist?.realname },
     {
-      label: "Ngày sinh",
+      label: "NgÃ y sinh",
       value: artist?.birthday ? formatDateDisplay(artist?.birthday) : null,
     },
-    { label: "Quốc gia", value: artist?.national },
+    { label: "Quá»‘c gia", value: artist?.national },
   ].filter((item) => item.value);
 
   /* =======================
@@ -156,7 +158,7 @@ const renderBioHtml = (bio = "") => {
                 />
               ) : (
                 <div className="flex aspect-square w-full items-center justify-center bg-white/10 text-sm text-white/70">
-                  Chưa có ảnh
+                  ChÆ°a cÃ³ áº£nh
                 </div>
               )}
               <div className="absolute inset-0 rounded-2xl border border-white/10" />
@@ -167,7 +169,7 @@ const renderBioHtml = (bio = "") => {
           <div className="flex-1 space-y-5">
             <div>
               <p className="mb-2 text-xs uppercase tracking-[0.35em] text-white/50">
-                Nghệ sĩ
+                Nghá»‡ sÄ©
               </p>
               <h1 className="text-2xl font-extrabold leading-tight text-white sm:text-3xl">
                 {artist?.name}
@@ -176,16 +178,16 @@ const renderBioHtml = (bio = "") => {
                 <p className="mt-1 text-sm text-white/70">{artist.alias}</p>
               )}
               <p className="mt-1 text-sm text-white/70">
-                {songs.length} bài hát nổi bật
+                {songs.length} bÃ i hÃ¡t ná»•i báº­t
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3 text-sm text-white/70">
               <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">
-                {songs.length} bài hát
+                {songs.length} bÃ i hÃ¡t
               </span>
               <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">
-                Tổng thời lượng: {formatTime(totalDuration)}
+                Tá»•ng thá»i lÆ°á»£ng: {formatTime(totalDuration)}
               </span>
             </div>
 
@@ -197,7 +199,7 @@ const renderBioHtml = (bio = "") => {
                              shadow-lg shadow-emerald-400/30 transition
                              md:hover:brightness-110 md:hover:scale-[1.05] active:scale-[0.97]"
                 >
-                  ▶ Phát tất cả
+                  â–¶ PhÃ¡t táº¥t cáº£
                 </button>
 )}
                 <FollowArtistButton artist={artist} size="lg" />
@@ -213,7 +215,7 @@ const renderBioHtml = (bio = "") => {
               <div className="relative space-y-3">
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60">
                   <span className="h-[1px] w-6 bg-white/30" />
-                  <span>Tóm tắt</span>
+                  <span>TÃ³m táº¯t</span>
                 </div>
                 <p className="text-sm leading-relaxed text-white/80">
                   {artist.shortBio}
@@ -228,7 +230,7 @@ const renderBioHtml = (bio = "") => {
               <div className="relative space-y-4">
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60">
                   <span className="h-[1px] w-6 bg-white/30" />
-                  <span>Thông tin</span>
+                  <span>ThÃ´ng tin</span>
                 </div>
                 <div className="space-y-3 text-sm text-white/80">
                   {artistInfoItems.map((item) => (
@@ -257,7 +259,7 @@ const renderBioHtml = (bio = "") => {
           <div className="relative space-y-3">
             <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60">
               <span className="h-[1px] w-6 bg-white/30" />
-              <span>Giới thiệu</span>
+              <span>Giá»›i thiá»‡u</span>
             </div>
              <p
               className="whitespace-pre-line text-sm leading-relaxed text-white/80"
@@ -271,15 +273,15 @@ const renderBioHtml = (bio = "") => {
          <div className="user-surface overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] scrollbar-muted xl:overflow-x-auto">
         <div className="min-w-0 xl:min-w-[720px]">
           <div className="px-4 pt-4 text-sm font-semibold text-white xl:hidden">
-            Danh sách bài hát
+            Danh sÃ¡ch bÃ i hÃ¡t
           </div>
           {/* TABLE HEADER */}
           <div className="hidden grid-cols-[60px_1fr_160px_140px_100px] items-center bg-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-white/60 xl:grid xl:px-5">
             <span className="text-center">#</span>
-            <span>Bài hát</span>
+            <span>BÃ i hÃ¡t</span>
             <span className="text-center">Album</span>
-            <span className="text-center">Hành động</span>
-            <span className="text-right">Thời gian</span>
+            <span className="text-center">HÃ nh Ä‘á»™ng</span>
+            <span className="text-right">Thá»i gian</span>
           </div>
 
           {/* ROWS */}
@@ -342,7 +344,7 @@ const renderBioHtml = (bio = "") => {
                           <ArtistNames
                             item={song}
                             stopPropagation
-                            fallback={artist?.name || "Nghệ sĩ"}
+                            fallback={artist?.name || "Nghá»‡ sÄ©"}
                             linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
                           />
                         </div>
@@ -369,7 +371,7 @@ const renderBioHtml = (bio = "") => {
                           ? "border-rose-400/40 text-rose-300"
                           : "border-white/10 text-white/70 md:hover:bg-white/15"
                       }`}
-                      aria-label={isLiked ? "Bỏ thích bài hát" : "Thích bài hát"}
+                      aria-label={isLiked ? "Bá» thÃ­ch bÃ i hÃ¡t" : "ThÃ­ch bÃ i hÃ¡t"}
                     >
                       <FiHeart />
                     </button>

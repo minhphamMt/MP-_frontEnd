@@ -87,7 +87,9 @@ const useArtistFollowStore = create((set, get) => ({
     set({
       followedArtists: [],
       followedArtistIds: [],
+      loading: false,
       hasLoaded: false,
+      pendingIds: [],
     }),
 
   isFollowing: (artistId) => {
@@ -176,6 +178,13 @@ const useArtistFollowStore = create((set, get) => ({
   toggleFollow: async (artist) => {
     const id = normalizeArtistId(artist);
     if (!id) return false;
+
+    if (!get().hasLoaded && !get().loading) {
+      await get().loadFollowedArtists();
+    }
+
+    if (get().loading) return get().isFollowing(id);
+
     if (get().isFollowing(id)) {
       return get().unfollowArtist(id);
     }

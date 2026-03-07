@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getAlbumById, getAlbums } from "../api/album.api";
 import SongTable from "../components/song/SongTable";
+import { useEnsureLikedAlbumsLoaded } from "../hooks/useEnsureLibraryState";
 import { filterPlayableSongs } from "../utils/song";
 import { getArtistLabel } from "../utils/artist";
 import useAlbumLikeStore, {
@@ -9,12 +10,13 @@ import useAlbumLikeStore, {
 import { FiHeart } from "react-icons/fi";
 
 export default function Albums() {
+  useEnsureLikedAlbumsLoaded();
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
   const toggleAlbumLike = useAlbumLikeStore((s) => s.toggleAlbumLike);
   /* =======================
-     HYDRATE ALBUM (GIỮ NGUYÊN)
+     HYDRATE ALBUM (GIá»® NGUYÃŠN)
      ======================= */
   const hydrateAlbum = useCallback(async (album) => {
     if (album.songs?.length) {
@@ -43,7 +45,7 @@ export default function Albums() {
   }, []);
 
   /* =======================
-     LOAD ALBUMS (GIỮ NGUYÊN)
+     LOAD ALBUMS (GIá»® NGUYÃŠN)
      ======================= */
   const loadAlbums = useCallback(async () => {
     try {
@@ -75,13 +77,13 @@ export default function Albums() {
       {/* PAGE HEADER */}
       <div className="user-surface p-6">
         <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-          Thư viện
+          ThÆ° viá»‡n
         </p>
         <h1 className="mt-1 text-2xl font-extrabold text-white sm:text-3xl">
           Album
         </h1>
         <p className="mt-2 text-sm text-white/60">
-          Tuyển tập album nổi bật từ nghệ sĩ yêu thích
+          Tuyá»ƒn táº­p album ná»•i báº­t tá»« nghá»‡ sÄ© yÃªu thÃ­ch
         </p>
       </div>
 
@@ -100,8 +102,8 @@ export default function Albums() {
                 title={album.title || "Album"}
                 subtitle={
                   album.artist_name
-                    ? `${getArtistLabel(album, album.artist_name)} � ${album.songs.length} b�i h�t`
-                    : `${album.songs.length} bài hát`
+                    ? `${getArtistLabel(album, album.artist_name)} · ${album.songs.length} bài hát`
+                    : `${album.songs.length} bÃ i hÃ¡t`
                 }
                 songs={album.songs || []}
                 loading={loading}
@@ -114,7 +116,7 @@ export default function Albums() {
                         ? "border-rose-400/40 text-rose-300"
                         : "border-white/10 text-white/70 md:hover:bg-white/15"
                     }`}
-                    aria-label={isLiked ? "Bỏ thích album" : "Thích album"}
+                    aria-label={isLiked ? "Bá» thÃ­ch album" : "ThÃ­ch album"}
                   >
                     <FiHeart />
                   </button>
@@ -127,8 +129,8 @@ export default function Albums() {
         {!albums.length && (
           <div className="user-surface">
             <SongTable
-              title="Album nổi bật"
-              subtitle="Không có album nào để hiển thị"
+              title="Album ná»•i báº­t"
+              subtitle="KhÃ´ng cÃ³ album nÃ o Ä‘á»ƒ hiá»ƒn thá»‹"
               songs={[]}
               loading={loading}
               onRefresh={loadAlbums}

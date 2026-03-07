@@ -14,12 +14,26 @@ import {
 } from "../api/auth.api";
 const STORAGE_KEY = "auth-state";
 
-const resetPlayerStore = async () => {
+const resetSessionStores = async () => {
   try {
     const { default: usePlayerStore } = await import("./player.store");
     usePlayerStore.getState().resetForAuthChange();
   } catch (error) {
     console.warn("Failed to reset player store", error);
+  }
+
+  try {
+    const { default: useAlbumLikeStore } = await import("./album-like.store");
+    useAlbumLikeStore.getState().resetForAuthChange?.();
+  } catch (error) {
+    console.warn("Failed to reset album like store", error);
+  }
+
+  try {
+    const { default: useArtistFollowStore } = await import("./artist-follow.store");
+    useArtistFollowStore.getState().clearFollowedArtists?.();
+  } catch (error) {
+    console.warn("Failed to reset artist follow store", error);
   }
 };
 
@@ -94,6 +108,7 @@ const {
   authContext: storedAuthContext,
   isAuthenticated: storedIsAuthenticated,
 } = loadStoredAuth();
+const hasStoredTokens = Boolean(storedToken || storedRefreshToken);
 
 const useAuthStore = create((set, get) => ({
   /* =====================
@@ -108,7 +123,7 @@ const useAuthStore = create((set, get) => ({
   loading: false,
 
   // 🔴 QUAN TRỌNG: auth đã sẵn sàng hay chưa
-  isAuthReady: false,
+  isAuthReady: !hasStoredTokens,
 
   /* =====================
      ACTIONS
@@ -154,6 +169,18 @@ const useAuthStore = create((set, get) => ({
 
     set(nextState);
     persistAuthState(nextState);
+  },
+
+  bootstrapAuth: async () => {
+    const { accessToken, refreshToken, isAuthReady } = get();
+    if (isAuthReady) return get().user;
+
+    if (!accessToken && !refreshToken) {
+      set({ loading: false, isAuthReady: true, isAuthenticated: false });
+      return null;
+    }
+
+    return get().loadUser();
   },
 
   /* ===== LOGIN ===== */
@@ -277,6 +304,12 @@ const useAuthStore = create((set, get) => ({
 
   /* ===== LOAD USER (REFRESH LOGIN) ===== */
   loadUser: async () => {
+    const { accessToken, refreshToken } = get();
+    if (!accessToken && !refreshToken) {
+      set({ loading: false, isAuthReady: true, isAuthenticated: false });
+      return null;
+    }
+
     set({ loading: true, isAuthReady: false });
 
     try {
@@ -462,7 +495,7 @@ const useAuthStore = create((set, get) => ({
       isAuthReady: true,
     });
     clearStoredAuth();
-    await resetPlayerStore();
+    await resetSessionStores();
 
     if (refreshToken) {
       try {

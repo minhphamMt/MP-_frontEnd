@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiCalendar, FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import { getAlbumById } from "../api/album.api";
+import {
+  useEnsureLikedAlbumsLoaded,
+  useEnsureLikedSongsLoaded,
+} from "../hooks/useEnsureLibraryState";
 import useAlbumLikeStore, {
   normalizeAlbumId,
 } from "../store/album-like.store";
@@ -18,6 +22,8 @@ import { toPlayableSong } from "../utils/song";
 const formatTime = (s = 0) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 export default function AlbumDetail() {
+  useEnsureLikedSongsLoaded();
+  useEnsureLikedAlbumsLoaded();
   const { id } = useParams();
   const navigate = useNavigate();
   const [album, setAlbum] = useState(null);
@@ -37,7 +43,7 @@ export default function AlbumDetail() {
   const toggleAlbumLike = useAlbumLikeStore((s) => s.toggleAlbumLike);
 
   /* =======================
-     LOAD ALBUM (GIỮ NGUYÊN)
+     LOAD ALBUM (GIá»® NGUYÃŠN)
      ======================= */
   const loadAlbum = useCallback(async () => {
     try {
@@ -101,7 +107,7 @@ export default function AlbumDetail() {
     return (
        <div className="user-page-shell min-h-screen p-6 text-white/60">
         <div className="user-surface p-6">
-          Đang tải album...
+          Äang táº£i album...
         </div>
       </div>
     );
@@ -111,7 +117,7 @@ export default function AlbumDetail() {
     return (
       <div className="user-page-shell min-h-screen p-6 text-white/60">
         <div className="user-surface p-6">
-          Album không tồn tại
+          Album khÃ´ng tá»“n táº¡i
         </div>
       </div>
     );
@@ -125,15 +131,15 @@ export default function AlbumDetail() {
     album?.artist_name || artistMeta?.name || artistMeta?.alias;
   const artistId = album?.artist_id || artistMeta?.id;
   const artistInfoItems = [
-    { label: "Nghệ danh", value: artistMeta?.alias },
-    { label: "Tên thật", value: artistMeta?.realname },
+    { label: "Nghá»‡ danh", value: artistMeta?.alias },
+    { label: "TÃªn tháº­t", value: artistMeta?.realname },
     {
-      label: "Ngày sinh",
+      label: "NgÃ y sinh",
       value: artistMeta?.birthday
         ? formatDateDisplay(artistMeta?.birthday)
         : null,
     },
-    { label: "Quốc gia", value: artistMeta?.national },
+    { label: "Quá»‘c gia", value: artistMeta?.national },
   ].filter((item) => item.value);
 
   return (
@@ -178,10 +184,10 @@ export default function AlbumDetail() {
 
             <div className="flex flex-wrap gap-3 text-sm text-white/70">
               <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">
-                {songs.length} bài hát
+                {songs.length} bÃ i hÃ¡t
               </span>
               <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">
-                Tổng thời lượng: {formatTime(totalDuration)}
+                Tá»•ng thá»i lÆ°á»£ng: {formatTime(totalDuration)}
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1">
                 <FiCalendar className="text-emerald-300" />
@@ -198,11 +204,11 @@ export default function AlbumDetail() {
                              shadow-lg shadow-green-400/30 transition
                              md:hover:brightness-110 md:hover:scale-[1.05] active:scale-[0.97]"
                 >
-                    ▶ Phát tất cả
+                    â–¶ PhÃ¡t táº¥t cáº£
                   </button>
                 ) : (
                   <div className="rounded-full border border-white/15 bg-white/5 px-6 py-2 text-sm text-white/60">
-                    Chỉ xem thông tin
+                    Chá»‰ xem thÃ´ng tin
                   </div>
                 )}
 
@@ -219,7 +225,7 @@ export default function AlbumDetail() {
                       : "border-white/15 bg-white/5 text-white/80 md:hover:bg-white/10"
                   } ${isArtistRole ? "cursor-not-allowed opacity-60" : ""}`}
                 >
-                  {isLiked ? "✓ Đã thích" : "+ Thích album"}
+                  {isLiked ? "âœ“ ÄÃ£ thÃ­ch" : "+ ThÃ­ch album"}
                 </button>
               </div>
             )}
@@ -232,7 +238,7 @@ export default function AlbumDetail() {
           <div className="relative space-y-4">
             <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60">
               <span className="h-[1px] w-6 bg-white/30" />
-              <span>Nghệ sĩ</span>
+              <span>Nghá»‡ sÄ©</span>
             </div>
             {artistDisplayName && (
               <button
@@ -266,14 +272,14 @@ export default function AlbumDetail() {
          <div className="user-surface overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] scrollbar-muted xl:overflow-x-auto">
        <div className="min-w-0 xl:min-w-[640px]">
           <div className="px-4 pt-4 text-sm font-semibold text-white xl:hidden">
-            Danh sách bài hát
+            Danh sÃ¡ch bÃ i hÃ¡t
           </div>
           {/* TABLE HEADER */}
           <div className="hidden grid-cols-[60px_1fr_140px_100px] items-center bg-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-white/60 xl:grid xl:px-5">
             <span className="text-center">#</span>
-            <span>Bài hát</span>
-            <span className="text-center">Hành động</span>
-            <span className="text-right">Thời gian</span>
+            <span>BÃ i hÃ¡t</span>
+            <span className="text-center">HÃ nh Ä‘á»™ng</span>
+            <span className="text-right">Thá»i gian</span>
           </div>
 
           {/* ROWS */}
@@ -339,7 +345,7 @@ export default function AlbumDetail() {
                           <ArtistNames
                             item={song}
                             stopPropagation
-                            fallback={artistDisplayName || "Nghệ sĩ"}
+                            fallback={artistDisplayName || "Nghá»‡ sÄ©"}
                             linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
                           />
                         </div>
@@ -363,7 +369,7 @@ export default function AlbumDetail() {
                           ? "border-rose-400/40 text-rose-300"
                           : "border-white/10 text-white/70 md:hover:bg-white/15"
                       } ${isArtistRole ? "cursor-not-allowed opacity-60" : ""}`}
-                      aria-label={isLiked ? "Bỏ thích bài hát" : "Thích bài hát"}
+                      aria-label={isLiked ? "Bá» thÃ­ch bÃ i hÃ¡t" : "ThÃ­ch bÃ i hÃ¡t"}
                     >
                       <FiHeart />
                     </button>

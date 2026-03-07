@@ -136,6 +136,10 @@ const usePlayerStore = create((set, get) => ({
   muted: false,
 
   likedSongIds: [],
+  likedSongsLoading: false,
+  likedSongsLoaded: false,
+  lastPlayedLoading: false,
+  lastPlayedLoaded: false,
   recommendationLoading: false,
 
   /* ===== INTERNAL ===== */
@@ -181,6 +185,8 @@ const usePlayerStore = create((set, get) => ({
       currentTime: 0,
       hasRecordedPlay: false,
       shuffleHistory: [],
+      lastPlayedLoading: false,
+      lastPlayedLoaded: true,
     });
 
     if (updatedQueue.length <= 1) {
@@ -394,6 +400,10 @@ const usePlayerStore = create((set, get) => ({
       hasRecordedPlay: false,
       shuffleHistory: [],
       likedSongIds: [],
+      likedSongsLoading: false,
+      likedSongsLoaded: false,
+      lastPlayedLoading: false,
+      lastPlayedLoaded: false,
       recommendationLoading: false,
     });
   },
@@ -417,20 +427,58 @@ const usePlayerStore = create((set, get) => ({
     );
   },
 
-  loadLastPlayed: async () => {
-    if (get().currentSong) return;
+  ensureLastPlayedLoaded: async () => get().loadLastPlayed(),
+
+  loadLastPlayed: async ({ force = false } = {}) => {
+    const { isAuthenticated } = useAuthStore.getState();
+    const { currentSong, lastPlayedLoading, lastPlayedLoaded } = get();
+
+    if (!isAuthenticated) {
+      set({
+        lastPlayedLoading: false,
+        lastPlayedLoaded: false,
+      });
+      return null;
+    }
+
+    if (currentSong && !force) {
+      set({
+        lastPlayedLoading: false,
+        lastPlayedLoaded: true,
+      });
+      return currentSong;
+    }
+
+    if (lastPlayedLoading) return currentSong;
+    if (lastPlayedLoaded && !force) return currentSong;
+
+    set({ lastPlayedLoading: true });
 
     try {
       const res = await getMyHistory({ limit: 1 });
       const payload = res?.data?.data ?? res?.data ?? {};
       const items = payload?.items ?? payload ?? [];
 
+      if (!items.length) {
+        set({
+          lastPlayedLoading: false,
+          lastPlayedLoaded: true,
+        });
+        return null;
+      }
+
       let playable = toPlayableSong(items[0]);
       if (!playable?.audio_url) {
         const fetched = await fetchPlayableSong(playable, getSongById);
         if (fetched) playable = fetched;
       }
-      if (!playable?.audio_url) return;
+      if (!playable?.audio_url) {
+        set({
+          lastPlayedLoading: false,
+          lastPlayedLoaded: true,
+        });
+        return null;
+      }
 
       audio.src = playable.audio_url;
       audio.load();
@@ -442,9 +490,17 @@ const usePlayerStore = create((set, get) => ({
         isPlaying: false,
         currentTime: 0,
         hasRecordedPlay: false,
+        lastPlayedLoading: false,
+        lastPlayedLoaded: true,
       });
+      return playable;
     } catch (err) {
       console.error("Load last played song failed", err);
+      set({
+        lastPlayedLoading: false,
+        lastPlayedLoaded: true,
+      });
+      return null;
     }
   },
 
@@ -452,14 +508,51 @@ const usePlayerStore = create((set, get) => ({
      LIKE
   ===================== */
 
-  loadLikedSongs: async () => {
+  setLikedSongIds: (songIds = []) => {
+    const ids = [...new Set((songIds || []).map(normalizeSongId).filter(Boolean))];
+    set({
+      likedSongIds: ids,
+      likedSongsLoading: false,
+      likedSongsLoaded: true,
+    });
+  },
+
+  ensureLikedSongsLoaded: async () => get().loadLikedSongs(),
+
+  loadLikedSongs: async ({ force = false } = {}) => {
+    const { isAuthenticated } = useAuthStore.getState();
+    const { likedSongsLoading, likedSongsLoaded, likedSongIds } = get();
+
+    if (!isAuthenticated) {
+      set({
+        likedSongIds: [],
+        likedSongsLoading: false,
+        likedSongsLoaded: false,
+      });
+      return [];
+    }
+
+    if (likedSongsLoading) return likedSongIds;
+    if (likedSongsLoaded && !force) return likedSongIds;
+
+    set({ likedSongsLoading: true });
     try {
       const res = await getLikedSongs();
       const songs = extractSongsFromResponse(res);
       const ids = [...new Set(songs.map(normalizeSongId).filter(Boolean))];
-      set({ likedSongIds: ids });
+      set({
+        likedSongIds: ids,
+        likedSongsLoading: false,
+        likedSongsLoaded: true,
+      });
+      return ids;
     } catch (err) {
       console.error("Load liked songs error", err);
+      set({
+        likedSongsLoading: false,
+        likedSongsLoaded: likedSongIds.length > 0,
+      });
+      return likedSongIds;
     }
   },
 
@@ -472,6 +565,10 @@ const usePlayerStore = create((set, get) => ({
       return;
     }
 
+    if (!get().likedSongsLoaded) {
+      await get().ensureLikedSongsLoaded();
+    }
+
     const { likedSongIds } = get();
     const isLiked = likedSongIds.includes(targetId);
 
@@ -479,6 +576,7 @@ const usePlayerStore = create((set, get) => ({
       likedSongIds: isLiked
         ? likedSongIds.filter((id) => id !== targetId)
         : [...likedSongIds, targetId],
+      likedSongsLoaded: true,
     });
 
     try {
@@ -486,7 +584,7 @@ const usePlayerStore = create((set, get) => ({
         ? await api.delete(`/songs/${targetId}/like`)
         : await api.post(`/songs/${targetId}/like`);
     } catch {
-      set({ likedSongIds });
+      set({ likedSongIds, likedSongsLoaded: true });
     }
   },
 }));

@@ -37,8 +37,51 @@ const extractAlbumsFromResponse = (payload) => {
 
 const useAlbumLikeStore = create((set, get) => ({
   likedAlbumIds: [],
+  likedAlbumsLoading: false,
+  likedAlbumsLoaded: false,
 
-  loadLikedAlbums: async () => {
+  resetForAuthChange: () =>
+    set({
+      likedAlbumIds: [],
+      likedAlbumsLoading: false,
+      likedAlbumsLoaded: false,
+    }),
+
+  setLikedAlbumIds: (albumIds = []) => {
+    const ids = [
+      ...new Set(
+        (albumIds || [])
+          .map((album) => normalizeAlbumId(album))
+          .filter((id) => id !== null && id !== "")
+      ),
+    ];
+
+    set({
+      likedAlbumIds: ids,
+      likedAlbumsLoading: false,
+      likedAlbumsLoaded: true,
+    });
+  },
+
+  ensureLikedAlbumsLoaded: async () => get().loadLikedAlbums(),
+
+  loadLikedAlbums: async ({ force = false } = {}) => {
+    const { isAuthenticated } = useAuthStore.getState();
+    const { likedAlbumsLoading, likedAlbumsLoaded, likedAlbumIds } = get();
+
+    if (!isAuthenticated) {
+      set({
+        likedAlbumIds: [],
+        likedAlbumsLoading: false,
+        likedAlbumsLoaded: false,
+      });
+      return [];
+    }
+
+    if (likedAlbumsLoading) return likedAlbumIds;
+    if (likedAlbumsLoaded && !force) return likedAlbumIds;
+
+    set({ likedAlbumsLoading: true });
     try {
       const res = await getLikedAlbums();
       const albums = extractAlbumsFromResponse(res);
@@ -51,9 +94,19 @@ const useAlbumLikeStore = create((set, get) => ({
         ),
       ];
 
-      set({ likedAlbumIds: ids });
+      set({
+        likedAlbumIds: ids,
+        likedAlbumsLoading: false,
+        likedAlbumsLoaded: true,
+      });
+      return ids;
     } catch (err) {
       console.error("Load liked albums error", err);
+      set({
+        likedAlbumsLoading: false,
+        likedAlbumsLoaded: likedAlbumIds.length > 0,
+      });
+      return likedAlbumIds;
     }
   },
 
@@ -67,6 +120,10 @@ const useAlbumLikeStore = create((set, get) => ({
       return;
     }
 
+    if (!get().likedAlbumsLoaded) {
+      await get().ensureLikedAlbumsLoaded();
+    }
+
     const { likedAlbumIds } = get();
     const isLiked = likedAlbumIds.includes(targetId);
 
@@ -74,6 +131,7 @@ const useAlbumLikeStore = create((set, get) => ({
       likedAlbumIds: isLiked
         ? likedAlbumIds.filter((id) => id !== targetId)
         : [...likedAlbumIds, targetId],
+      likedAlbumsLoaded: true,
     });
 
     try {
@@ -84,7 +142,7 @@ const useAlbumLikeStore = create((set, get) => ({
       }
     } catch (err) {
       console.error("Toggle album like error", err);
-      set({ likedAlbumIds });
+      set({ likedAlbumIds, likedAlbumsLoaded: true });
     }
   },
 }));

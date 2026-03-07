@@ -128,7 +128,6 @@ export default function ZingChart() {
   );
   const [chartBoxSize, setChartBoxSize] = useState({ width: 0, height: 0 });
   const [syncedRowsHeight, setSyncedRowsHeight] = useState(null);
-  const [chartReadyVersion, setChartReadyVersion] = useState(0);
   const [regionCharts, setRegionCharts] = useState({
     vietnam: [],
     usuk: [],
@@ -139,57 +138,7 @@ export default function ZingChart() {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const autoHoverTimerRef = useRef(null);
-  const chartResizeTimersRef = useRef([]);
-  const chartSettleIntervalRef = useRef(null);
   const { playSong } = usePlayerStore();
-
-  const clearQueuedChartResizes = useCallback(() => {
-    if (!chartResizeTimersRef.current.length) return;
-    chartResizeTimersRef.current.forEach((timerId) => clearTimeout(timerId));
-    chartResizeTimersRef.current = [];
-  }, []);
-
-  const queueChartResizes = useCallback(() => {
-    clearQueuedChartResizes();
-    const delays = [0, 80, 180, 320, 520, 900, 1400];
-    chartResizeTimersRef.current = delays.map((delay) =>
-      setTimeout(() => {
-        const chart = chartRef.current;
-        if (!chart || typeof chart.resize !== "function") return;
-        try {
-          chart.resize();
-        } catch {
-          // Ignore resize errors from stale chart instances.
-        }
-      }, delay)
-    );
-  }, [clearQueuedChartResizes]);
-
-  const stopChartSettleResizeLoop = useCallback(() => {
-    if (!chartSettleIntervalRef.current) return;
-    clearInterval(chartSettleIntervalRef.current);
-    chartSettleIntervalRef.current = null;
-  }, []);
-
-  const startChartSettleResizeLoop = useCallback(() => {
-    stopChartSettleResizeLoop();
-    let ticks = 0;
-    const maxTicks = 30;
-    chartSettleIntervalRef.current = setInterval(() => {
-      ticks += 1;
-      const chart = chartRef.current;
-      if (chart && typeof chart.resize === "function") {
-        try {
-          chart.resize();
-        } catch {
-          // Ignore resize errors from stale chart instances.
-        }
-      }
-      if (ticks >= maxTicks) {
-        stopChartSettleResizeLoop();
-      }
-    }, 200);
-  }, [stopChartSettleResizeLoop]);
 
   const getSongCover = useCallback(
     (song) =>
@@ -588,113 +537,7 @@ export default function ZingChart() {
 
   const handleChartReady = useCallback((instance) => {
     chartRef.current = instance || null;
-    if (instance) {
-      setChartReadyVersion((prev) => prev + 1);
-      queueChartResizes();
-      startChartSettleResizeLoop();
-    }
-  }, [queueChartResizes, startChartSettleResizeLoop]);
-
-  useEffect(() => {
-    const chart = chartRef.current;
-    if (
-      !chart ||
-      typeof chart.resize !== "function" ||
-      !weeklyLineOption ||
-      !chartReadyVersion
-    ) {
-      return undefined;
-    }
-
-    let rafA = 0;
-    let rafB = 0;
-    const safeResize = () => {
-      try {
-        chart.resize();
-      } catch {
-        // Ignore resize errors from stale chart instances.
-      }
-    };
-
-    rafA = requestAnimationFrame(() => {
-      safeResize();
-      rafB = requestAnimationFrame(safeResize);
-    });
-    const timer = setTimeout(safeResize, 120);
-
-    return () => {
-      if (rafA) cancelAnimationFrame(rafA);
-      if (rafB) cancelAnimationFrame(rafB);
-      clearTimeout(timer);
-    };
-  }, [
-    chartReadyVersion,
-    weeklyLineOption,
-    syncedRowsHeight,
-    viewportWidth,
-    loading,
-    weeklySongs.length,
-  ]);
-
-  useEffect(() => {
-    const chart = chartRef.current;
-    const container = chartContainerRef.current;
-
-    if (!chart || typeof chart.resize !== "function" || !container) {
-      return undefined;
-    }
-
-    let rafId = 0;
-    const safeResize = () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        try {
-          chart.resize();
-        } catch {
-          // Ignore resize errors from stale chart instances.
-        }
-      });
-    };
-
-    let observer = null;
-    if (typeof ResizeObserver !== "undefined") {
-      observer = new ResizeObserver(() => {
-        safeResize();
-      });
-      observer.observe(container);
-    } else if (typeof window !== "undefined") {
-      window.addEventListener("resize", safeResize);
-    }
-
-    if (typeof window !== "undefined") {
-      window.addEventListener("load", safeResize);
-      window.addEventListener("pageshow", safeResize);
-      document.addEventListener("visibilitychange", safeResize);
-    }
-
-    safeResize();
-    queueChartResizes();
-    startChartSettleResizeLoop();
-
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      if (observer) observer.disconnect();
-      if (typeof window !== "undefined") {
-        window.removeEventListener("resize", safeResize);
-        window.removeEventListener("load", safeResize);
-        window.removeEventListener("pageshow", safeResize);
-        document.removeEventListener("visibilitychange", safeResize);
-      }
-    };
-  }, [
-    chartReadyVersion,
-    weeklyLineOption,
-    syncedRowsHeight,
-    viewportWidth,
-    loading,
-    queueChartResizes,
-    startChartSettleResizeLoop,
-  ]);
+  }, []);
 
   useEffect(() => {
     const chart = chartRef.current;
@@ -777,10 +620,9 @@ export default function ZingChart() {
         clearInterval(autoHoverTimerRef.current);
         autoHoverTimerRef.current = null;
       }
-      clearQueuedChartResizes();
-      stopChartSettleResizeLoop();
+      chartRef.current = null;
     },
-    [clearQueuedChartResizes, stopChartSettleResizeLoop]
+    []
   );
 
   const handlePlay = async (song, queue) => {

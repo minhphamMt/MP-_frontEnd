@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { FiHeart, FiPause, FiPlay } from "react-icons/fi";
+import { useEnsureLikedSongsLoaded } from "../../hooks/useEnsureLibraryState";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { formatDuration, fetchPlayableSong } from "../../utils/song";
 import { getSongById } from "../../api/song.api";
@@ -9,6 +10,7 @@ import OptimizedImage from "../common/OptimizedImage";
 import ArtistNames from "../artist/ArtistNames";
 
 export default function SongTable({ title, subtitle, songs, loading, onRefresh, headerActions }) {
+  useEnsureLikedSongsLoaded();
   const { playSong, pause, resume, currentSong, isPlaying, likedSongIds, toggleLike } = usePlayerStore();
 
   const handlePlaySong = async (song, queue) => {

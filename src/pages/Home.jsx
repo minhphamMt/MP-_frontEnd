@@ -19,6 +19,7 @@ import { resolveAssetUrl } from "../utils/asset";
 import { getArtistLabel } from "../utils/artist";
 
 const HISTORY_LIMIT = 10;
+const HOME_HISTORY_LIMIT = 20;
 const TOP_WEEK_COLORS = ["#fbbf24", "#60a5fa", "#a78bfa", "#fb7185", "#f97316"];
 
 const toList = (raw) =>
@@ -93,6 +94,7 @@ export default function Home() {
   const newAlbumTimerRef = useRef(null);
   const artistResumeRef = useRef(null);
   const newAlbumResumeRef = useRef(null);
+  const historyCacheRef = useRef([]);
 
   const currentSong = usePlayerStore((state) => state.currentSong);
   const playSong = usePlayerStore((state) => state.playSong);
@@ -137,29 +139,29 @@ export default function Home() {
     [fetchSongsByIds]
   );
 
-  const getLastPlayedSongId = useCallback(async () => {
-    if (!isAuthenticated) return null;
-    try {
-      const historyRes = await getMyHistory({ limit: 1 });
-      const first = toList(historyRes?.data?.data ?? historyRes?.data)?.[0];
-      return normalizeSongId(first?.song || first);
-    } catch {
-      return null;
-    }
-  }, [isAuthenticated]);
+  const loadUserHistory = useCallback(
+    async ({ force = false } = {}) => {
+      if (!isAuthenticated) {
+        historyCacheRef.current = [];
+        return [];
+      }
 
-  const getRandomHistorySongId = useCallback(async () => {
-    if (!isAuthenticated) return null;
-    try {
-      const historyRes = await getMyHistory({ limit: 20 });
-      const items = toList(historyRes?.data?.data ?? historyRes?.data);
-      if (!items.length) return null;
-      const randomItem = items[Math.floor(Math.random() * items.length)];
-      return normalizeSongId(randomItem?.song || randomItem);
-    } catch {
-      return null;
-    }
-  }, [isAuthenticated]);
+      if (historyCacheRef.current.length && !force) {
+        return historyCacheRef.current;
+      }
+
+      try {
+        const historyRes = await getMyHistory({ limit: HOME_HISTORY_LIMIT });
+        const items = toList(historyRes?.data?.data ?? historyRes?.data);
+        historyCacheRef.current = items;
+        return items;
+      } catch {
+        historyCacheRef.current = [];
+        return [];
+      }
+    },
+    [isAuthenticated]
+  );
 
   const loadRecommendations = useCallback(
     async (seedSongId, { silent = false } = {}) => {
@@ -178,20 +180,22 @@ export default function Home() {
   const loadHome = useCallback(async () => {
     try {
       setLoadingHome(true);
+      setChartLoading(true);
+      if (isAuthenticated) {
+        setContinueLoading(true);
+      }
 
-      const [artistRes, albumRes] = await Promise.all([
+      const [artistRes, albumRes, topRes, historyItems] = await Promise.all([
         getArtistCollections({ limit: 20 }),
         getAlbums({ limit: 20, sort: "release_date", order: "desc" }),
+        getWeeklyTopSongs(),
+        isAuthenticated ? loadUserHistory({ force: true }) : Promise.resolve([]),
       ]);
 
       setArtistAlbums(toList(artistRes?.data?.data || artistRes?.data));
       setNewAlbums(toList(albumRes?.data?.data || albumRes?.data));
 
       if (isAuthenticated) {
-        setContinueLoading(true);
-        const historyRes = await getMyHistory({ limit: HISTORY_LIMIT });
-        const historyItems = toList(historyRes?.data?.data ?? historyRes?.data);
-
         const normalized = dedupeSongIds(
           historyItems
             .map((item) => {
@@ -209,11 +213,10 @@ export default function Home() {
         setContinueSongs(normalized);
         setContinueLoading(false);
       } else {
+        historyCacheRef.current = [];
         setContinueSongs([]);
       }
 
-      setChartLoading(true);
-      const topRes = await getWeeklyTopSongs();
       const rawTop = toList(topRes?.data?.data || topRes?.data);
       const metricMap = new Map(
         rawTop.map((item) => [
@@ -233,7 +236,8 @@ export default function Home() {
       );
       setChartLoading(false);
 
-      const seed = isAuthenticated ? (await getLastPlayedSongId()) || normalizeSongId(currentSong) : null;
+      const firstHistorySongId = normalizeSongId(historyItems?.[0]?.song || historyItems?.[0]);
+      const seed = isAuthenticated ? firstHistorySongId || normalizeSongId(currentSong) : null;
       await loadRecommendations(seed, { silent: true });
     } catch (error) {
       console.error("Load home error:", error);
@@ -242,7 +246,7 @@ export default function Home() {
       setContinueLoading(false);
       setChartLoading(false);
     }
-  }, [currentSong, getLastPlayedSongId, isAuthenticated, loadRecommendations]);
+  }, [currentSong, isAuthenticated, loadRecommendations, loadUserHistory]);
 
   useEffect(() => {
     if (ranRef.current) return;
@@ -359,9 +363,13 @@ export default function Home() {
   const maxTopMetric = Math.max(...weeklyTop.map((song) => Number(song?.metric || 0)), 1);
 
   const refreshRecommendations = async () => {
+    const historyItems = await loadUserHistory();
+    const randomItem = historyItems.length
+      ? historyItems[Math.floor(Math.random() * historyItems.length)]
+      : null;
     const seedSongId =
-      (await getRandomHistorySongId()) ||
-      (await getLastPlayedSongId()) ||
+      normalizeSongId(randomItem?.song || randomItem) ||
+      normalizeSongId(historyItems?.[0]?.song || historyItems?.[0]) ||
       normalizeSongId(currentSong);
     await loadRecommendations(seedSongId);
   };
