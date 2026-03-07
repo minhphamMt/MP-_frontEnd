@@ -614,6 +614,12 @@ audio.addEventListener("loadedmetadata", () => {
   syncMediaSession();
 });
 
+audio.addEventListener("playing", () => {
+  // Re-apply handlers once playback is active so iOS lock screen picks track controls.
+  setupMediaSession();
+  syncMediaSession();
+});
+
 audio.addEventListener("timeupdate", () => {
   const time = audio.currentTime || 0;
   const state = usePlayerStore.getState();
