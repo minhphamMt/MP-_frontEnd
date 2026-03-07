@@ -4,9 +4,9 @@ import { FaPlay, FaRegClock } from "react-icons/fa";
 import { FiExternalLink, FiRefreshCw, FiTrendingUp } from "react-icons/fi";
 import ReactECharts from "echarts-for-react";
 import {
+  getZingChart,
+  getTop5Chart,
   getRegionCharts,
-  getWeeklyTopSeries,
-  getWeeklyTopSongs,
 } from "../api/chart.api";
 import { getSongById } from "../api/song.api";
 import {
@@ -27,6 +27,30 @@ const REGION_META = [
   { key: "vietnam", title: "Việt Nam", link: "/zing-chart/region/vietnam" },
   { key: "usuk", title: "US-UK", link: "/zing-chart/region/usuk" },
   { key: "kpop", title: "K-Pop", link: "/zing-chart/region/kpop" },
+];
+
+const PERIOD_OPTIONS = [
+  {
+    value: "day",
+    label: "Ngày",
+    eyebrow: "Realtime trong ngày",
+    title: "Top trong ngày",
+    description: "Cập nhật theo lượt nghe trong ngày hiện tại.",
+  },
+  {
+    value: "week",
+    label: "Tuần",
+    eyebrow: "Top tuần hiện tại",
+    title: "Top trong tuần",
+    description: "Tổng hợp lượt nghe từ đầu tuần đến hiện tại.",
+  },
+  {
+    value: "total",
+    label: "Tổng",
+    eyebrow: "All-time phổ biến",
+    title: "Top toàn thời gian",
+    description: "Những bài có tổng lượt nghe cao nhất toàn hệ thống.",
+  },
 ];
 
 const REGION_GRID_THREE_COL_MIN = 1320;
@@ -120,10 +144,13 @@ const getRankTheme = (rank) => {
 };
 
 export default function ZingChart() {
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [chartPeriod, setChartPeriod] = useState("day");
   const [weeklySongs, setWeeklySongs] = useState([]);
-  const [weeklySeries, setWeeklySeries] = useState([]);
+  const [weeklySeries, setWeeklySeries] = useState({ labels: [], songs: [] });
+  const [rankingLoading, setRankingLoading] = useState(true);
+  const [trendLoading, setTrendLoading] = useState(true);
+  const [regionLoading, setRegionLoading] = useState(true);
   const [isChartHovered, setIsChartHovered] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1280
@@ -142,6 +169,7 @@ export default function ZingChart() {
   const regionGridRef = useRef(null);
   const chartRef = useRef(null);
   const autoHoverTimerRef = useRef(null);
+  const hasBootstrappedRef = useRef(false);
   const { playSong } = usePlayerStore();
 
   const getSongCover = useCallback(
@@ -157,29 +185,61 @@ export default function ZingChart() {
     []
   );
 
-  const getSongMetric = useCallback(
-    (song) =>
+  const getSongMetric = useCallback((song) => {
+    const totalMetric =
       Number(
-        song?.score ?? song?.weekly_play_count ?? song?.play_count ?? song?.plays ?? 0
-      ) || 0,
-    []
+        song?.playCount ??
+          song?.total_play_count ??
+          song?.play_count ??
+          song?.plays ??
+          0
+      ) || 0;
+    const periodMetric =
+      song?.periodPlayCount ??
+      song?.period_play_count ??
+      song?.score ??
+      song?.weekly_play_count;
+
+    if (song?.period === "total") {
+      return totalMetric;
+    }
+
+    return Number(periodMetric ?? totalMetric) || 0;
+  }, []);
+
+  const activePeriodMeta = useMemo(
+    () => PERIOD_OPTIONS.find((option) => option.value === chartPeriod) || PERIOD_OPTIONS[0],
+    [chartPeriod]
   );
 
-  const loadChart = useCallback(async () => {
-    setLoading(true);
+  const loadRanking = useCallback(async (period) => {
+    setRankingLoading(true);
     try {
-      const [weeklyRes, weeklySeriesRes, regionRes] = await Promise.all([
-        getWeeklyTopSongs(),
-        getWeeklyTopSeries(),
-        getRegionCharts({ limit: 5 }),
-      ]);
-
+      const weeklyRes = await getZingChart({ limit: 5, period });
       const topWeekly = filterPlayableSongs(
         toArray(weeklyRes?.data?.data || weeklyRes?.data)
       ).slice(0, 5);
-      const seriesPayload = toArray(
-        weeklySeriesRes?.data?.data || weeklySeriesRes?.data
-      );
+      const hydratedWeekly = await hydrateSongArtists(topWeekly, getSongById);
+      setWeeklySongs(hydratedWeekly);
+    } catch (error) {
+      console.error("Load MChart ranking failed", error);
+      setWeeklySongs([]);
+    } finally {
+      setRankingLoading(false);
+    }
+  }, []);
+
+  const loadDashboard = useCallback(async () => {
+    setTrendLoading(true);
+    setRegionLoading(true);
+    try {
+      const [trendRes, regionRes] = await Promise.all([
+        getTop5Chart({ period: "week", limit: 5 }),
+        getRegionCharts({ limit: 5 }),
+      ]);
+
+      const trendRoot = trendRes?.data?.data || trendRes?.data || {};
+      const trendSongs = filterPlayableSongs(toArray(trendRoot?.songs)).slice(0, 5);
       const regionPayloadRaw = regionRes?.data?.data || regionRes?.data || {};
       const normalizedRegions = {
         vietnam: filterPlayableSongs(
@@ -193,29 +253,30 @@ export default function ZingChart() {
         ).slice(0, 5),
       };
 
-      const [hydratedWeekly, hydratedVietnam, hydratedUsuk, hydratedKpop] =
+      const [hydratedTrendSongs, hydratedVietnam, hydratedUsuk, hydratedKpop] =
         await Promise.all([
-          hydrateSongArtists(topWeekly, getSongById),
+          hydrateSongArtists(trendSongs, getSongById),
           hydrateSongArtists(normalizedRegions.vietnam, getSongById),
           hydrateSongArtists(normalizedRegions.usuk, getSongById),
           hydrateSongArtists(normalizedRegions.kpop, getSongById),
         ]);
 
-      setWeeklySongs(hydratedWeekly);
-      setWeeklySeries(seriesPayload);
+      setWeeklySeries({
+        labels: Array.isArray(trendRoot?.labels) ? trendRoot.labels : [],
+        songs: hydratedTrendSongs,
+      });
       setRegionCharts({
         vietnam: hydratedVietnam,
         usuk: hydratedUsuk,
         kpop: hydratedKpop,
       });
     } catch (error) {
-      console.error("Load MinhChart failed", error);
-      setWeeklySongs([]);
-      setWeeklySeries([]);
+      console.error("Load MChart dashboard failed", error);
+      setWeeklySeries({ labels: [], songs: [] });
       setRegionCharts({ vietnam: [], usuk: [], kpop: [] });
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      setTrendLoading(false);
+      setRegionLoading(false);
     }
   }, []);
 
@@ -290,8 +351,18 @@ export default function ZingChart() {
   }, []);
 
   useEffect(() => {
-    loadChart();
-  }, [loadChart]);
+    const bootstrap = async () => {
+      await Promise.all([loadDashboard(), loadRanking("day")]);
+      hasBootstrappedRef.current = true;
+    };
+
+    bootstrap();
+  }, [loadDashboard, loadRanking]);
+
+  useEffect(() => {
+    if (!hasBootstrappedRef.current) return;
+    loadRanking(chartPeriod);
+  }, [chartPeriod, loadRanking]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -322,39 +393,29 @@ export default function ZingChart() {
     observer.observe(target);
 
     return () => observer.disconnect();
-  }, [viewportWidth, loading, weeklySongs, regionCharts]);
+  }, [viewportWidth, rankingLoading, weeklySongs, regionCharts]);
 
   const weeklyLineData = useMemo(() => {
-    if (!weeklySongs.length || !weeklySeries.length) {
+    const labels = Array.isArray(weeklySeries?.labels) ? weeklySeries.labels : [];
+    const trendSongs = Array.isArray(weeklySeries?.songs) ? weeklySeries.songs : [];
+
+    if (!trendSongs.length) {
       return { categories: [], series: [], minValue: 0, maxValue: 0 };
     }
 
-    const allowedSongIds = new Set(weeklySongs.map((song) => song.id));
-    const groupedBySong = new Map();
-    const allDates = new Set();
-
-    weeklySeries.forEach((entry) => {
-      const songId = entry?.song_id || entry?.songId || entry?.id;
-      if (!allowedSongIds.has(songId)) return;
-      const rawDate = entry?.date || entry?.period_start || entry?.periodStart;
-      if (!rawDate) return;
-
-      const count =
-        Number(entry?.play_count ?? entry?.plays ?? entry?.playCount ?? 0) || 0;
-      const bySong = groupedBySong.get(songId) || new Map();
-      bySong.set(rawDate, count);
-      groupedBySong.set(songId, bySong);
-      allDates.add(rawDate);
-    });
-
-    const sortedDates = Array.from(allDates).sort(
-      (a, b) => new Date(a).getTime() - new Date(b).getTime()
-    );
+    const categoriesSource =
+      labels.length > 0
+        ? labels
+        : Array.from(
+            { length: Array.isArray(trendSongs[0]?.series) ? trendSongs[0].series.length : 0 },
+            (_, index) => `Ngày ${index + 1}`
+          );
 
     const allValues = [];
-    const series = weeklySongs.map((song, index) => {
-      const map = groupedBySong.get(song.id) || new Map();
-      const values = sortedDates.map((rawDate) => map.get(rawDate) || 0);
+    const series = trendSongs.slice(0, 5).map((song, index) => {
+      const values = categoriesSource.map(
+        (_, pointIndex) => Number(song?.series?.[pointIndex] ?? 0) || 0
+      );
       allValues.push(...values);
       return {
         name: song.title,
@@ -368,12 +429,16 @@ export default function ZingChart() {
     const maxValue = allValues.length ? Math.max(...allValues) : 0;
 
     return {
-      categories: sortedDates.map((rawDate) => formatWeeklyDate(rawDate)),
+      categories: categoriesSource.map((rawDate) =>
+        String(rawDate).startsWith("Ngày ")
+          ? rawDate
+          : formatWeeklyDate(rawDate)
+      ),
       series,
       minValue,
       maxValue,
     };
-  }, [weeklySeries, weeklySongs]);
+  }, [weeklySeries]);
 
   const isMobile = viewportWidth < 640;
   const isTablet = viewportWidth < 1024;
@@ -559,7 +624,11 @@ export default function ZingChart() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadChart();
+    try {
+      await Promise.all([loadDashboard(), loadRanking(chartPeriod)]);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleChartReady = useCallback((instance) => {
@@ -577,7 +646,7 @@ export default function ZingChart() {
       !hasSeries ||
       !hasCategories ||
       isChartHovered ||
-      loading
+      trendLoading
     ) {
       return undefined;
     }
@@ -639,7 +708,7 @@ export default function ZingChart() {
       downplayAll();
       safeDispatch({ type: "hideTip" });
     };
-  }, [isChartHovered, isMobile, loading, weeklyLineData]);
+  }, [isChartHovered, isMobile, trendLoading, weeklyLineData]);
 
   useEffect(
     () => () => {
@@ -673,21 +742,42 @@ export default function ZingChart() {
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3 sm:mb-5">
           <div>
             <p className="text-[11px] uppercase tracking-[0.28em] text-white/50">
-              Dữ liệu top nhạc trong tuần
+              Top 5 tuần + Bảng xếp hạng theo giai đoạn
             </p>
             <h1 className="mt-1 text-3xl font-black text-white sm:text-4xl">
               MChart
             </h1>
+            <p className="mt-2 text-sm text-white/60">
+              Biểu đồ luôn vẽ Top 5 bài hát có lượt nghe cao nhất trong tuần. Bộ lọc chỉ đổi bảng Top 5 xếp hạng ở bên phải.
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="user-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold disabled:opacity-60"
-          >
-            <FiRefreshCw className={refreshing ? "animate-spin" : ""} />
-            {refreshing ? "Đang cập nhật..." : "Làm mới dữ liệu"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
+              {PERIOD_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setChartPeriod(option.value)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    chartPeriod === option.value
+                      ? "bg-white text-[#111]"
+                      : "text-white/72 md:hover:bg-white/10 md:hover:text-white"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="user-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold disabled:opacity-60"
+            >
+              <FiRefreshCw className={refreshing ? "animate-spin" : ""} />
+              {refreshing ? "Đang cập nhật..." : "Làm mới dữ liệu"}
+            </button>
+          </div>
         </div>
 
         <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,1fr)]">
@@ -697,10 +787,10 @@ export default function ZingChart() {
             <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-white/50">
-                  Weekly Trend
+                  Weekly Top 5
                 </p>
                 <p className="truncate text-sm font-semibold text-white sm:text-base">
-                  Xu hướng top tuần
+                  Biến động của Top 5 tuần
                 </p>
               </div>
               <span
@@ -709,7 +799,7 @@ export default function ZingChart() {
                 }`}
               >
                 <FiTrendingUp className="text-sky-300" />
-                {weeklySongs.length} bài hát
+                {weeklyLineData.series.length} bài hát
               </span>
             </div>
 
@@ -724,7 +814,7 @@ export default function ZingChart() {
                 if (weeklyLineOption) setIsChartHovered(false);
               }}
             >
-              {loading ? (
+              {trendLoading ? (
                 <div className="p-4 text-sm text-white/60">Đang tải biểu đồ...</div>
               ) : weeklyLineOption ? (
                 chartBoxSize.width > 0 && chartBoxSize.height > 0 ? (
@@ -752,24 +842,24 @@ export default function ZingChart() {
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-base font-bold text-white sm:text-lg">
-                Top 5 bài hát tuần
+                {activePeriodMeta.title}
               </h2>
               <span className={`text-xs text-white/50 ${isVerySmall ? "hidden" : ""}`}>
-                Cập nhật mới
+                {activePeriodMeta.label}
               </span>
             </div>
 
             <div ref={weeklyRowsRef} className="space-y-2.5">
-              {loading && (
+              {rankingLoading && (
                 <div className="text-sm text-white/60">Đang tải bảng xếp hạng...</div>
               )}
-              {!loading && !weeklySongs.length && (
+              {!rankingLoading && !weeklySongs.length && (
                 <div className="text-sm text-white/60">
                   Chưa có dữ liệu bảng xếp hạng.
                 </div>
               )}
 
-              {!loading &&
+              {!rankingLoading &&
                 weeklySongs.map((song, index) => {
                   const rank = index + 1;
                   const theme = getRankTheme(rank);
@@ -886,16 +976,16 @@ export default function ZingChart() {
                 </div>
 
                 <div className="space-y-2.5">
-                  {loading && (
+                  {regionLoading && (
                     <div className="text-sm text-white/60">
                       Đang tải dữ liệu khu vực...
                     </div>
                   )}
-                  {!loading && !songs.length && (
+                  {!regionLoading && !songs.length && (
                     <div className="text-sm text-white/60">Chưa có dữ liệu.</div>
                   )}
 
-                  {!loading &&
+                  {!regionLoading &&
                     songs.map((song, index) => {
                       const rank = index + 1;
                       const theme = getRankTheme(rank);

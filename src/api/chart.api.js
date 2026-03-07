@@ -1,9 +1,11 @@
 import api from "./axios";
 
-export const getZingChart = () => api.get("/charts/zing");
+export const getZingChart = (params) => api.get("/charts/zing", { params });
 
 export const getZingChartSeries = (params) =>
   api.get("/charts/zing/series", { params });
+
+export const getTop5Chart = (params) => api.get("/charts/top5", { params });
 
 export const getNewReleaseChart = (params) =>
   api.get("/charts/new-release", { params });

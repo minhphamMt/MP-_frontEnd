@@ -108,9 +108,31 @@ export const toPlayableSong = (rawInput = {}) => {
     album_title: source.album_title ?? source.albumTitle ?? source.album?.title,
     audio_url: audioPath || "",
     rank: raw.rank ?? source.rank,
+    period: raw.period ?? source.period,
+    series: Array.isArray(raw.series)
+      ? raw.series
+      : Array.isArray(source.series)
+        ? source.series
+        : undefined,
+    playCount:
+      raw.playCount ??
+      source.playCount ??
+      raw.total_play_count ??
+      source.total_play_count ??
+      raw.play_count ??
+      source.play_count,
+    periodPlayCount:
+      raw.periodPlayCount ??
+      source.periodPlayCount ??
+      raw.period_play_count ??
+      source.period_play_count,
     play_count:
       raw.weekly_play_count ??
       source.weekly_play_count ??
+      raw.period_play_count ??
+      source.period_play_count ??
+      raw.total_play_count ??
+      source.total_play_count ??
       raw.playCount ??
       raw.play_count ??
       source.playCount ??
