@@ -91,13 +91,13 @@ export default function LikedSongs() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-              ThÆ° viá»‡n
+              Thư viện
             </p>
             <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-              BÃ i hÃ¡t Ä‘Ã£ thÃ­ch
+              Bài hát đã thích
             </h1>
             <p className="text-sm text-white/60">
-              {likedSongs.length} bÃ i hÃ¡t Ä‘Æ°á»£c lÆ°u
+              {likedSongs.length} bài hát được lưu
             </p>
           </div>
 
@@ -106,7 +106,7 @@ export default function LikedSongs() {
             onClick={() => navigate("/playlists")}
             className="user-btn-secondary px-4 py-2 text-sm font-semibold"
           >
-            â† Quay láº¡i thÆ° viá»‡n
+            ← Quay lại thư viện
           </button>
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function LikedSongs() {
       <section>
         {loading ? (
           <div className="user-surface p-6 text-sm text-white/60">
-            Äang táº£i bÃ i hÃ¡t Ä‘Ã£ thÃ­ch...
+            Đang tải bài hát đã thích...
           </div>
         ) : (
           <LikedSongsSection
