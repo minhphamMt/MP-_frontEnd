@@ -2,15 +2,19 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import api from "../api/axios";
-import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
-import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import FollowArtistButton from "../components/artist/FollowArtistButton";
 import ArtistNames from "../components/artist/ArtistNames";
-import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
-import { resolveAssetUrl } from "../utils/asset";
-import { formatDateDisplay } from "../utils/date";
 import OptimizedImage from "../components/common/OptimizedImage";
-import { getArtistLabel, getPrimaryArtistId, normalizeArtists } from "../utils/artist";
+import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
+import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
+import usePlayerStore, { normalizeSongId } from "../store/player.store";
+import { resolveAssetUrl } from "../utils/asset";
+import {
+  getArtistLabel,
+  getPrimaryArtistId,
+  normalizeArtists,
+} from "../utils/artist";
+import { formatDateDisplay } from "../utils/date";
 import { toPlayableSong } from "../utils/song";
 
 const formatTime = (s = 0) =>
@@ -23,31 +27,30 @@ export default function ArtistDetail() {
   const [artist, setArtist] = useState(null);
   const [loading, setLoading] = useState(true);
 
- const {
+  const {
     playSong,
     currentSong,
     isPlaying,
     likedSongIds,
     toggleLike,
   } = usePlayerStore();
-const renderBioHtml = (bio = "") => {
-  if (!bio) return { __html: "" };
 
-  let normalized = bio;
-  normalized = normalized.replace(/\r\n/g, "\n");
-  normalized = normalized.replace(/\n{2,}/g, "\n");
-  normalized = normalized.replace(/<br\s*\/?>/gi, "<br />");
-  normalized = normalized.replace(/(<br \/>){2,}/gi, "<br />");
-  normalized = normalized.replace(/(\n\s*)*(<br \/>)(\s*\n)*/gi, "<br />");
-  normalized = normalized.trim();
+  const renderBioHtml = (bio = "") => {
+    if (!bio) return { __html: "" };
 
-  return {
-    __html: normalized,
+    let normalized = bio;
+    normalized = normalized.replace(/\r\n/g, "\n");
+    normalized = normalized.replace(/\n{2,}/g, "\n");
+    normalized = normalized.replace(/<br\s*\/?>/gi, "<br />");
+    normalized = normalized.replace(/(<br \/>){2,}/gi, "<br />");
+    normalized = normalized.replace(/(\n\s*)*(<br \/>)(\s*\n)*/gi, "<br />");
+    normalized = normalized.trim();
+
+    return { __html: normalized };
   };
-};
 
   /* =======================
-     LOAD ARTIST (GIá»® NGUYÃŠN)
+     LOAD ARTIST (GIỮ NGUYÊN)
      ======================= */
   const loadArtist = useCallback(async () => {
     try {
@@ -60,10 +63,11 @@ const renderBioHtml = (bio = "") => {
       const payload = res.data?.data || {};
       const artistData = payload.artist || null;
       const songList = payload.songs || [];
-        if (artistData) {
+
+      if (artistData) {
         setArtist({
           id: artistData.id,
-          name: artistData.name || artistData.alias || "Nghá»‡ sÄ©",
+          name: artistData.name || artistData.alias || "Nghệ sĩ",
           alias: artistData.alias,
           realname: artistData.realname,
           birthday: artistData.birthday,
@@ -73,7 +77,7 @@ const renderBioHtml = (bio = "") => {
           bio: artistData.bio,
           shortBio: artistData.short_bio,
         });
-        } else {
+      } else {
         setArtist(null);
       }
 
@@ -83,7 +87,10 @@ const renderBioHtml = (bio = "") => {
             artist_id: artistData?.id ?? id,
             artist_name: artistData?.name || artistData?.alias || "",
           });
-          const artists = normalizeArtists({ ...s, artists: s.artists || fallbackArtists });
+          const artists = normalizeArtists({
+            ...s,
+            artists: s.artists || fallbackArtists,
+          });
 
           return toPlayableSong({
             ...s,
@@ -112,45 +119,35 @@ const renderBioHtml = (bio = "") => {
     [songs]
   );
 
-  /* =======================
-     LOADING
-     ======================= */
   if (loading) {
     return (
-       <div className="user-page-shell min-h-screen p-6 text-white/60">
-        <div className="user-surface p-6">
-          Äang táº£i nghá»‡ sÄ©...
-        </div>
+      <div className="user-page-shell min-h-screen p-6 text-white/60">
+        <div className="user-surface p-6">Đang tải nghệ sĩ...</div>
       </div>
     );
   }
- const coverUrl = resolveAssetUrl(artist?.cover || artist?.avatar);
+
+  const coverUrl = resolveAssetUrl(artist?.cover || artist?.avatar);
   const artistInfoItems = [
-    { label: "Nghá»‡ danh", value: artist?.alias },
-    { label: "TÃªn tháº­t", value: artist?.realname },
+    { label: "Nghệ danh", value: artist?.alias },
+    { label: "Tên thật", value: artist?.realname },
     {
-      label: "NgÃ y sinh",
-      value: artist?.birthday ? formatDateDisplay(artist?.birthday) : null,
+      label: "Ngày sinh",
+      value: artist?.birthday ? formatDateDisplay(artist.birthday) : null,
     },
-    { label: "Quá»‘c gia", value: artist?.national },
+    { label: "Quốc gia", value: artist?.national },
   ].filter((item) => item.value);
 
-  /* =======================
-     UI
-     ======================= */
   return (
-   <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
-      {/* ===== HERO ===== */}
+    <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
       <div className="user-surface relative overflow-hidden p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
-        {/* GLOW */}
         <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-emerald-500/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-emerald-400/15 blur-3xl" />
 
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center">
-          {/* AVATAR */}
           <div className="mx-auto w-full max-w-[260px] lg:mx-0">
             <div className="relative overflow-hidden rounded-2xl shadow-xl shadow-black/40">
-               {coverUrl ? (
+              {coverUrl ? (
                 <OptimizedImage
                   src={coverUrl}
                   alt={artist?.name}
@@ -158,36 +155,35 @@ const renderBioHtml = (bio = "") => {
                 />
               ) : (
                 <div className="flex aspect-square w-full items-center justify-center bg-white/10 text-sm text-white/70">
-                  ChÆ°a cÃ³ áº£nh
+                  Chưa có ảnh
                 </div>
               )}
               <div className="absolute inset-0 rounded-2xl border border-white/10" />
             </div>
           </div>
 
-          {/* INFO */}
           <div className="flex-1 space-y-5">
             <div>
               <p className="mb-2 text-xs uppercase tracking-[0.35em] text-white/50">
-                Nghá»‡ sÄ©
+                Nghệ sĩ
               </p>
               <h1 className="text-2xl font-extrabold leading-tight text-white sm:text-3xl">
                 {artist?.name}
               </h1>
-                {artist?.alias && artist.alias !== artist.name && (
+              {artist?.alias && artist.alias !== artist.name && (
                 <p className="mt-1 text-sm text-white/70">{artist.alias}</p>
               )}
               <p className="mt-1 text-sm text-white/70">
-                {songs.length} bÃ i hÃ¡t ná»•i báº­t
+                {songs.length} bài hát nổi bật
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3 text-sm text-white/70">
               <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">
-                {songs.length} bÃ i hÃ¡t
+                {songs.length} bài hát
               </span>
               <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">
-                Tá»•ng thá»i lÆ°á»£ng: {formatTime(totalDuration)}
+                Tổng thời lượng: {formatTime(totalDuration)}
               </span>
             </div>
 
@@ -195,19 +191,18 @@ const renderBioHtml = (bio = "") => {
               {songs.length > 0 && (
                 <button
                   onClick={() => playSong(songs[0], songs)}
-                  className="rounded-full border border-emerald-300/50 bg-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900
-                             shadow-lg shadow-emerald-400/30 transition
-                             md:hover:brightness-110 md:hover:scale-[1.05] active:scale-[0.97]"
+                  className="rounded-full border border-emerald-300/50 bg-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-emerald-400/30 transition md:hover:scale-[1.05] md:hover:brightness-110 active:scale-[0.97]"
                 >
-                  â–¶ PhÃ¡t táº¥t cáº£
+                  ▶ Phát tất cả
                 </button>
-)}
-                <FollowArtistButton artist={artist} size="lg" />
+              )}
+              <FollowArtistButton artist={artist} size="lg" />
             </div>
           </div>
         </div>
       </div>
-   {(artistInfoItems.length > 0 || artist?.shortBio) && (
+
+      {(artistInfoItems.length > 0 || artist?.shortBio) && (
         <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
           {artist?.shortBio && (
             <div className="user-surface relative overflow-hidden p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
@@ -215,7 +210,7 @@ const renderBioHtml = (bio = "") => {
               <div className="relative space-y-3">
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60">
                   <span className="h-[1px] w-6 bg-white/30" />
-                  <span>TÃ³m táº¯t</span>
+                  <span>Tóm tắt</span>
                 </div>
                 <p className="text-sm leading-relaxed text-white/80">
                   {artist.shortBio}
@@ -230,7 +225,7 @@ const renderBioHtml = (bio = "") => {
               <div className="relative space-y-4">
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60">
                   <span className="h-[1px] w-6 bg-white/30" />
-                  <span>ThÃ´ng tin</span>
+                  <span>Thông tin</span>
                 </div>
                 <div className="space-y-3 text-sm text-white/80">
                   {artistInfoItems.map((item) => (
@@ -239,9 +234,7 @@ const renderBioHtml = (bio = "") => {
                       className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2 last:border-none last:pb-0"
                     >
                       <span className="text-white/60">{item.label}</span>
-                      <span className="font-medium text-white">
-                        {item.value}
-                      </span>
+                      <span className="font-medium text-white">{item.value}</span>
                     </div>
                   ))}
                 </div>
@@ -251,7 +244,6 @@ const renderBioHtml = (bio = "") => {
         </div>
       )}
 
-      {/* ===== BIO ===== */}
       {artist?.bio && (
         <div className="user-surface relative overflow-hidden p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           <div className="pointer-events-none absolute inset-0 bg-white/[0.02]" />
@@ -259,9 +251,9 @@ const renderBioHtml = (bio = "") => {
           <div className="relative space-y-3">
             <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60">
               <span className="h-[1px] w-6 bg-white/30" />
-              <span>Giá»›i thiá»‡u</span>
+              <span>Giới thiệu</span>
             </div>
-             <p
+            <p
               className="whitespace-pre-line text-sm leading-relaxed text-white/80"
               dangerouslySetInnerHTML={renderBioHtml(artist.bio)}
             />
@@ -269,38 +261,35 @@ const renderBioHtml = (bio = "") => {
         </div>
       )}
 
-      {/* ===== SONG LIST ===== */}
-         <div className="user-surface overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] scrollbar-muted xl:overflow-x-auto">
+      <div className="user-surface scrollbar-muted overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] xl:overflow-x-auto">
         <div className="min-w-0 xl:min-w-[720px]">
           <div className="px-4 pt-4 text-sm font-semibold text-white xl:hidden">
-            Danh sÃ¡ch bÃ i hÃ¡t
-          </div>
-          {/* TABLE HEADER */}
-          <div className="hidden grid-cols-[60px_1fr_160px_140px_100px] items-center bg-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-white/60 xl:grid xl:px-5">
-            <span className="text-center">#</span>
-            <span>BÃ i hÃ¡t</span>
-            <span className="text-center">Album</span>
-            <span className="text-center">HÃ nh Ä‘á»™ng</span>
-            <span className="text-right">Thá»i gian</span>
+            Danh sách bài hát
           </div>
 
-          {/* ROWS */}
+          <div className="hidden grid-cols-[60px_1fr_160px_140px_100px] items-center bg-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-white/60 xl:grid xl:px-5">
+            <span className="text-center">#</span>
+            <span>Bài hát</span>
+            <span className="text-center">Album</span>
+            <span className="text-center">Hành động</span>
+            <span className="text-right">Thời gian</span>
+          </div>
+
           <div className="divide-y divide-white/5">
             {songs.map((song, index) => {
               const songId = normalizeSongId(song);
               const isActive = normalizeSongId(currentSong) === songId;
-              const isLiked = songId && likedSongIds.includes(songId);
+              const isSongLiked = songId && likedSongIds.includes(songId);
 
               return (
                 <div
                   key={song.id}
                   onClick={() => playSong(song, songs)}
-                  className={`group grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 cursor-pointer transition xl:grid-cols-[60px_1fr_160px_140px_100px] xl:gap-3 xl:px-5 ${
-                    isActive ? "bg-emerald-400/10" : "md:hover:bg-white/5"
+                  className={`group grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 transition xl:grid-cols-[60px_1fr_160px_140px_100px] xl:gap-3 xl:px-5 ${
+                    isActive ? "bg-emerald-400/10" : "cursor-pointer md:hover:bg-white/5"
                   }`}
                 >
-                  {/* INDEX */}
-                 <div className="hidden text-center text-sm font-semibold xl:block">
+                  <div className="hidden text-center text-sm font-semibold xl:block">
                     {isActive ? (
                       <FiMusic className="mx-auto text-emerald-400" />
                     ) : (
@@ -308,9 +297,8 @@ const renderBioHtml = (bio = "") => {
                     )}
                   </div>
 
-                  {/* SONG */}
                   <div className="flex min-w-0 items-center gap-3">
-                     <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/30 sm:h-12 sm:w-12">
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/30 sm:h-12 sm:w-12">
                       <OptimizedImage
                         src={resolveAssetUrl(song.cover_url)}
                         alt={song.title}
@@ -334,32 +322,31 @@ const renderBioHtml = (bio = "") => {
 
                     <div className="min-w-0">
                       <div
-                         className={`truncate text-sm font-semibold sm:text-base ${
+                        className={`truncate text-sm font-semibold sm:text-base ${
                           isActive ? "text-emerald-300" : "text-white"
                         }`}
                       >
                         {song.title}
                       </div>
-                        <div className="hidden truncate text-xs text-white/60 xl:block">
-                          <ArtistNames
-                            item={song}
-                            stopPropagation
-                            fallback={artist?.name || "Nghá»‡ sÄ©"}
-                            linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-                          />
-                        </div>
+                      <div className="hidden truncate text-xs text-white/60 xl:block">
+                        <ArtistNames
+                          item={song}
+                          stopPropagation
+                          fallback={artist?.name || "Nghệ sĩ"}
+                          linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* ALBUM */}
                   <div className="hidden truncate text-center text-sm text-white/60 xl:block">
                     {song.album_title || "Single"}
                   </div>
-                  {/* ACTIONS */}
-                   <div className="flex items-center justify-end gap-2 sm:justify-center">
+
+                  <div className="flex items-center justify-end gap-2 sm:justify-center">
                     <AddToPlaylistButton
                       song={song}
-                       triggerClassName="h-8 w-8 !border-white/20 !bg-white/10 md:hover:!bg-white/20 sm:h-9 sm:w-9"
+                      triggerClassName="h-8 w-8 !border-white/20 !bg-white/10 sm:h-9 sm:w-9 md:hover:!bg-white/20"
                     />
                     <button
                       onClick={(e) => {
@@ -367,16 +354,16 @@ const renderBioHtml = (bio = "") => {
                         if (songId) toggleLike(songId);
                       }}
                       className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm transition sm:h-9 sm:w-9 ${
-                        isLiked
+                        isSongLiked
                           ? "border-rose-400/40 text-rose-300"
                           : "border-white/10 text-white/70 md:hover:bg-white/15"
                       }`}
-                      aria-label={isLiked ? "Bá» thÃ­ch bÃ i hÃ¡t" : "ThÃ­ch bÃ i hÃ¡t"}
+                      aria-label={isSongLiked ? "Bỏ thích bài hát" : "Thích bài hát"}
                     >
                       <FiHeart />
                     </button>
                   </div>
-                  {/* DURATION */}
+
                   <div className="hidden text-right text-sm text-white/60 xl:block">
                     {formatTime(song.duration)}
                   </div>

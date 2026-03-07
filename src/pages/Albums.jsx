@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
+import { FiHeart } from "react-icons/fi";
 import { getAlbumById, getAlbums } from "../api/album.api";
 import SongTable from "../components/song/SongTable";
 import { useEnsureLikedAlbumsLoaded } from "../hooks/useEnsureLibraryState";
-import { filterPlayableSongs } from "../utils/song";
-import { getArtistLabel } from "../utils/artist";
 import useAlbumLikeStore, {
   normalizeAlbumId,
 } from "../store/album-like.store";
-import { FiHeart } from "react-icons/fi";
+import { getArtistLabel } from "../utils/artist";
+import { filterPlayableSongs } from "../utils/song";
 
 export default function Albums() {
   useEnsureLikedAlbumsLoaded();
@@ -15,8 +15,9 @@ export default function Albums() {
   const [loading, setLoading] = useState(true);
   const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
   const toggleAlbumLike = useAlbumLikeStore((s) => s.toggleAlbumLike);
+
   /* =======================
-     HYDRATE ALBUM (GIá»® NGUYÃŠN)
+     HYDRATE ALBUM (GIỮ NGUYÊN)
      ======================= */
   const hydrateAlbum = useCallback(async (album) => {
     if (album.songs?.length) {
@@ -45,7 +46,7 @@ export default function Albums() {
   }, []);
 
   /* =======================
-     LOAD ALBUMS (GIá»® NGUYÃŠN)
+     LOAD ALBUMS (GIỮ NGUYÊN)
      ======================= */
   const loadAlbums = useCallback(async () => {
     try {
@@ -53,9 +54,7 @@ export default function Albums() {
       const res = await getAlbums({ limit: 20 });
       const raw = res?.data?.data || [];
 
-      const hydrated = await Promise.all(
-        raw.map((album) => hydrateAlbum(album))
-      );
+      const hydrated = await Promise.all(raw.map((album) => hydrateAlbum(album)));
       setAlbums(hydrated);
     } catch (err) {
       console.error("Load albums failed", err);
@@ -69,41 +68,33 @@ export default function Albums() {
     loadAlbums();
   }, [loadAlbums]);
 
-  /* =======================
-     UI
-     ======================= */
   return (
-     <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
-      {/* PAGE HEADER */}
+    <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
       <div className="user-surface p-6">
         <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-          ThÆ° viá»‡n
+          Thư viện
         </p>
         <h1 className="mt-1 text-2xl font-extrabold text-white sm:text-3xl">
           Album
         </h1>
         <p className="mt-2 text-sm text-white/60">
-          Tuyá»ƒn táº­p album ná»•i báº­t tá»« nghá»‡ sÄ© yÃªu thÃ­ch
+          Tuyển tập album nổi bật từ nghệ sĩ yêu thích
         </p>
       </div>
 
-      {/* ALBUM LIST */}
       <div className="space-y-10">
-         {albums.map((album) => {
+        {albums.map((album) => {
           const albumId = normalizeAlbumId(album);
           const isLiked = albumId && likedAlbumIds.includes(albumId);
 
           return (
-            <div
-              key={album.id || album.title}
-              className="user-surface"
-            >
+            <div key={album.id || album.title} className="user-surface">
               <SongTable
                 title={album.title || "Album"}
                 subtitle={
                   album.artist_name
                     ? `${getArtistLabel(album, album.artist_name)} · ${album.songs.length} bài hát`
-                    : `${album.songs.length} bÃ i hÃ¡t`
+                    : `${album.songs.length} bài hát`
                 }
                 songs={album.songs || []}
                 loading={loading}
@@ -116,7 +107,7 @@ export default function Albums() {
                         ? "border-rose-400/40 text-rose-300"
                         : "border-white/10 text-white/70 md:hover:bg-white/15"
                     }`}
-                    aria-label={isLiked ? "Bá» thÃ­ch album" : "ThÃ­ch album"}
+                    aria-label={isLiked ? "Bỏ thích album" : "Thích album"}
                   >
                     <FiHeart />
                   </button>
@@ -129,8 +120,8 @@ export default function Albums() {
         {!albums.length && (
           <div className="user-surface">
             <SongTable
-              title="Album ná»•i báº­t"
-              subtitle="KhÃ´ng cÃ³ album nÃ o Ä‘á»ƒ hiá»ƒn thá»‹"
+              title="Album nổi bật"
+              subtitle="Không có album nào để hiển thị"
               songs={[]}
               loading={loading}
               onRefresh={loadAlbums}
@@ -141,4 +132,3 @@ export default function Albums() {
     </div>
   );
 }
-

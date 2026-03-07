@@ -2,25 +2,30 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiCalendar, FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import { getAlbumById } from "../api/album.api";
+import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
+import ArtistNames from "../components/artist/ArtistNames";
+import OptimizedImage from "../components/common/OptimizedImage";
 import {
   useEnsureLikedAlbumsLoaded,
   useEnsureLikedSongsLoaded,
 } from "../hooks/useEnsureLibraryState";
+import useAuthStore from "../store/auth.store";
 import useAlbumLikeStore, {
   normalizeAlbumId,
 } from "../store/album-like.store";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
-import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 import { resolveAssetUrl } from "../utils/asset";
-import useAuthStore from "../store/auth.store";
+import {
+  getArtistLabel,
+  getPrimaryArtistId,
+  normalizeArtists,
+} from "../utils/artist";
 import { formatDateDisplay } from "../utils/date";
-import OptimizedImage from "../components/common/OptimizedImage";
-import { getArtistLabel, getPrimaryArtistId, normalizeArtists } from "../utils/artist";
-import ArtistNames from "../components/artist/ArtistNames";
 import { toPlayableSong } from "../utils/song";
 
 const formatTime = (s = 0) =>
   `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
 export default function AlbumDetail() {
   useEnsureLikedSongsLoaded();
   useEnsureLikedAlbumsLoaded();
@@ -29,7 +34,8 @@ export default function AlbumDetail() {
   const [album, setAlbum] = useState(null);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
-   const {
+
+  const {
     playSong,
     currentSong,
     isPlaying,
@@ -43,7 +49,7 @@ export default function AlbumDetail() {
   const toggleAlbumLike = useAlbumLikeStore((s) => s.toggleAlbumLike);
 
   /* =======================
-     LOAD ALBUM (GIá»® NGUYÃŠN)
+     LOAD ALBUM (GIỮ NGUYÊN)
      ======================= */
   const loadAlbum = useCallback(async () => {
     try {
@@ -57,7 +63,6 @@ export default function AlbumDetail() {
       }
 
       setAlbum(data);
-
       setSongs(
         (data.songs || []).map((s) => {
           const fallbackArtists = normalizeArtists({
@@ -69,8 +74,10 @@ export default function AlbumDetail() {
               data.artist?.name ||
               "",
           });
-
-          const artists = normalizeArtists({ ...s, artists: s.artists || fallbackArtists });
+          const artists = normalizeArtists({
+            ...s,
+            artists: s.artists || fallbackArtists,
+          });
 
           return toPlayableSong({
             ...s,
@@ -100,15 +107,10 @@ export default function AlbumDetail() {
   const albumId = normalizeAlbumId(album);
   const isLiked = albumId && likedAlbumIds.includes(albumId);
 
-  /* =======================
-     LOADING / EMPTY
-     ======================= */
   if (loading) {
     return (
-       <div className="user-page-shell min-h-screen p-6 text-white/60">
-        <div className="user-surface p-6">
-          Äang táº£i album...
-        </div>
+      <div className="user-page-shell min-h-screen p-6 text-white/60">
+        <div className="user-surface p-6">Đang tải album...</div>
       </div>
     );
   }
@@ -116,42 +118,32 @@ export default function AlbumDetail() {
   if (!album) {
     return (
       <div className="user-page-shell min-h-screen p-6 text-white/60">
-        <div className="user-surface p-6">
-          Album khÃ´ng tá»“n táº¡i
-        </div>
+        <div className="user-surface p-6">Album không tồn tại</div>
       </div>
     );
   }
 
-  /* =======================
-     UI
-     ======================= */
   const artistMeta = album?.artist || {};
   const artistDisplayName =
     album?.artist_name || artistMeta?.name || artistMeta?.alias;
   const artistId = album?.artist_id || artistMeta?.id;
   const artistInfoItems = [
-    { label: "Nghá»‡ danh", value: artistMeta?.alias },
-    { label: "TÃªn tháº­t", value: artistMeta?.realname },
+    { label: "Nghệ danh", value: artistMeta?.alias },
+    { label: "Tên thật", value: artistMeta?.realname },
     {
-      label: "NgÃ y sinh",
-      value: artistMeta?.birthday
-        ? formatDateDisplay(artistMeta?.birthday)
-        : null,
+      label: "Ngày sinh",
+      value: artistMeta?.birthday ? formatDateDisplay(artistMeta.birthday) : null,
     },
-    { label: "Quá»‘c gia", value: artistMeta?.national },
+    { label: "Quốc gia", value: artistMeta?.national },
   ].filter((item) => item.value);
 
   return (
-     <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
-      {/* ===== HERO ===== */}
+    <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
       <div className="user-surface relative overflow-hidden p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
-        {/* GLOW */}
         <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-emerald-500/20 blur-3xl" />
 
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center">
-          {/* COVER */}
-           <div className="mx-auto w-full max-w-[260px] lg:mx-0">
+          <div className="mx-auto w-full max-w-[260px] lg:mx-0">
             <div className="relative overflow-hidden rounded-2xl shadow-xl shadow-black/40">
               <OptimizedImage
                 src={resolveAssetUrl(album.cover_url)}
@@ -161,7 +153,7 @@ export default function AlbumDetail() {
               <div className="absolute inset-0 rounded-2xl border border-white/10" />
             </div>
           </div>
-          {/* INFO */}
+
           <div className="flex-1 space-y-5">
             <div>
               <p className="mb-2 text-xs uppercase tracking-[0.35em] text-white/50">
@@ -170,7 +162,7 @@ export default function AlbumDetail() {
               <h1 className="text-2xl font-extrabold leading-tight text-white sm:text-3xl">
                 {album.title}
               </h1>
-               {artistDisplayName && (
+              {artistDisplayName && (
                 <button
                   type="button"
                   onClick={() => artistId && navigate(`/artist/${artistId}`)}
@@ -184,10 +176,10 @@ export default function AlbumDetail() {
 
             <div className="flex flex-wrap gap-3 text-sm text-white/70">
               <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">
-                {songs.length} bÃ i hÃ¡t
+                {songs.length} bài hát
               </span>
               <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">
-                Tá»•ng thá»i lÆ°á»£ng: {formatTime(totalDuration)}
+                Tổng thời lượng: {formatTime(totalDuration)}
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1">
                 <FiCalendar className="text-emerald-300" />
@@ -197,22 +189,20 @@ export default function AlbumDetail() {
 
             {songs.length > 0 && (
               <div className="flex flex-wrap gap-3 pt-2">
-               {canPlay ? (
+                {canPlay ? (
                   <button
                     onClick={() => playSong(songs[0], songs)}
-                    className="rounded-full border border-emerald-300/50 bg-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900
-                             shadow-lg shadow-green-400/30 transition
-                             md:hover:brightness-110 md:hover:scale-[1.05] active:scale-[0.97]"
-                >
-                    â–¶ PhÃ¡t táº¥t cáº£
+                    className="rounded-full border border-emerald-300/50 bg-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-green-400/30 transition md:hover:scale-[1.05] md:hover:brightness-110 active:scale-[0.97]"
+                  >
+                    ▶ Phát tất cả
                   </button>
                 ) : (
                   <div className="rounded-full border border-white/15 bg-white/5 px-6 py-2 text-sm text-white/60">
-                    Chá»‰ xem thÃ´ng tin
+                    Chỉ xem thông tin
                   </div>
                 )}
 
-                  <button
+                <button
                   onClick={() => {
                     if (!isArtistRole) {
                       toggleAlbumLike(albumId);
@@ -225,20 +215,21 @@ export default function AlbumDetail() {
                       : "border-white/15 bg-white/5 text-white/80 md:hover:bg-white/10"
                   } ${isArtistRole ? "cursor-not-allowed opacity-60" : ""}`}
                 >
-                  {isLiked ? "âœ“ ÄÃ£ thÃ­ch" : "+ ThÃ­ch album"}
+                  {isLiked ? "✓ Đã thích" : "+ Thích album"}
                 </button>
               </div>
             )}
           </div>
         </div>
       </div>
- {(artistDisplayName || artistInfoItems.length > 0) && (
+
+      {(artistDisplayName || artistInfoItems.length > 0) && (
         <div className="user-surface relative overflow-hidden p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
           <div className="pointer-events-none absolute inset-0 bg-white/[0.02]" />
           <div className="relative space-y-4">
             <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60">
               <span className="h-[1px] w-6 bg-white/30" />
-              <span>Nghá»‡ sÄ©</span>
+              <span>Nghệ sĩ</span>
             </div>
             {artistDisplayName && (
               <button
@@ -258,9 +249,7 @@ export default function AlbumDetail() {
                     className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3"
                   >
                     <span className="text-white/60">{item.label}</span>
-                    <span className="font-medium text-white">
-                      {item.value}
-                    </span>
+                    <span className="font-medium text-white">{item.value}</span>
                   </div>
                 ))}
               </div>
@@ -268,26 +257,26 @@ export default function AlbumDetail() {
           </div>
         </div>
       )}
-      {/* ===== SONG LIST ===== */}
-         <div className="user-surface overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] scrollbar-muted xl:overflow-x-auto">
-       <div className="min-w-0 xl:min-w-[640px]">
+
+      <div className="user-surface scrollbar-muted overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] xl:overflow-x-auto">
+        <div className="min-w-0 xl:min-w-[640px]">
           <div className="px-4 pt-4 text-sm font-semibold text-white xl:hidden">
-            Danh sÃ¡ch bÃ i hÃ¡t
-          </div>
-          {/* TABLE HEADER */}
-          <div className="hidden grid-cols-[60px_1fr_140px_100px] items-center bg-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-white/60 xl:grid xl:px-5">
-            <span className="text-center">#</span>
-            <span>BÃ i hÃ¡t</span>
-            <span className="text-center">HÃ nh Ä‘á»™ng</span>
-            <span className="text-right">Thá»i gian</span>
+            Danh sách bài hát
           </div>
 
-          {/* ROWS */}
+          <div className="hidden grid-cols-[60px_1fr_140px_100px] items-center bg-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-white/60 xl:grid xl:px-5">
+            <span className="text-center">#</span>
+            <span>Bài hát</span>
+            <span className="text-center">Hành động</span>
+            <span className="text-right">Thời gian</span>
+          </div>
+
           <div className="divide-y divide-white/5">
             {songs.map((song, index) => {
               const songId = normalizeSongId(song);
               const isActive = normalizeSongId(currentSong) === songId;
-              const isLiked = songId && likedSongIds.includes(songId);
+              const isSongLiked = songId && likedSongIds.includes(songId);
+
               return (
                 <div
                   key={song.id}
@@ -296,11 +285,10 @@ export default function AlbumDetail() {
                     isActive
                       ? "bg-emerald-400/10"
                       : canPlay
-                        ? "md:hover:bg-white/5 cursor-pointer"
+                        ? "cursor-pointer md:hover:bg-white/5"
                         : "cursor-default"
                   }`}
                 >
-                  {/* INDEX */}
                   <div className="hidden text-center text-sm font-semibold xl:block">
                     {isActive ? (
                       <FiMusic className="mx-auto text-emerald-400" />
@@ -309,9 +297,8 @@ export default function AlbumDetail() {
                     )}
                   </div>
 
-                  {/* SONG */}
                   <div className="flex min-w-0 items-center gap-3">
-                     <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/30 sm:h-12 sm:w-12">
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/30 sm:h-12 sm:w-12">
                       <OptimizedImage
                         src={resolveAssetUrl(song.cover_url)}
                         alt={song.title}
@@ -335,28 +322,28 @@ export default function AlbumDetail() {
 
                     <div className="min-w-0">
                       <div
-                         className={`truncate text-sm font-semibold sm:text-base ${
+                        className={`truncate text-sm font-semibold sm:text-base ${
                           isActive ? "text-emerald-300" : "text-white"
                         }`}
                       >
                         {song.title}
                       </div>
-                        <div className="hidden truncate text-xs text-white/60 xl:block">
-                          <ArtistNames
-                            item={song}
-                            stopPropagation
-                            fallback={artistDisplayName || "Nghá»‡ sÄ©"}
-                            linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-                          />
-                        </div>
+                      <div className="hidden truncate text-xs text-white/60 xl:block">
+                        <ArtistNames
+                          item={song}
+                          stopPropagation
+                          fallback={artistDisplayName || "Nghệ sĩ"}
+                          linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
+                        />
+                      </div>
                     </div>
                   </div>
-                  {/* ACTIONS */}
+
                   <div className="flex items-center justify-end gap-2 lg:justify-center">
                     <AddToPlaylistButton
                       song={song}
-                     disabled={isArtistRole}
-                     triggerClassName="h-8 w-8 !border-white/20 !bg-white/10 md:hover:!bg-white/20 sm:h-9 sm:w-9"
+                      disabled={isArtistRole}
+                      triggerClassName="h-8 w-8 !border-white/20 !bg-white/10 sm:h-9 sm:w-9 md:hover:!bg-white/20"
                     />
                     <button
                       onClick={(e) => {
@@ -365,18 +352,17 @@ export default function AlbumDetail() {
                       }}
                       disabled={isArtistRole}
                       className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm transition sm:h-9 sm:w-9 ${
-                        isLiked
+                        isSongLiked
                           ? "border-rose-400/40 text-rose-300"
                           : "border-white/10 text-white/70 md:hover:bg-white/15"
                       } ${isArtistRole ? "cursor-not-allowed opacity-60" : ""}`}
-                      aria-label={isLiked ? "Bá» thÃ­ch bÃ i hÃ¡t" : "ThÃ­ch bÃ i hÃ¡t"}
+                      aria-label={isSongLiked ? "Bỏ thích bài hát" : "Thích bài hát"}
                     >
                       <FiHeart />
                     </button>
                   </div>
 
-                  {/* DURATION */}
-                 <div className="hidden text-right text-sm text-white/60 xl:block">
+                  <div className="hidden text-right text-sm text-white/60 xl:block">
                     {formatTime(song.duration)}
                   </div>
                 </div>

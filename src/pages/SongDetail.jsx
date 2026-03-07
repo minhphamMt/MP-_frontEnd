@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { FiClock, FiDisc, FiHeart, FiMusic, FiPlus, FiUser } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
+import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
+import ArtistNames from "../components/artist/ArtistNames";
+import OptimizedImage from "../components/common/OptimizedImage";
 import { getSongById } from "../api/song.api";
 import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
+import { resolveAssetUrl } from "../utils/asset";
 import {
   fetchPlayableSong,
   formatDuration,
   toPlayableSong,
 } from "../utils/song";
-import { resolveAssetUrl } from "../utils/asset";
-import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
-import OptimizedImage from "../components/common/OptimizedImage";
-import ArtistNames from "../components/artist/ArtistNames";
 
 export default function SongDetail() {
   useEnsureLikedSongsLoaded();
@@ -56,10 +56,7 @@ export default function SongDetail() {
       return;
     }
 
-    const playable = song.audio_url
-      ? song
-      : await fetchPlayableSong(song, getSongById);
-
+    const playable = song.audio_url ? song : await fetchPlayableSong(song, getSongById);
     if (playable?.audio_url) {
       setSong(playable);
       playSong(playable, [playable]);
@@ -68,10 +65,8 @@ export default function SongDetail() {
 
   if (loading) {
     return (
-       <div className="user-page-shell min-h-screen p-6 text-white/70">
-        <div className="user-surface p-6">
-          Äang táº£i thÃ´ng tin bÃ i hÃ¡t...
-        </div>
+      <div className="user-page-shell min-h-screen p-6 text-white/70">
+        <div className="user-surface p-6">Đang tải thông tin bài hát...</div>
       </div>
     );
   }
@@ -79,9 +74,7 @@ export default function SongDetail() {
   if (!song) {
     return (
       <div className="user-page-shell min-h-screen p-6 text-white/70">
-        <div className="user-surface p-6">
-          KhÃ´ng tÃ¬m tháº¥y bÃ i hÃ¡t.
-        </div>
+        <div className="user-surface p-6">Không tìm thấy bài hát.</div>
       </div>
     );
   }
@@ -97,13 +90,10 @@ export default function SongDetail() {
 
   return (
     <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
-      {/* HERO */}
       <div className="user-surface relative overflow-hidden p-6 shadow-[0_30px_90px_rgba(0,0,0,0.6)]">
-        {/* GLOW */}
         <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-emerald-400/20 blur-3xl" />
 
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center">
-          {/* COVER */}
           <div className="w-full max-w-[260px]">
             <div className="relative overflow-hidden rounded-2xl shadow-xl shadow-black/40">
               {song.cover_url ? (
@@ -121,13 +111,12 @@ export default function SongDetail() {
             </div>
           </div>
 
-          {/* INFO */}
           <div className="flex-1 space-y-5">
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-[0.35em] text-white/50">
-                BÃ i hÃ¡t
+                Bài hát
               </p>
-               <h1 className="text-2xl font-extrabold leading-tight text-white sm:text-3xl">
+              <h1 className="text-2xl font-extrabold leading-tight text-white sm:text-3xl">
                 {song.title}
               </h1>
 
@@ -142,7 +131,6 @@ export default function SongDetail() {
               </div>
             </div>
 
-            {/* META */}
             <div className="flex flex-wrap gap-3 text-sm text-white/70">
               {song.album_title && (
                 <button
@@ -162,15 +150,12 @@ export default function SongDetail() {
               </span>
             </div>
 
-            {/* ACTIONS */}
             <div className="flex flex-wrap gap-3 pt-2">
               <button
                 onClick={handlePlay}
-                className="rounded-full border border-emerald-300/50 bg-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900
-                           shadow-lg shadow-emerald-500/30 transition
-                           md:hover:brightness-110 md:hover:scale-[1.05] active:scale-[0.97]"
+                className="rounded-full border border-emerald-300/50 bg-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-emerald-500/30 transition md:hover:scale-[1.05] md:hover:brightness-110 active:scale-[0.97]"
               >
-                {isActive && isPlaying ? "â¸ Táº¡m dá»«ng" : "â–¶ PhÃ¡t ngay"}
+                {isActive && isPlaying ? "⏸ Tạm dừng" : "▶ Phát ngay"}
               </button>
 
               <AddToPlaylistButton
@@ -179,11 +164,12 @@ export default function SongDetail() {
                 triggerLabel={
                   <span className="flex items-center gap-2 font-semibold">
                     <FiPlus />
-                    <span>ThÃªm vÃ o thÆ° viá»‡n</span>
+                    <span>Thêm vào thư viện</span>
                   </span>
                 }
                 triggerClassName="rounded-full border border-white/15 bg-white/5 px-6 py-2 text-sm text-white/80 transition md:hover:bg-white/10"
               />
+
               <button
                 type="button"
                 onClick={() => {
@@ -196,33 +182,32 @@ export default function SongDetail() {
                 }`}
               >
                 <FiHeart className={isLiked ? "text-rose-300" : ""} />
-                {isLiked ? "ÄÃ£ thÃ­ch" : "YÃªu thÃ­ch"}
+                {isLiked ? "Đã thích" : "Yêu thích"}
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* DETAILS */}
       <div className="user-surface p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-        <h2 className="text-lg font-semibold text-white">ThÃ´ng tin phÃ¡t</h2>
+        <h2 className="text-lg font-semibold text-white">Thông tin phát</h2>
 
         <div className="mt-4 grid grid-cols-1 gap-4 text-sm text-white/70 md:grid-cols-2">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="text-xs uppercase tracking-[0.25em] text-white/50">
-              TiÃªu Ä‘á»
+              Tiêu đề
             </div>
             <div className="mt-1 text-white">{song.title}</div>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="text-xs uppercase tracking-[0.25em] text-white/50">
-              Nghá»‡ sÄ©
+              Nghệ sĩ
             </div>
             <div className="mt-1 text-white">
               <ArtistNames
                 item={song}
-                fallback="KhÃ´ng rÃµ"
+                fallback="Không rõ"
                 stopPropagation
                 linkClassName="transition md:hover:text-emerald-300 md:hover:underline"
               />
@@ -244,18 +229,16 @@ export default function SongDetail() {
                   {song.album_title}
                 </button>
               ) : (
-                "Äang cáº­p nháº­t"
+                "Đang cập nhật"
               )}
             </div>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="text-xs uppercase tracking-[0.25em] text-white/50">
-              Thá»i lÆ°á»£ng
+              Thời lượng
             </div>
-            <div className="mt-1 text-white">
-              {formatDuration(song.duration)}
-            </div>
+            <div className="mt-1 text-white">{formatDuration(song.duration)}</div>
           </div>
         </div>
       </div>

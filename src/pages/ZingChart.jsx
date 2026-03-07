@@ -828,7 +828,7 @@ export default function ZingChart() {
           </h2>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 2xl:grid-cols-3">
           {REGION_META.map((region) => {
             const songs = regionCharts[region.key] || [];
             const topRegionMetric = Math.max(

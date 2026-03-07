@@ -10,22 +10,21 @@ import {
 } from "../api/playlist.api";
 import { getRecommendations } from "../api/recommendation.api";
 import { getSongById } from "../api/song.api";
+import Toast from "../components/common/Toast";
+import PlaylistDetailHeader from "../components/playlists/PlaylistDetailHeader";
+import PlaylistSongsTable from "../components/playlists/PlaylistSongsTable";
+import PlaylistSuggestions from "../components/playlists/PlaylistSuggestions";
+import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import {
   fetchPlayableSong,
   filterPlayableSongs,
   toPlayableSong,
 } from "../utils/song";
-import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
-
-import PlaylistDetailHeader from "../components/playlists/PlaylistDetailHeader";
-import PlaylistSongsTable from "../components/playlists/PlaylistSongsTable";
-import PlaylistSuggestions from "../components/playlists/PlaylistSuggestions";
-import Toast from "../components/common/Toast";
 
 const getData = (payload) => payload?.data?.data ?? payload?.data ?? payload;
 
-// Chuáº©n hoÃ¡ key id Ä‘á»ƒ so sÃ¡nh / filter (trÃ¡nh khÃ¡c shape: id, song_id, _id, ...)
+// Chuẩn hóa key id để so sánh / filter (tránh khác shape: id, song_id, _id, ...)
 const getSongKey = (song) => {
   const id = normalizeSongId(song) ?? song?.id ?? song?.song_id ?? song?._id;
   return id === undefined || id === null ? "" : String(id);
@@ -55,14 +54,12 @@ export default function PlaylistDetail() {
   } = usePlayerStore();
   const playlistSongs = useMemo(() => playlist?.songs || [], [playlist?.songs]);
 
-  // Set ids á»•n Ä‘á»‹nh Ä‘á»ƒ loáº¡i trÃ¹ng recommendations
+  // Set ids ổn định để loại trùng recommendations
   const playlistSongIds = useMemo(() => {
-    return (playlist?.songs || [])
-      .map((s) => getSongKey(s))
-      .filter(Boolean);
+    return (playlist?.songs || []).map((s) => getSongKey(s)).filter(Boolean);
   }, [playlist?.songs?.length]);
 
-  // ========== Load playlist detail (return normalized Ä‘á»ƒ dÃ¹ng ngay) ==========
+  // ========== Load playlist detail (return normalized để dùng ngay) ==========
   const hydratePlaylist = useCallback(async () => {
     if (!id) return null;
 
@@ -85,7 +82,8 @@ export default function PlaylistDetail() {
       setLoading(false);
     }
   }, [id]);
-  // ========== Load recommendations (nháº­n excludeIds Ä‘á»ƒ luÃ´n lá»c Ä‘Ãºng) ==========
+
+  // ========== Load recommendations (nhận excludeIds để luôn lọc đúng) ==========
   const loadRecommendations = useCallback(
     async (seedSongId, excludeSongIds = []) => {
       try {
@@ -94,6 +92,7 @@ export default function PlaylistDetail() {
           setRecommendedSongs([]);
           return;
         }
+
         const res = await getRecommendations(seedSongId);
         const items = res?.data?.data || res?.data || [];
         const ids = items
@@ -115,20 +114,19 @@ export default function PlaylistDetail() {
             }
           })
         );
-        // Loáº¡i null + loáº¡i trÃ¹ng playlist + unique
+
+        // Loại null + loại trùng playlist + unique
         const unique = [];
         const seen = new Set();
         for (const song of songs) {
           if (!song) continue;
           const key = getSongKey(song);
-          if (!key) continue;
-          if (excludeSet.has(key)) continue;
-          if (seen.has(key)) continue;
+          if (!key || excludeSet.has(key) || seen.has(key)) continue;
           seen.add(key);
           unique.push(song);
-
           if (unique.length >= desiredCount) break;
         }
+
         setRecommendedSongs(unique);
       } catch (err) {
         console.error("Load recommendations failed", err);
@@ -137,43 +135,46 @@ export default function PlaylistDetail() {
         setRecommendationLoading(false);
       }
     },
-    [getRecommendations, getSongById]
+    []
   );
-  // ========== Effect load tuáº§n tá»±: playlist xong -> recommendations ==========
+
+  // ========== Effect load tuần tự: playlist xong -> recommendations ==========
   useEffect(() => {
     if (!id) return;
     let mounted = true;
+
     (async () => {
       setLoading(true);
-      const pl = await hydratePlaylist(); // âœ… chá» playlist vá»
+      const pl = await hydratePlaylist(); // chờ playlist về
       if (!mounted) return;
-      const excludeIds = (pl?.songs || [])
-        .map((s) => getSongKey(s))
-        .filter(Boolean);
-      const seedId =
-        normalizeSongId(currentSong) || getSongKey(pl?.songs?.[0]);
+
+      const excludeIds = (pl?.songs || []).map((s) => getSongKey(s)).filter(Boolean);
+      const seedId = normalizeSongId(currentSong) || getSongKey(pl?.songs?.[0]);
       await loadRecommendations(seedId, excludeIds);
     })();
+
     return () => {
       mounted = false;
     };
   }, [id, hydratePlaylist, loadRecommendations, currentSong]);
-  // ========== Play song ==========
+
   const handlePlaySong = async (song, queue = playlistSongs) => {
     const playable = (await fetchPlayableSong(song, getSongById)) || song;
     if (!playable?.audio_url) return;
+
     const normalizedId = getSongKey(playable);
     const updatedQueue = (queue || []).map((item) => {
       const itemId = getSongKey(item);
       return itemId && itemId === normalizedId ? { ...item, ...playable } : item;
     });
+
     if (getSongKey(currentSong) === normalizedId) {
       isPlaying ? pause() : resume();
     } else {
       playSong(playable, updatedQueue);
     }
   };
-  // ========== Update playlist after add/remove ==========
+
   const updatePlaylistAfterChange = async (res) => {
     const updated = getData(res);
     const normalized = {
@@ -184,7 +185,6 @@ export default function PlaylistDetail() {
     setPlaylist(normalized);
   };
 
-  // ========== Rename ==========
   const handleRename = async (newName) => {
     const targetName = newName ?? rename;
     if (!playlist?.id || !targetName?.trim()) return;
@@ -201,38 +201,36 @@ export default function PlaylistDetail() {
     }
   };
 
-  // ========== Delete ==========
   const handleDelete = async () => {
     if (!playlist?.id) return;
 
     try {
       await deletePlaylist(playlist.id);
-
-      setToastTitle("ThÃ nh cÃ´ng");
+      setToastTitle("Thành công");
       setToastMessage(
-        `ÄÃ£ xÃ³a playlist "${playlist?.title || playlist?.name || "Playlist"}"`
+        `Đã xóa playlist "${playlist?.title || playlist?.name || "Playlist"}"`
       );
-
       setTimeout(() => navigate("/playlists"), 800);
     } catch (err) {
       console.error("Delete playlist failed", err);
     }
   };
 
-  // ========== Add suggested song ==========
   const handleAddSuggestedSong = async (song) => {
     if (!playlist?.id || !song) return;
+
     try {
       setSaving(true);
       const songId = getSongKey(song);
       if (!songId) return;
+
       const res = await addSongToPlaylist(playlist.id, { songId });
       await updatePlaylistAfterChange(res);
       setRecommendedSongs((prev) =>
         (prev || []).filter((item) => getSongKey(item) !== songId)
       );
-      setToastTitle("ThÃ nh cÃ´ng");
-      setToastMessage(`ÄÃ£ thÃªm "${song?.title || "bÃ i hÃ¡t"}" vÃ o playlist.`);
+      setToastTitle("Thành công");
+      setToastMessage(`Đã thêm "${song?.title || "bài hát"}" vào playlist.`);
     } catch (err) {
       console.error("Add suggested song failed", err);
     } finally {
@@ -240,7 +238,6 @@ export default function PlaylistDetail() {
     }
   };
 
-  // ========== Remove song from playlist ==========
   const handleRemoveSong = async (song) => {
     if (!playlist?.id) return;
 
@@ -260,10 +257,8 @@ export default function PlaylistDetail() {
 
   if (loading) {
     return (
-       <div className="user-page-shell min-h-screen p-6 text-white/70">
-        <div className="user-surface p-6">
-          Äang táº£i playlist...
-        </div>
+      <div className="user-page-shell min-h-screen p-6 text-white/70">
+        <div className="user-surface p-6">Đang tải playlist...</div>
       </div>
     );
   }
@@ -272,13 +267,12 @@ export default function PlaylistDetail() {
     return (
       <div className="user-page-shell min-h-screen p-6 text-white/70">
         <div className="user-surface p-6">
-          KhÃ´ng tÃ¬m tháº¥y playlist. Vui lÃ²ng thá»­ láº¡i.
+          Không tìm thấy playlist. Vui lòng thử lại.
         </div>
       </div>
     );
   }
 
-  // ========== MAIN ==========
   return (
     <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
       <Toast
@@ -298,7 +292,7 @@ export default function PlaylistDetail() {
           if (shuffled.length) handlePlaySong(shuffled[0], shuffled);
         }}
         onRename={() => {
-          const newName = prompt("Äá»•i tÃªn playlist", rename || playlist.title);
+          const newName = prompt("Đổi tên playlist", rename || playlist.title);
           if (newName?.trim()) {
             handleRename(newName.trim());
           }
@@ -326,7 +320,7 @@ export default function PlaylistDetail() {
             normalizeSongId(currentSong) || getSongKey(playlistSongs?.[0]),
             playlistSongIds
           )
-        } // âœ… refresh váº«n lá»c Ä‘Ãºng
+        } // refresh vẫn lọc đúng
         onPlay={(song) => handlePlaySong(song, recommendedSongs)}
         onAdd={handleAddSuggestedSong}
       />
