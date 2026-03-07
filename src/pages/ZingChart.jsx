@@ -29,6 +29,8 @@ const REGION_META = [
   { key: "kpop", title: "K-Pop", link: "/zing-chart/region/kpop" },
 ];
 
+const REGION_GRID_THREE_COL_MIN = 1320;
+
 const toArray = (payload) => {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.items)) return payload.items;
@@ -126,6 +128,7 @@ export default function ZingChart() {
   const [viewportWidth, setViewportWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1280
   );
+  const [regionGridWidth, setRegionGridWidth] = useState(0);
   const [chartBoxSize, setChartBoxSize] = useState({ width: 0, height: 0 });
   const [syncedRowsHeight, setSyncedRowsHeight] = useState(null);
   const [regionCharts, setRegionCharts] = useState({
@@ -136,6 +139,7 @@ export default function ZingChart() {
   const weeklyListCardRef = useRef(null);
   const weeklyRowsRef = useRef(null);
   const chartContainerRef = useRef(null);
+  const regionGridRef = useRef(null);
   const chartRef = useRef(null);
   const autoHoverTimerRef = useRef(null);
   const { playSong } = usePlayerStore();
@@ -222,6 +226,28 @@ export default function ZingChart() {
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof ResizeObserver === "undefined") {
+      return undefined;
+    }
+
+    const gridNode = regionGridRef.current;
+    if (!gridNode) return undefined;
+
+    const updateRegionGridWidth = () => {
+      setRegionGridWidth(gridNode.getBoundingClientRect().width || 0);
+    };
+
+    updateRegionGridWidth();
+
+    const observer = new ResizeObserver(() => {
+      updateRegionGridWidth();
+    });
+
+    observer.observe(gridNode);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -354,6 +380,7 @@ export default function ZingChart() {
   const isVerySmall = viewportWidth < 460;
   const isDesktopTwoColumn = viewportWidth >= 1280;
   const showChartLegend = viewportWidth >= 1280;
+  const showRegionChartsInRow = regionGridWidth >= REGION_GRID_THREE_COL_MIN;
   const mobileLabelInterval = isMobile
     ? Math.max(0, Math.ceil(weeklyLineData.categories.length / 4) - 1)
     : 0;
@@ -828,7 +855,12 @@ export default function ZingChart() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 2xl:grid-cols-3">
+        <div
+          ref={regionGridRef}
+          className={`grid grid-cols-1 gap-4 ${
+            showRegionChartsInRow ? "grid-cols-3" : ""
+          }`}
+        >
           {REGION_META.map((region) => {
             const songs = regionCharts[region.key] || [];
             const topRegionMetric = Math.max(
