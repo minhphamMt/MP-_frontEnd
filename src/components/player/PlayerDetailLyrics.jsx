@@ -101,6 +101,7 @@ export default function PlayerDetailLyrics({
       lyricsState.items.length > 0 ? (
         <div
           ref={lyricsContainerRef}
+          data-mobile-sheet-scroll="true"
           className="mt-1 flex-1 space-y-2 overflow-y-auto pr-1 scrollbar-hidden"
         >
           {lyricsState.items.map((item, index) => {

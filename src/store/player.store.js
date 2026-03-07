@@ -75,11 +75,28 @@ const setupMediaSession = () => {
   const pause = () => usePlayerStore.getState().pause();
   const playNext = () => usePlayerStore.getState().playNext();
   const playPrev = () => usePlayerStore.getState().playPrev();
+  const seekTo = (details) => {
+    const rawTime = Number(details?.seekTime);
+    if (!Number.isFinite(rawTime)) return;
+
+    const boundedTime = Number.isFinite(audio.duration) && audio.duration > 0
+      ? Math.min(Math.max(rawTime, 0), audio.duration)
+      : Math.max(rawTime, 0);
+
+    if (details?.fastSeek && typeof audio.fastSeek === "function") {
+      audio.fastSeek(boundedTime);
+    } else {
+      audio.currentTime = boundedTime;
+    }
+
+    usePlayerStore.setState({ currentTime: boundedTime });
+  };
 
   safeSetActionHandler("play", play);
   safeSetActionHandler("pause", pause);
   safeSetActionHandler("nexttrack", playNext);
   safeSetActionHandler("previoustrack", playPrev);
+  safeSetActionHandler("seekto", seekTo);
   // Clear seek handlers so iOS lock screen/external controls keep skip-track icons.
   safeSetActionHandler("seekbackward", null);
   safeSetActionHandler("seekforward", null);

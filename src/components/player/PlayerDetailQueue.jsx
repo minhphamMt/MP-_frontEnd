@@ -111,7 +111,10 @@ function PlayerDetailQueue({ queue = [], currentIndex = 0, playAt }) {
         </div>
       ) : null}
 
-      <div className="mt-5 min-h-0 flex-1 space-y-6 overflow-y-auto pr-1 scrollbar-hidden">
+      <div
+        data-mobile-sheet-scroll="true"
+        className="mt-5 min-h-0 flex-1 space-y-6 overflow-y-auto pr-1 scrollbar-hidden"
+      >
         {played.length ? (
           <div className="space-y-2.5">
             <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-white/34">
