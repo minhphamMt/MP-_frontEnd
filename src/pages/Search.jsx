@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { searchEntities } from "../api/search.api";
+import { extractSearchCollections, searchEntities } from "../api/search.api";
 import AlbumCard from "../components/album/AlbumCard";
 import ArtistAlbumCard from "../components/album/ArtistAlbumCard";
 import SongRow from "../components/song/SongRow";
@@ -35,6 +35,7 @@ const normalizeAlbum = (album) => {
   if (!album || typeof album !== "object") return null;
   return {
     ...album,
+    id: album.id ?? album.album_id ?? album.albumId,
     title: album.title ?? album.name,
     artist_name: getArtistLabel(
       album,
@@ -124,12 +125,11 @@ export default function Search() {
       setLoading(true);
       try {
         const res = await searchEntities({ q: keyword, limit: 30, page: 1 });
-        const payload = res?.data?.data ?? res?.data ?? {};
-        const items = payload?.items ?? payload;
-
-        const rawSongs = Array.isArray(items?.songs) ? items.songs : [];
-        const rawArtists = Array.isArray(items?.artists) ? items.artists : [];
-        const rawAlbums = Array.isArray(items?.albums) ? items.albums : [];
+        const {
+          songs: rawSongs,
+          artists: rawArtists,
+          albums: rawAlbums,
+        } = extractSearchCollections(res?.data);
 
         setSongs(filterPlayableSongs(rawSongs));
         setArtists(rawArtists.map(normalizeArtist).filter(Boolean));

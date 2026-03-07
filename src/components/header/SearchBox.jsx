@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiClock, FiDisc, FiHeadphones, FiMusic, FiSearch, FiUser } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getSearchHistory, searchEntities } from "../../api/search.api";
+import {
+  extractSearchCollections,
+  getSearchHistory,
+  searchEntities,
+} from "../../api/search.api";
 import { searchAdmin } from "../../api/admin.api";
 import { getSongById } from "../../api/song.api";
 import { fetchPlayableSong, toPlayableSong } from "../../utils/song";
@@ -12,6 +16,17 @@ import useAuthStore from "../../store/auth.store";
 import { createPortal } from "react-dom";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
+
+const getSearchItemId = (item) =>
+  item?.id ??
+  item?._id ??
+  item?.song_id ??
+  item?.songId ??
+  item?.album_id ??
+  item?.albumId ??
+  item?.artist_id ??
+  item?.artistId ??
+  "";
 
 export default function SearchBox() {
   const location = useLocation();
@@ -231,11 +246,7 @@ export default function SearchBox() {
         setResults(normalized);
       } else {
         const res = await searchEntities({ q: trimmed, limit: 8, page: 1 });
-        const payload = res?.data?.data ?? res?.data ?? {};
-        const items = payload?.items ?? payload;
-        const songs = Array.isArray(items?.songs) ? items.songs : [];
-        const artists = Array.isArray(items?.artists) ? items.artists : [];
-        const albums = Array.isArray(items?.albums) ? items.albums : [];
+        const { songs, artists, albums } = extractSearchCollections(res?.data);
 
         const merged = [
           ...songs.map((item) => ({ ...item, type: "song" })),
@@ -423,11 +434,17 @@ const handleResultNavigate = async (item) => {
   }
 
   if (item.type === "artist") {
-    navigate(`/artist/${item.id}`);
+    const targetId = getSearchItemId(item);
+    if (!targetId) return;
+    navigate(`/artist/${targetId}`);
   } else if (item.type === "album") {
-    navigate(`/album/${item.id}`);
+    const targetId = getSearchItemId(item);
+    if (!targetId) return;
+    navigate(`/album/${targetId}`);
   } else if (item.type === "song") {
-    navigate(`/song/${item.id}`);
+    const targetId = getSearchItemId(item);
+    if (!targetId) return;
+    navigate(`/song/${targetId}`);
   }
 
   setOpen(false);
@@ -544,7 +561,7 @@ const handleResultNavigate = async (item) => {
               <div className="max-h-80 space-y-1 overflow-y-auto pr-1">
                 {results.map((item) => (
                   <div
-                    key={`${item.type}-${item.id}`}
+                    key={`${item.type}-${getSearchItemId(item) || item.displayLabel}`}
                     className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-white transition md:hover:bg-white/[0.08] sm:gap-3 sm:px-3"
                   >
                     <button
