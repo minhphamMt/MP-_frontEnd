@@ -142,6 +142,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
   useEffect(() => {
     const seedId = normalizeSongId(currentSong);
     if (!seedId) return undefined;
+    if (repeatMode !== "off") return undefined;
     if (recommendationLoading) return undefined;
     if (queue.length > currentIndex + 1) return undefined;
     if (lastRecommendationSeedRef.current === seedId) return undefined;
@@ -164,6 +165,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     currentSong,
     queue.length,
     recommendationLoading,
+    repeatMode,
   ]);
 
   const handleAnimEnd = () => {
@@ -326,6 +328,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
   const glassPanelClass = "player-detail-glass";
   const softButtonClass =
     "flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.07] text-white/82 transition active:scale-95 md:hover:bg-white/[0.12] md:hover:text-white";
+  const mobileUtilityButtonClass =
+    "flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.07] text-white/82 transition active:scale-95";
   const pillClass =
     "rounded-full bg-white/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/66 sm:text-[11px]";
   const isLiked = likedSongIds.includes(currentSongId);
@@ -393,9 +397,11 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
 
           <div className="min-w-0 text-center md:text-left">
-            <h2 className="overflow-hidden text-[clamp(2.1rem,8vw,5rem)] font-semibold leading-[0.94] tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
-              {currentSong.title}
-            </h2>
+            <div className="overflow-visible pb-2">
+              <h2 className="overflow-hidden pt-[0.04em] pb-[0.14em] text-[clamp(2.1rem,8vw,5rem)] font-semibold leading-[1.02] tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
+                {currentSong.title}
+              </h2>
+            </div>
             <div className="mt-3 overflow-hidden text-sm font-medium text-white/78 sm:text-base lg:text-xl [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
               <ArtistNames
                 item={currentSong}
@@ -664,6 +670,158 @@ export default function PlayerDetail({ isOpen, onClose }) {
     </div>
   );
 
+  const mobileNowPanel = (
+    <div
+      className={`${glassPanelClass} flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[26px] p-4`}
+    >
+      <div className="flex flex-1 flex-col items-center justify-center gap-5 pb-4 pt-2">
+        <div className="relative mx-auto w-full max-w-[min(58vw,248px)]">
+          <div
+            className="pointer-events-none absolute -inset-4 rounded-[34px] opacity-60 blur-3xl"
+            style={{
+              background:
+                "radial-gradient(circle at 40% 30%, rgba(255,255,255,0.14), transparent 34%), radial-gradient(circle at 65% 72%, rgba(242,178,90,0.16), transparent 42%)",
+            }}
+          />
+          <div className="relative aspect-square overflow-hidden rounded-[28px] bg-black/28 shadow-[0_26px_80px_rgba(0,0,0,0.42)]">
+            {cover ? (
+              <OptimizedImage
+                src={cover}
+                alt={currentSong.title}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,#2f2f2f,#111)] text-sm uppercase tracking-[0.32em] text-white/50">
+                No cover
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="w-full min-w-0 text-center">
+          <div className="overflow-visible pb-2">
+            <h2 className="overflow-hidden px-2 pt-[0.04em] pb-[0.14em] text-[clamp(1.8rem,8vw,3rem)] font-semibold leading-[1.03] tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+              {currentSong.title}
+            </h2>
+          </div>
+          <div className="mt-1 overflow-hidden px-3 text-sm font-medium text-white/72 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+            <ArtistNames
+              item={currentSong}
+              fallback="Unknown"
+              linkClassName="transition"
+            />
+          </div>
+          <p className="mt-3 text-[11px] uppercase tracking-[0.24em] text-white/42">
+            {isPlaying ? "Đang phát" : "Tạm dừng"} · {modeLabel}
+          </p>
+        </div>
+      </div>
+
+      <div className={`rounded-[24px] bg-black/18 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)] backdrop-blur-2xl ${songSlideClass}`}>
+        <div className="space-y-2">
+          <div className="-my-1 px-1 py-1">
+            <input
+              type="range"
+              min={0}
+              max={total || 0}
+              step={0.1}
+              value={Math.min(displayedTime, total || 0)}
+              onPointerDownCapture={handleSliderInteractionStart}
+              onPointerMoveCapture={handleSliderInteractionMove}
+              onPointerUpCapture={handleSliderInteractionEnd}
+              onPointerCancelCapture={handleSliderInteractionEnd}
+              onTouchStartCapture={handleSliderInteractionStart}
+              onTouchMoveCapture={handleSliderInteractionMove}
+              onTouchEndCapture={handleSliderInteractionEnd}
+              onTouchCancelCapture={handleSliderInteractionEnd}
+              onMouseDownCapture={handleSliderInteractionStart}
+              onMouseUpCapture={handleSliderInteractionEnd}
+              onPointerDown={onSeekStart}
+              onPointerUp={onSeekCommit}
+              onPointerCancel={onSeekCommit}
+              onMouseDown={onSeekStart}
+              onTouchStart={onSeekStart}
+              onChange={onSeekChange}
+              onMouseUp={onSeekCommit}
+              onTouchEnd={onSeekCommit}
+              className="player-detail-range h-2.5 w-full cursor-pointer"
+              style={{
+                "--range-progress": `${
+                  total > 0 ? (Math.min(displayedTime, total) / total) * 100 : 0
+                }%`,
+              }}
+            />
+          </div>
+          <div className="flex items-center justify-between px-1 text-[11px] text-white/64">
+            <span>{formatTime(displayedTime)}</span>
+            <span>{formatTime(total)}</span>
+          </div>
+        </div>
+
+        <div className="mt-5 flex items-center justify-center gap-3">
+          <button
+            onClick={toggleShuffle}
+            className={`${mobileUtilityButtonClass} ${
+              shuffle
+                ? "bg-emerald-400/18 text-emerald-100 shadow-[0_0_22px_rgba(29,185,84,0.18)]"
+                : ""
+            }`}
+            aria-label="Trộn"
+          >
+            <FaShuffle />
+          </button>
+          <button
+            onClick={playPrev}
+            className={mobileUtilityButtonClass}
+            aria-label="Bài trước"
+          >
+            <FaBackwardStep />
+          </button>
+          <button
+            onClick={togglePlay}
+            className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_28%,#9dfabd,#4ad67f_55%,#249956)] text-[1.65rem] text-[#062512] shadow-[0_0_42px_rgba(75,220,126,0.52)] transition active:scale-95"
+            aria-label="Phát hoặc tạm dừng"
+          >
+            {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
+          </button>
+          <button
+            onClick={playNext}
+            className={mobileUtilityButtonClass}
+            aria-label="Bài tiếp"
+          >
+            <FaForwardStep />
+          </button>
+          <button
+            onClick={toggleRepeatMode}
+            className={`${mobileUtilityButtonClass} ${
+              repeatMode !== "off"
+                ? "bg-emerald-400/18 text-emerald-100 shadow-[0_0_22px_rgba(29,185,84,0.18)]"
+                : ""
+            }`}
+            aria-label="Lặp lại"
+          >
+            <span className="relative inline-flex">
+              <FaRepeat />
+              {repeatMode === "one" && (
+                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#1db954] text-[10px] font-semibold text-black">
+                  1
+                </span>
+              )}
+            </span>
+          </button>
+        </div>
+
+        <div className="mt-4 flex items-center justify-center gap-3">
+          {likeButton}
+          <AddToPlaylistButton
+            song={currentSong}
+            triggerClassName="h-11 w-11 bg-white/[0.07] text-white/82"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
   const mobileLyricsPanel = (
     <div
       className={`${glassPanelClass} flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[26px] p-4`}
@@ -728,34 +886,44 @@ export default function PlayerDetail({ isOpen, onClose }) {
       <div className="relative z-10 h-full w-full overflow-hidden">
         <button
           onClick={onClose}
-          className="absolute right-3 top-[calc(env(safe-area-inset-top)+10px)] z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/30 text-base text-white/86 shadow-[0_10px_22px_rgba(0,0,0,0.26)] transition md:hover:bg-black/44 md:hover:text-white sm:right-5 sm:top-5 sm:h-10 sm:w-10 sm:text-lg lg:right-7 lg:top-6"
+          className="absolute right-3 top-[calc(env(safe-area-inset-top)+10px)] z-20 hidden h-9 w-9 items-center justify-center rounded-full bg-black/30 text-base text-white/86 shadow-[0_10px_22px_rgba(0,0,0,0.26)] transition md:hover:bg-black/44 md:hover:text-white sm:right-5 sm:top-5 sm:h-10 sm:w-10 sm:text-lg lg:flex lg:right-7 lg:top-6"
           aria-label="Đóng"
         >
           <span className="-mt-[1px] leading-none">×</span>
         </button>
 
-        <div className="flex h-full min-h-0 flex-col px-3 pb-3 pt-[calc(env(safe-area-inset-top)+10px)] sm:px-5 sm:pb-5 sm:pt-5 lg:px-7 lg:pt-6">
+        <div className="flex h-full min-h-0 flex-col px-3 pb-3 pt-[calc(env(safe-area-inset-top)+8px)] sm:px-5 sm:pb-5 sm:pt-5 lg:px-7 lg:pt-6">
           <div className="hidden flex-1 lg:grid lg:min-h-0 lg:grid-cols-[minmax(0,1.18fr)_minmax(300px,380px)] lg:gap-5 xl:grid-cols-[minmax(0,1.24fr)_420px]">
             <div className="min-h-0">{detailPanel}</div>
             <div className="min-h-0">{sidePanel}</div>
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-12 sm:pt-14 lg:hidden">
-            <div className="mb-3 flex items-center gap-2 rounded-full bg-black/22 p-1">
-              {mobileTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => scrollToMobileTab(tab.id)}
-                  className={`flex-1 rounded-full px-3 py-2 text-[11px] font-semibold transition ${
-                    mobileTab === tab.id
-                      ? "bg-white/[0.1] text-white"
-                      : "text-white/58"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-3 sm:pt-4 lg:hidden">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex flex-1 items-center gap-2 rounded-full bg-black/22 p-1">
+                {mobileTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => scrollToMobileTab(tab.id)}
+                    className={`flex-1 rounded-full px-3 py-2 text-[11px] font-semibold transition ${
+                      mobileTab === tab.id
+                        ? "bg-white/[0.1] text-white"
+                        : "text-white/58"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/30 text-base text-white/82 shadow-[0_10px_20px_rgba(0,0,0,0.22)] transition active:scale-95"
+                aria-label="Đóng"
+              >
+                <span className="-mt-[1px] leading-none">×</span>
+              </button>
             </div>
 
             <div
@@ -783,7 +951,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 {mobileQueuePanel}
               </div>
               <div className="flex min-h-0 w-full min-w-full snap-center overflow-hidden">
-                {detailPanel}
+                {mobileNowPanel}
               </div>
               <div className="flex min-h-0 w-full min-w-full snap-center overflow-hidden">
                 {mobileLyricsPanel}

@@ -80,10 +80,9 @@ const setupMediaSession = () => {
   safeSetActionHandler("pause", pause);
   safeSetActionHandler("nexttrack", playNext);
   safeSetActionHandler("previoustrack", playPrev);
-
-  // Some browsers still show 10s seek icons; map them to track skip.
-  safeSetActionHandler("seekbackward", playPrev);
-  safeSetActionHandler("seekforward", playNext);
+  // Clear seek handlers so iOS lock screen/external controls keep skip-track icons.
+  safeSetActionHandler("seekbackward", null);
+  safeSetActionHandler("seekforward", null);
 };
 
 const syncMediaSession = () => {
@@ -337,8 +336,9 @@ const usePlayerStore = create((set, get) => ({
     }),
 
     appendRecommendationsToQueue: async () => {
-    const { recommendationLoading, currentSong, queue } = get();
+    const { recommendationLoading, currentSong, queue, repeatMode } = get();
     if (recommendationLoading) return false;
+    if (repeatMode !== "off") return false;
 
     const seedSongId = normalizeSongId(currentSong);
     if (!seedSongId) return false;
