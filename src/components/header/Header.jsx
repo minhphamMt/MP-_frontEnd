@@ -38,7 +38,7 @@ export default function Header({ onMenuClick }) {
       </div>
 
       {showSearch && (
-        <div className="relative ml-2 max-w-full flex-1 sm:ml-4 sm:max-w-xl">
+        <div className="relative ml-2 min-w-0 flex-1 sm:ml-4 lg:max-w-[620px] xl:max-w-[720px]">
           <SearchBox />
         </div>
       )}

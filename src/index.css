@@ -381,6 +381,49 @@ body {
   padding: 0.62rem 0.95rem;
 }
 
+.ui-select,
+.artist-content .artist-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 3rem !important;
+  background-image:
+    linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.72) 50%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.72) 50%, transparent 50%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  background-position:
+    calc(100% - 20px) calc(50% - 3px),
+    calc(100% - 14px) calc(50% - 3px),
+    50% 50%;
+  background-size: 6px 6px, 6px 6px, 100% 100%;
+  background-repeat: no-repeat;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.ui-select:hover,
+.artist-content .artist-select:hover {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  background-color: #232323 !important;
+}
+
+.ui-select:focus,
+.artist-content .artist-select:focus {
+  border-color: rgba(29, 185, 84, 0.62) !important;
+  background-color: #222222 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 0 3px rgba(29, 185, 84, 0.14),
+    0 12px 28px rgba(0, 0, 0, 0.22) !important;
+}
+
+.ui-select option,
+.artist-content .artist-select option {
+  background: #141414;
+  color: rgba(255, 255, 255, 0.92);
+}
+
 .artist-content .artist-textarea {
   min-height: 120px;
   padding: 0.85rem 0.95rem;
@@ -553,6 +596,165 @@ body {
   border-color: rgba(29, 185, 84, 0.62);
   box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.14);
   background: #222222;
+}
+
+.ui-search-field {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    #171717;
+  color: rgba(255, 255, 255, 0.94);
+  outline: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 12px 26px rgba(0, 0, 0, 0.22);
+  transition:
+    border-color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
+}
+
+.ui-search-field::placeholder {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.ui-search-field:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03)),
+    #1b1b1b;
+}
+
+.ui-search-field:focus {
+  border-color: rgba(29, 185, 84, 0.58);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03)),
+    #1b1b1b;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 0 4px rgba(29, 185, 84, 0.14),
+    0 16px 34px rgba(0, 0, 0, 0.28);
+}
+
+.header-search-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 9999px;
+  min-height: 48px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(33, 33, 33, 0.98), rgba(24, 24, 24, 0.98)),
+    #1a1a1a;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 8px 18px rgba(0, 0, 0, 0.14);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.header-search-shell::after {
+  display: none;
+}
+
+.header-search-shell:hover,
+.header-search-shell:focus-within {
+  border-color: rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(36, 36, 36, 0.98), rgba(26, 26, 26, 0.98)),
+    #1d1d1d;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+.header-search-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.header-search-input {
+  min-height: 46px;
+  padding-left: 3rem;
+  padding-right: 4rem;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  font-weight: 500;
+}
+
+.header-search-input.ui-search-field,
+.header-search-input.ui-search-field:hover,
+.header-search-input.ui-search-field:focus {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.header-search-input:focus {
+  transform: none;
+  box-shadow: none;
+}
+
+.header-search-trailing {
+  position: absolute;
+  right: 0.7rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.header-search-divider {
+  height: 18px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.header-search-action {
+  display: inline-flex;
+  height: 28px;
+  width: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.62);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.header-search-action:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+@media (max-width: 640px) {
+  .header-search-input {
+    min-height: 44px;
+    padding-left: 2.85rem;
+    padding-right: 3.2rem;
+  }
+
+  .header-search-shell {
+    min-height: 46px;
+  }
+
+  .header-search-trailing {
+    right: 0.8rem;
+  }
+
+  .header-search-action {
+    height: 28px;
+    width: 28px;
+  }
 }
 
 .user-content [data-card] {

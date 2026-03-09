@@ -353,7 +353,7 @@ export default function AdminSongManagement() {
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white"
+            className="ui-select w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white"
           >
             {STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value} className="text-black">
@@ -509,7 +509,7 @@ export default function AdminSongManagement() {
                           status: event.target.value,
                         }))
                       }
-                      className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white sm:text-sm"
+                      className="ui-select mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white sm:text-sm"
                     >
                       <option value="" className="text-black">
                         Không đổi

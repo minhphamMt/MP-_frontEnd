@@ -149,12 +149,12 @@ export default function AdminSongs() {
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
             placeholder="Tìm theo bài hát, nghệ sĩ, album..."
-            className="w-full rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition placeholder:text-white/40 focus:border-white/30 focus:outline-none sm:w-64"
+            className="ui-search-field w-full rounded-full px-4 py-2 text-xs font-semibold text-white/80 focus:border-white/30 focus:outline-none sm:w-72"
           />
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white"
+            className="ui-select rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white"
           >
             {STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value} className="text-black">

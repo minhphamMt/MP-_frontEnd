@@ -308,7 +308,7 @@ export default function AdminSearch() {
 
     if (item.type === "user") {
       if (targetId) {
-        navigate(`/admin/users/${targetId}/edit`);
+        navigate(`/admin/users/${targetId}`);
         return;
       }
       navigate(`/admin/users?keyword=${encodedLabel}`);

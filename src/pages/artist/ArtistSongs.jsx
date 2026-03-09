@@ -177,14 +177,14 @@ export default function ArtistSongs() {
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
               placeholder="Tìm theo tên bài hát..."
-              className="artist-input rounded-full pl-11 pr-4"
+              className="artist-input ui-search-field rounded-full pl-11 pr-4"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="artist-select rounded-full"
+            className="artist-select ui-select rounded-full"
           >
             <option value="all">Tất cả trạng thái</option>
             <option value="approved">Công khai</option>

@@ -4,12 +4,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   createUser,
   getUserById,
+  normalizeUserDetailPayload,
   updateUser,
   uploadUserAvatarByAdmin,
 } from "../../api/admin.api";
 import Toast from "../../components/common/Toast";
-import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import { resolveAssetUrl } from "../../utils/asset";
 
 const ROLE_OPTIONS = ["USER", "ARTIST", "ADMIN"];
 const emptyUserPayload = {
@@ -43,23 +44,28 @@ export default function AdminUserForm() {
 
   useEffect(() => {
     if (!isEdit) return;
+
     const loadUser = async () => {
       try {
         setLoading(true);
         const res = await getUserById(id);
         const payload = res?.data?.data ?? res?.data ?? null;
-        if (!payload) {
+        const detail = normalizeUserDetailPayload(payload);
+        const profile = detail.profile;
+
+        if (!profile) {
           setErrorMessage("Không tìm thấy người dùng.");
           return;
         }
-        setUser(payload);
+
+        setUser(profile);
         setFormValues({
-          display_name: payload.display_name || payload.name || "",
-          email: payload.email || "",
+          display_name: profile.display_name || profile.name || "",
+          email: profile.email || "",
           password: "",
-          role: payload.role || "USER",
-          is_active: Boolean(payload.is_active),
-          avatar_url: payload.avatar_url || payload.avatar || "",
+          role: profile.role || "USER",
+          is_active: Boolean(profile.is_active),
+          avatar_url: profile.avatar_url || profile.avatar || "",
         });
         setErrorMessage("");
       } catch (error) {
@@ -69,6 +75,7 @@ export default function AdminUserForm() {
         setLoading(false);
       }
     };
+
     loadUser();
   }, [id, isEdit]);
 
@@ -115,6 +122,7 @@ export default function AdminUserForm() {
     try {
       setSaving(true);
       setErrorMessage("");
+
       const payload = normalizePayload({
         display_name: formValues.display_name,
         email: formValues.email,
@@ -148,7 +156,9 @@ export default function AdminUserForm() {
     } catch (error) {
       console.error("Save user failed", error);
       setErrorMessage(
-        isEdit ? "Không thể cập nhật người dùng." : "Không thể tạo người dùng."
+        isEdit
+          ? "Không thể cập nhật người dùng."
+          : "Không thể tạo người dùng."
       );
     } finally {
       setSaving(false);
@@ -164,7 +174,7 @@ export default function AdminUserForm() {
         <FiChevronLeft /> Quay lại danh sách
       </button>
 
-      <div className="flex min-h-0 flex-1 flex-col admin-glass rounded-3xl border border-white/10 bg-[#181818] p-5 text-xs shadow-[0_25px_80px_rgba(0,0,0,0.45)] sm:p-6 sm:text-sm">
+      <div className="admin-glass flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-[#181818] p-5 text-xs shadow-[0_25px_80px_rgba(0,0,0,0.45)] sm:p-6 sm:text-sm">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
@@ -184,20 +194,22 @@ export default function AdminUserForm() {
         </div>
 
         {errorMessage && (
-          <div className="mt-4 admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-100 sm:text-sm">
+          <div className="admin-alert mt-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-100 sm:text-sm">
             {errorMessage}
           </div>
         )}
 
         <div className="mt-6 flex min-h-0 flex-1 flex-col">
           {loading ? (
-            <div className="text-xs text-white/60 sm:text-sm">Đang tải dữ liệu...</div>
+            <div className="text-xs text-white/60 sm:text-sm">
+              Đang tải dữ liệu...
+            </div>
           ) : (
             <div className="h-full overflow-y-auto pr-1">
               <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
                   <p className="text-xs font-semibold text-white sm:text-sm">
-                    {isEdit ? "Ảnh đại diện" : "Ảnh đại diện"}
+                    Ảnh đại diện
                   </p>
                   <div className="mt-4 flex flex-col gap-4">
                     {avatarPreview ? (
@@ -233,7 +245,7 @@ export default function AdminUserForm() {
                         }));
                       }}
                       placeholder="Avatar URL (nếu không upload)"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
                     {isEdit && user && (
                       <div className="space-y-2 text-xs text-white/70 sm:text-sm">
@@ -260,7 +272,7 @@ export default function AdminUserForm() {
                   <p className="text-xs font-semibold text-white sm:text-sm">
                     {isEdit ? "Cập nhật người dùng" : "Thông tin người dùng"}
                   </p>
-                  <div className="mt-4 grid gap-3 sm:gap-4 sm:grid-cols-2">
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4">
                     <input
                       value={formValues.display_name}
                       onChange={handleChange("display_name")}
@@ -285,7 +297,7 @@ export default function AdminUserForm() {
                     <select
                       value={formValues.role}
                       onChange={handleChange("role")}
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white focus:border-emerald-400/60 focus:outline-none sm:text-sm"
+                      className="ui-select rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     >
                       {ROLE_OPTIONS.map((role) => (
                         <option key={role} value={role} className="text-black">

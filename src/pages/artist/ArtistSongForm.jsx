@@ -255,7 +255,7 @@ export default function ArtistSongForm() {
                   name="album_id"
                   value={formValues.album_id}
                   onChange={handleChange}
-                  className="artist-select mt-2"
+                  className="artist-select ui-select mt-2"
                 >
                   <option value="">Chọn album (tùy chọn)</option>
                   {albums.map((album) => (

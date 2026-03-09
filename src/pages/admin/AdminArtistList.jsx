@@ -239,7 +239,7 @@ export default function AdminArtistList() {
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
           placeholder="Tìm kiếm nghệ sĩ theo tên, alias, mã..."
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+          className="ui-search-field w-full rounded-2xl px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
         />
       </div>
 

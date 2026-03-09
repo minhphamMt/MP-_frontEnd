@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FiClock, FiDisc, FiHeadphones, FiMusic, FiSearch, FiUser } from "react-icons/fi";
+import {
+  FiClock,
+  FiDisc,
+  FiHeadphones,
+  FiMusic,
+  FiSearch,
+  FiUser,
+} from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   extractSearchCollections,
@@ -421,7 +428,7 @@ const handleResultNavigate = async (item) => {
       }
     } else if (item.type === "user") {
       if (targetId) {
-        navigate(`/admin/users/${targetId}/edit`);
+        navigate(`/admin/users/${targetId}`);
       } else {
         navigate(`/admin/users?keyword=${encodeURIComponent(label)}`);
       }
@@ -491,10 +498,10 @@ const handleResultNavigate = async (item) => {
   };
 
   return (
-    <div className="relative z-500 w-full max-w-2xl" ref={containerRef}>
-      <form onSubmit={handleSubmit} className="relative" key={defaultKeyword}>
+    <div className="relative z-500 w-full max-w-none" ref={containerRef}>
+      <form onSubmit={handleSubmit} className="header-search-shell" key={defaultKeyword}>
         <FiSearch
-          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/70"
+          className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-white/55"
           size={18}
         />
         <input
@@ -502,18 +509,28 @@ const handleResultNavigate = async (item) => {
           type="text"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-         onFocus={() => {
-          setHasFocus(true);
-  setOpen(true);
-}}
+          onFocus={() => {
+            setHasFocus(true);
+            setOpen(true);
+          }}
 
           placeholder={
             isAdmin
               ? "Tìm kiếm nghệ sĩ, bài hát, album..."
-              : "Tìm kiếm bài hát, nghệ sĩ, lời bài hát..."
+              : "Bạn muốn phát gì hôm nay?"
           }
-          className="user-input rounded-full border-white/10 bg-[#1f1f1f] py-2.5 pl-12 pr-4 text-base text-white shadow-[0_10px_22px_rgba(0,0,0,0.34)] sm:text-sm"
+          className="ui-search-field header-search-input text-sm text-white sm:text-base"
         />
+        <div className="header-search-trailing">
+          <span className="header-search-divider" />
+          <button
+            type="submit"
+            className="header-search-action"
+            aria-label="Tìm kiếm"
+          >
+            <FiSearch className="text-[15px]" />
+          </button>
+        </div>
       </form>
 
 {open &&
