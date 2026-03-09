@@ -500,10 +500,9 @@ const handleResultNavigate = async (item) => {
   return (
     <div className="relative z-500 w-full max-w-none" ref={containerRef}>
       <form onSubmit={handleSubmit} className="header-search-shell" key={defaultKeyword}>
-        <FiSearch
-          className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-white/55"
-          size={18}
-        />
+        <div className="header-search-leading" aria-hidden="true">
+          <FiSearch size={16} />
+        </div>
         <input
           ref={inputRef}
           type="text"
@@ -528,7 +527,7 @@ const handleResultNavigate = async (item) => {
             className="header-search-action"
             aria-label="Tìm kiếm"
           >
-            <FiSearch className="text-[15px]" />
+            <FiSearch className="translate-y-[0.5px] text-[13px]" />
           </button>
         </div>
       </form>
