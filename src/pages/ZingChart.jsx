@@ -157,14 +157,11 @@ export default function ZingChart() {
   );
   const [regionGridWidth, setRegionGridWidth] = useState(0);
   const [chartBoxSize, setChartBoxSize] = useState({ width: 0, height: 0 });
-  const [syncedRowsHeight, setSyncedRowsHeight] = useState(null);
   const [regionCharts, setRegionCharts] = useState({
     vietnam: [],
     usuk: [],
     kpop: [],
   });
-  const weeklyListCardRef = useRef(null);
-  const weeklyRowsRef = useRef(null);
   const chartContainerRef = useRef(null);
   const regionGridRef = useRef(null);
   const chartRef = useRef(null);
@@ -364,37 +361,6 @@ export default function ZingChart() {
     loadRanking(chartPeriod);
   }, [chartPeriod, loadRanking]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-    if (viewportWidth < 1280) {
-      setSyncedRowsHeight(null);
-      return undefined;
-    }
-
-    const target = weeklyRowsRef.current;
-    if (!target) return undefined;
-
-    const syncHeight = () => {
-      const nextHeight = Math.round(target.getBoundingClientRect().height || 0);
-      if (!nextHeight) return;
-      setSyncedRowsHeight((prev) => (prev === nextHeight ? prev : nextHeight));
-    };
-
-    syncHeight();
-
-    if (typeof ResizeObserver === "undefined") {
-      window.addEventListener("resize", syncHeight);
-      return () => window.removeEventListener("resize", syncHeight);
-    }
-
-    const observer = new ResizeObserver(() => {
-      syncHeight();
-    });
-    observer.observe(target);
-
-    return () => observer.disconnect();
-  }, [viewportWidth, rankingLoading, weeklySongs, regionCharts]);
-
   const weeklyLineData = useMemo(() => {
     const labels = Array.isArray(weeklySeries?.labels) ? weeklySeries.labels : [];
     const trendSongs = Array.isArray(weeklySeries?.songs) ? weeklySeries.songs : [];
@@ -454,8 +420,6 @@ export default function ZingChart() {
     : isTablet
       ? "h-[300px]"
       : "h-[420px]";
-  const chartContainerStyle =
-    isDesktopTwoColumn && syncedRowsHeight ? { height: `${syncedRowsHeight}px` } : undefined;
   const chartMountKey = `${chartBoxSize.width}x${chartBoxSize.height}-${weeklyLineData.categories.length}-${isMobile ? "m" : "d"}`;
 
   const weeklyLineOption = useMemo(() => {
@@ -780,9 +744,9 @@ export default function ZingChart() {
           </div>
         </div>
 
-        <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,1fr)]">
+        <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,1fr)] xl:items-stretch">
           <div
-            className="min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-[#121212] p-4 sm:p-5 xl:flex xl:flex-col"
+            className="min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-[#121212] p-4 sm:p-5 xl:flex xl:h-full xl:flex-col"
           >
             <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
               <div className="min-w-0">
@@ -805,8 +769,7 @@ export default function ZingChart() {
 
             <div
               ref={chartContainerRef}
-              className={`${chartHeightClass} min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#101010]`}
-              style={chartContainerStyle}
+              className={`${isDesktopTwoColumn ? "min-h-0 flex-1" : chartHeightClass} min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#101010]`}
               onMouseEnter={() => {
                 if (weeklyLineOption) setIsChartHovered(true);
               }}
@@ -836,10 +799,7 @@ export default function ZingChart() {
             </div>
           </div>
 
-          <div
-            ref={weeklyListCardRef}
-            className="min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-[#121212] p-4 sm:p-5"
-          >
+          <div className="min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-[#121212] p-4 sm:p-5 xl:h-full">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-base font-bold text-white sm:text-lg">
                 {activePeriodMeta.title}
@@ -849,18 +809,27 @@ export default function ZingChart() {
               </span>
             </div>
 
-            <div ref={weeklyRowsRef} className="space-y-2.5">
-              {rankingLoading && (
-                <div className="text-sm text-white/60">Đang tải bảng xếp hạng...</div>
-              )}
-              {!rankingLoading && !weeklySongs.length && (
-                <div className="text-sm text-white/60">
-                  Chưa có dữ liệu bảng xếp hạng.
+            <div className="relative min-h-[332px]">
+              {rankingLoading && weeklySongs.length ? (
+                <div className="absolute inset-0 z-10 flex items-start justify-end rounded-2xl bg-[#121212]/45 px-3 py-2 backdrop-blur-[1px]">
+                  <div className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-xs text-white/72">
+                    Đang tải bảng xếp hạng...
+                  </div>
                 </div>
-              )}
+              ) : null}
 
-              {!rankingLoading &&
-                weeklySongs.map((song, index) => {
+              <div className="space-y-2.5">
+                {!weeklySongs.length && rankingLoading ? (
+                  <div className="text-sm text-white/60">Đang tải bảng xếp hạng...</div>
+                ) : null}
+
+                {!rankingLoading && !weeklySongs.length ? (
+                  <div className="text-sm text-white/60">
+                    Chưa có dữ liệu bảng xếp hạng.
+                  </div>
+                ) : null}
+
+                {weeklySongs.map((song, index) => {
                   const rank = index + 1;
                   const theme = getRankTheme(rank);
                   const metric = getSongMetric(song);
@@ -930,6 +899,7 @@ export default function ZingChart() {
                     </div>
                   );
                 })}
+              </div>
             </div>
           </div>
         </div>

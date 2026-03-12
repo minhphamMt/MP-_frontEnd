@@ -9,7 +9,7 @@ import {
   FaVolumeHigh,
   FaVolumeXmark,
 } from "react-icons/fa6";
-import { FiHeart } from "react-icons/fi";
+import { FiChevronDown, FiHeart, FiMaximize, FiMinimize } from "react-icons/fi";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
 import PlayerDetailLyrics from "./PlayerDetailLyrics";
@@ -67,6 +67,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
   const [seekValue, setSeekValue] = useState(0);
   const [fallbackDuration, setFallbackDuration] = useState(0);
   const [mobileDragOffset, setMobileDragOffset] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const phaseRef = useRef("closed");
   const audioRef = useRef(null);
@@ -75,6 +76,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
   const unlockSwipeTimerRef = useRef(null);
   const prevIndexRef = useRef(currentIndex);
   const lastRecommendationSeedRef = useRef(null);
+  const fullscreenByPlayerRef = useRef(false);
   const mobileGestureRef = useRef({
     startX: 0,
     startY: 0,
@@ -85,6 +87,20 @@ export default function PlayerDetail({ isOpen, onClose }) {
   useEffect(() => {
     phaseRef.current = phase;
   }, [phase]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return undefined;
+
+    const handleFullscreenChange = () => {
+      const nextFullscreen = Boolean(document.fullscreenElement);
+      setIsFullscreen(nextFullscreen);
+      if (!nextFullscreen) fullscreenByPlayerRef.current = false;
+    };
+
+    handleFullscreenChange();
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -272,6 +288,41 @@ export default function PlayerDetail({ isOpen, onClose }) {
     unlockCarouselSwipe();
   };
 
+  const exitPlayerFullscreen = async () => {
+    if (typeof document === "undefined") return;
+    if (!document.fullscreenElement || !fullscreenByPlayerRef.current) return;
+
+    try {
+      await document.exitFullscreen?.();
+    } catch (error) {
+      console.error("Exit fullscreen failed", error);
+    } finally {
+      fullscreenByPlayerRef.current = false;
+    }
+  };
+
+  const handleClose = async () => {
+    await exitPlayerFullscreen();
+    onClose?.();
+  };
+
+  const toggleFullscreen = async () => {
+    if (typeof document === "undefined") return;
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen?.();
+        fullscreenByPlayerRef.current = false;
+        return;
+      }
+
+      await document.documentElement.requestFullscreen?.();
+      fullscreenByPlayerRef.current = true;
+    } catch (error) {
+      console.error("Toggle fullscreen failed", error);
+    }
+  };
+
   const togglePlay = () => {
     isPlaying ? pause() : resume();
   };
@@ -351,7 +402,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       Math.abs(deltaY) > Math.abs(deltaX) * 1.2;
 
     resetMobileGesture();
-    if (shouldClose) onClose?.();
+    if (shouldClose) handleClose();
   };
 
   if (!mounted || !currentSong) return null;
@@ -402,15 +453,19 @@ export default function PlayerDetail({ isOpen, onClose }) {
       : phase === "exit"
       ? "player-detail-anim-out"
       : "";
-  const stableClass =
-    phase === "open" || phase === "enter"
-      ? "translate-y-0 opacity-100"
-      : "translate-y-full opacity-0";
+  const stableClass = phase === "exit" ? "opacity-0" : "opacity-100";
   const glassPanelClass = "player-detail-glass";
   const softButtonClass =
     "flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.07] text-white/82 transition active:scale-95 md:hover:bg-white/[0.12] md:hover:text-white";
   const mobileUtilityButtonClass =
     "flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.07] text-white/82 transition active:scale-95";
+  const closeButtonClass =
+    "inline-flex h-11 w-11 items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(82,119,170,0.42),rgba(22,38,62,0.94))] text-white/86 shadow-[0_16px_34px_rgba(6,14,28,0.4)] transition active:scale-95 md:hover:-translate-y-0.5 md:hover:brightness-110 md:hover:text-white";
+  const fullscreenButtonClass = `inline-flex h-11 w-11 items-center justify-center rounded-full text-white/84 shadow-[0_16px_34px_rgba(6,14,28,0.34)] transition active:scale-95 md:hover:-translate-y-0.5 md:hover:text-white ${
+    isFullscreen
+      ? "bg-[radial-gradient(circle_at_30%_30%,rgba(56,189,248,0.34),rgba(14,77,112,0.94))]"
+      : "bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.14),rgba(28,31,39,0.94))] md:hover:brightness-110"
+  }`;
   const pillClass =
     "rounded-full bg-white/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/66 sm:text-[11px]";
   const isLiked = likedSongIds.includes(currentSongId);
@@ -673,9 +728,27 @@ export default function PlayerDetail({ isOpen, onClose }) {
             {activeTabDescription}
           </p>
         </div>
-        <span className="rounded-full bg-white/[0.05] px-3 py-1 text-[11px] text-white/54">
-          {activeTab === "queue" ? `${queueCount} bài` : "Sync"}
-        </span>
+        <div className="flex shrink-0 items-center gap-2 self-start">
+          <span className="rounded-full bg-white/[0.05] px-3 py-1 text-[11px] text-white/54">
+            {activeTab === "queue" ? `${queueCount} bài` : "Sync"}
+          </span>
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className={fullscreenButtonClass}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          >
+            {isFullscreen ? <FiMinimize size={17} /> : <FiMaximize size={17} />}
+          </button>
+          <button
+            type="button"
+            onClick={handleClose}
+            className={closeButtonClass}
+            aria-label="Close player detail"
+          >
+            <FiChevronDown size={18} />
+          </button>
+        </div>
       </div>
 
       <div className="mt-4 flex items-center gap-1.5 rounded-full bg-black/24 p-1">
@@ -927,7 +1000,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
         className="absolute inset-0 bg-black/48 backdrop-blur-[2px]"
         onMouseDown={(e) => {
           if (e.target !== e.currentTarget) return;
-          if (backdropReady) onClose?.();
+          if (backdropReady) handleClose();
         }}
       />
 
@@ -953,14 +1026,6 @@ export default function PlayerDetail({ isOpen, onClose }) {
       </div>
 
       <div className="relative z-10 h-full w-full overflow-hidden">
-        <button
-          onClick={onClose}
-          className="absolute right-3 top-[calc(env(safe-area-inset-top)+10px)] z-20 hidden h-9 w-9 items-center justify-center rounded-full bg-black/30 text-base text-white/86 shadow-[0_10px_22px_rgba(0,0,0,0.26)] transition md:hover:bg-black/44 md:hover:text-white sm:right-5 sm:top-5 sm:h-10 sm:w-10 sm:text-lg lg:flex lg:right-7 lg:top-6"
-          aria-label="Đóng"
-        >
-          <span className="-mt-[1px] leading-none">×</span>
-        </button>
-
         <div className="flex h-full min-h-0 flex-col px-3 pb-3 pt-[calc(env(safe-area-inset-top)+8px)] sm:px-5 sm:pb-5 sm:pt-5 lg:px-7 lg:pt-6">
           <div className="hidden flex-1 lg:grid lg:min-h-0 lg:grid-cols-[minmax(0,1.18fr)_minmax(300px,380px)] lg:gap-5 xl:grid-cols-[minmax(0,1.24fr)_420px]">
             <div className="min-h-0">{detailPanel}</div>

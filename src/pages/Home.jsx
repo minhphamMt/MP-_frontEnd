@@ -18,8 +18,12 @@ import { filterPlayableSongs, fetchPlayableSong, toPlayableSong } from "../utils
 import { resolveAssetUrl } from "../utils/asset";
 import { getArtistLabel } from "../utils/artist";
 
-const HISTORY_LIMIT = 10;
 const HOME_HISTORY_LIMIT = 20;
+const CONTINUE_SONGS_LIMIT = 6;
+const RECOMMENDATION_DESKTOP_LIMIT = 9;
+const RECOMMENDATION_TABLET_LIMIT = 8;
+const SM_BREAKPOINT = 640;
+const XL_BREAKPOINT = 1280;
 const TOP_WEEK_COLORS = ["#fbbf24", "#60a5fa", "#a78bfa", "#fb7185", "#f97316"];
 
 const toList = (raw) =>
@@ -86,6 +90,9 @@ export default function Home() {
   const [continueLoading, setContinueLoading] = useState(false);
   const [chartLoading, setChartLoading] = useState(false);
   const [recommendationLoading, setRecommendationLoading] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : XL_BREAKPOINT
+  );
 
   const ranRef = useRef(false);
   const artistRailRef = useRef(null);
@@ -100,33 +107,36 @@ export default function Home() {
   const playSong = usePlayerStore((state) => state.playSong);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  const fetchSongsByIds = useCallback(async (ids = [], limit = 9) => {
-    const queue = ids.filter(Boolean);
-    const collected = [];
+  const fetchSongsByIds = useCallback(
+    async (ids = [], limit = RECOMMENDATION_DESKTOP_LIMIT) => {
+      const queue = ids.filter(Boolean);
+      const collected = [];
 
-    for (let index = 0; index < queue.length; index += 6) {
-      if (collected.length >= limit) break;
-      const chunk = queue.slice(index, index + 6);
-      const results = await Promise.allSettled(chunk.map((id) => getSongById(id)));
-
-      for (const result of results) {
-        if (result.status !== "fulfilled") continue;
-        const song = toPlayableSong(result.value?.data?.data || result.value?.data || {});
-        if (!song?.id) continue;
-        collected.push(song);
+      for (let index = 0; index < queue.length; index += 6) {
         if (collected.length >= limit) break;
-      }
-    }
+        const chunk = queue.slice(index, index + 6);
+        const results = await Promise.allSettled(chunk.map((id) => getSongById(id)));
 
-    return dedupeSongIds(collected).slice(0, limit);
-  }, []);
+        for (const result of results) {
+          if (result.status !== "fulfilled") continue;
+          const song = toPlayableSong(result.value?.data?.data || result.value?.data || {});
+          if (!song?.id) continue;
+          collected.push(song);
+          if (collected.length >= limit) break;
+        }
+      }
+
+      return dedupeSongIds(collected).slice(0, limit);
+    },
+    []
+  );
 
   const fetchRecommendedSongs = useCallback(
     async (seedSongId) => {
       const recRes = seedSongId ? await getRecommendations(seedSongId) : await getColdStartRecommendations(30);
       const selectedIds = normalizeRecommendedIds(recRes?.data?.data || recRes?.data || []);
 
-      if (selectedIds.length < 9) {
+      if (selectedIds.length < RECOMMENDATION_DESKTOP_LIMIT) {
         const fallbackRes = await getColdStartRecommendations(50);
         for (const id of normalizeRecommendedIds(fallbackRes?.data?.data || fallbackRes?.data || [])) {
           if (!selectedIds.includes(id)) selectedIds.push(id);
@@ -134,7 +144,7 @@ export default function Home() {
         }
       }
 
-      return fetchSongsByIds(selectedIds, 9);
+      return fetchSongsByIds(selectedIds, RECOMMENDATION_DESKTOP_LIMIT);
     },
     [fetchSongsByIds]
   );
@@ -208,7 +218,7 @@ export default function Home() {
               };
             })
             .filter(Boolean)
-        ).slice(0, 8);
+        ).slice(0, CONTINUE_SONGS_LIMIT);
 
         setContinueSongs(normalized);
         setContinueLoading(false);
@@ -253,6 +263,15 @@ export default function Home() {
     ranRef.current = true;
     loadHome();
   }, [loadHome]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const handleResize = () => setViewportWidth(window.innerWidth);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const scrollForwardWithLoop = useCallback((ref, distance) => {
     const node = ref.current;
@@ -361,6 +380,14 @@ export default function Home() {
   const continueQueue = useMemo(() => continueSongs.map((song) => ({ ...song })), [continueSongs]);
   const weeklyQueue = useMemo(() => weeklyTop.map((song) => ({ ...song })), [weeklyTop]);
   const maxTopMetric = Math.max(...weeklyTop.map((song) => Number(song?.metric || 0)), 1);
+  const recommendationLimit =
+    viewportWidth >= SM_BREAKPOINT && viewportWidth < XL_BREAKPOINT
+      ? RECOMMENDATION_TABLET_LIMIT
+      : RECOMMENDATION_DESKTOP_LIMIT;
+  const visibleRecommendedSongs = useMemo(
+    () => songs.slice(0, recommendationLimit),
+    [recommendationLimit, songs]
+  );
 
   const refreshRecommendations = async () => {
     const historyItems = await loadUserHistory();
@@ -528,7 +555,7 @@ export default function Home() {
       >
         {recommendationLoading && !songs.length ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, idx) => (
+            {Array.from({ length: recommendationLimit }).map((_, idx) => (
               <div key={idx} className="h-28 animate-pulse rounded-2xl border border-white/10 bg-[#151515]" />
             ))}
           </div>
@@ -538,9 +565,9 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
-            {songs.map((song) => (
+            {visibleRecommendedSongs.map((song) => (
               <div key={song.id} className="space-y-1.5">
-                <SongCard song={song} queue={songs} />
+                <SongCard song={song} queue={visibleRecommendedSongs} />
                 {/* <p className="px-1 text-xs text-white/55">
                   {reasonById.get(normalizeSongId(song)) || "Gợi ý theo sở thích gần đây"}
                 </p> */}
