@@ -91,7 +91,7 @@ export default function PlayerDockPanel() {
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold">{tab.label}</span>
                         <span className="mt-0.5 block truncate text-[11px] text-white/45">
-                          {tab.id === "queue" ? `${queueCount} bài hiện có` : "Theo nhịp bài hát"}
+                          {tab.id === "queue" ? `${queueCount} bài hiện có` : "Xem lời bài hát"}
                         </span>
                       </span>
                     </button>

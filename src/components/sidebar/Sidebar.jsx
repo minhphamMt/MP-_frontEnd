@@ -5,6 +5,7 @@ import { FiChevronsLeft, FiChevronsRight, FiX } from "react-icons/fi";
 import { MdAlbum, MdExplore, MdHistory, MdLibraryMusic, MdPlaylistPlay } from "react-icons/md";
 
 import useAuthStore from "../../store/auth.store";
+import BrandLogo from "../branding/BrandLogo";
 import AdminSidebar from "./AdminSidebar";
 import ArtistSidebar from "./ArtistSidebar";
 import SidebarItem from "./SidebarItem";
@@ -76,18 +77,13 @@ export default function Sidebar({ isOpen, onClose }) {
         >
           {isCompact ? (
             <div
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-[#121212]"
+              className="flex items-center justify-center"
               title="Khoaluan Music"
             >
-              <span className="h-2.5 w-2.5 rounded-full bg-[#1db954] shadow-[0_0_14px_rgba(29,185,84,0.8)]" />
+              <BrandLogo compact />
             </div>
           ) : (
-            <div className="flex min-w-0 items-center gap-2.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#1db954] shadow-[0_0_14px_rgba(29,185,84,0.8)]" />
-              <span className="truncate text-base font-black tracking-wide text-white/95">
-                Khoaluan Music
-              </span>
-            </div>
+            <BrandLogo />
           )}
 
           <button

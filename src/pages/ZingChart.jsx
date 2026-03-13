@@ -712,7 +712,7 @@ export default function ZingChart() {
               MChart
             </h1>
             <p className="mt-2 text-sm text-white/60">
-              Biểu đồ luôn vẽ Top 5 bài hát có lượt nghe cao nhất trong tuần. Bộ lọc chỉ đổi bảng Top 5 xếp hạng ở bên phải.
+              Cập nhật danh sách bài hát thịnh hành nhất theo từng ngày, tuần và tổng hợp theo từng khu vực.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">

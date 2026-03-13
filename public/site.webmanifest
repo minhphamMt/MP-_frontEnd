@@ -1,6 +1,6 @@
 {
-  "name": "khoaluan",
-  "short_name": "khoaluan",
+  "name": "Khoaluan Music",
+  "short_name": "Khoaluan",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -15,7 +15,7 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
+  "theme_color": "#050914",
+  "background_color": "#050914",
   "display": "standalone"
 }
