@@ -1,8 +1,11 @@
-import { normalizeSongId } from "../../store/player.store";
-import { FiHeart, FiPause, FiPlay, FiTrash2, FiMusic } from "react-icons/fi";
-import { resolveAssetUrl } from "../../utils/asset";
-import OptimizedImage from "../common/OptimizedImage";
+import { FiHeart, FiMusic, FiPause, FiPlay, FiTrash2 } from "react-icons/fi";
+
 import ArtistNames from "../artist/ArtistNames";
+import { normalizeSongId } from "../../store/player.store";
+import { resolveAssetUrl } from "../../utils/asset";
+import { formatDuration } from "../../utils/song";
+import OptimizedImage from "../common/OptimizedImage";
+import { SongDetailIconButton, SongDetailLink } from "../song/SongDetailLink";
 
 export default function PlaylistSongsTable({
   songs = [],
@@ -13,113 +16,146 @@ export default function PlaylistSongsTable({
   onRemove,
   onToggleLike,
 }) {
+  if (!songs.length) {
+    return (
+      <div className="rounded-[24px] border border-white/10 bg-[#121212] px-5 py-10 text-center text-sm text-white/60">
+        Playlist này chưa có bài hát nào. Hãy thêm vài bài để bắt đầu nghe.
+      </div>
+    );
+  }
+
   return (
-    <div className="user-page-shell p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="user-heading-label">Danh sách</p>
-          <h3 className="text-lg font-semibold text-white">Bài hát trong playlist</h3>
-        </div>
-        <span className="user-chip px-3 py-1 text-xs">{songs.length} bài hát</span>
+    <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[#121212]">
+      <div className="hidden grid-cols-[56px_minmax(0,2.3fr)_minmax(0,1.1fr)_88px_104px] items-center border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/45 lg:grid">
+        <span className="text-center">#</span>
+        <span>Bài hát</span>
+        <span>Nghệ sĩ</span>
+        <span className="text-center">Thời gian</span>
+        <span className="text-right">Tác vụ</span>
       </div>
 
-      <div className="mt-4 overflow-x-auto scrollbar-muted">
-        <div className="min-w-0 lg:min-w-[640px]">
-          <div className="hidden grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.35em] text-white/50 lg:grid">
-            <span />
-            <span>Bài hát</span>
-            <span>Album</span>
-            <span className="text-right">Thời gian</span>
-          </div>
+      <div className="divide-y divide-white/8">
+        {songs.map((song, index) => {
+          const songId = normalizeSongId(song);
+          const isActive = normalizeSongId(currentSong) === songId;
+          const isLiked = songId && likedSongIds.includes(songId);
 
-          {!songs.length && <p className="px-4 py-4 text-sm text-white/60">Chưa có bài hát trong playlist này.</p>}
+          return (
+            <article
+              key={song.id || `${song.title}-${index}`}
+              onClick={() => onPlay?.(song)}
+              className={`group grid min-w-0 cursor-pointer grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 transition lg:grid-cols-[56px_minmax(0,2.3fr)_minmax(0,1.1fr)_88px_104px] ${
+                isActive ? "bg-emerald-400/10" : "md:hover:bg-white/[0.04]"
+              }`}
+            >
+              <div className="hidden items-center justify-center lg:flex">
+                {isActive ? (
+                  isPlaying ? (
+                    <FiPause className="text-base text-emerald-300" />
+                  ) : (
+                    <FiPlay className="text-base text-emerald-300" />
+                  )
+                ) : (
+                  <span className="text-sm font-semibold text-white/55">
+                    {index + 1}
+                  </span>
+                )}
+              </div>
 
-          <div className="divide-y divide-white/10">
-            {songs.map((song, index) => {
-              const songId = normalizeSongId(song);
-              const isPlayingCurrent = normalizeSongId(currentSong) === songId;
-              const isLiked = songId && likedSongIds.includes(songId);
-              return (
-                <div
-                  key={song.id || index}
-                  className={`group grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 text-sm transition lg:grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,1fr)] ${
-                    isPlayingCurrent ? "bg-emerald-400/10" : "md:hover:bg-white/[0.05]"
-                  }`}
-                >
-                  <div className="hidden justify-center lg:flex">
-                    <FiMusic className={`transition ${isPlayingCurrent ? "text-emerald-300" : "text-white/40 md:group-hover:text-white"}`} />
-                  </div>
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5">
+                  <OptimizedImage
+                    src={resolveAssetUrl(song.cover_url)}
+                    alt={song.title}
+                    className="h-full w-full object-cover"
+                  />
 
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md">
-                      <OptimizedImage src={resolveAssetUrl(song.cover_url)} alt={song.title} className="h-full w-full object-cover" />
-                      <button
-                        onClick={() => onPlay?.(song)}
-                        className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition md:group-hover:opacity-100"
-                      >
-                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-300 text-black shadow-[0_8px_16px_rgba(52,211,153,0.35)]">
-                          {isPlayingCurrent && isPlaying ? <FiPause className="text-sm" /> : <FiPlay className="ml-0.5 text-sm" />}
-                        </span>
-                      </button>
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className={`truncate font-medium ${isPlayingCurrent ? "text-emerald-300" : "text-white"}`}>{song.title}</p>
-                      <p className="truncate text-xs text-white/60">
-                        <ArtistNames
-                          item={song}
-                          stopPropagation
-                          linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-                          fallback="Nghệ sĩ"
-                        />
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="hidden truncate text-xs text-white/70 lg:block">{song.album_title || song.album || "-"}</div>
-
-                  <div className="hidden items-center justify-end gap-4 text-xs text-white/70 lg:flex">
-                    <button
-                      onClick={() => songId && onToggleLike?.(songId)}
-                      className={`flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 ${
-                        isLiked
-                          ? "border-rose-400/60 bg-rose-400/10 text-rose-300"
-                          : "border-white/20 text-white/60 md:hover:border-white/40 md:hover:text-white"
-                      }`}
-                    >
-                      <FiHeart className="text-[16px]" />
-                    </button>
-                    <button
-                      onClick={() => onRemove?.(song)}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-white/60 transition md:hover:border-rose-400/60 md:hover:text-rose-300"
-                    >
-                      <FiTrash2 className="text-[16px]" />
-                    </button>
-                    <span className="tabular-nums">{song.duration}</span>
-                  </div>
-                  <div className="flex items-center justify-end gap-2 lg:hidden">
-                    <button
-                      onClick={() => songId && onToggleLike?.(songId)}
-                      className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200 ${
-                        isLiked
-                          ? "border-rose-400/60 bg-rose-400/10 text-rose-300"
-                          : "border-white/20 text-white/60 md:hover:border-white/40 md:hover:text-white"
-                      }`}
-                    >
-                      <FiHeart className="text-[14px]" />
-                    </button>
-                    <button
-                      onClick={() => onRemove?.(song)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 text-white/60 transition md:hover:border-rose-400/60 md:hover:text-rose-300"
-                    >
-                      <FiTrash2 className="text-[14px]" />
-                    </button>
+                  <div
+                    className={`absolute inset-0 flex items-center justify-center bg-black/45 transition ${
+                      isActive ? "opacity-100" : "opacity-0 md:group-hover:opacity-100"
+                    }`}
+                  >
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-300 text-black shadow-[0_8px_18px_rgba(52,211,153,0.35)]">
+                      {isActive && isPlaying ? (
+                        <FiPause className="text-sm" />
+                      ) : (
+                        <FiPlay className="ml-0.5 text-sm" />
+                      )}
+                    </span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
+
+                <div className="min-w-0">
+                  <SongDetailLink
+                    song={song}
+                    className={`truncate text-sm font-semibold transition md:hover:text-emerald-300 md:hover:underline sm:text-[15px] ${
+                      isActive ? "text-emerald-300" : "text-white"
+                    }`}
+                  >
+                    {song.title}
+                  </SongDetailLink>
+
+                  <div className="mt-1 truncate text-xs text-white/60 lg:hidden">
+                    <ArtistNames
+                      item={song}
+                      stopPropagation
+                      fallback="Đang cập nhật nghệ sĩ"
+                      linkClassName="transition md:hover:text-emerald-300 md:hover:underline"
+                    />
+                  </div>
+
+                  <div className="mt-1 truncate text-[11px] text-white/40 lg:hidden">
+                    {formatDuration(song.duration)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="hidden min-w-0 text-sm text-white/60 lg:block">
+                <ArtistNames
+                  item={song}
+                  stopPropagation
+                  fallback="Đang cập nhật nghệ sĩ"
+                  linkClassName="truncate transition md:hover:text-emerald-300 md:hover:underline"
+                />
+              </div>
+
+              <div className="hidden text-center text-sm text-white/50 lg:block">
+                {formatDuration(song.duration)}
+              </div>
+
+              <div className="flex items-center justify-end gap-2">
+                <SongDetailIconButton song={song} />
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (songId) onToggleLike?.(songId);
+                  }}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm transition ${
+                    isLiked
+                      ? "border-rose-400/50 bg-rose-400/10 text-rose-300"
+                      : "border-white/15 text-white/65 md:hover:bg-white/[0.1]"
+                  }`}
+                  aria-label={isLiked ? "Bỏ thích bài hát" : "Thích bài hát"}
+                >
+                  <FiHeart />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onRemove?.(song);
+                  }}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-white/65 transition md:hover:border-rose-400/50 md:hover:bg-rose-500/10 md:hover:text-rose-300"
+                  aria-label="Gỡ bài hát khỏi playlist"
+                >
+                  <FiTrash2 />
+                </button>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </div>
   );

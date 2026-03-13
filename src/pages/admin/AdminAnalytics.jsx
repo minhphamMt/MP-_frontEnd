@@ -10,7 +10,7 @@ import {
   FiUsers,
 } from "react-icons/fi";
 import * as echarts from "echarts/core";
-import { LineChart as ELineChart, BarChart, PieChart as EPieChart } from "echarts/charts";
+import { LineChart as ELineChart, BarChart } from "echarts/charts";
 import { GridComponent, TooltipComponent, LegendComponent } from "echarts/components";
 import { SVGRenderer } from "echarts/renderers";
 import ReactEChartsCore from "echarts-for-react/lib/core";
@@ -23,7 +23,6 @@ echarts.use([
   LegendComponent,
   ELineChart,
   BarChart,
-  EPieChart,
   SVGRenderer,
 ]);
 
@@ -35,6 +34,13 @@ const extractData = (payload) => payload?.data?.data ?? payload?.data ?? payload
 const safeNumber = (value) => {
   const next = Number(value);
   return Number.isFinite(next) ? next : 0;
+};
+
+const formatCount = (value) => new Intl.NumberFormat("vi-VN").format(safeNumber(value));
+
+const formatPercent = (value, total) => {
+  if (total <= 0) return "0.0";
+  return ((safeNumber(value) / total) * 100).toFixed(1);
 };
 
 const formatDayLabel = (value) => {
@@ -49,9 +55,11 @@ const formatMonthLabel = (value) => {
   return `${month}/${year}`;
 };
 
-function ChartPanel({ title, subtitle, icon: Icon, children, right }) {
+function ChartPanel({ title, subtitle, icon: Icon, children, right, className = "" }) {
   return (
-    <section className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+    <section
+      className={`admin-glass w-full min-w-0 rounded-3xl border border-white/10 bg-[#181818] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.45)] ${className}`}
+    >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.24em] text-white/45">{title}</p>
@@ -69,92 +77,111 @@ function ChartPanel({ title, subtitle, icon: Icon, children, right }) {
   );
 }
 
-function DonutChart({ segments, total }) {
-  const stats = useMemo(() => {
-    const map = new Map();
-    segments.forEach((item) => map.set(item.label, safeNumber(item.value)));
-    return map;
-  }, [segments]);
-
-  const option = useMemo(
-    () => ({
-      animationDuration: 350,
-      animationEasing: "cubicOut",
-      tooltip: {
-        trigger: "item",
-        backgroundColor: "rgba(16, 16, 16, 0.95)",
-        borderColor: "rgba(255,255,255,0.12)",
-        textStyle: { color: "#e5e7eb" },
-      },
-      legend: {
-        orient: "vertical",
-        top: "center",
-        right: 12,
-        icon: "circle",
-        itemWidth: 9,
-        itemHeight: 9,
-        textStyle: { color: "rgba(255,255,255,0.78)", fontSize: 13 },
-        formatter: (name) => {
-          const value = safeNumber(stats.get(name));
-          const percent = total > 0 ? ((value / total) * 100).toFixed(1) : "0.0";
-          return `${name}  ${value} (${percent}%)`;
-        },
-      },
-      graphic: [
-        {
-          type: "text",
-          left: "32%",
-          top: "43%",
-          style: {
-            text: "Tổng",
-            fill: "rgba(255,255,255,0.52)",
-            fontSize: 11,
-            fontWeight: 600,
-            textAlign: "center",
-          },
-        },
-        {
-          type: "text",
-          left: "32%",
-          top: "50%",
-          style: {
-            text: `${total}`,
-            fill: "#f3f4f6",
-            fontSize: 40,
-            fontWeight: 800,
-            textAlign: "center",
-          },
-        },
-      ],
-      series: [
-        {
-          type: "pie",
-          radius: ["52%", "72%"],
-          center: ["32%", "50%"],
-          avoidLabelOverlap: true,
-          label: { show: false },
-          labelLine: { show: false },
-          data: segments.map((item) => ({
-            name: item.label,
-            value: safeNumber(item.value),
-            itemStyle: { color: item.color },
-          })),
-        },
-      ],
-    }),
-    [segments, stats, total]
+function SongStatusBreakdown({ segments, total }) {
+  const normalizedSegments = useMemo(
+    () =>
+      segments.map((item) => {
+        const value = safeNumber(item.value);
+        return {
+          ...item,
+          value,
+          percentValue: total > 0 ? (value / total) * 100 : 0,
+          percentLabel: formatPercent(value, total),
+        };
+      }),
+    [segments, total]
   );
 
+  const dominantSegment = useMemo(() => {
+    return (
+      normalizedSegments.reduce((winner, item) => {
+        if (!winner || item.value > winner.value) return item;
+        return winner;
+      }, null) || null
+    );
+  }, [normalizedSegments]);
+
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      notMerge
-      lazyUpdate
-      opts={{ renderer: "svg" }}
-      className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
-      style={{ width: "100%", height: 260 }}
-    />
+    <div className="rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <div className="rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,_rgba(52,211,153,0.18),_rgba(20,20,20,0.92)_62%)] p-5">
+          <p className="text-xs uppercase tracking-[0.24em] text-white/45">Tổng bài hát</p>
+          <p className="mt-3 text-4xl font-black text-white sm:text-5xl">{formatCount(total)}</p>
+          <p className="mt-2 text-sm text-white/55">
+            Theo dõi nhanh số lượng bài hát ở mỗi trạng thái duyệt.
+          </p>
+
+          <div className="mt-6 h-3 overflow-hidden rounded-full bg-white/8">
+            <div className="flex h-full w-full gap-[2px]">
+              {normalizedSegments.map((segment) => (
+                <span
+                  key={segment.label}
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${segment.percentValue}%`,
+                    minWidth: segment.value > 0 ? "6px" : "0px",
+                    backgroundColor: segment.color,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {dominantSegment && (
+            <div className="mt-6 rounded-3xl border border-white/10 bg-black/20 p-4">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">
+                Trạng thái nhiều nhất
+              </p>
+              <div className="mt-3 flex items-center gap-3">
+                <span
+                  className="h-3 w-3 rounded-full"
+                  style={{ backgroundColor: dominantSegment.color }}
+                />
+                <div>
+                  <p className="text-base font-semibold text-white">{dominantSegment.label}</p>
+                  <p className="text-sm text-white/55">
+                    {formatCount(dominantSegment.value)} bài hát ({dominantSegment.percentLabel}%)
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          {normalizedSegments.map((segment) => (
+            <article
+              key={segment.label}
+              className="rounded-3xl border border-white/10 bg-white/[0.03] p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span
+                    className="mt-1 h-3 w-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: segment.color }}
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-white">{segment.label}</p>
+                    <p className="text-xs text-white/45">{formatCount(segment.value)} bài hát</p>
+                  </div>
+                </div>
+                <p className="text-lg font-black text-white">{segment.percentLabel}%</p>
+              </div>
+
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/8">
+                <div
+                  className="h-full rounded-full transition-[width] duration-500 ease-out"
+                  style={{
+                    width: `${Math.max(segment.percentValue, segment.value > 0 ? 2.5 : 0)}%`,
+                    backgroundColor: segment.color,
+                  }}
+                />
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -486,13 +513,15 @@ function LineChart({ labels, values }) {
       notMerge
       lazyUpdate
       opts={{ renderer: "svg" }}
-      className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
+      className="w-full min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
       style={{ width: "100%", height: 250 }}
     />
   );
 }
 
 function AlbumByMonthChart({ items }) {
+  const useWideBars = items.length <= 3;
+
   const option = useMemo(
     () => ({
       animationDuration: 350,
@@ -528,7 +557,8 @@ function AlbumByMonthChart({ items }) {
         {
           type: "bar",
           data: items.map((item) => item.value),
-          barMaxWidth: 28,
+          barWidth: useWideBars ? "42%" : undefined,
+          barMaxWidth: useWideBars ? 72 : 28,
           itemStyle: {
             borderRadius: [8, 8, 0, 0],
             color: {
@@ -553,7 +583,7 @@ function AlbumByMonthChart({ items }) {
         },
       ],
     }),
-    [items]
+    [items, useWideBars]
   );
 
   return (
@@ -563,7 +593,7 @@ function AlbumByMonthChart({ items }) {
       notMerge
       lazyUpdate
       opts={{ renderer: "svg" }}
-      className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
+      className="w-full min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
       style={{ width: "100%", height: 250 }}
     />
   );
@@ -784,7 +814,7 @@ export default function AdminAnalytics() {
   }, [albumByMonth, overview, roleSummary, songStatusSummary.total]);
 
   return (
-    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
+    <div className="admin-page-shell min-h-screen w-full max-w-full min-w-0 space-y-6 px-4 py-6 sm:px-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">Quản trị</p>
@@ -816,7 +846,7 @@ export default function AdminAnalytics() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid w-full min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {overviewKpi.map((item) => (
           <article
             key={item.key}
@@ -831,7 +861,7 @@ export default function AdminAnalytics() {
         ))}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid w-full min-w-0 gap-6 xl:grid-cols-2">
         <ChartPanel
           title="Trạng thái bài hát"
           subtitle="Tỷ trọng trạng thái duyệt bài hát"
@@ -842,7 +872,10 @@ export default function AdminAnalytics() {
           ) : songStatusSummary.total === 0 ? (
             <p className="text-sm text-white/60">Không có dữ liệu trạng thái bài hát.</p>
           ) : (
-            <DonutChart segments={songStatusSummary.segments} total={songStatusSummary.total} />
+            <SongStatusBreakdown
+              segments={songStatusSummary.segments}
+              total={songStatusSummary.total}
+            />
           )}
         </ChartPanel>
 
@@ -861,7 +894,7 @@ export default function AdminAnalytics() {
         </ChartPanel>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid w-full min-w-0 gap-6 xl:grid-cols-2">
         <ChartPanel
           title="Thể loại x Trạng thái"
           subtitle="Top thể loại và tình trạng duyệt"
@@ -909,8 +942,9 @@ export default function AdminAnalytics() {
         </ChartPanel>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+      <div className="grid w-full min-w-0 gap-6 xl:grid-cols-12">
         <ChartPanel
+          className="xl:col-span-8 2xl:col-span-9"
           title="Xu hướng yêu cầu nghệ sĩ"
           subtitle="Số yêu cầu nâng cấp nghệ sĩ theo 14 ngày gần nhất"
           icon={FiClock}
@@ -932,6 +966,7 @@ export default function AdminAnalytics() {
         </ChartPanel>
 
         <ChartPanel
+          className="xl:col-span-4 2xl:col-span-3"
           title="Album theo tháng"
           subtitle="Số album phát hành theo tháng"
           icon={FiDisc}

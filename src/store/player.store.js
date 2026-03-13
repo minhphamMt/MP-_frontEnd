@@ -3,7 +3,7 @@ import api from "../api/axios";
 import { getMyHistory } from "../api/history.api";
 import { getLikedSongs } from "../api/like.api";
 import { getRecommendations } from "../api/recommendation.api";
-import { getSongById, recordSongPlay } from "../api/song.api";
+import { getSongById, getSongLyrics, recordSongPlay } from "../api/song.api";
 import { fetchPlayableSong, toPlayableSong } from "../utils/song";
 import { getArtistLabel } from "../utils/artist";
 import useAuthStore from "./auth.store";
@@ -41,7 +41,15 @@ const extractSongsFromResponse = (payload) => {
   return sources.find(Array.isArray) || [];
 };
 
+const extractLyricsFromResponse = (payload) => {
+  const topLevel = payload?.data ?? payload;
+  const data = topLevel?.data ?? topLevel;
+  const items = data?.items ?? data ?? [];
+  return Array.isArray(items) ? items : [];
+};
+
 const audio = new Audio();
+const lyricRequests = new Map();
 
 const resolveMediaArtwork = (song) => {
   const artwork = song?.cover_url;
@@ -157,6 +165,11 @@ const usePlayerStore = create((set, get) => ({
   lastPlayedLoading: false,
   lastPlayedLoaded: false,
   recommendationLoading: false,
+  dockPanelOpen: false,
+  dockPanelTab: "queue",
+  lyricsBySongId: {},
+  lyricsLoadingBySongId: {},
+  lyricsErrorBySongId: {},
 
   /* ===== INTERNAL ===== */
   audio,
@@ -204,6 +217,8 @@ const usePlayerStore = create((set, get) => ({
       lastPlayedLoading: false,
       lastPlayedLoaded: true,
     });
+
+    get().preloadLyricsForSong(playable);
 
     if (updatedQueue.length <= 1) {
       get().appendRecommendationsToQueue();
@@ -317,6 +332,120 @@ const usePlayerStore = create((set, get) => ({
     set({ muted: audio.muted });
   },
 
+  openDockPanel: (tab = "queue") =>
+    set({
+      dockPanelOpen: true,
+      dockPanelTab: tab,
+    }),
+
+  closeDockPanel: () =>
+    set({
+      dockPanelOpen: false,
+    }),
+
+  toggleDockPanel: (tab = "queue") =>
+    set((state) => ({
+      dockPanelOpen: state.dockPanelTab === tab ? !state.dockPanelOpen : true,
+      dockPanelTab: tab,
+    })),
+
+  setDockPanelTab: (tab = "queue") =>
+    set({
+      dockPanelTab: tab,
+      dockPanelOpen: true,
+    }),
+
+  ensureLyricsLoaded: async (songOrId, { force = false } = {}) => {
+    const songId = normalizeSongId(songOrId);
+    if (!songId) return [];
+
+    const { lyricsBySongId, lyricsLoadingBySongId } = get();
+    const hasCachedLyrics = Object.prototype.hasOwnProperty.call(
+      lyricsBySongId,
+      songId
+    );
+
+    if (hasCachedLyrics && !force) {
+      return lyricsBySongId[songId] ?? [];
+    }
+
+    if (lyricRequests.has(songId)) {
+      return lyricRequests.get(songId);
+    }
+
+    if (!lyricsLoadingBySongId[songId]) {
+      set((state) => ({
+        lyricsLoadingBySongId: {
+          ...state.lyricsLoadingBySongId,
+          [songId]: true,
+        },
+        lyricsErrorBySongId: {
+          ...state.lyricsErrorBySongId,
+          [songId]: null,
+        },
+      }));
+    }
+
+    const request = getSongLyrics(songId)
+      .then((response) => {
+        const items = extractLyricsFromResponse(response);
+
+        set((state) => ({
+          lyricsBySongId: {
+            ...state.lyricsBySongId,
+            [songId]: items,
+          },
+          lyricsLoadingBySongId: {
+            ...state.lyricsLoadingBySongId,
+            [songId]: false,
+          },
+          lyricsErrorBySongId: {
+            ...state.lyricsErrorBySongId,
+            [songId]: null,
+          },
+        }));
+
+        return items;
+      })
+      .catch((error) => {
+        console.error("Load song lyrics failed", error);
+
+        set((state) => ({
+          lyricsLoadingBySongId: {
+            ...state.lyricsLoadingBySongId,
+            [songId]: false,
+          },
+          lyricsErrorBySongId: {
+            ...state.lyricsErrorBySongId,
+            [songId]: "Kh\u00f4ng th\u1ec3 t\u1ea3i l\u1eddi b\u00e0i h\u00e1t",
+          },
+        }));
+
+        return [];
+      })
+      .finally(() => {
+        lyricRequests.delete(songId);
+      });
+
+    lyricRequests.set(songId, request);
+    return request;
+  },
+
+  preloadLyricsForSong: (songOrId) => {
+    const songId = normalizeSongId(songOrId);
+    if (!songId) return;
+
+    const { lyricsBySongId, lyricsLoadingBySongId } = get();
+    const hasCachedLyrics = Object.prototype.hasOwnProperty.call(
+      lyricsBySongId,
+      songId
+    );
+
+    if (hasCachedLyrics || lyricsLoadingBySongId[songId]) return;
+
+    void get().ensureLyricsLoaded(songId);
+  },
+
   /* =====================
      QUEUE
   ===================== */
@@ -350,6 +479,8 @@ const usePlayerStore = create((set, get) => ({
       currentSong: null,
       currentIndex: -1,
       isPlaying: false,
+      dockPanelOpen: false,
+      dockPanelTab: "queue",
     }),
 
     appendRecommendationsToQueue: async () => {
@@ -422,6 +553,11 @@ const usePlayerStore = create((set, get) => ({
       lastPlayedLoading: false,
       lastPlayedLoaded: false,
       recommendationLoading: false,
+      dockPanelOpen: false,
+      dockPanelTab: "queue",
+      lyricsBySongId: {},
+      lyricsLoadingBySongId: {},
+      lyricsErrorBySongId: {},
     });
   },
 
@@ -510,6 +646,7 @@ const usePlayerStore = create((set, get) => ({
         lastPlayedLoading: false,
         lastPlayedLoaded: true,
       });
+      get().preloadLyricsForSong(playable);
       return playable;
     } catch (err) {
       console.error("Load last played song failed", err);

@@ -17,6 +17,7 @@ import PlayerDetailQueue from "./PlayerDetailQueue";
 import OptimizedImage from "../common/OptimizedImage";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import ArtistNames from "../artist/ArtistNames";
+import { SongDetailLink } from "../song/SongDetailLink";
 
 const formatTime = (sec = 0) => {
   const s = Math.max(0, Math.floor(sec || 0));
@@ -534,9 +535,12 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
           <div className="min-w-0 text-center md:text-left">
             <div className="overflow-visible pb-2">
-              <h2 className="overflow-hidden pt-[0.04em] pb-[0.14em] text-[clamp(2.1rem,8vw,5rem)] font-semibold leading-[1.02] tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
+              <SongDetailLink
+                song={currentSong}
+                className="overflow-hidden pt-[0.04em] pb-[0.14em] text-[clamp(2.1rem,8vw,5rem)] font-semibold leading-[1.02] tracking-tight text-white transition md:hover:text-emerald-300 md:hover:underline [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]"
+              >
                 {currentSong.title}
-              </h2>
+              </SongDetailLink>
             </div>
             <div className="mt-3 overflow-hidden text-sm font-medium text-white/78 sm:text-base lg:text-xl [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
               <ArtistNames
@@ -842,9 +846,12 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
         <div className="w-full min-w-0 text-center">
           <div className="overflow-visible pb-2">
-            <h2 className="overflow-hidden px-2 pt-[0.04em] pb-[0.14em] text-[clamp(1.8rem,8vw,3rem)] font-semibold leading-[1.03] tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+            <SongDetailLink
+              song={currentSong}
+              className="overflow-hidden px-2 pt-[0.04em] pb-[0.14em] text-[clamp(1.8rem,8vw,3rem)] font-semibold leading-[1.03] tracking-tight text-white transition md:hover:text-emerald-300 md:hover:underline [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
+            >
               {currentSong.title}
-            </h2>
+            </SongDetailLink>
           </div>
           <div className="mt-1 overflow-hidden px-3 text-sm font-medium text-white/72 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
             <ArtistNames

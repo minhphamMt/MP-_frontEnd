@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import { getMyHistory } from "../api/history.api";
 import { getSongById } from "../api/song.api";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 import ArtistNames from "../components/artist/ArtistNames";
 import OptimizedImage from "../components/common/OptimizedImage";
+import { SongDetailIconButton, SongDetailLink } from "../components/song/SongDetailLink";
 import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { resolveAssetUrl } from "../utils/asset";
@@ -106,6 +107,7 @@ export default function History() {
   const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef(null);
 
   const { playSong, likedSongIds, toggleLike, currentSong, isPlaying } =
     usePlayerStore();
@@ -176,6 +178,39 @@ export default function History() {
     () => meta?.page || meta?.currentPage || meta?.pageNumber || 1,
     [meta]
   );
+
+  const loadMoreHistory = useCallback(() => {
+    if (loading || loadingMore || !hasMore) return;
+    loadHistory(currentPage + 1, true);
+  }, [currentPage, hasMore, loadHistory, loading, loadingMore]);
+
+  useEffect(() => {
+    const target = sentinelRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) loadMoreHistory();
+        });
+      },
+      {
+        root: null,
+        rootMargin: "220px",
+        threshold: 0.1,
+      }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [loadMoreHistory]);
+
+  const statusText = useMemo(() => {
+    if (loading) return "\u0110ang t\u1ea3i l\u1ecbch s\u1eed...";
+    if (loadingMore) return "\u0110ang t\u1ea3i th\u00eam b\u00e0i \u0111\u00e3 nghe...";
+    if (!hasMore && history.length) return "B\u1ea1n \u0111\u00e3 xem h\u1ebft l\u1ecbch s\u1eed nghe g\u1ea7n \u0111\u00e2y.";
+    return "K\u00e9o xu\u1ed1ng \u0111\u1ec3 t\u1ea3i th\u00eam m\u1ee5c nghe g\u1ea7n \u0111\u00e2y.";
+  }, [hasMore, history.length, loading, loadingMore]);
 
   if (loading) {
     return (
@@ -281,13 +316,14 @@ export default function History() {
                     </div>
 
                     <div className="min-w-0">
-                      <div
-                        className={`truncate font-medium ${
+                      <SongDetailLink
+                        song={item}
+                        className={`truncate font-medium transition md:hover:text-emerald-300 md:hover:underline ${
                           isPlayingCurrent ? "text-emerald-300" : "text-white"
                         }`}
                       >
                         {item.title}
-                      </div>
+                      </SongDetailLink>
                       <div className="truncate text-xs text-white/60">
                         <ArtistNames
                           item={item}
@@ -308,6 +344,7 @@ export default function History() {
                       song={item}
                       triggerClassName="h-9 w-9 !border-white/20 !bg-white/5 md:hover:!bg-white/15"
                     />
+                    <SongDetailIconButton song={item} className="h-9 w-9 border-white/20" />
                     <button
                       type="button"
                       onClick={(e) => {
@@ -332,11 +369,12 @@ export default function History() {
                     {formatRelativeTime(item.listened_at)}
                   </div>
 
-                  <div className="grid w-[150px] grid-cols-[repeat(2,32px)_minmax(80px,1fr)] items-center justify-items-end gap-2 text-right xl:hidden">
+                  <div className="grid w-[190px] grid-cols-[repeat(3,32px)_minmax(80px,1fr)] items-center justify-items-end gap-2 text-right xl:hidden">
                     <AddToPlaylistButton
                       song={item}
                       triggerClassName="h-8 w-8 !border-white/20 !bg-white/5 md:hover:!bg-white/15"
                     />
+                    <SongDetailIconButton song={item} />
                     <button
                       type="button"
                       onClick={(e) => {
@@ -363,7 +401,7 @@ export default function History() {
         </div>
       </div>
 
-      {hasMore && (
+      {false && hasMore && (
         <div className="flex justify-center pt-2">
           <button
             onClick={() => loadHistory(currentPage + 1, true)}
@@ -374,6 +412,13 @@ export default function History() {
           </button>
         </div>
       )}
+
+      <div
+        ref={sentinelRef}
+        className="user-surface flex min-h-16 items-center justify-center px-4 text-center text-xs text-white/60"
+      >
+        {statusText}
+      </div>
     </div>
   );
 }

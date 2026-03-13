@@ -12,6 +12,7 @@ import ArtistAlbumCard from "../components/album/ArtistAlbumCard";
 import ArtistNames from "../components/artist/ArtistNames";
 import Section from "../components/section/Section";
 import SongCard from "../components/song/SongCard";
+import { SongDetailLink } from "../components/song/SongDetailLink";
 import useAuthStore from "../store/auth.store";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { filterPlayableSongs, fetchPlayableSong, toPlayableSong } from "../utils/song";
@@ -503,7 +504,12 @@ export default function Home() {
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-white">{song.title}</p>
+                    <SongDetailLink
+                      song={song}
+                      className="truncate text-sm font-semibold text-white transition md:hover:text-emerald-300 md:hover:underline"
+                    >
+                      {song.title}
+                    </SongDetailLink>
                     <ArtistNames
                       item={song}
                       stopPropagation
@@ -627,7 +633,12 @@ export default function Home() {
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-white sm:text-base">{song.title}</p>
+                      <SongDetailLink
+                        song={song}
+                        className="truncate text-sm font-semibold text-white transition md:hover:text-emerald-300 md:hover:underline sm:text-base"
+                      >
+                        {song.title}
+                      </SongDetailLink>
                       <ArtistNames
                         item={song}
                         stopPropagation

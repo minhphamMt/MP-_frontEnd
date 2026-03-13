@@ -5,6 +5,7 @@ import AdminDialogHost from "../components/admin/AdminDialogHost";
 import { AUTH_REQUIRED_EVENT, getAuthRequiredMessage } from "../utils/authPrompt";
 import Header from "../components/header/Header";
 import PlayerBar from "../components/player/PlayerBar";
+import PlayerDockPanel from "../components/player/PlayerDockPanel";
 import Sidebar from "../components/sidebar/Sidebar";
 import useAuthStore from "../store/auth.store";
 
@@ -58,7 +59,7 @@ export default function MainLayout() {
 
         <main
           ref={mainRef}
-          className={`scrollbar-page relative flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 ${
+          className={`scrollbar-page relative min-w-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 ${
             isAdminRoute
               ? "admin-main-surface bg-[#0a0a0a]"
               : isArtistWorkspaceRoute
@@ -67,7 +68,7 @@ export default function MainLayout() {
           }`}
         >
           <div
-            className={`relative z-10 ${
+            className={`relative z-10 w-full min-w-0 ${
               isAdminRoute
                 ? "admin-content"
                 : isArtistWorkspaceRoute
@@ -80,6 +81,7 @@ export default function MainLayout() {
             <Outlet />
           </div>
         </main>
+        {shouldShowPlayer && <PlayerDockPanel />}
       </div>
 
       {shouldShowPlayer && <PlayerBar />}

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { getSongLyrics } from "../../api/song.api";
-import { normalizeSongId } from "../../store/player.store";
+import { useEffect, useMemo, useRef } from "react";
+import usePlayerStore, { normalizeSongId } from "../../store/player.store";
+
+const EMPTY_LYRICS = [];
 
 export default function PlayerDetailLyrics({
   currentSong,
@@ -8,51 +9,37 @@ export default function PlayerDetailLyrics({
   isActive,
   onSeek,
 }) {
-  const [lyricsState, setLyricsState] = useState({
-    items: [],
-    loading: false,
-    error: null,
-  });
   const lyricsContainerRef = useRef(null);
   const lastLyricIndexRef = useRef(-1);
+  const songId = normalizeSongId(currentSong);
+  const ensureLyricsLoaded = usePlayerStore((state) => state.ensureLyricsLoaded);
+  const lyricItems = usePlayerStore((state) =>
+    songId ? state.lyricsBySongId[songId] ?? EMPTY_LYRICS : EMPTY_LYRICS
+  );
+  const lyricsLoading = usePlayerStore((state) =>
+    songId ? Boolean(state.lyricsLoadingBySongId[songId]) : false
+  );
+  const lyricsError = usePlayerStore((state) =>
+    songId ? state.lyricsErrorBySongId[songId] ?? null : null
+  );
 
   useEffect(() => {
-    const songId = normalizeSongId(currentSong);
     lastLyricIndexRef.current = -1;
+  }, [songId]);
 
-    if (!songId) {
-      setLyricsState({ items: [], loading: false, error: null });
-      return;
-    }
-
-    setLyricsState((prev) => ({ ...prev, loading: true, error: null }));
-    getSongLyrics(songId)
-      .then((res) => {
-        const payload = res?.data?.data ?? res?.data ?? {};
-        const items = payload?.items ?? payload ?? [];
-        setLyricsState({
-          items: Array.isArray(items) ? items : [],
-          loading: false,
-          error: null,
-        });
-      })
-      .catch(() => {
-        setLyricsState({
-          items: [],
-          loading: false,
-          error: "Không thể tải lời bài hát",
-        });
-      });
-  }, [currentSong]);
+  useEffect(() => {
+    if (!songId) return;
+    ensureLyricsLoaded(songId);
+  }, [ensureLyricsLoaded, songId]);
 
   const lyricIndex = useMemo(() => {
-    if (!lyricsState.items.length) return -1;
+    if (!lyricItems.length) return -1;
 
     const ms = Math.floor(displayedTime * 1000);
     let active = -1;
 
-    for (let i = 0; i < lyricsState.items.length; i += 1) {
-      const item = lyricsState.items[i];
+    for (let i = 0; i < lyricItems.length; i += 1) {
+      const item = lyricItems[i];
       const start = Number(item?.start_time ?? item?.startTime ?? 0);
 
       if (ms >= start) active = i;
@@ -60,7 +47,7 @@ export default function PlayerDetailLyrics({
     }
 
     return active;
-  }, [displayedTime, lyricsState.items]);
+  }, [displayedTime, lyricItems]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -82,29 +69,29 @@ export default function PlayerDetailLyrics({
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-      {lyricsState.loading ? (
-        <div className="text-sm text-white/56">Đang tải lời bài hát...</div>
+      {lyricsLoading ? (
+        <div className="text-sm text-white/56">
+          {"\u0110ang t\u1ea3i l\u1eddi b\u00e0i h\u00e1t..."}
+        </div>
       ) : null}
 
-      {lyricsState.error ? (
-        <div className="text-sm text-red-100/90">{lyricsState.error}</div>
+      {lyricsError ? (
+        <div className="text-sm text-red-100/90">{lyricsError}</div>
       ) : null}
 
-      {!lyricsState.loading &&
-      !lyricsState.error &&
-      lyricsState.items.length === 0 ? (
-        <div className="text-sm text-white/48">Bài hát chưa có lời.</div>
+      {!lyricsLoading && !lyricsError && lyricItems.length === 0 ? (
+        <div className="text-sm text-white/48">
+          {"B\u00e0i h\u00e1t ch\u01b0a c\u00f3 l\u1eddi."}
+        </div>
       ) : null}
 
-      {!lyricsState.loading &&
-      !lyricsState.error &&
-      lyricsState.items.length > 0 ? (
+      {!lyricsLoading && !lyricsError && lyricItems.length > 0 ? (
         <div
           ref={lyricsContainerRef}
           data-mobile-sheet-scroll="true"
           className="mt-1 flex-1 space-y-2 overflow-y-auto pr-1 scrollbar-hidden"
         >
-          {lyricsState.items.map((item, index) => {
+          {lyricItems.map((item, index) => {
             const isLineActive = index === lyricIndex;
 
             return (

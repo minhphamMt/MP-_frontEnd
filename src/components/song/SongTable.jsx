@@ -8,6 +8,7 @@ import { resolveAssetUrl } from "../../utils/asset";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import OptimizedImage from "../common/OptimizedImage";
 import ArtistNames from "../artist/ArtistNames";
+import { SongDetailIconButton, SongDetailLink } from "./SongDetailLink";
 
 export default function SongTable({ title, subtitle, songs, loading, onRefresh, headerActions }) {
   useEnsureLikedSongsLoaded();
@@ -123,7 +124,14 @@ export default function SongTable({ title, subtitle, songs, loading, onRefresh, 
                     </div>
 
                     <div className="min-w-0">
-                      <div className={`truncate font-medium ${isActive ? "text-emerald-300" : "text-white"}`}>{song.title}</div>
+                      <SongDetailLink
+                        song={song}
+                        className={`truncate font-medium transition md:hover:text-emerald-300 md:hover:underline ${
+                          isActive ? "text-emerald-300" : "text-white"
+                        }`}
+                      >
+                        {song.title}
+                      </SongDetailLink>
                       <div className="truncate text-xs text-white/60">
                         <ArtistNames
                           item={song}
@@ -149,6 +157,7 @@ export default function SongTable({ title, subtitle, songs, loading, onRefresh, 
                       song={song}
                       triggerClassName="h-9 w-9 !border-white/20 !bg-white/[0.06] md:hover:!bg-white/[0.14]"
                     />
+                    <SongDetailIconButton song={song} className="h-9 w-9 border-white/20" />
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -169,6 +178,7 @@ export default function SongTable({ title, subtitle, songs, loading, onRefresh, 
                       song={song}
                       triggerClassName="h-8 w-8 !border-white/20 !bg-white/[0.06] md:hover:!bg-white/[0.14]"
                     />
+                    <SongDetailIconButton song={song} />
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

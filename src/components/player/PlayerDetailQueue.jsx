@@ -2,6 +2,7 @@ import { memo, useMemo } from "react";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
 import ArtistNames from "../artist/ArtistNames";
+import { SongDetailLink } from "../song/SongDetailLink";
 
 function PlayerDetailQueue({ queue = [], currentIndex = 0, playAt }) {
   const activeIndex = useMemo(() => {
@@ -44,11 +45,19 @@ function PlayerDetailQueue({ queue = [], currentIndex = 0, playAt }) {
 
   const Item = ({ song, index, label, isCurrent = false, isPlayed = false }) => {
     const cover = resolveAssetUrl(song?.cover || song?.cover_url || song?.image);
+    const handleSelect = () => playAt?.(index);
 
     return (
-      <button
-        type="button"
-        onClick={() => playAt?.(index)}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={handleSelect}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleSelect();
+          }
+        }}
         className={`group flex w-full items-center gap-3 rounded-[18px] px-3 py-3 text-left transition ${
           isCurrent
             ? "bg-white/[0.1] text-white"
@@ -71,9 +80,12 @@ function PlayerDetailQueue({ queue = [], currentIndex = 0, playAt }) {
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-2">
-            <div className="min-w-0 flex-1 text-sm font-semibold leading-tight line-clamp-2">
+            <SongDetailLink
+              song={song}
+              className="min-w-0 flex-1 text-sm font-semibold leading-tight line-clamp-2 transition md:hover:text-emerald-300 md:hover:underline"
+            >
               {song?.title}
-            </div>
+            </SongDetailLink>
             {label ? (
               <span
                 className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
@@ -96,7 +108,7 @@ function PlayerDetailQueue({ queue = [], currentIndex = 0, playAt }) {
             />
           </div>
         </div>
-      </button>
+      </div>
     );
   };
 

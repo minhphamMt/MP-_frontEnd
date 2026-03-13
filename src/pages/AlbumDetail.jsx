@@ -1,10 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FiCalendar, FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
+import {
+  FiCalendar,
+  FiClock,
+  FiDisc,
+  FiHeart,
+  FiMusic,
+  FiPause,
+  FiPlay,
+  FiUser,
+} from "react-icons/fi";
 import { getAlbumById } from "../api/album.api";
-import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 import ArtistNames from "../components/artist/ArtistNames";
 import OptimizedImage from "../components/common/OptimizedImage";
+import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
+import { SongDetailIconButton, SongDetailLink } from "../components/song/SongDetailLink";
 import {
   useEnsureLikedAlbumsLoaded,
   useEnsureLikedSongsLoaded,
@@ -21,19 +31,47 @@ import {
   normalizeArtists,
 } from "../utils/artist";
 import { formatDateDisplay } from "../utils/date";
-import { toPlayableSong } from "../utils/song";
+import { formatDuration, toPlayableSong } from "../utils/song";
 
-const formatTime = (s = 0) =>
-  `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+const formatTotalDuration = (seconds = 0) => {
+  const total = Number.isFinite(Number(seconds)) ? Math.max(0, Math.round(Number(seconds))) : 0;
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+
+  if (hours > 0) return `${hours} giờ ${minutes} phút`;
+  return formatDuration(total);
+};
+
+const stripHtml = (value = "") =>
+  `${value}`
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+function SectionHeader({ label, title, description, headerActions }) {
+  return (
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="min-w-0">
+        <p className="user-heading-label">{label}</p>
+        <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">{title}</h2>
+        {description && <p className="mt-2 max-w-3xl text-sm text-white/65">{description}</p>}
+      </div>
+      {headerActions ? <div className="flex flex-wrap items-center gap-2">{headerActions}</div> : null}
+    </div>
+  );
+}
 
 export default function AlbumDetail() {
   useEnsureLikedSongsLoaded();
   useEnsureLikedAlbumsLoaded();
+
   const { id } = useParams();
   const navigate = useNavigate();
   const [album, setAlbum] = useState(null);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const {
     playSong,
@@ -45,52 +83,67 @@ export default function AlbumDetail() {
   const role = useAuthStore((state) => state.role);
   const isArtistRole = role === "ARTIST";
   const canPlay = role !== "ARTIST" && role !== "ADMIN";
-  const likedAlbumIds = useAlbumLikeStore((s) => s.likedAlbumIds);
-  const toggleAlbumLike = useAlbumLikeStore((s) => s.toggleAlbumLike);
+  const likedAlbumIds = useAlbumLikeStore((state) => state.likedAlbumIds);
+  const toggleAlbumLike = useAlbumLikeStore((state) => state.toggleAlbumLike);
 
-  /* =======================
-     LOAD ALBUM (GIỮ NGUYÊN)
-     ======================= */
   const loadAlbum = useCallback(async () => {
     try {
       setLoading(true);
-
       const res = await getAlbumById(id);
-      const data = res?.data?.data;
-      if (!data) {
+      const payload = res?.data?.data ?? res?.data ?? null;
+
+      if (!payload) {
         setAlbum(null);
+        setSongs([]);
+        setErrorMessage("Không tìm thấy album.");
         return;
       }
 
-      setAlbum(data);
-      setSongs(
-        (data.songs || []).map((s) => {
-          const fallbackArtists = normalizeArtists({
-            artist_id: s.artist_id || s.artist?.id || data.artist_id || data.artist?.id,
-            artist_name:
-              s.artist_name ||
-              s.artist?.name ||
-              data.artist_name ||
-              data.artist?.name ||
-              "",
-          });
-          const artists = normalizeArtists({
-            ...s,
-            artists: s.artists || fallbackArtists,
-          });
+      const normalizedAlbum = {
+        ...payload,
+        id: payload.id ?? payload.album_id ?? payload.albumId ?? id,
+        title: payload.title ?? payload.name ?? "Album",
+        cover_url: payload.cover_url || payload.cover || "",
+        artist_name: getArtistLabel(
+          payload,
+          payload.artist_name || payload.artist?.name || payload.artist?.alias || ""
+        ),
+      };
 
-          return toPlayableSong({
-            ...s,
-            artist_name: getArtistLabel({ ...s, artists }, ""),
-            artist_id: getPrimaryArtistId({ ...s, artists }),
-            artists,
-            album_id: s.album_id ?? data.id,
-            album_title: s.album_title ?? data.title,
-          });
-        })
-      );
+      const normalizedSongs = (payload.songs || []).map((song) => {
+        const fallbackArtists = normalizeArtists({
+          artist_id: song.artist_id || song.artist?.id || payload.artist_id || payload.artist?.id,
+          artist_name:
+            song.artist_name ||
+            song.artist?.name ||
+            payload.artist_name ||
+            payload.artist?.name ||
+            payload.artist?.alias ||
+            "",
+        });
+        const artists = normalizeArtists({
+          ...song,
+          artists: song.artists || fallbackArtists,
+        });
+
+        return toPlayableSong({
+          ...song,
+          artist_name: getArtistLabel({ ...song, artists }, ""),
+          artist_id: getPrimaryArtistId({ ...song, artists }),
+          artists,
+          album_id: song.album_id ?? normalizedAlbum.id,
+          album_title: song.album_title ?? normalizedAlbum.title,
+        });
+      });
+
+      setAlbum(normalizedAlbum);
+      setSongs(normalizedSongs);
+      setErrorMessage("");
     } catch (err) {
       console.error("Load album detail error:", err);
+      setAlbum(null);
+      setSongs([]);
+      setErrorMessage("Không thể tải album.");
     } finally {
       setLoading(false);
     }
@@ -101,276 +154,426 @@ export default function AlbumDetail() {
   }, [loadAlbum]);
 
   const totalDuration = useMemo(
-    () => songs.reduce((acc, curr) => acc + (curr.duration || 0), 0),
+    () => songs.reduce((sum, item) => sum + Number(item?.duration || 0), 0),
     [songs]
   );
+
   const albumId = normalizeAlbumId(album);
   const isLiked = albumId && likedAlbumIds.includes(albumId);
+  const artistMeta = album?.artist || {};
+  const artistDisplayName =
+    album?.artist_name || artistMeta?.name || artistMeta?.alias || "Đang cập nhật";
+  const artistId = album?.artist_id || artistMeta?.id || null;
+  const releaseDate = album?.release_date ? formatDateDisplay(album.release_date) : "Đang cập nhật";
+  const artistSummary = useMemo(
+    () =>
+      artistMeta?.short_bio ||
+      artistMeta?.shortBio ||
+      (artistMeta?.bio ? stripHtml(artistMeta.bio).slice(0, 240).trim() : ""),
+    [artistMeta?.bio, artistMeta?.shortBio, artistMeta?.short_bio]
+  );
+
+  const summaryCards = useMemo(
+    () => [
+      { icon: FiMusic, label: "Bài hát", value: `${songs.length}` },
+      { icon: FiClock, label: "Tổng thời lượng", value: formatTotalDuration(totalDuration) },
+      { icon: FiCalendar, label: "Ngày phát hành", value: releaseDate },
+      { icon: FiUser, label: "Nghệ sĩ", value: artistDisplayName },
+    ],
+    [artistDisplayName, releaseDate, songs.length, totalDuration]
+  );
+
+  const albumInfoItems = useMemo(
+    () => [
+      { label: "Tên album", value: album?.title || "Đang cập nhật" },
+      { label: "Nghệ sĩ", value: artistDisplayName },
+      { label: "Ngày phát hành", value: releaseDate },
+      { label: "Số bài hát", value: `${songs.length} bài hát` },
+      { label: "Tổng thời lượng", value: formatTotalDuration(totalDuration) },
+    ],
+    [album?.title, artistDisplayName, releaseDate, songs.length, totalDuration]
+  );
+
+  const artistInfoItems = useMemo(
+    () =>
+      [
+        { label: "Nghệ danh", value: artistMeta?.alias },
+        { label: "Tên thật", value: artistMeta?.realname },
+        {
+          label: "Ngày sinh",
+          value: artistMeta?.birthday ? formatDateDisplay(artistMeta.birthday) : null,
+        },
+        { label: "Quốc gia", value: artistMeta?.national },
+      ].filter((item) => item.value),
+    [artistMeta?.alias, artistMeta?.birthday, artistMeta?.national, artistMeta?.realname]
+  );
 
   if (loading) {
     return (
-      <div className="user-page-shell min-h-screen p-6 text-white/60">
-        <div className="user-surface p-6">Đang tải album...</div>
+      <div className="user-page-shell min-h-screen w-full max-w-full space-y-6 px-4 py-6 sm:px-8">
+        <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
+          <div className="user-surface h-[320px] animate-pulse bg-white/5" />
+          <div className="user-surface h-[320px] animate-pulse bg-white/5" />
+        </div>
+        <div className="user-surface h-[420px] animate-pulse bg-white/5" />
+        <div className="user-surface h-[280px] animate-pulse bg-white/5" />
       </div>
     );
   }
 
   if (!album) {
     return (
-      <div className="user-page-shell min-h-screen p-6 text-white/60">
-        <div className="user-surface p-6">Album không tồn tại</div>
+      <div className="user-page-shell min-h-screen w-full max-w-full px-4 py-6 sm:px-8">
+        <div className="user-surface flex min-h-[260px] items-center justify-center p-6 text-center">
+          <div className="space-y-3">
+            <p className="user-heading-label">Album</p>
+            <h1 className="text-2xl font-black text-white">Không tìm thấy album</h1>
+            <p className="text-sm text-white/60">
+              {errorMessage || "Album này hiện chưa sẵn sàng trong thư viện."}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
-  const artistMeta = album?.artist || {};
-  const artistDisplayName =
-    album?.artist_name || artistMeta?.name || artistMeta?.alias;
-  const artistId = album?.artist_id || artistMeta?.id;
-  const artistInfoItems = [
-    { label: "Nghệ danh", value: artistMeta?.alias },
-    { label: "Tên thật", value: artistMeta?.realname },
-    {
-      label: "Ngày sinh",
-      value: artistMeta?.birthday ? formatDateDisplay(artistMeta.birthday) : null,
-    },
-    { label: "Quốc gia", value: artistMeta?.national },
-  ].filter((item) => item.value);
-
   return (
-    <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">
-      <div className="user-surface relative overflow-hidden p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
-        <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-emerald-500/20 blur-3xl" />
+    <div className="user-page-shell min-h-screen w-full max-w-full space-y-8 px-4 py-6 sm:px-8">
+      {errorMessage && (
+        <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+          {errorMessage}
+        </div>
+      )}
 
-        <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center">
-          <div className="mx-auto w-full max-w-[260px] lg:mx-0">
-            <div className="relative overflow-hidden rounded-2xl shadow-xl shadow-black/40">
+      <section className="user-surface relative overflow-hidden p-5 sm:p-6 lg:p-8">
+        {album.cover_url && (
+          <div
+            className="pointer-events-none absolute inset-0 opacity-20"
+            style={{
+              backgroundImage: `url(${resolveAssetUrl(album.cover_url)})`,
+              backgroundPosition: "center",
+              backgroundSize: "cover",
+            }}
+          />
+        )}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(29,185,84,0.24),_transparent_38%),linear-gradient(135deg,rgba(255,255,255,0.06),transparent_36%)]" />
+        <div className="pointer-events-none absolute -top-24 right-0 h-60 w-60 rounded-full bg-emerald-400/10 blur-3xl" />
+
+        <div className="relative grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
+          <div className="mx-auto w-full max-w-[300px] xl:mx-0">
+            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#171717] shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
               <OptimizedImage
                 src={resolveAssetUrl(album.cover_url)}
                 alt={album.title}
-                className="aspect-square h-full w-full object-cover object-center transition duration-500 md:hover:scale-105"
+                className="aspect-square h-full w-full object-cover object-center"
               />
-              <div className="absolute inset-0 rounded-2xl border border-white/10" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
             </div>
           </div>
 
-          <div className="flex-1 space-y-5">
-            <div>
-              <p className="mb-2 text-xs uppercase tracking-[0.35em] text-white/50">
-                Album
-              </p>
-              <h1 className="text-2xl font-extrabold leading-tight text-white sm:text-3xl">
+          <div className="min-w-0 space-y-6">
+            <div className="space-y-3">
+              <p className="user-heading-label">Album</p>
+              <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl xl:text-5xl">
                 {album.title}
               </h1>
-              {artistDisplayName && (
-                <button
-                  type="button"
-                  onClick={() => artistId && navigate(`/artist/${artistId}`)}
-                  disabled={!artistId}
-                  className="mt-1 text-sm text-white/70 transition md:hover:text-emerald-300 disabled:cursor-default disabled:hover:text-white/70"
-                >
-                  {artistDisplayName}
-                </button>
-              )}
-            </div>
-
-            <div className="flex flex-wrap gap-3 text-sm text-white/70">
-              <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">
-                {songs.length} bài hát
-              </span>
-              <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">
-                Tổng thời lượng: {formatTime(totalDuration)}
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1">
-                <FiCalendar className="text-emerald-300" />
-                {formatDateDisplay(album.release_date)}
-              </span>
-            </div>
-
-            {songs.length > 0 && (
-              <div className="flex flex-wrap gap-3 pt-2">
-                {canPlay ? (
-                  <button
-                    onClick={() => playSong(songs[0], songs)}
-                    className="rounded-full border border-emerald-300/50 bg-emerald-400 px-6 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-green-400/30 transition md:hover:scale-[1.05] md:hover:brightness-110 active:scale-[0.97]"
-                  >
-                    ▶ Phát tất cả
-                  </button>
-                ) : (
-                  <div className="rounded-full border border-white/15 bg-white/5 px-6 py-2 text-sm text-white/60">
-                    Chỉ xem thông tin
-                  </div>
-                )}
-
-                <button
-                  onClick={() => {
-                    if (!isArtistRole) {
-                      toggleAlbumLike(albumId);
-                    }
-                  }}
-                  disabled={isArtistRole}
-                  className={`rounded-full border px-6 py-2 text-sm transition ${
-                    isLiked
-                      ? "border-rose-400/40 bg-rose-500/10 text-rose-200 md:hover:bg-rose-500/20"
-                      : "border-white/15 bg-white/5 text-white/80 md:hover:bg-white/10"
-                  } ${isArtistRole ? "cursor-not-allowed opacity-60" : ""}`}
-                >
-                  {isLiked ? "✓ Đã thích" : "+ Thích album"}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {(artistDisplayName || artistInfoItems.length > 0) && (
-        <div className="user-surface relative overflow-hidden p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-          <div className="pointer-events-none absolute inset-0 bg-white/[0.02]" />
-          <div className="relative space-y-4">
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60">
-              <span className="h-[1px] w-6 bg-white/30" />
-              <span>Nghệ sĩ</span>
-            </div>
-            {artistDisplayName && (
               <button
                 type="button"
                 onClick={() => artistId && navigate(`/artist/${artistId}`)}
                 disabled={!artistId}
-                className="text-lg font-semibold text-white transition md:hover:text-emerald-300 disabled:cursor-default disabled:hover:text-white"
+                className="inline-flex max-w-full items-center gap-2 text-left text-sm text-white/78 transition md:hover:text-emerald-300 disabled:cursor-default disabled:hover:text-white/78"
               >
-                {artistDisplayName}
+                <FiUser className="shrink-0" />
+                <span className="truncate">{artistDisplayName}</span>
               </button>
-            )}
-            {artistInfoItems.length > 0 && (
-              <div className="grid gap-3 text-sm text-white/80 sm:grid-cols-2">
-                {artistInfoItems.map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3"
-                  >
-                    <span className="text-white/60">{item.label}</span>
-                    <span className="font-medium text-white">{item.value}</span>
+              {artistSummary && (
+                <p className="max-w-3xl text-sm leading-relaxed text-white/78 sm:text-[15px]">
+                  {artistSummary}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2.5">
+              <span className="user-chip rounded-full px-3 py-1.5 text-xs font-medium">
+                {songs.length} bài hát
+              </span>
+              <span className="user-chip rounded-full px-3 py-1.5 text-xs font-medium">
+                {formatTotalDuration(totalDuration)}
+              </span>
+              <span className="user-chip rounded-full px-3 py-1.5 text-xs font-medium">
+                {releaseDate}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {canPlay && songs.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => playSong(songs[0], songs)}
+                  className="user-btn-primary inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold"
+                >
+                  <FiPlay className="text-base" />
+                  Phát tất cả
+                </button>
+              ) : (
+                <div className="user-btn-secondary inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold text-white/65">
+                  <FiDisc />
+                  Chỉ xem thông tin
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isArtistRole) toggleAlbumLike(albumId);
+                }}
+                disabled={isArtistRole}
+                className={`inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold transition ${
+                  isLiked
+                    ? "border-rose-400/60 bg-rose-500/18 text-rose-100 md:hover:bg-rose-500/24"
+                    : "border-white/15 bg-white/5 text-white/80 md:hover:bg-white/10"
+                } ${isArtistRole ? "cursor-not-allowed opacity-60" : ""}`}
+              >
+                <FiHeart className={isLiked ? "text-rose-300" : ""} />
+                {isLiked ? "Đã thích album" : "Thích album"}
+              </button>
+
+              {artistId && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/artist/${artistId}`)}
+                  className="user-btn-secondary inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold"
+                >
+                  <FiUser />
+                  Xem nghệ sĩ
+                </button>
+              )}
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {summaryCards.map((item) => (
+                <article key={item.label} className="user-soft-card px-4 py-4">
+                  <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-white/50">
+                    <item.icon className="text-white/60" />
+                    <span>{item.label}</span>
                   </div>
-                ))}
-              </div>
-            )}
+                  <p className="mt-3 truncate text-lg font-bold text-white sm:text-xl">{item.value}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
-      )}
+      </section>
 
-      <div className="user-surface scrollbar-muted overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.45)] xl:overflow-x-auto">
-        <div className="min-w-0 xl:min-w-[640px]">
-          <div className="px-4 pt-4 text-sm font-semibold text-white xl:hidden">
-            Danh sách bài hát
+      <section className="user-surface p-5 sm:p-6">
+        <SectionHeader
+          label="Tracklist"
+          title="Danh sách bài hát"
+          description={
+            canPlay
+              ? "Tracklist của album nằm trọn ở đây để bạn nghe liền mạch hoặc chọn đúng bài mình thích."
+              : "Tài khoản hiện tại đang ở chế độ xem thông tin của album."
+          }
+          headerActions={
+            songs.length > 0 ? (
+              <span className="user-chip rounded-full px-3 py-1 text-xs font-medium">
+                {songs.length} bài hát
+              </span>
+            ) : null
+          }
+        />
+
+        {songs.length === 0 ? (
+          <div className="mt-5 rounded-[24px] border border-white/10 bg-[#121212] px-5 py-10 text-center text-sm text-white/60">
+            Album này hiện chưa có track nào để nghe.
           </div>
+        ) : (
+          <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-[#121212]">
+            <div className="hidden grid-cols-[56px_minmax(0,2.35fr)_minmax(0,1.15fr)_88px_120px] items-center border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/45 lg:grid">
+              <span className="text-center">#</span>
+              <span>Bài hát</span>
+              <span>Nghệ sĩ</span>
+              <span className="text-center">Thời gian</span>
+              <span className="text-right">Tác vụ</span>
+            </div>
 
-          <div className="hidden grid-cols-[60px_1fr_140px_100px] items-center bg-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-white/60 xl:grid xl:px-5">
-            <span className="text-center">#</span>
-            <span>Bài hát</span>
-            <span className="text-center">Hành động</span>
-            <span className="text-right">Thời gian</span>
-          </div>
+            <div className="divide-y divide-white/8">
+              {songs.map((song, index) => {
+                const songId = normalizeSongId(song);
+                const isActive = normalizeSongId(currentSong) === songId;
+                const isSongLiked = songId && likedSongIds.includes(songId);
 
-          <div className="divide-y divide-white/5">
-            {songs.map((song, index) => {
-              const songId = normalizeSongId(song);
-              const isActive = normalizeSongId(currentSong) === songId;
-              const isSongLiked = songId && likedSongIds.includes(songId);
+                return (
+                  <article
+                    key={song.id || `${song.title}-${index}`}
+                    onClick={canPlay ? () => playSong(song, songs) : undefined}
+                    className={`group grid min-w-0 grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 transition lg:grid-cols-[56px_minmax(0,2.35fr)_minmax(0,1.15fr)_88px_120px] ${
+                      isActive
+                        ? "bg-emerald-400/10"
+                        : canPlay
+                          ? "cursor-pointer md:hover:bg-white/[0.04]"
+                          : "cursor-default"
+                    }`}
+                  >
+                    <div className="hidden items-center justify-center lg:flex">
+                      {isActive ? (
+                        isPlaying ? (
+                          <FiPause className="text-base text-emerald-300" />
+                        ) : (
+                          <FiPlay className="text-base text-emerald-300" />
+                        )
+                      ) : (
+                        <span className="text-sm font-semibold text-white/55">{index + 1}</span>
+                      )}
+                    </div>
 
-              return (
-                <div
-                  key={song.id}
-                  onClick={canPlay ? () => playSong(song, songs) : undefined}
-                  className={`group grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 transition xl:grid-cols-[60px_1fr_140px_100px] xl:gap-3 xl:px-5 ${
-                    isActive
-                      ? "bg-emerald-400/10"
-                      : canPlay
-                        ? "cursor-pointer md:hover:bg-white/5"
-                        : "cursor-default"
-                  }`}
-                >
-                  <div className="hidden text-center text-sm font-semibold xl:block">
-                    {isActive ? (
-                      <FiMusic className="mx-auto text-emerald-400" />
-                    ) : (
-                      <span className="text-white/70">{index + 1}</span>
-                    )}
-                  </div>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5">
+                        <OptimizedImage
+                          src={resolveAssetUrl(song.cover_url)}
+                          alt={song.title}
+                          className="h-full w-full object-cover"
+                        />
+                        {canPlay && (
+                          <div
+                            className={`absolute inset-0 flex items-center justify-center bg-black/45 transition ${
+                              isActive ? "opacity-100" : "opacity-0 md:group-hover:opacity-100"
+                            }`}
+                          >
+                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-300 text-black shadow-[0_8px_18px_rgba(52,211,153,0.35)]">
+                              {isActive && isPlaying ? (
+                                <FiPause className="text-sm" />
+                              ) : (
+                                <FiPlay className="ml-0.5 text-sm" />
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </div>
 
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/30 sm:h-12 sm:w-12">
-                      <OptimizedImage
-                        src={resolveAssetUrl(song.cover_url)}
-                        alt={song.title}
-                        className="h-full w-full object-cover"
-                      />
-
-                      <div
-                        className={`absolute inset-0 flex items-center justify-center bg-black/50 transition ${
-                          isActive ? "opacity-100" : "opacity-0 md:group-hover:opacity-100"
-                        }`}
-                      >
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1db954] text-black shadow-[0_8px_16px_rgba(29,185,84,0.35)]">
-                          {isActive && isPlaying ? (
-                            <FiPause className="text-sm" />
-                          ) : (
-                            <FiPlay className="ml-0.5 text-sm" />
-                          )}
+                      <div className="min-w-0">
+                        <SongDetailLink
+                          song={song}
+                          className={`truncate text-sm font-semibold transition md:hover:text-emerald-300 md:hover:underline sm:text-[15px] ${
+                            isActive ? "text-emerald-300" : "text-white"
+                          }`}
+                        >
+                          {song.title}
+                        </SongDetailLink>
+                        <div className="mt-1 truncate text-xs text-white/60 lg:hidden">
+                          <ArtistNames
+                            item={song}
+                            stopPropagation
+                            fallback={artistDisplayName}
+                            linkClassName="transition md:hover:text-emerald-300 md:hover:underline"
+                          />
+                        </div>
+                        <div className="mt-1 truncate text-[11px] text-white/40 lg:hidden">
+                          {formatDuration(song.duration)}
                         </div>
                       </div>
                     </div>
 
-                    <div className="min-w-0">
-                      <div
-                        className={`truncate text-sm font-semibold sm:text-base ${
-                          isActive ? "text-emerald-300" : "text-white"
-                        }`}
-                      >
-                        {song.title}
-                      </div>
-                      <div className="hidden truncate text-xs text-white/60 xl:block">
-                        <ArtistNames
-                          item={song}
-                          stopPropagation
-                          fallback={artistDisplayName || "Nghệ sĩ"}
-                          linkClassName="inline-block transition md:hover:text-emerald-300 md:hover:underline"
-                        />
-                      </div>
+                    <div className="hidden min-w-0 text-sm text-white/60 lg:block">
+                      <ArtistNames
+                        item={song}
+                        stopPropagation
+                        fallback={artistDisplayName}
+                        linkClassName="truncate transition md:hover:text-emerald-300 md:hover:underline"
+                      />
                     </div>
-                  </div>
 
-                  <div className="flex items-center justify-end gap-2 lg:justify-center">
-                    <AddToPlaylistButton
-                      song={song}
-                      disabled={isArtistRole}
-                      triggerClassName="h-8 w-8 !border-white/20 !bg-white/10 sm:h-9 sm:w-9 md:hover:!bg-white/20"
-                    />
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!isArtistRole && songId) toggleLike(songId);
-                      }}
-                      disabled={isArtistRole}
-                      className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm transition sm:h-9 sm:w-9 ${
-                        isSongLiked
-                          ? "border-rose-400/40 text-rose-300"
-                          : "border-white/10 text-white/70 md:hover:bg-white/15"
-                      } ${isArtistRole ? "cursor-not-allowed opacity-60" : ""}`}
-                      aria-label={isSongLiked ? "Bỏ thích bài hát" : "Thích bài hát"}
+                    <div className="hidden text-center text-sm text-white/50 lg:block">
+                      {formatDuration(song.duration)}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2">
+                      <SongDetailIconButton song={song} />
+                      <AddToPlaylistButton
+                        song={song}
+                        disabled={isArtistRole}
+                        triggerClassName="h-8 w-8 !border-white/20 !bg-white/[0.06] md:hover:!bg-white/[0.14]"
+                      />
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (!isArtistRole && songId) toggleLike(songId);
+                        }}
+                        disabled={isArtistRole}
+                        className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm transition ${
+                          isSongLiked
+                            ? "border-rose-400/50 bg-rose-400/10 text-rose-300"
+                            : "border-white/15 text-white/65 md:hover:bg-white/[0.1]"
+                        } ${isArtistRole ? "cursor-not-allowed opacity-60" : ""}`}
+                        aria-label={isSongLiked ? "Bỏ thích bài hát" : "Thích bài hát"}
+                      >
+                        <FiHeart />
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="user-surface p-5 sm:p-6">
+        <SectionHeader
+          label="Thông tin"
+          title="Album và nghệ sĩ"
+          description="Những điểm nổi bật của album và nghệ sĩ được đặt cạnh nhau để bạn theo dõi dễ hơn."
+        />
+
+        <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {albumInfoItems.map((item) => (
+              <article key={item.label} className="user-soft-card px-4 py-4">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-white/45">{item.label}</p>
+                <p className="mt-3 text-sm font-semibold text-white sm:text-[15px]">{item.value}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <article className="user-soft-card p-5">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-white/45">Nghệ sĩ phát hành</p>
+              <h3 className="mt-3 text-xl font-bold text-white">{artistDisplayName}</h3>
+              {artistSummary && (
+                <p className="mt-2 text-sm leading-relaxed text-white/65">{artistSummary}</p>
+              )}
+              {artistId && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/artist/${artistId}`)}
+                  className="user-btn-secondary mt-4 inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold"
+                >
+                  <FiUser />
+                  Mở trang nghệ sĩ
+                </button>
+              )}
+            </article>
+
+            {artistInfoItems.length > 0 && (
+              <article className="user-soft-card p-5">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-white/45">Thông tin thêm</p>
+                <div className="mt-4 space-y-3">
+                  {artistInfoItems.map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex flex-wrap items-center justify-between gap-2 border-b border-white/8 pb-3 last:border-none last:pb-0"
                     >
-                      <FiHeart />
-                    </button>
-                  </div>
-
-                  <div className="hidden text-right text-sm text-white/60 xl:block">
-                    {formatTime(song.duration)}
-                  </div>
+                      <span className="text-sm text-white/55">{item.label}</span>
+                      <span className="text-sm font-semibold text-white">{item.value}</span>
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
+              </article>
+            )}
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

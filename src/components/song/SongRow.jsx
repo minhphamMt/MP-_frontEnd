@@ -5,6 +5,7 @@ import { formatDuration } from "../../utils/song";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
 import ArtistNames from "../artist/ArtistNames";
+import { SongDetailLink } from "./SongDetailLink";
 
 export default function SongRow({ song, queue }) {
   const { playSong, currentSong, isPlaying } = usePlayerStore();
@@ -42,7 +43,12 @@ export default function SongRow({ song, queue }) {
 
       <div className="min-w-0 flex-1 overflow-hidden">
         <div className={`truncate text-sm font-semibold transition ${isActive ? "text-emerald-300" : "text-white"}`}>
-          <span className="block w-full truncate">{song.title}</span>
+          <SongDetailLink
+            song={song}
+            className="block w-full truncate transition md:hover:text-emerald-300 md:hover:underline"
+          >
+            {song.title}
+          </SongDetailLink>
         </div>
         <div className="flex min-w-0 max-w-full items-center gap-1 overflow-hidden text-xs text-white/60">
           <ArtistNames

@@ -5,6 +5,7 @@ import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
 import ArtistNames from "../artist/ArtistNames";
+import { SongDetailLink } from "./SongDetailLink";
 
 export default function SongCard({ song, queue }) {
   useEnsureLikedSongsLoaded();
@@ -58,7 +59,12 @@ export default function SongCard({ song, queue }) {
             Gợi ý
           </div>
           <div className={`truncate text-base font-semibold sm:text-lg ${isActive ? "text-emerald-300" : "text-white"}`}>
-            {song.title}
+            <SongDetailLink
+              song={song}
+              className="truncate transition md:hover:text-emerald-300 md:hover:underline"
+            >
+              {song.title}
+            </SongDetailLink>
           </div>
           <div className="truncate text-xs text-white/70 sm:text-sm">
             <ArtistNames

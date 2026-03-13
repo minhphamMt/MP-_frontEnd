@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FaBackwardStep, FaForwardStep, FaPause, FaPlay } from "react-icons/fa6";
+import { FiColumns } from "react-icons/fi";
 import {
   HiHeart,
   HiOutlineHeart,
@@ -15,6 +16,7 @@ import useAuthStore from "../../store/auth.store";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
 import PlayerDetail from "./PlayerDetail";
+import { SongDetailLink } from "../song/SongDetailLink";
 
 const formatTime = (t = 0) =>
   `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
@@ -44,6 +46,10 @@ export default function PlayerBar() {
     toggleLike,
     lastPlayedLoading,
     ensureLastPlayedLoaded,
+    dockPanelOpen,
+    dockPanelTab,
+    openDockPanel,
+    closeDockPanel,
   } = usePlayerStore();
 
   useEnsureLikedSongsLoaded(Boolean(currentSong));
@@ -53,6 +59,11 @@ export default function PlayerBar() {
       ensureLastPlayedLoaded();
     }
   }, [ensureLastPlayedLoaded, isAuthReady, isAuthenticated]);
+
+  useEffect(() => {
+    if (!showDetail) return;
+    closeDockPanel();
+  }, [closeDockPanel, showDetail]);
 
   if (!currentSong) {
     const isInitializingPlayer = !isAuthReady || (isAuthenticated && lastPlayedLoading);
@@ -70,6 +81,7 @@ export default function PlayerBar() {
   const volumePercent = Math.round((volume ?? 0) * 100);
   const displayVolumePercent = muted ? 0 : volumePercent;
   const volumeGradient = `linear-gradient(to right, #1db954 ${displayVolumePercent}%, rgba(255,255,255,0.2) ${displayVolumePercent}%)`;
+  const isLiked = likedSongIds.includes(normalizeSongId(currentSong));
 
   const handleVolumeChange = (value) => {
     const next = Math.round(Number(value));
@@ -95,7 +107,12 @@ export default function PlayerBar() {
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-medium text-white">{currentSong.title}</div>
+            <SongDetailLink
+              song={currentSong}
+              className="block truncate text-sm font-medium text-white transition md:hover:text-emerald-300 md:hover:underline"
+            >
+              {currentSong.title}
+            </SongDetailLink>
             <div className="truncate text-xs text-white/60">
               <ArtistNames
                 item={currentSong}
@@ -111,14 +128,10 @@ export default function PlayerBar() {
               const songId = normalizeSongId(currentSong);
               if (songId) toggleLike(songId);
             }}
-            className={`text-lg transition ${
-              likedSongIds.includes(normalizeSongId(currentSong))
-                ? "text-[#1db954]"
-                : "text-white/70"
-            }`}
+            className={`text-lg transition ${isLiked ? "text-[#1db954]" : "text-white/70"}`}
             aria-label="Yêu thích"
           >
-            {likedSongIds.includes(normalizeSongId(currentSong)) ? <HiHeart /> : <HiOutlineHeart />}
+            {isLiked ? <HiHeart /> : <HiOutlineHeart />}
           </button>
 
           <button
@@ -164,7 +177,12 @@ export default function PlayerBar() {
               />
             </div>
             <div className="min-w-0">
-              <div className="truncate font-semibold text-white">{currentSong.title}</div>
+              <SongDetailLink
+                song={currentSong}
+                className="block truncate font-semibold text-white transition md:hover:text-emerald-300 md:hover:underline"
+              >
+                {currentSong.title}
+              </SongDetailLink>
               <div className="truncate text-sm text-white/60">
                 <ArtistNames
                   item={currentSong}
@@ -178,17 +196,11 @@ export default function PlayerBar() {
                 if (songId) toggleLike(songId);
               }}
               className={`ml-auto flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-sm transition md:hover:border-white/20 ${
-                likedSongIds.includes(normalizeSongId(currentSong))
-                  ? "text-[#1db954]"
-                  : "text-white/60"
+                isLiked ? "text-[#1db954]" : "text-white/60"
               }`}
               aria-label="Yêu thích"
             >
-              {likedSongIds.includes(normalizeSongId(currentSong)) ? (
-                <HiHeart />
-              ) : (
-                <HiOutlineHeart />
-              )}
+              {isLiked ? <HiHeart /> : <HiOutlineHeart />}
             </button>
           </div>
 
@@ -232,7 +244,8 @@ export default function PlayerBar() {
             <button
               onClick={() => setShowDetail(true)}
               className="text-white/70 md:hover:text-white"
-              aria-label="Mở hàng chờ"
+              aria-label="Mở trình phát mở rộng"
+              title="Mở trình phát mở rộng"
             >
               <HiOutlineQueueList />
             </button>
@@ -241,6 +254,7 @@ export default function PlayerBar() {
               onClick={toggleRepeatMode}
               className={repeatMode !== "off" ? "text-[#1db954]" : "text-white/70"}
               aria-label="Chế độ lặp"
+              title="Chế độ lặp"
             >
               <span className="relative inline-flex">
                 <RiRepeat2Fill />
@@ -257,6 +271,7 @@ export default function PlayerBar() {
                 onClick={toggleMute}
                 className="text-white/70 md:hover:text-white"
                 aria-label={muted || volumePercent === 0 ? "Bật âm thanh" : "Tắt âm thanh"}
+                title={muted || volumePercent === 0 ? "Bật âm thanh" : "Tắt âm thanh"}
               >
                 {muted || volumePercent === 0 ? (
                   <HiOutlineSpeakerXMark />
@@ -274,6 +289,22 @@ export default function PlayerBar() {
                 style={{ background: volumeGradient }}
               />
             </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                dockPanelOpen ? closeDockPanel() : openDockPanel(dockPanelTab || "queue")
+              }
+              className={`hidden h-10 w-10 items-center justify-center rounded-xl border transition lg:flex ${
+                dockPanelOpen
+                  ? "border-[#1db954]/40 bg-[#1db954]/14 text-[#9ff0bc] shadow-[0_10px_24px_rgba(29,185,84,0.16)]"
+                  : "border-white/10 bg-[#111111] text-white/70 md:hover:border-white/20 md:hover:bg-[#191919] md:hover:text-white"
+              }`}
+              aria-label={dockPanelOpen ? "Đóng bảng phát nhạc" : "Mở bảng phát nhạc"}
+              title={dockPanelOpen ? "Đóng bảng phát nhạc" : "Mở bảng phát nhạc"}
+            >
+              <FiColumns size={17} />
+            </button>
           </div>
         </div>
       </div>
