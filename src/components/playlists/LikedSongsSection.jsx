@@ -18,9 +18,11 @@ export default function LikedSongsSection({
   limit,
   showViewAll = false,
   onViewAll,
+  density = "cozy",
 }) {
   const visibleSongs =
     typeof limit === "number" ? songs.slice(0, limit) : songs;
+  const isCompact = density === "compact";
 
   return (
     <div>
@@ -75,7 +77,9 @@ export default function LikedSongsSection({
                 <article
                   key={song.id || `${song.title}-${index}`}
                   onClick={() => onPlay?.(song)}
-                  className={`group grid min-w-0 cursor-pointer grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 transition lg:grid-cols-[56px_minmax(0,2.3fr)_minmax(0,1.1fr)_88px_116px] ${
+                  className={`group grid min-w-0 cursor-pointer grid-cols-[1fr_auto] items-center gap-3 px-4 transition lg:grid-cols-[56px_minmax(0,2.3fr)_minmax(0,1.1fr)_88px_116px] ${
+                    isCompact ? "py-2.5" : "py-3"
+                  } ${
                     isPlayingCurrent
                       ? "bg-emerald-400/10"
                       : "md:hover:bg-white/[0.04]"
@@ -96,7 +100,11 @@ export default function LikedSongsSection({
                   </div>
 
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5">
+                    <div
+                      className={`relative shrink-0 overflow-hidden border border-white/10 bg-white/5 ${
+                        isCompact ? "h-11 w-11 rounded-lg" : "h-12 w-12 rounded-xl"
+                      }`}
+                    >
                       <OptimizedImage
                         src={resolveAssetUrl(song.cover_url)}
                         alt={song.title}
@@ -123,7 +131,9 @@ export default function LikedSongsSection({
                     <div className="min-w-0">
                       <SongDetailLink
                         song={song}
-                        className={`truncate text-sm font-semibold transition md:hover:text-emerald-300 md:hover:underline sm:text-[15px] ${
+                        className={`truncate font-semibold transition md:hover:text-emerald-300 md:hover:underline ${
+                          isCompact ? "text-[13px] sm:text-sm" : "text-sm sm:text-[15px]"
+                        } ${
                           isPlayingCurrent ? "text-emerald-300" : "text-white"
                         }`}
                       >

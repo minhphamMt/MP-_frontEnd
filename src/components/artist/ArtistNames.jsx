@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { getArtistLabel, normalizeArtists } from "../../utils/artist";
+import { stripUnderlineClasses } from "../../utils/linkClass";
 
 export default function ArtistNames({
   item,
@@ -8,8 +9,10 @@ export default function ArtistNames({
   className = "",
   linkClassName = "",
   stopPropagation = false,
+  onNavigate,
 }) {
   const resolvedArtists = normalizeArtists(artists ?? item);
+  const cleanedLinkClassName = stripUnderlineClasses(linkClassName);
 
   if (!resolvedArtists.length) {
     const label = getArtistLabel(item, fallback);
@@ -26,6 +29,7 @@ export default function ArtistNames({
           if (stopPropagation) {
             event.stopPropagation();
           }
+          onNavigate?.(event);
         };
 
         return (
@@ -34,7 +38,10 @@ export default function ArtistNames({
               <Link
                 to={`/artist/${artist.id}`}
                 onClick={handleClick}
-                className={linkClassName}
+                className={[
+                  "no-underline hover:no-underline focus:no-underline",
+                  cleanedLinkClassName,
+                ].join(" ")}
               >
                 {name}
               </Link>

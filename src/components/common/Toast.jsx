@@ -20,14 +20,14 @@ export default function Toast({
   return createPortal(
     <div
       className="
-        fixed top-6 left-1/2 -translate-x-1/2 z-[70] max-w-sm
+        fixed left-1/2 top-6 z-[70] max-w-sm -translate-x-1/2
         rounded-xl border border-white/10
         bg-[#1a1a1a] px-4 py-3 text-sm text-white
         shadow-2xl shadow-emerald-500/20
         animate-[toast-in_0.35s_cubic-bezier(0.22,1,0.36,1)]
       "
-      onClick={(e) => {
-        e.stopPropagation();
+      onClick={(event) => {
+        event.stopPropagation();
       }}
     >
       <div className="flex items-start gap-3">
@@ -38,9 +38,9 @@ export default function Toast({
           <p className="font-semibold leading-relaxed">{message}</p>
         </div>
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
+          onClick={(event) => {
+            event.stopPropagation();
+            event.preventDefault();
             onClose();
           }}
           className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/80 transition md:hover:bg-white/20"

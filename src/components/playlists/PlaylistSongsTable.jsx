@@ -64,11 +64,17 @@ export default function PlaylistSongsTable({
 
               <div className="flex min-w-0 items-center gap-3">
                 <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5">
-                  <OptimizedImage
-                    src={resolveAssetUrl(song.cover_url)}
-                    alt={song.title}
-                    className="h-full w-full object-cover"
-                  />
+                  {song.cover_url ? (
+                    <OptimizedImage
+                      src={resolveAssetUrl(song.cover_url)}
+                      alt={song.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-white/35">
+                      <FiMusic />
+                    </div>
+                  )}
 
                   <div
                     className={`absolute inset-0 flex items-center justify-center bg-black/45 transition ${
@@ -88,7 +94,7 @@ export default function PlaylistSongsTable({
                 <div className="min-w-0">
                   <SongDetailLink
                     song={song}
-                    className={`truncate text-sm font-semibold transition md:hover:text-emerald-300 md:hover:underline sm:text-[15px] ${
+                    className={`truncate text-sm font-semibold transition md:hover:text-emerald-300 sm:text-[15px] ${
                       isActive ? "text-emerald-300" : "text-white"
                     }`}
                   >
@@ -100,7 +106,7 @@ export default function PlaylistSongsTable({
                       item={song}
                       stopPropagation
                       fallback="Đang cập nhật nghệ sĩ"
-                      linkClassName="transition md:hover:text-emerald-300 md:hover:underline"
+                      linkClassName="transition md:hover:text-emerald-300"
                     />
                   </div>
 
@@ -115,7 +121,7 @@ export default function PlaylistSongsTable({
                   item={song}
                   stopPropagation
                   fallback="Đang cập nhật nghệ sĩ"
-                  linkClassName="truncate transition md:hover:text-emerald-300 md:hover:underline"
+                  linkClassName="truncate transition md:hover:text-emerald-300"
                 />
               </div>
 

@@ -6,6 +6,7 @@ export default function ArtistFollowSection({
   containerRef,
   cardVariant = "grid",
   gridClassName,
+  density = "cozy",
 }) {
   const isLibrary = cardVariant === "library";
   const normalizedArtists = artists.map((artist) => ({
@@ -30,7 +31,7 @@ export default function ArtistFollowSection({
       <div ref={containerRef} className="scrollbar-hidden flex gap-3 overflow-x-auto pb-2 sm:gap-4 scroll-smooth">
         {normalizedArtists.map((artist) => (
           <div key={artist.artist_id} className="w-44 shrink-0 sm:w-60 lg:w-64">
-            <ArtistAlbumCard artist={artist} variant="rail" />
+            <ArtistAlbumCard artist={artist} variant="rail" density={density} />
           </div>
         ))}
       </div>
@@ -40,7 +41,12 @@ export default function ArtistFollowSection({
   return (
     <div ref={containerRef} className={gridClassName || "grid min-[520px]:grid-cols-2 grid-cols-1 gap-4 sm:gap-6"}>
       {normalizedArtists.map((artist) => (
-        <ArtistAlbumCard key={artist.artist_id} artist={artist} variant={cardVariant} />
+        <ArtistAlbumCard
+          key={artist.artist_id}
+          artist={artist}
+          variant={cardVariant}
+          density={density}
+        />
       ))}
     </div>
   );

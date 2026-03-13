@@ -10,7 +10,7 @@ import { getArtistLabel, getPrimaryArtistId, normalizeArtists } from "../../util
 import { toPlayableSong } from "../../utils/song";
 import ArtistNames from "../artist/ArtistNames";
 
-export default function AlbumCard({ album, variant = "rail" }) {
+export default function AlbumCard({ album, variant = "rail", density = "cozy" }) {
   useEnsureLikedAlbumsLoaded();
   const navigate = useNavigate();
   const playSong = usePlayerStore((s) => s.playSong);
@@ -20,6 +20,7 @@ export default function AlbumCard({ album, variant = "rail" }) {
   const isLiked = albumId && likedAlbumIds.includes(albumId);
   const isRail = variant === "rail";
   const isLibrary = variant === "library";
+  const isCompact = density === "compact";
 
   const handlePlayAlbum = async (e) => {
     e.stopPropagation();
@@ -57,10 +58,16 @@ export default function AlbumCard({ album, variant = "rail" }) {
       data-card
       onClick={() => navigate(`/album/${album.id}`)}
       className={`group relative cursor-pointer overflow-hidden p-3 transition-all duration-300 ${isRail ? "w-44 shrink-0 sm:w-60 sm:p-4 lg:w-64" : "w-full sm:p-4"} ${
-        isLibrary ? "rounded-lg border border-white/10 bg-[#181818]" : "user-surface"
+        isLibrary
+          ? `${isCompact ? "rounded-[18px]" : "rounded-lg"} border border-white/10 bg-[#181818]`
+          : "user-surface"
       }`}
     >
-      <div className={`relative aspect-square w-full overflow-hidden ${isLibrary ? "rounded-md" : "rounded-xl"}`}>
+      <div
+        className={`relative aspect-square w-full overflow-hidden ${
+          isLibrary ? (isCompact ? "rounded-[14px]" : "rounded-md") : "rounded-xl"
+        }`}
+      >
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -95,15 +102,25 @@ export default function AlbumCard({ album, variant = "rail" }) {
         </button>
       </div>
 
-      <div className="relative mt-3 space-y-1">
+      <div className={`relative ${isCompact ? "mt-2.5 space-y-1" : "mt-3 space-y-1"}`}>
         <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/50">
           <FiDisc className="text-emerald-300" />
           Album
         </div>
 
-        <h3 className="truncate text-sm font-semibold text-white sm:text-base">{album.title}</h3>
+        <h3
+          className={`truncate font-semibold text-white ${
+            isCompact ? "text-[13px] sm:text-sm" : "text-sm sm:text-base"
+          }`}
+        >
+          {album.title}
+        </h3>
 
-        <div className="flex items-center gap-2 text-xs text-white/70 sm:text-sm">
+        <div
+          className={`flex items-center gap-2 text-white/70 ${
+            isCompact ? "text-[11px] sm:text-xs" : "text-xs sm:text-sm"
+          }`}
+        >
           <FiMusic className="shrink-0 text-white/60" />
           <ArtistNames
             item={album}

@@ -15,6 +15,7 @@ import { GridComponent, TooltipComponent, LegendComponent } from "echarts/compon
 import { SVGRenderer } from "echarts/renderers";
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import { getAdminOverview, getReportCharts } from "../../api/admin.api";
+import ChartLoadingState from "../../components/charts/ChartLoadingState";
 import { getArtistLabel } from "../../utils/artist";
 
 echarts.use([
@@ -55,9 +56,17 @@ const formatMonthLabel = (value) => {
   return `${month}/${year}`;
 };
 
+const SONG_STATUS_HEIGHT = "clamp(280px, 34vw, 340px)";
+const WEEKLY_TOP_HEIGHT = "clamp(360px, 48vw, 470px)";
+const GENRE_STATUS_HEIGHT = "clamp(260px, 30vw, 300px)";
+const ROLE_DISTRIBUTION_HEIGHT = "clamp(176px, 24vw, 190px)";
+const REQUEST_TREND_HEIGHT = "clamp(220px, 28vw, 250px)";
+const ALBUM_BY_MONTH_HEIGHT = "clamp(220px, 28vw, 250px)";
+
 function ChartPanel({ title, subtitle, icon: Icon, children, right, className = "" }) {
   return (
     <section
+      data-card
       className={`admin-glass w-full min-w-0 rounded-3xl border border-white/10 bg-[#181818] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.45)] ${className}`}
     >
       <div className="mb-4 flex items-start justify-between gap-3">
@@ -267,7 +276,7 @@ function WeeklyTopChart({ items }) {
       lazyUpdate
       opts={{ renderer: "svg" }}
       className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
-      style={{ width: "100%", height: 470 }}
+      style={{ width: "100%", height: WEEKLY_TOP_HEIGHT }}
     />
   );
 }
@@ -358,7 +367,7 @@ function GenreStatusChart({ rows }) {
       lazyUpdate
       opts={{ renderer: "svg" }}
       className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
-      style={{ width: "100%", height: 300 }}
+      style={{ width: "100%", height: GENRE_STATUS_HEIGHT }}
     />
   );
 }
@@ -432,7 +441,7 @@ function RoleDistributionChart({ counts, total }) {
       lazyUpdate
       opts={{ renderer: "svg" }}
       className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
-      style={{ width: "100%", height: 190 }}
+      style={{ width: "100%", height: ROLE_DISTRIBUTION_HEIGHT }}
     />
   );
 }
@@ -514,7 +523,7 @@ function LineChart({ labels, values }) {
       lazyUpdate
       opts={{ renderer: "svg" }}
       className="w-full min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
-      style={{ width: "100%", height: 250 }}
+      style={{ width: "100%", height: REQUEST_TREND_HEIGHT }}
     />
   );
 }
@@ -594,7 +603,7 @@ function AlbumByMonthChart({ items }) {
       lazyUpdate
       opts={{ renderer: "svg" }}
       className="w-full min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#141414]"
-      style={{ width: "100%", height: 250 }}
+      style={{ width: "100%", height: ALBUM_BY_MONTH_HEIGHT }}
     />
   );
 }
@@ -850,13 +859,18 @@ export default function AdminAnalytics() {
         {overviewKpi.map((item) => (
           <article
             key={item.key}
+            data-card
             className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
           >
             <div className="flex items-center justify-between text-white/60">
               <span className="text-xs uppercase tracking-[0.2em]">{item.label}</span>
               <item.icon />
             </div>
-            <p className="mt-3 text-3xl font-black text-white">{loading ? "..." : item.value}</p>
+            {loading ? (
+              <div className="ui-skeleton mt-3 h-9 w-20 rounded-full bg-white/8" />
+            ) : (
+              <p className="mt-3 text-3xl font-black text-white">{item.value}</p>
+            )}
           </article>
         ))}
       </div>
@@ -868,7 +882,7 @@ export default function AdminAnalytics() {
           icon={FiBarChart2}
         >
           {loading ? (
-            <p className="text-sm text-white/60">Đang tải dữ liệu...</p>
+            <ChartLoadingState height={SONG_STATUS_HEIGHT} bars={5} />
           ) : songStatusSummary.total === 0 ? (
             <p className="text-sm text-white/60">Không có dữ liệu trạng thái bài hát.</p>
           ) : (
@@ -885,7 +899,7 @@ export default function AdminAnalytics() {
           icon={FiTrendingUp}
         >
           {loading ? (
-            <p className="text-sm text-white/60">Đang tải dữ liệu...</p>
+            <ChartLoadingState height={WEEKLY_TOP_HEIGHT} bars={5} />
           ) : weeklyRanking.length === 0 ? (
             <p className="text-sm text-white/60">Chưa có dữ liệu top bài hát tuần.</p>
           ) : (
@@ -901,7 +915,7 @@ export default function AdminAnalytics() {
           icon={FiMusic}
         >
           {loading ? (
-            <p className="text-sm text-white/60">Đang tải dữ liệu...</p>
+            <ChartLoadingState height={GENRE_STATUS_HEIGHT} bars={5} />
           ) : genreStatusRows.length === 0 ? (
             <p className="text-sm text-white/60">Không có dữ liệu thể loại bài hát.</p>
           ) : (
@@ -915,7 +929,7 @@ export default function AdminAnalytics() {
           icon={FiUsers}
         >
           {loading ? (
-            <p className="text-sm text-white/60">Đang tải dữ liệu...</p>
+            <ChartLoadingState height={ROLE_DISTRIBUTION_HEIGHT} bars={3} compact />
           ) : roleSummary.total === 0 ? (
             <p className="text-sm text-white/60">Không có dữ liệu người dùng.</p>
           ) : (
@@ -955,7 +969,7 @@ export default function AdminAnalytics() {
           }
         >
           {loading ? (
-            <p className="text-sm text-white/60">Đang tải dữ liệu...</p>
+            <ChartLoadingState height={REQUEST_TREND_HEIGHT} bars={6} />
           ) : requestTrend.values.length === 0 ? (
             <p className="text-sm text-white/60">Chưa có dữ liệu yêu cầu nghệ sĩ.</p>
           ) : requestTrend.total === 0 ? (
@@ -972,7 +986,7 @@ export default function AdminAnalytics() {
           icon={FiDisc}
         >
           {loading ? (
-            <p className="text-sm text-white/60">Đang tải dữ liệu...</p>
+            <ChartLoadingState height={ALBUM_BY_MONTH_HEIGHT} bars={4} compact />
           ) : albumByMonth.length === 0 ? (
             <p className="text-sm text-white/60">Chưa có dữ liệu album theo tháng.</p>
           ) : (

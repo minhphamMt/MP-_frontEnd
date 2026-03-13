@@ -19,7 +19,7 @@ import { filterPlayableSongs, fetchPlayableSong, toPlayableSong } from "../utils
 import { resolveAssetUrl } from "../utils/asset";
 import { getArtistLabel } from "../utils/artist";
 
-const HOME_HISTORY_LIMIT = 20;
+const HOME_HISTORY_LIMIT = 60;
 const CONTINUE_SONGS_LIMIT = 6;
 const RECOMMENDATION_DESKTOP_LIMIT = 9;
 const RECOMMENDATION_TABLET_LIMIT = 8;
@@ -64,6 +64,39 @@ const dedupeSongIds = (items = []) => {
     seen.add(id);
     return true;
   });
+};
+
+const buildContinueSongs = (historyItems = []) => {
+  const normalized = historyItems
+    .map((item, index) => {
+      const song = toPlayableSong(item?.song || item);
+      if (!song?.id) return null;
+
+      const listenedAt =
+        item?.listened_at || item?.listen_time || item?.created_at || null;
+      const historyId =
+        item?.id ??
+        item?._id ??
+        item?.history_id ??
+        item?.historyId ??
+        `${song.id}-${listenedAt || index}-${index}`;
+
+      return {
+        ...song,
+        listened_at: listenedAt,
+        progressPercent: progressPercent(item, song.duration),
+        continueKey: `${historyId}-${index}`,
+      };
+    })
+    .filter(Boolean);
+
+  return normalized
+    .reduce((acc, item) => {
+      if (acc.some((entry) => entry.id === item.id)) return acc;
+      acc.push(item);
+      return acc;
+    }, [])
+    .slice(0, CONTINUE_SONGS_LIMIT);
 };
 
 const normalizeRecommendedIds = (items = []) =>
@@ -207,21 +240,7 @@ export default function Home() {
       setNewAlbums(toList(albumRes?.data?.data || albumRes?.data));
 
       if (isAuthenticated) {
-        const normalized = dedupeSongIds(
-          historyItems
-            .map((item) => {
-              const song = toPlayableSong(item?.song || item);
-              if (!song?.id) return null;
-              return {
-                ...song,
-                listened_at: item?.listened_at || item?.listen_time || item?.created_at,
-                progressPercent: progressPercent(item, song.duration),
-              };
-            })
-            .filter(Boolean)
-        ).slice(0, CONTINUE_SONGS_LIMIT);
-
-        setContinueSongs(normalized);
+        setContinueSongs(buildContinueSongs(historyItems));
         setContinueLoading(false);
       } else {
         historyCacheRef.current = [];
@@ -417,8 +436,8 @@ export default function Home() {
         <div className="relative z-10 max-w-2xl space-y-4">
           {loadingHome && !featuredSong ? (
             <div className="space-y-3">
-              <div className="h-3 w-32 animate-pulse rounded-full bg-white/15" />
-              <div className="h-9 w-[70%] animate-pulse rounded-lg bg-white/20" />
+              <div className="ui-skeleton-line h-3 w-32" />
+              <div className="ui-skeleton-line h-9 w-[70%] rounded-lg" />
             </div>
           ) : (
             <>
@@ -476,13 +495,13 @@ export default function Home() {
             </Link>
           </div>
         ) : continueLoading ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, idx) => (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: CONTINUE_SONGS_LIMIT }).map((_, idx) => (
               <div key={idx} className="rounded-2xl border border-white/10 bg-[#151515] p-3">
-                <div className="h-14 animate-pulse rounded-xl bg-white/10" />
+                <div className="ui-skeleton h-14 rounded-xl" />
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
         ) : !continueSongs.length ? (
           <div className="rounded-2xl border border-white/10 bg-[#151515] p-4 text-sm text-white/70">
             Chưa có bài nào để tiếp tục nghe.
@@ -491,7 +510,7 @@ export default function Home() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {continueSongs.map((song) => (
               <article
-                key={song.id}
+                key={song.continueKey || `${song.id}-${song.listened_at || song.title}`}
                 className="group rounded-2xl border border-white/10 bg-[#151515] p-3 transition md:hover:border-white/20 md:hover:bg-[#1a1a1a]"
               >
                 <div className="flex items-center gap-3">
@@ -562,7 +581,7 @@ export default function Home() {
         {recommendationLoading && !songs.length ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
             {Array.from({ length: recommendationLimit }).map((_, idx) => (
-              <div key={idx} className="h-28 animate-pulse rounded-2xl border border-white/10 bg-[#151515]" />
+              <div key={idx} className="ui-skeleton h-28 rounded-2xl border border-white/10" />
             ))}
           </div>
         ) : !songs.length ? (
@@ -595,7 +614,7 @@ export default function Home() {
         {chartLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, idx) => (
-              <div key={idx} className="h-14 animate-pulse rounded-xl border border-white/10 bg-[#151515]" />
+              <div key={idx} className="ui-skeleton h-14 rounded-xl border border-white/10" />
             ))}
           </div>
         ) : !weeklyTop.length ? (
@@ -682,7 +701,7 @@ export default function Home() {
               ? Array.from({ length: 4 }).map((_, idx) => (
                   <div
                     key={idx}
-                    className="h-60 w-44 shrink-0 animate-pulse rounded-2xl border border-white/10 bg-[#151515] sm:w-60 lg:w-64"
+                    className="ui-skeleton h-60 w-44 shrink-0 rounded-2xl border border-white/10 sm:w-60 lg:w-64"
                   />
                 ))
               : artistAlbums.map((artist) => (
@@ -728,7 +747,7 @@ export default function Home() {
               ? Array.from({ length: 4 }).map((_, idx) => (
                   <div
                     key={idx}
-                    className="h-60 w-44 shrink-0 animate-pulse rounded-2xl border border-white/10 bg-[#151515] sm:w-60 lg:w-64"
+                    className="ui-skeleton h-60 w-44 shrink-0 rounded-2xl border border-white/10 sm:w-60 lg:w-64"
                   />
                 ))
               : newAlbums.map((album) => <AlbumCard key={album.id} album={album} />)}

@@ -17,15 +17,18 @@ import {
   deletePlaylist,
   getPlaylistById,
   removeSongFromPlaylist,
+  reorderSongInPlaylist,
   updatePlaylist,
 } from "../api/playlist.api";
 import { getRecommendations } from "../api/recommendation.api";
 import { getSongById } from "../api/song.api";
 import OptimizedImage from "../components/common/OptimizedImage";
+import ShareLinkButton from "../components/common/ShareLinkButton";
 import Toast from "../components/common/Toast";
 import PlaylistSongsTable from "../components/playlists/PlaylistSongsTable";
 import PlaylistSuggestions from "../components/playlists/PlaylistSuggestions";
 import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
+import usePageMetadata from "../hooks/usePageMetadata";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { resolveAssetUrl } from "../utils/asset";
 import {
@@ -47,6 +50,23 @@ const normalizePlaylist = (payload = {}) => ({
 const getSongKey = (song) => {
   const id = normalizeSongId(song) ?? song?.id ?? song?.song_id ?? song?._id;
   return id === undefined || id === null ? "" : String(id);
+};
+
+const moveListItem = (list = [], fromIndex, toIndex) => {
+  const nextList = [...list];
+  if (
+    fromIndex === toIndex ||
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= nextList.length ||
+    toIndex >= nextList.length
+  ) {
+    return nextList;
+  }
+
+  const [movedItem] = nextList.splice(fromIndex, 1);
+  nextList.splice(toIndex, 0, movedItem);
+  return nextList;
 };
 
 const formatPlaylistDuration = (songs = []) => {
@@ -362,6 +382,53 @@ export default function PlaylistDetail() {
     }
   };
 
+  const handleReorderSong = async (fromIndex, toIndex) => {
+    if (!playlist?.id) return;
+    if (
+      fromIndex === toIndex ||
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= playlistSongs.length ||
+      toIndex >= playlistSongs.length
+    ) {
+      return;
+    }
+
+    const targetSong = playlistSongs[fromIndex];
+    const songId = getSongKey(targetSong);
+    if (!songId) return;
+
+    const optimisticSongs = moveListItem(playlistSongs, fromIndex, toIndex);
+    setPlaylist((prev) => (prev ? { ...prev, songs: optimisticSongs } : prev));
+
+    try {
+      setSaving(true);
+      const res = await reorderSongInPlaylist(playlist.id, songId, {
+        from_index: fromIndex,
+        to_index: toIndex,
+        fromIndex: fromIndex,
+        toIndex: toIndex,
+        target_index: toIndex,
+        targetIndex: toIndex,
+        new_index: toIndex,
+        newIndex: toIndex,
+        position: toIndex,
+      });
+
+      const payload = getData(res);
+      if (payload?.songs || payload?.items || payload?.data) {
+        updatePlaylistAfterChange(res);
+      }
+    } catch (error) {
+      console.error("Reorder playlist song failed", error);
+      setPlaylist((prev) => (prev ? { ...prev, songs: playlistSongs } : prev));
+      setToastTitle("Không thể đổi thứ tự");
+      setToastMessage("Bài hát chưa được sắp lại. Hãy thử lại sau.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const playlistCover = resolveAssetUrl(playlistSongs?.[0]?.cover_url);
   const uniqueArtistCount = useMemo(() => {
     const artistKeys = playlistSongs
@@ -415,16 +482,36 @@ export default function PlaylistDetail() {
     ],
     [likedSongsInPlaylistCount, playlistSongs, uniqueArtistCount]
   );
+  const sharePath = playlist?.id ? `/playlists/${playlist.id}` : id ? `/playlists/${id}` : "";
+  const playlistMetaDescription = useMemo(() => {
+    const parts = [
+      `${playlistSongs.length} bài hát`,
+      formatPlaylistDuration(playlistSongs),
+      `${uniqueArtistCount} nghệ sĩ`,
+    ].filter(Boolean);
+
+    return parts.length
+      ? `${parts.join(" • ")} trên Khoaluan Music.`
+      : "Khám phá playlist trên Khoaluan Music.";
+  }, [playlistSongs, uniqueArtistCount]);
+
+  usePageMetadata({
+    title: playlist?.title || "Playlist",
+    description: playlistMetaDescription,
+    image: playlistCover,
+    url: sharePath,
+    type: "music.playlist",
+  });
 
   if (loading) {
     return (
       <div className="user-page-shell min-h-screen w-full max-w-full space-y-6 px-4 py-6 sm:px-8">
         <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
-          <div className="user-surface h-[320px] animate-pulse bg-white/5" />
-          <div className="user-surface h-[320px] animate-pulse bg-white/5" />
+          <div className="user-surface ui-skeleton h-[320px] bg-white/5" />
+          <div className="user-surface ui-skeleton h-[320px] bg-white/5" />
         </div>
-        <div className="user-surface h-[360px] animate-pulse bg-white/5" />
-        <div className="user-surface h-[260px] animate-pulse bg-white/5" />
+        <div className="user-surface ui-skeleton h-[360px] bg-white/5" />
+        <div className="user-surface ui-skeleton h-[260px] bg-white/5" />
       </div>
     );
   }
@@ -563,6 +650,23 @@ export default function PlaylistDetail() {
                 <FiTrash2 />
                 Xóa playlist
               </button>
+
+              <ShareLinkButton
+                path={sharePath}
+                title="Chia sẻ playlist"
+                shareTitle={playlist?.title || "Playlist"}
+                shareText={`Nghe playlist ${playlist?.title || "này"} trên Khoaluan Music.`}
+                preview={{
+                  eyebrow: "Playlist",
+                  title: playlist?.title || "Playlist",
+                  subtitle: `${playlistSongs.length} bài hát • ${uniqueArtistCount} nghệ sĩ`,
+                  description: `${formatPlaylistDuration(
+                    playlistSongs
+                  )} • ${likedSongsInPlaylistCount} bài đã thích`,
+                  image: playlistCover,
+                }}
+                className="px-5 py-3"
+              />
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

@@ -9,9 +9,11 @@ export default function PlaylistGrid({
   onOpen,
   layout = "grid",
   variant = "default",
+  density = "cozy",
 }) {
   const isRowLayout = layout === "row";
   const isLibrary = variant === "library";
+  const isCompact = density === "compact";
 
   return (
     <div
@@ -19,7 +21,9 @@ export default function PlaylistGrid({
         isRowLayout
           ? "scrollbar-hidden flex gap-4 overflow-x-auto pb-2 sm:gap-5"
           : isLibrary
-            ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+            ? isCompact
+              ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
+              : "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
             : "grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 sm:gap-5"
       }
     >
@@ -38,7 +42,9 @@ export default function PlaylistGrid({
               isRowLayout ? "w-44 shrink-0 sm:w-52" : "w-full"
             } ${
               isLibrary
-                ? "rounded-[20px] border border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))] p-3"
+                ? isCompact
+                  ? "rounded-[18px] border border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))] p-2.5"
+                  : "rounded-[20px] border border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))] p-3"
                 : "user-surface p-3 sm:p-4"
             }`}
           >
@@ -54,7 +60,11 @@ export default function PlaylistGrid({
             ) : null}
 
             <div className="relative">
-              <div className="relative aspect-square w-full overflow-hidden rounded-[18px] border border-white/10 bg-[#181818]">
+              <div
+                className={`relative aspect-square w-full overflow-hidden border border-white/10 bg-[#181818] ${
+                  isCompact ? "rounded-[16px]" : "rounded-[18px]"
+                }`}
+              >
                 {cover ? (
                   <OptimizedImage
                     src={cover}
@@ -78,17 +88,27 @@ export default function PlaylistGrid({
                 </div>
               </div>
 
-              <div className="mt-3 space-y-1.5">
+              <div className={`${isCompact ? "mt-2.5 space-y-1" : "mt-3 space-y-1.5"}`}>
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-white/45">
                   <FiList className="text-white/60" />
                   <span>Bộ sưu tập</span>
                 </div>
 
-                <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-bold text-white sm:text-[15px]">
+                <h3
+                  className={`line-clamp-2 font-bold text-white ${
+                    isCompact
+                      ? "min-h-[2.25rem] text-[13px] sm:text-sm"
+                      : "min-h-[2.5rem] text-sm sm:text-[15px]"
+                  }`}
+                >
                   {playlist?.title || playlist?.name || "Playlist"}
                 </h3>
 
-                <div className="flex items-center gap-2 text-xs text-white/62 sm:text-sm">
+                <div
+                  className={`flex items-center gap-2 text-white/62 ${
+                    isCompact ? "text-[11px] sm:text-xs" : "text-xs sm:text-sm"
+                  }`}
+                >
                   <FiMusic className="shrink-0 text-white/55" />
                   <span>{songCount} bài hát</span>
                 </div>

@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FiCheckCircle, FiInfo, FiRefreshCw, FiSlash } from "react-icons/fi";
+import { FiCheckCircle, FiDownload, FiInfo, FiRefreshCw, FiSlash } from "react-icons/fi";
 import { approveSong, blockSong, listAdminSongs } from "../../api/admin.api";
 import { resolveAssetUrl } from "../../utils/asset";
 import { toPlayableSong } from "../../utils/song";
@@ -46,6 +46,8 @@ export default function AdminSongs() {
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [missingAudioOnly, setMissingAudioOnly] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [toast, setToast] = useState({ title: "", message: "" });
 
@@ -91,6 +93,10 @@ export default function AdminSongs() {
     navigate(location.pathname, { replace: true, state: {} });
   }, [location, navigate]);
 
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [songs, statusFilter, keyword, missingAudioOnly]);
+
   const handleApprove = async (song) => {
     if (!getSongAudio(song)) {
       setToast({
@@ -133,7 +139,104 @@ export default function AdminSongs() {
     }
   };
 
-  const visibleSongs = useMemo(() => songs, [songs]);
+  const visibleSongs = useMemo(() => {
+    if (!missingAudioOnly) return songs;
+    return songs.filter((song) => !getSongAudio(song));
+  }, [missingAudioOnly, songs]);
+
+  const selectedSongs = useMemo(
+    () => visibleSongs.filter((song) => selectedIds.includes(song.id)),
+    [selectedIds, visibleSongs]
+  );
+
+  const allVisibleSelected = visibleSongs.length > 0 && selectedSongs.length === visibleSongs.length;
+
+  const toggleSongSelection = (songId) => {
+    setSelectedIds((prev) =>
+      prev.includes(songId) ? prev.filter((item) => item !== songId) : [...prev, songId]
+    );
+  };
+
+  const toggleSelectAllVisible = () => {
+    setSelectedIds((prev) =>
+      allVisibleSelected ? prev.filter((id) => !visibleSongs.some((song) => song.id === id)) : visibleSongs.map((song) => song.id)
+    );
+  };
+
+  const exportVisibleSongs = () => {
+    if (!visibleSongs.length || typeof window === "undefined") return;
+
+    const rows = [
+      ["id", "title", "artist", "album", "status", "has_audio"],
+      ...visibleSongs.map((song) => [
+        song.id,
+        `"${(song.title || "").replace(/"/g, '""')}"`,
+        `"${(getArtistLabel(song, song.artist_name || "") || "").replace(/"/g, '""')}"`,
+        `"${(song.album_title || "Single").replace(/"/g, '""')}"`,
+        song.status || "",
+        getSongAudio(song) ? "yes" : "no",
+      ]),
+    ];
+
+    const blob = new Blob([rows.map((row) => row.join(",")).join("\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "admin-song-review.csv";
+    link.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleBulkApprove = async () => {
+    if (!selectedSongs.length) return;
+
+    try {
+      let processedCount = 0;
+      for (const song of selectedSongs) {
+        if (!getSongAudio(song)) continue;
+        await approveSong(song.id);
+        processedCount += 1;
+      }
+      setToast({
+        title: "Thành công",
+        message: `Đã duyệt ${processedCount} bài hát đã chọn.`,
+      });
+      await loadSongs();
+    } catch (error) {
+      console.error("Bulk approve songs failed", error);
+      setToast({ title: "Lỗi", message: "Không thể duyệt hàng loạt bài hát." });
+    }
+  };
+
+  const handleBulkReject = async () => {
+    if (!selectedSongs.length) return;
+
+    const reason = await promptAdminInput({
+      title: "Từ chối nhiều bài hát",
+      message: "Nhập lý do chung cho các bài hát đã chọn",
+      placeholder: "Nhập lý do...",
+      confirmText: "Từ chối",
+      cancelText: "Hủy",
+      tone: "danger",
+    });
+    if (!reason?.trim()) return;
+
+    try {
+      for (const song of selectedSongs) {
+        await blockSong(song.id, { reject_reason: reason.trim() });
+      }
+      setToast({
+        title: "Thành công",
+        message: `Đã từ chối ${selectedSongs.length} bài hát đã chọn.`,
+      });
+      await loadSongs();
+    } catch (error) {
+      console.error("Bulk reject songs failed", error);
+      setToast({ title: "Lỗi", message: "Không thể từ chối hàng loạt bài hát." });
+    }
+  };
 
   return (
     <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
@@ -168,8 +271,92 @@ export default function AdminSongs() {
           >
             <FiRefreshCw /> Làm mới
           </button>
+          <button
+            onClick={exportVisibleSongs}
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
+          >
+            <FiDownload /> Xuất CSV
+          </button>
         </div>
       </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setStatusFilter("pending");
+            setMissingAudioOnly(false);
+          }}
+          className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+            statusFilter === "pending" && !missingAudioOnly
+              ? "bg-amber-400/18 text-amber-100"
+              : "border border-white/12 bg-white/[0.04] text-white/70 md:hover:bg-white/[0.08]"
+          }`}
+        >
+          Chờ duyệt
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setStatusFilter("");
+            setMissingAudioOnly(true);
+          }}
+          className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+            missingAudioOnly
+              ? "bg-rose-400/18 text-rose-100"
+              : "border border-white/12 bg-white/[0.04] text-white/70 md:hover:bg-white/[0.08]"
+          }`}
+        >
+          Thiếu mp3
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setStatusFilter("");
+            setMissingAudioOnly(false);
+          }}
+          className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+            !statusFilter && !missingAudioOnly
+              ? "bg-emerald-400/18 text-emerald-100"
+              : "border border-white/12 bg-white/[0.04] text-white/70 md:hover:bg-white/[0.08]"
+          }`}
+        >
+          Toàn bộ
+        </button>
+      </div>
+
+      {selectedSongs.length ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-white/10 bg-white/[0.04] px-4 py-3">
+          <div className="text-sm text-white/78">
+            Đã chọn <span className="font-semibold text-white">{selectedSongs.length}</span> bài hát
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleBulkApprove}
+              className="inline-flex items-center gap-2 rounded-full border border-emerald-400/35 bg-emerald-500/12 px-4 py-2 text-xs font-semibold text-emerald-100 transition md:hover:bg-emerald-500/18"
+            >
+              <FiCheckCircle />
+              Duyệt đã chọn
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkReject}
+              className="inline-flex items-center gap-2 rounded-full border border-rose-400/35 bg-rose-500/12 px-4 py-2 text-xs font-semibold text-rose-100 transition md:hover:bg-rose-500/18"
+            >
+              <FiSlash />
+              Từ chối đã chọn
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedIds([])}
+              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-white/75 transition md:hover:bg-white/[0.08]"
+            >
+              Bỏ chọn
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {errorMessage && (
         <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
@@ -178,7 +365,16 @@ export default function AdminSongs() {
       )}
 
       <div className="overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.5fr_1fr_0.6fr_0.9fr]">
+        <div className="grid grid-cols-[40px_1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[40px_1.5fr_1fr_0.6fr_0.9fr]">
+          <label className="flex items-center justify-center">
+            <input
+              type="checkbox"
+              checked={allVisibleSelected}
+              onChange={toggleSelectAllVisible}
+              className="h-4 w-4 rounded border-white/20 bg-transparent"
+              aria-label="Chọn tất cả bài hát đang hiển thị"
+            />
+          </label>
           <span>Bài hát</span>
           <span className="hidden lg:block">Nghệ sĩ</span>
           <span className="hidden lg:block">Trạng thái</span>
@@ -199,8 +395,17 @@ export default function AdminSongs() {
             visibleSongs.map((song) => (
               <div
                 key={song.id}
-                className="grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 text-sm text-white/80 lg:grid-cols-[1.5fr_1fr_0.6fr_0.9fr]"
+                className="grid grid-cols-[40px_1fr_auto] items-center gap-2 px-4 py-3 text-sm text-white/80 lg:grid-cols-[40px_1.5fr_1fr_0.6fr_0.9fr]"
               >
+                <label className="flex items-center justify-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(song.id)}
+                    onChange={() => toggleSongSelection(song.id)}
+                    className="h-4 w-4 rounded border-white/20 bg-transparent"
+                    aria-label={`Chọn bài hát ${song.title}`}
+                  />
+                </label>
                 <div className="flex items-center gap-3">
                   {getSongCover(song) ? (
                     <OptimizedImage

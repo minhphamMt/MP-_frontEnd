@@ -41,4 +41,43 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+
+          if (id.includes("echarts-for-react")) {
+            return "charts-react";
+          }
+
+          if (id.includes("zrender")) {
+            return "charts-render";
+          }
+
+          if (id.includes("echarts")) {
+            return "charts-core";
+          }
+
+          if (id.includes("firebase")) {
+            return "firebase";
+          }
+
+          if (id.includes("framer-motion")) {
+            return "motion";
+          }
+
+          if (id.includes("react-icons")) {
+            return "icons";
+          }
+
+          if (id.includes("axios") || id.includes("zustand")) {
+            return "core";
+          }
+
+          return "vendor";
+        },
+      },
+    },
+  },
 });

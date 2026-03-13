@@ -18,9 +18,11 @@ import AlbumCard from "../components/album/AlbumCard";
 import ArtistNames from "../components/artist/ArtistNames";
 import FollowArtistButton from "../components/artist/FollowArtistButton";
 import OptimizedImage from "../components/common/OptimizedImage";
+import ShareLinkButton from "../components/common/ShareLinkButton";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 import { SongDetailIconButton, SongDetailLink } from "../components/song/SongDetailLink";
 import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
+import usePageMetadata from "../hooks/usePageMetadata";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { resolveAssetUrl } from "../utils/asset";
 import {
@@ -368,16 +370,37 @@ export default function ArtistDetail() {
   const coverUrl = resolveAssetUrl(artist?.cover || artist?.avatar);
   const portraitUrl = resolveAssetUrl(artist?.avatar || artist?.cover);
   const activeSongId = normalizeSongId(currentSong);
+  const sharePath = artist?.id ? `/artist/${artist.id}` : id ? `/artist/${id}` : "";
+  const artistMetaDescription = useMemo(() => {
+    const parts = [
+      `${songs.length} bài hát`,
+      `${albums.length} album`,
+      totalDuration ? formatTotalDuration(totalDuration) : "",
+      artistSummary,
+    ].filter(Boolean);
+
+    return parts.length
+      ? `${parts.join(" • ")} trên Khoaluan Music.`
+      : "Khám phá nghệ sĩ trên Khoaluan Music.";
+  }, [albums.length, artistSummary, songs.length, totalDuration]);
+
+  usePageMetadata({
+    title: artist?.name || artist?.alias || "Nghệ sĩ",
+    description: artistMetaDescription,
+    image: coverUrl || portraitUrl,
+    url: sharePath,
+    type: "profile",
+  });
 
   if (loading) {
     return (
       <div className="user-page-shell min-h-screen w-full max-w-full space-y-6 px-4 py-6 sm:px-8">
         <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
-          <div className="user-surface h-[320px] animate-pulse bg-white/5" />
-          <div className="user-surface h-[320px] animate-pulse bg-white/5" />
+          <div className="user-surface ui-skeleton h-[320px] bg-white/5" />
+          <div className="user-surface ui-skeleton h-[320px] bg-white/5" />
         </div>
-        <div className="user-surface h-[420px] animate-pulse bg-white/5" />
-        <div className="user-surface h-[260px] animate-pulse bg-white/5" />
+        <div className="user-surface ui-skeleton h-[420px] bg-white/5" />
+        <div className="user-surface ui-skeleton h-[260px] bg-white/5" />
       </div>
     );
   }
@@ -478,6 +501,22 @@ export default function ArtistDetail() {
                 </button>
               )}
               <FollowArtistButton artist={artist} size="lg" />
+              <ShareLinkButton
+                path={sharePath}
+                title="Chia sẻ nghệ sĩ"
+                shareTitle={artist?.name || artist?.alias || "Nghệ sĩ"}
+                shareText={`Khám phá ${artist?.name || artist?.alias || "nghệ sĩ này"} trên Khoaluan Music.`}
+                preview={{
+                  eyebrow: "Nghệ sĩ",
+                  title: artist?.name || artist?.alias || "Nghệ sĩ",
+                  subtitle: artist?.national || `${songs.length} bài hát • ${albums.length} album`,
+                  description:
+                    artistSummary ||
+                    `${songs.length} bài hát • ${albums.length} album trên Khoaluan Music.`,
+                  image: coverUrl || portraitUrl,
+                }}
+                className="px-5 py-3"
+              />
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

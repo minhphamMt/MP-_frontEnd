@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLikedSongs } from "../api/like.api";
 import { getSongById } from "../api/song.api";
+import FilterToolbar from "../components/common/FilterToolbar";
 import LikedSongsSection from "../components/playlists/LikedSongsSection";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
+import { matchesAnyText } from "../utils/searchText";
 import {
   fetchPlayableSong,
   filterPlayableSongs,
@@ -30,6 +32,7 @@ export default function LikedSongs() {
   const navigate = useNavigate();
   const [likedSongs, setLikedSongs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [keyword, setKeyword] = useState("");
   const {
     playSong,
     pause,
@@ -42,6 +45,16 @@ export default function LikedSongs() {
   } = usePlayerStore();
 
   const likedQueue = useMemo(() => likedSongs || [], [likedSongs]);
+  const filteredLikedSongs = useMemo(
+    () =>
+      likedSongs.filter((song) =>
+        matchesAnyText(
+          [song?.title, song?.artist_name, song?.album_title, song?.album],
+          keyword
+        )
+      ),
+    [keyword, likedSongs]
+  );
 
   const loadLikedSongsList = useCallback(async () => {
     try {
@@ -111,6 +124,28 @@ export default function LikedSongs() {
         </div>
       </div>
 
+      <FilterToolbar
+        value={keyword}
+        onChange={setKeyword}
+        placeholder="Tìm bài hát đã thích theo tên, nghệ sĩ hoặc album"
+        actions={
+          keyword ? (
+            <button
+              type="button"
+              onClick={() => setKeyword("")}
+              className="user-btn-secondary px-4 py-2 text-sm font-semibold"
+            >
+              Xóa lọc
+            </button>
+          ) : null
+        }
+        summary={
+          keyword
+            ? `Có ${filteredLikedSongs.length} bài hát khớp từ khóa hiện tại.`
+            : "Tìm nhanh lại những bài hát bạn đã lưu để nghe lại."
+        }
+      />
+
       <section>
         {loading ? (
           <div className="user-surface p-6 text-sm text-white/60">
@@ -118,11 +153,11 @@ export default function LikedSongs() {
           </div>
         ) : (
           <LikedSongsSection
-            songs={likedSongs}
+            songs={filteredLikedSongs}
             currentSong={currentSong}
             isPlaying={isPlaying}
             likedSongIds={likedSongIds}
-            onPlay={(song) => handlePlaySong(song, likedQueue)}
+            onPlay={(song) => handlePlaySong(song, filteredLikedSongs)}
             onToggleLike={toggleLike}
           />
         )}

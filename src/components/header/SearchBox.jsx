@@ -23,6 +23,7 @@ import useAuthStore from "../../store/auth.store";
 import { createPortal } from "react-dom";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
+import useDebouncedValue from "../../hooks/useDebouncedValue";
 
 const getSearchItemId = (item) =>
   item?.id ??
@@ -41,6 +42,7 @@ export default function SearchBox() {
   const inputRef = useRef(null);
   const containerRef = useRef(null);
   const dropdownRef = useRef(null);
+  const suggestionRequestRef = useRef(0);
   const [keyword, setKeyword] = useState("");
   const [results, setResults] = useState([]);
   const [history, setHistory] = useState([]);
@@ -48,6 +50,7 @@ export default function SearchBox() {
   const [open, setOpen] = useState(false);
   const [hasFocus, setHasFocus] = useState(false);
   const [historyLoadedForUserId, setHistoryLoadedForUserId] = useState(null);
+  const debouncedKeyword = useDebouncedValue(keyword.trim(), 320);
 
   const { playSong } = usePlayerStore();
   const user = useAuthStore((state) => state.user);
@@ -150,8 +153,11 @@ export default function SearchBox() {
 
   const fetchSuggestions = useCallback(async (term) => {
     const trimmed = term.trim();
+    const requestId = ++suggestionRequestRef.current;
+
     if (!trimmed) {
       setResults([]);
+      setLoading(false);
       return;
     }
 
@@ -250,6 +256,7 @@ export default function SearchBox() {
           })
           .filter(Boolean);
 
+        if (requestId !== suggestionRequestRef.current) return;
         setResults(normalized);
       } else {
         const res = await searchEntities({ q: trimmed, limit: 8, page: 1 });
@@ -285,29 +292,32 @@ export default function SearchBox() {
             item.image,
         }));
 
+        if (requestId !== suggestionRequestRef.current) return;
         setResults(normalized);
       }
     } catch (err) {
+      if (requestId !== suggestionRequestRef.current) return;
       console.error("Search suggestions error", err);
       setResults([]);
     } finally {
-      setLoading(false);
+      if (requestId === suggestionRequestRef.current) {
+        setLoading(false);
+      }
     }
   }, [isAdmin]);
 
   useEffect(() => {
     if (!hasFocus) return;
 
-    const timer = setTimeout(() => {
-      if (keyword.trim()) {
-        fetchSuggestions(keyword);
-      } else {
-        setResults([]);
-      }
-    }, 320);
+    if (debouncedKeyword) {
+      fetchSuggestions(debouncedKeyword);
+      return;
+    }
 
-    return () => clearTimeout(timer);
-  }, [fetchSuggestions, keyword, hasFocus]);
+    suggestionRequestRef.current += 1;
+    setResults([]);
+    setLoading(false);
+  }, [debouncedKeyword, fetchSuggestions, hasFocus]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

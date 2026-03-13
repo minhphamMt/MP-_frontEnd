@@ -50,6 +50,24 @@ const extractLyricsFromResponse = (payload) => {
 
 const audio = new Audio();
 const lyricRequests = new Map();
+let sleepTimerId = null;
+let rememberedDockTab = "queue";
+const PLAYBACK_RATE_DEFAULT = 1;
+const PLAYBACK_RATE_MIN = 0.75;
+const PLAYBACK_RATE_MAX = 1.5;
+
+const clampPlaybackRate = (value) =>
+  Math.min(PLAYBACK_RATE_MAX, Math.max(PLAYBACK_RATE_MIN, Number(value) || PLAYBACK_RATE_DEFAULT));
+
+const PLAYER_DOCK_TABS = new Set(["queue", "lyrics"]);
+const getConfiguredPlaybackRate = () => PLAYBACK_RATE_DEFAULT;
+const getRememberedDockTab = () => rememberedDockTab;
+const getAutoOpenDockTab = () => null;
+
+const rememberDockTab = (tab) => {
+  if (!PLAYER_DOCK_TABS.has(tab)) return;
+  rememberedDockTab = tab;
+};
 
 const resolveMediaArtwork = (song) => {
   const artwork = song?.cover_url;
@@ -158,6 +176,9 @@ const usePlayerStore = create((set, get) => ({
 
   volume: 1,
   muted: false,
+  playbackRate: getConfiguredPlaybackRate(),
+  sleepTimerEndsAt: null,
+  sleepTimerMinutes: 0,
 
   likedSongIds: [],
   likedSongsLoading: false,
@@ -166,7 +187,7 @@ const usePlayerStore = create((set, get) => ({
   lastPlayedLoaded: false,
   recommendationLoading: false,
   dockPanelOpen: false,
-  dockPanelTab: "queue",
+  dockPanelTab: getRememberedDockTab(),
   lyricsBySongId: {},
   lyricsLoadingBySongId: {},
   lyricsErrorBySongId: {},
@@ -202,7 +223,9 @@ const usePlayerStore = create((set, get) => ({
       return item;
     });
 
+    const { playbackRate } = get();
     audio.src = playable.audio_url;
+    audio.playbackRate = playbackRate;
     audio.load();
     audio.play();
 
@@ -217,6 +240,19 @@ const usePlayerStore = create((set, get) => ({
       lastPlayedLoading: false,
       lastPlayedLoaded: true,
     });
+
+    const autoOpenDockTab = getAutoOpenDockTab();
+    if (
+      autoOpenDockTab &&
+      typeof window !== "undefined" &&
+      window.innerWidth >= 1024
+    ) {
+      rememberDockTab(autoOpenDockTab);
+      set({
+        dockPanelOpen: true,
+        dockPanelTab: autoOpenDockTab,
+      });
+    }
 
     get().preloadLyricsForSong(playable);
 
@@ -332,28 +368,82 @@ const usePlayerStore = create((set, get) => ({
     set({ muted: audio.muted });
   },
 
-  openDockPanel: (tab = "queue") =>
+  setPlaybackRate: (value) => {
+    const playbackRate = clampPlaybackRate(value);
+    audio.playbackRate = playbackRate;
+    set({ playbackRate });
+    syncMediaSession();
+  },
+
+  cyclePlaybackRate: () => {
+    const order = [0.75, 1, 1.25, 1.5];
+    const current = clampPlaybackRate(get().playbackRate);
+    const currentIndex = order.findIndex((item) => item === current);
+    const nextRate = order[(currentIndex + 1) % order.length];
+    get().setPlaybackRate(nextRate);
+  },
+
+  clearSleepTimer: () => {
+    if (sleepTimerId) {
+      clearTimeout(sleepTimerId);
+      sleepTimerId = null;
+    }
+    set({
+      sleepTimerEndsAt: null,
+      sleepTimerMinutes: 0,
+    });
+  },
+
+  setSleepTimer: (minutes) => {
+    const nextMinutes = Math.max(0, Number(minutes) || 0);
+    get().clearSleepTimer();
+
+    if (!nextMinutes) return;
+
+    const sleepTimerEndsAt = Date.now() + nextMinutes * 60 * 1000;
+    sleepTimerId = setTimeout(() => {
+      const { pause } = get();
+      pause();
+      get().clearSleepTimer();
+    }, nextMinutes * 60 * 1000);
+
+    set({
+      sleepTimerEndsAt,
+      sleepTimerMinutes: nextMinutes,
+    });
+  },
+
+  openDockPanel: (tab = getRememberedDockTab()) => {
+    const nextTab = PLAYER_DOCK_TABS.has(tab) ? tab : getRememberedDockTab();
+    rememberDockTab(nextTab);
     set({
       dockPanelOpen: true,
-      dockPanelTab: tab,
-    }),
+      dockPanelTab: nextTab,
+    });
+  },
 
   closeDockPanel: () =>
     set({
       dockPanelOpen: false,
     }),
 
-  toggleDockPanel: (tab = "queue") =>
+  toggleDockPanel: (tab = getRememberedDockTab()) => {
+    const nextTab = PLAYER_DOCK_TABS.has(tab) ? tab : getRememberedDockTab();
+    rememberDockTab(nextTab);
     set((state) => ({
-      dockPanelOpen: state.dockPanelTab === tab ? !state.dockPanelOpen : true,
-      dockPanelTab: tab,
-    })),
+      dockPanelOpen: state.dockPanelTab === nextTab ? !state.dockPanelOpen : true,
+      dockPanelTab: nextTab,
+    }));
+  },
 
-  setDockPanelTab: (tab = "queue") =>
+  setDockPanelTab: (tab = getRememberedDockTab()) => {
+    const nextTab = PLAYER_DOCK_TABS.has(tab) ? tab : getRememberedDockTab();
+    rememberDockTab(nextTab);
     set({
-      dockPanelTab: tab,
+      dockPanelTab: nextTab,
       dockPanelOpen: true,
-    }),
+    });
+  },
 
   ensureLyricsLoaded: async (songOrId, { force = false } = {}) => {
     const songId = normalizeSongId(songOrId);
@@ -463,25 +553,81 @@ const usePlayerStore = create((set, get) => ({
     });
   },
 
-  removeFromQueue: (index) =>
+  moveQueueItem: (fromIndex, toIndex) =>
     set((state) => {
-      if (index === state.currentIndex) {
-        get().playNext();
+      const queue = [...state.queue];
+      if (
+        fromIndex === toIndex ||
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= queue.length ||
+        toIndex >= queue.length
+      ) {
+        return state;
       }
+
+      const [movedItem] = queue.splice(fromIndex, 1);
+      queue.splice(toIndex, 0, movedItem);
+
+      let nextCurrentIndex = state.currentIndex;
+      if (fromIndex === state.currentIndex) {
+        nextCurrentIndex = toIndex;
+      } else if (fromIndex < state.currentIndex && toIndex >= state.currentIndex) {
+        nextCurrentIndex = Math.max(0, state.currentIndex - 1);
+      } else if (fromIndex > state.currentIndex && toIndex <= state.currentIndex) {
+        nextCurrentIndex = Math.min(queue.length - 1, state.currentIndex + 1);
+      }
+
       return {
-        queue: state.queue.filter((_, i) => i !== index),
+        queue,
+        currentIndex: nextCurrentIndex,
       };
     }),
 
-  clearQueue: () =>
+  removeFromQueue: (index) => {
+    const state = get();
+    if (index < 0 || index >= state.queue.length) return;
+
+    const nextQueue = state.queue.filter((_, itemIndex) => itemIndex !== index);
+
+    if (!nextQueue.length) {
+      audio.pause();
+      audio.currentTime = 0;
+      set({
+        queue: [],
+        currentSong: null,
+        currentIndex: -1,
+        isPlaying: false,
+        currentTime: 0,
+      });
+      return;
+    }
+
+    if (index === state.currentIndex) {
+      const nextIndex = Math.min(index, nextQueue.length - 1);
+      const nextSong = nextQueue[nextIndex];
+      get().playSong(nextSong, nextQueue);
+      return;
+    }
+
     set({
-      queue: [],
-      currentSong: null,
-      currentIndex: -1,
-      isPlaying: false,
-      dockPanelOpen: false,
-      dockPanelTab: "queue",
-    }),
+      queue: nextQueue,
+      currentIndex: index < state.currentIndex ? state.currentIndex - 1 : state.currentIndex,
+    });
+  },
+
+  clearQueue: () =>
+    {
+      get().clearSleepTimer();
+      set({
+        queue: [],
+        currentSong: null,
+        currentIndex: -1,
+        isPlaying: false,
+        dockPanelOpen: false,
+        dockPanelTab: getRememberedDockTab(),
+      });
+    },
 
     appendRecommendationsToQueue: async () => {
     const { recommendationLoading, currentSong, queue, repeatMode } = get();
@@ -534,9 +680,14 @@ const usePlayerStore = create((set, get) => ({
   },
   
   resetForAuthChange: () => {
+    if (sleepTimerId) {
+      clearTimeout(sleepTimerId);
+      sleepTimerId = null;
+    }
     audio.pause();
     audio.currentTime = 0;
     audio.src = "";
+    audio.playbackRate = getConfiguredPlaybackRate();
 
     set({
       currentSong: null,
@@ -546,6 +697,9 @@ const usePlayerStore = create((set, get) => ({
       duration: 0,
       currentTime: 0,
       hasRecordedPlay: false,
+      playbackRate: getConfiguredPlaybackRate(),
+      sleepTimerEndsAt: null,
+      sleepTimerMinutes: 0,
       shuffleHistory: [],
       likedSongIds: [],
       likedSongsLoading: false,
@@ -554,7 +708,7 @@ const usePlayerStore = create((set, get) => ({
       lastPlayedLoaded: false,
       recommendationLoading: false,
       dockPanelOpen: false,
-      dockPanelTab: "queue",
+      dockPanelTab: getRememberedDockTab(),
       lyricsBySongId: {},
       lyricsLoadingBySongId: {},
       lyricsErrorBySongId: {},
@@ -633,7 +787,9 @@ const usePlayerStore = create((set, get) => ({
         return null;
       }
 
+      const { playbackRate } = get();
       audio.src = playable.audio_url;
+      audio.playbackRate = playbackRate;
       audio.load();
 
       set({
@@ -779,6 +935,7 @@ audio.addEventListener("ended", () => {
 });
 
 audio.volume = usePlayerStore.getState().volume ?? 1;
+audio.playbackRate = usePlayerStore.getState().playbackRate ?? PLAYBACK_RATE_DEFAULT;
 
 setupMediaSession();
 

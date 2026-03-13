@@ -1,0 +1,219 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FiCheck, FiClock, FiSliders } from "react-icons/fi";
+import ShareLinkButton from "../common/ShareLinkButton";
+import usePlayerStore, { normalizeSongId } from "../../store/player.store";
+
+const TIMER_OPTIONS = [
+  { value: 0, label: "Tắt hẹn giờ" },
+  { value: 15, label: "15 phút" },
+  { value: 30, label: "30 phút" },
+  { value: 60, label: "60 phút" },
+];
+
+const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5];
+
+const formatRemaining = (endsAt) => {
+  if (!endsAt) return "Hẹn giờ";
+  const diffMs = endsAt - Date.now();
+  if (diffMs <= 0) return "Hẹn giờ";
+  const totalMinutes = Math.max(1, Math.ceil(diffMs / 60000));
+  if (totalMinutes < 60) return `${totalMinutes}p`;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return minutes ? `${hours}g ${minutes}p` : `${hours}g`;
+};
+
+function ToolbarMenu({ open, children, align = "right", placement = "bottom" }) {
+  if (!open) return null;
+
+  const placementClass =
+    placement === "top"
+      ? "bottom-[calc(100%+0.75rem)] origin-bottom"
+      : "top-[calc(100%+0.75rem)] origin-top";
+
+  return (
+    <div
+      className={`absolute z-[90] min-w-[190px] overflow-hidden rounded-[24px] bg-[#0c0d0e]/98 p-2 shadow-[0_28px_80px_rgba(0,0,0,0.58)] ring-1 ring-inset ring-[#1c2021] backdrop-blur-2xl ${placementClass} ${
+        align === "left" ? "left-0" : "right-0"
+      }`}
+    >
+      <div className="absolute inset-x-0 top-0 h-16 bg-[radial-gradient(circle_at_top,_rgba(29,185,84,0.16),_transparent_72%)]" />
+      <div className="relative">{children}</div>
+    </div>
+  );
+}
+
+export default function PlayerEnhancementToolbar({
+  compact = false,
+  className = "",
+  align = "right",
+  menuPlacement,
+}) {
+  const currentSong = usePlayerStore((state) => state.currentSong);
+  const playbackRate = usePlayerStore((state) => state.playbackRate);
+  const sleepTimerEndsAt = usePlayerStore((state) => state.sleepTimerEndsAt);
+  const sleepTimerMinutes = usePlayerStore((state) => state.sleepTimerMinutes);
+  const setPlaybackRate = usePlayerStore((state) => state.setPlaybackRate);
+  const setSleepTimer = usePlayerStore((state) => state.setSleepTimer);
+  const [activeMenu, setActiveMenu] = useState(null);
+  const [tick, setTick] = useState(Date.now());
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!activeMenu) return undefined;
+
+    const handleClickOutside = (event) => {
+      if (!containerRef.current?.contains(event.target)) {
+        setActiveMenu(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [activeMenu]);
+
+  useEffect(() => {
+    if (!sleepTimerEndsAt) return undefined;
+    const timer = setInterval(() => setTick(Date.now()), 15000);
+    return () => clearInterval(timer);
+  }, [sleepTimerEndsAt]);
+
+  const timerLabel = useMemo(
+    () => formatRemaining(sleepTimerEndsAt),
+    [sleepTimerEndsAt, tick]
+  );
+  const currentSongId = normalizeSongId(currentSong);
+  const currentArtistLabel = useMemo(() => {
+    if (currentSong?.artist_name) return currentSong.artist_name;
+    if (Array.isArray(currentSong?.artists) && currentSong.artists.length) {
+      return currentSong.artists
+        .map((artist) => artist?.name || artist?.alias || "")
+        .filter(Boolean)
+        .join(", ");
+    }
+    return "Nghệ sĩ";
+  }, [currentSong]);
+  const resolvedPlacement = menuPlacement || (compact ? "top" : "bottom");
+
+  const buttonClass = compact
+    ? "inline-flex h-10 items-center gap-2 rounded-full bg-[#111314] px-3 text-xs font-semibold text-white/80 ring-1 ring-inset ring-[#202425] shadow-[0_12px_28px_rgba(0,0,0,0.24)] transition md:hover:bg-[#171a1c] md:hover:text-white md:hover:ring-[#2a2f30] max-[390px]:h-9 max-[390px]:w-9 max-[390px]:justify-center max-[390px]:gap-0 max-[390px]:px-0"
+    : "inline-flex h-11 items-center gap-2 rounded-full bg-[#111314] px-4 text-sm font-semibold text-white/82 ring-1 ring-inset ring-[#202425] shadow-[0_12px_28px_rgba(0,0,0,0.24)] transition md:hover:bg-[#171a1c] md:hover:text-white md:hover:ring-[#2a2f30]";
+
+  return (
+    <div
+      ref={containerRef}
+      className={["flex flex-wrap items-center gap-2", className].join(" ")}
+    >
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setActiveMenu((prev) => (prev === "speed" ? null : "speed"))}
+          className={`${buttonClass} ${activeMenu === "speed" ? "bg-[#171b1c] text-white ring-[#2c3c33]" : ""}`}
+          aria-label="Tốc độ phát"
+        >
+          <FiSliders className="text-[15px] text-emerald-200/78" />
+          <span className={compact ? "max-[390px]:hidden" : ""}>{playbackRate}x</span>
+        </button>
+        <ToolbarMenu open={activeMenu === "speed"} align={align} placement={resolvedPlacement}>
+          <div className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">
+            Tốc độ phát
+          </div>
+          <div className="space-y-1">
+            {SPEED_OPTIONS.map((option) => {
+              const isActive = playbackRate === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => {
+                    setPlaybackRate(option);
+                    setActiveMenu(null);
+                  }}
+                  className={`flex w-full items-center justify-between rounded-[18px] px-3 py-2.5 text-sm transition ${
+                    isActive
+                      ? "bg-[linear-gradient(135deg,rgba(29,185,84,0.18),rgba(255,255,255,0.08))] text-emerald-50 shadow-[0_10px_24px_rgba(29,185,84,0.14)]"
+                      : "text-white/75 md:hover:bg-white/[0.06] md:hover:text-white"
+                  }`}
+                >
+                  <span>{option}x</span>
+                  {isActive ? <FiCheck className="text-[13px]" /> : null}
+                </button>
+              );
+            })}
+          </div>
+        </ToolbarMenu>
+      </div>
+
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setActiveMenu((prev) => (prev === "timer" ? null : "timer"))}
+          className={`${buttonClass} ${
+            sleepTimerEndsAt
+              ? "bg-[linear-gradient(135deg,rgba(245,158,11,0.18),rgba(255,255,255,0.06))] text-amber-50 ring-[#4d3820]"
+              : ""
+          }`}
+          aria-label="Hẹn giờ dừng phát"
+        >
+          <FiClock
+            className={`text-[15px] ${sleepTimerEndsAt ? "text-amber-200" : "text-white/64"}`}
+          />
+          <span className={compact ? "max-[390px]:hidden" : ""}>{timerLabel}</span>
+        </button>
+        <ToolbarMenu open={activeMenu === "timer"} align={align} placement={resolvedPlacement}>
+          <div className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">
+            Hẹn giờ dừng
+          </div>
+          <div className="space-y-1">
+            {TIMER_OPTIONS.map((option) => {
+              const isActive =
+                (option.value === 0 && !sleepTimerEndsAt) ||
+                (option.value > 0 && option.value === sleepTimerMinutes);
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setSleepTimer(option.value);
+                    setActiveMenu(null);
+                  }}
+                  className={`flex w-full items-center justify-between rounded-[18px] px-3 py-2.5 text-sm transition ${
+                    isActive
+                      ? "bg-[linear-gradient(135deg,rgba(245,158,11,0.18),rgba(255,255,255,0.06))] text-amber-50 shadow-[0_10px_24px_rgba(245,158,11,0.12)]"
+                      : "text-white/75 md:hover:bg-white/[0.06] md:hover:text-white"
+                  }`}
+                >
+                  <span>{option.label}</span>
+                  {isActive ? <FiCheck className="text-[13px]" /> : null}
+                </button>
+              );
+            })}
+          </div>
+        </ToolbarMenu>
+      </div>
+
+      {currentSongId ? (
+        <ShareLinkButton
+          path={`/song/${currentSongId}`}
+          title={compact ? "Chia sẻ" : "Chia sẻ bài hát"}
+          shareTitle={currentSong?.title || "Bài hát"}
+          shareText={`Nghe ${currentSong?.title || "bài hát này"} của ${currentArtistLabel} trên Khoaluan Music.`}
+          preview={{
+            eyebrow: "Đang phát",
+            title: currentSong?.title || "Bài hát",
+            subtitle: currentArtistLabel,
+            description: compact ? "" : "Mở nhanh trang bài hát đang phát để nghe và chia sẻ.",
+            image:
+              currentSong?.cover_url ||
+              currentSong?.thumbnail_m ||
+              currentSong?.thumbnail ||
+              currentSong?.image_url ||
+              "",
+          }}
+          compact={compact}
+          variant="toolbar"
+        />
+      ) : null}
+    </div>
+  );
+}

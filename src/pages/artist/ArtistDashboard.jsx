@@ -16,6 +16,7 @@ import ReactEChartsCore from "echarts-for-react/lib/core";
 import useAuthStore from "../../store/auth.store";
 import { getAlbums } from "../../api/album.api";
 import { getArtistSongs } from "../../api/song.api";
+import ChartLoadingState from "../../components/charts/ChartLoadingState";
 import ArtistAlbumTile from "../../components/artist/ArtistAlbumTile";
 import { getMyArtistProfile } from "../../api/artist.api";
 
@@ -154,14 +155,14 @@ const pickDate = (item, keys) => {
 
 function ChartCard({ title, children }) {
   return (
-    <article className="artist-soft-card p-4">
+    <article data-card className="artist-soft-card p-4">
       <p className="text-[11px] uppercase tracking-[0.22em] text-white/55">{title}</p>
       <div className="mt-3">{children}</div>
     </article>
   );
 }
 
-function MiniChart({ option, height = 180 }) {
+function MiniChart({ option, height = "clamp(180px, 28vw, 220px)" }) {
   return (
     <ReactEChartsCore
       echarts={echarts}
@@ -510,7 +511,7 @@ export default function ArtistDashboard() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <article className="artist-kpi p-5">
+        <article data-card className="artist-kpi p-5">
           <p className="text-xs uppercase tracking-[0.24em] text-white/55">Tổng album</p>
           <div className="mt-3 flex items-center justify-between">
             <h3 className="text-3xl font-bold text-white">{stats.totalAlbums}</h3>
@@ -519,7 +520,7 @@ export default function ArtistDashboard() {
             </span>
           </div>
         </article>
-        <article className="artist-kpi p-5">
+        <article data-card className="artist-kpi p-5">
           <p className="text-xs uppercase tracking-[0.24em] text-white/55">Tổng bài hát</p>
           <div className="mt-3 flex items-center justify-between">
             <h3 className="text-3xl font-bold text-white">{stats.totalSongs}</h3>
@@ -528,7 +529,7 @@ export default function ArtistDashboard() {
             </span>
           </div>
         </article>
-        <article className="artist-kpi p-5">
+        <article data-card className="artist-kpi p-5">
           <p className="text-xs uppercase tracking-[0.24em] text-white/55">Chờ duyệt</p>
           <div className="mt-3 flex items-center justify-between">
             <h3 className="text-3xl font-bold text-white">{stats.pendingSongs}</h3>
@@ -537,7 +538,7 @@ export default function ArtistDashboard() {
             </span>
           </div>
         </article>
-        <article className="artist-kpi p-5">
+        <article data-card className="artist-kpi p-5">
           <p className="text-xs uppercase tracking-[0.24em] text-white/55">Hành động nhanh</p>
           <button
             type="button"
@@ -553,7 +554,7 @@ export default function ArtistDashboard() {
       <section className="grid gap-4 md:grid-cols-2">
         <ChartCard title="Trạng thái bài hát">
           {loading ? (
-            <p className="px-2 py-8 text-sm text-white/65">Đang tải dữ liệu...</p>
+            <ChartLoadingState height="clamp(180px, 28vw, 220px)" bars={4} compact />
           ) : (
             <MiniChart option={songStatusOption} />
           )}
@@ -561,7 +562,7 @@ export default function ArtistDashboard() {
 
         <ChartCard title="Trạng thái album">
           {loading ? (
-            <p className="px-2 py-8 text-sm text-white/65">Đang tải dữ liệu...</p>
+            <ChartLoadingState height="clamp(180px, 28vw, 220px)" bars={4} compact />
           ) : (
             <MiniChart option={albumStatusOption} />
           )}
@@ -569,7 +570,7 @@ export default function ArtistDashboard() {
 
         <ChartCard title="Bài hát mới theo tháng">
           {loading ? (
-            <p className="px-2 py-8 text-sm text-white/65">Đang tải dữ liệu...</p>
+            <ChartLoadingState height="clamp(180px, 28vw, 220px)" bars={5} />
           ) : (
             <MiniChart option={songTimelineOption} />
           )}
@@ -577,7 +578,7 @@ export default function ArtistDashboard() {
 
         <ChartCard title="Single và bài trong album">
           {loading ? (
-            <p className="px-2 py-8 text-sm text-white/65">Đang tải dữ liệu...</p>
+            <ChartLoadingState height="clamp(180px, 28vw, 220px)" bars={4} compact />
           ) : (
             <MiniChart option={releaseTypeOption} />
           )}
@@ -601,7 +602,20 @@ export default function ArtistDashboard() {
         </div>
 
         {loading && (
-          <div className="artist-soft-card p-5 text-sm text-white/70">Đang tải dữ liệu...</div>
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={`artist-album-skeleton-${index}`}
+                className="artist-soft-card overflow-hidden p-4"
+              >
+                <div className="ui-skeleton aspect-square w-full rounded-[24px] bg-white/8" />
+                <div className="mt-4 space-y-3">
+                  <div className="ui-skeleton h-4 w-2/3 rounded-full bg-white/8" />
+                  <div className="ui-skeleton h-3 w-1/2 rounded-full bg-white/8" />
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
         {!loading && !latestAlbums.length && (
@@ -610,17 +624,19 @@ export default function ArtistDashboard() {
           </div>
         )}
 
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {latestAlbums.map((album) => (
-            <ArtistAlbumTile
-              key={album.id}
-              album={album}
-              onView={() => navigate(`/album/${album.id}`)}
-              onEdit={() => navigate(`/artist/albums/${album.id}/edit`)}
-              onDelete={() => navigate(`/artist/albums/${album.id}/edit`)}
-            />
-          ))}
-        </div>
+        {!loading && (
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {latestAlbums.map((album) => (
+              <ArtistAlbumTile
+                key={album.id}
+                album={album}
+                onView={() => navigate(`/album/${album.id}`)}
+                onEdit={() => navigate(`/artist/albums/${album.id}/edit`)}
+                onDelete={() => navigate(`/artist/albums/${album.id}/edit`)}
+              />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

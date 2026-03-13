@@ -18,7 +18,7 @@ export default function PlaylistSuggestions({
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={`suggestion-skeleton-${index}`}
-            className="h-[104px] rounded-[20px] border border-white/10 bg-white/5 animate-pulse"
+            className="ui-skeleton h-[104px] rounded-[20px] border border-white/10 bg-white/5"
           />
         ))}
       </div>

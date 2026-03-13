@@ -16,6 +16,7 @@ import useAuthStore from "../../store/auth.store";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
 import PlayerDetail from "./PlayerDetail";
+import PlayerEnhancementToolbar from "./PlayerEnhancementToolbar";
 import { SongDetailLink } from "../song/SongDetailLink";
 
 const formatTime = (t = 0) =>
@@ -64,6 +65,66 @@ export default function PlayerBar() {
     if (!showDetail) return;
     closeDockPanel();
   }, [closeDockPanel, showDetail]);
+
+  useEffect(() => {
+    if (!currentSong) return undefined;
+
+    const isTypingTarget = (target) => {
+      if (!(target instanceof HTMLElement)) return false;
+      return (
+        target.isContentEditable ||
+        ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+      );
+    };
+
+    const handleKeyDown = (event) => {
+      const state = usePlayerStore.getState();
+
+      if (event.altKey || event.ctrlKey || event.metaKey || isTypingTarget(event.target)) {
+        return;
+      }
+
+      if (event.code === "Space") {
+        event.preventDefault();
+        state.isPlaying ? state.pause() : state.resume();
+        return;
+      }
+
+      if (event.code === "ArrowLeft") {
+        event.preventDefault();
+        state.seek(Math.max(0, state.currentTime - 5));
+        return;
+      }
+
+      if (event.code === "ArrowRight") {
+        event.preventDefault();
+        state.seek(Math.min(state.duration || state.currentTime + 5, state.currentTime + 5));
+        return;
+      }
+
+      if (event.code === "KeyM") {
+        event.preventDefault();
+        state.toggleMute();
+        return;
+      }
+
+      if (event.code === "KeyL") {
+        event.preventDefault();
+        state.openDockPanel("lyrics");
+        return;
+      }
+
+      if (event.code === "KeyQ") {
+        event.preventDefault();
+        state.dockPanelOpen && state.dockPanelTab === "queue"
+          ? state.closeDockPanel()
+          : state.openDockPanel("queue");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentSong]);
 
   if (!currentSong) {
     const isInitializingPlayer = !isAuthReady || (isAuthenticated && lastPlayedLoading);
@@ -240,7 +301,7 @@ export default function PlayerBar() {
             </div>
           </div>
 
-          <div className="flex w-1/3 items-center justify-end gap-4">
+          <div className="flex w-1/3 items-center justify-end gap-3 xl:gap-4">
             <button
               onClick={() => setShowDetail(true)}
               className="text-white/70 md:hover:text-white"
@@ -289,6 +350,12 @@ export default function PlayerBar() {
                 style={{ background: volumeGradient }}
               />
             </div>
+
+            <PlayerEnhancementToolbar
+              compact
+              menuPlacement="top"
+              className="hidden xl:flex"
+            />
 
             <button
               type="button"

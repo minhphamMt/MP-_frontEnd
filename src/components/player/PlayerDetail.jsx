@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   FaBackwardStep,
   FaForwardStep,
@@ -17,6 +18,7 @@ import PlayerDetailQueue from "./PlayerDetailQueue";
 import OptimizedImage from "../common/OptimizedImage";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import ArtistNames from "../artist/ArtistNames";
+import PlayerEnhancementToolbar from "./PlayerEnhancementToolbar";
 import { SongDetailLink } from "../song/SongDetailLink";
 
 const formatTime = (sec = 0) => {
@@ -307,6 +309,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
     onClose?.();
   };
 
+  const handleDetailNavigation = () => {
+    void handleClose();
+  };
+
   const toggleFullscreen = async () => {
     if (typeof document === "undefined") return;
 
@@ -412,6 +418,9 @@ export default function PlayerDetail({ isOpen, onClose }) {
     currentSong.cover || currentSong.cover_url || currentSong.image
   );
   const currentSongId = normalizeSongId(currentSong);
+  const albumId = currentSong?.album_id || currentSong?.album?.id || null;
+  const albumTitle =
+    currentSong?.album_title || currentSong?.album?.title || "Single";
   const normalizedIndex = Number.isFinite(currentIndex) ? currentIndex : 0;
   const queueCount = Array.isArray(queue) ? queue.length : 0;
   const safeQueueSize = Math.max(queueCount, normalizedIndex + 1, 1);
@@ -459,7 +468,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
   const softButtonClass =
     "flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.07] text-white/82 transition active:scale-95 md:hover:bg-white/[0.12] md:hover:text-white";
   const mobileUtilityButtonClass =
-    "flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.07] text-white/82 transition active:scale-95";
+    "flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.07] text-white/82 transition active:scale-95 max-[390px]:h-10 max-[390px]:w-10";
   const closeButtonClass =
     "inline-flex h-11 w-11 items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(82,119,170,0.42),rgba(22,38,62,0.94))] text-white/86 shadow-[0_16px_34px_rgba(6,14,28,0.4)] transition active:scale-95 md:hover:-translate-y-0.5 md:hover:brightness-110 md:hover:text-white";
   const fullscreenButtonClass = `inline-flex h-11 w-11 items-center justify-center rounded-full text-white/84 shadow-[0_16px_34px_rgba(6,14,28,0.34)] transition active:scale-95 md:hover:-translate-y-0.5 md:hover:text-white ${
@@ -538,6 +547,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
               <SongDetailLink
                 song={currentSong}
                 className="overflow-hidden pt-[0.04em] pb-[0.14em] text-[clamp(2.1rem,8vw,5rem)] font-semibold leading-[1.02] tracking-tight text-white transition md:hover:text-emerald-300 md:hover:underline [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]"
+                onNavigate={handleDetailNavigation}
               >
                 {currentSong.title}
               </SongDetailLink>
@@ -547,8 +557,20 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 item={currentSong}
                 fallback="Unknown"
                 linkClassName="transition md:hover:text-white"
+                onNavigate={handleDetailNavigation}
               />
             </div>
+            {albumId ? (
+              <div className="mt-3">
+                <Link
+                  to={`/album/${albumId}`}
+                  onClick={handleDetailNavigation}
+                  className="inline-flex max-w-full items-center rounded-full border border-white/14 bg-white/[0.05] px-3 py-1.5 text-sm font-medium text-white/75 transition md:hover:border-emerald-300/40 md:hover:text-emerald-200"
+                >
+                  <span className="truncate">{albumTitle}</span>
+                </Link>
+              </div>
+            ) : null}
 
             <div className="mt-5 grid grid-cols-3 gap-2.5 sm:gap-3">
               {metaCards.map((card) => (
@@ -711,6 +733,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
               </span>
             </div>
           </div>
+
+          <div className="relative z-20 mt-4 flex flex-wrap items-center justify-center gap-2 xl:justify-end">
+            <PlayerEnhancementToolbar menuPlacement="top" />
+          </div>
         </div>
       </div>
     </div>
@@ -779,6 +805,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
               queue={queue}
               currentIndex={normalizedIndex}
               playAt={playAt}
+              onNavigate={handleDetailNavigation}
             />
           ) : (
             <PlayerDetailLyrics
@@ -810,6 +837,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             queue={queue}
             currentIndex={normalizedIndex}
             playAt={playAt}
+            onNavigate={handleDetailNavigation}
           />
         </div>
       </div>
@@ -818,10 +846,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const mobileNowPanel = (
     <div
-      className={`${glassPanelClass} flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[26px] p-4`}
+      className={`${glassPanelClass} flex h-full min-h-0 w-full flex-col overflow-y-auto rounded-[26px] p-3.5 scrollbar-hidden min-[390px]:p-4`}
     >
-      <div className="flex flex-1 flex-col items-center justify-center gap-5 pb-4 pt-2">
-        <div className="relative mx-auto w-full max-w-[min(58vw,248px)]">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 pb-3 pt-1 min-[390px]:gap-5 min-[390px]:pb-4 min-[390px]:pt-2">
+        <div className="relative mx-auto w-full max-w-[min(54vw,228px)] min-[390px]:max-w-[min(58vw,248px)]">
           <div
             className="pointer-events-none absolute -inset-4 rounded-[34px] opacity-60 blur-3xl"
             style={{
@@ -846,28 +874,43 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
         <div className="w-full min-w-0 text-center">
           <div className="overflow-visible pb-2">
-            <SongDetailLink
-              song={currentSong}
-              className="overflow-hidden px-2 pt-[0.04em] pb-[0.14em] text-[clamp(1.8rem,8vw,3rem)] font-semibold leading-[1.03] tracking-tight text-white transition md:hover:text-emerald-300 md:hover:underline [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
-            >
-              {currentSong.title}
-            </SongDetailLink>
+              <SongDetailLink
+                song={currentSong}
+                className="overflow-hidden px-2 pt-[0.04em] pb-[0.14em] text-[clamp(1.8rem,8vw,3rem)] font-semibold leading-[1.03] tracking-tight text-white transition md:hover:text-emerald-300 md:hover:underline [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
+                onNavigate={handleDetailNavigation}
+              >
+                {currentSong.title}
+              </SongDetailLink>
           </div>
           <div className="mt-1 overflow-hidden px-3 text-sm font-medium text-white/72 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-            <ArtistNames
-              item={currentSong}
-              fallback="Unknown"
-              linkClassName="transition"
-            />
-          </div>
-          <p className="mt-3 text-[11px] uppercase tracking-[0.24em] text-white/42">
+              <ArtistNames
+                item={currentSong}
+                fallback="Unknown"
+                linkClassName="transition"
+                onNavigate={handleDetailNavigation}
+              />
+            </div>
+            {albumId ? (
+              <div className="mt-2 flex justify-center px-3">
+                <Link
+                  to={`/album/${albumId}`}
+                  onClick={handleDetailNavigation}
+                  className="inline-flex max-w-full items-center rounded-full border border-white/14 bg-white/[0.05] px-3 py-1.5 text-xs font-medium text-white/72 transition"
+                >
+                  <span className="truncate">{albumTitle}</span>
+                </Link>
+              </div>
+            ) : null}
+            <p className="mt-2 text-[11px] uppercase tracking-[0.24em] text-white/42 min-[390px]:mt-3">
             {isPlaying ? "Đang phát" : "Tạm dừng"} · {modeLabel}
           </p>
         </div>
       </div>
 
-      <div className={`rounded-[24px] bg-black/18 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)] backdrop-blur-2xl ${songSlideClass}`}>
-        <div className="space-y-2">
+      <div
+        className={`mt-auto shrink-0 rounded-[22px] bg-black/18 p-3.5 shadow-[0_18px_48px_rgba(0,0,0,0.18)] backdrop-blur-2xl min-[390px]:rounded-[24px] min-[390px]:p-4 ${songSlideClass}`}
+      >
+        <div className="space-y-1.5 min-[390px]:space-y-2">
           <div className="-my-1 px-1 py-1">
             <input
               type="range"
@@ -907,7 +950,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </div>
         </div>
 
-        <div className="mt-5 flex items-center justify-center gap-3">
+        <div className="mt-4 flex items-center justify-center gap-2.5 max-[390px]:mt-3 min-[390px]:gap-3">
           <button
             onClick={toggleShuffle}
             className={`${mobileUtilityButtonClass} ${
@@ -928,7 +971,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </button>
           <button
             onClick={togglePlay}
-            className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_28%,#9dfabd,#4ad67f_55%,#249956)] text-[1.65rem] text-[#062512] shadow-[0_0_42px_rgba(75,220,126,0.52)] transition active:scale-95"
+            className="relative flex h-[4rem] w-[4rem] items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_28%,#9dfabd,#4ad67f_55%,#249956)] text-[1.45rem] text-[#062512] shadow-[0_0_42px_rgba(75,220,126,0.52)] transition active:scale-95 min-[390px]:h-[4.5rem] min-[390px]:w-[4.5rem] min-[390px]:text-[1.65rem]"
             aria-label="Phát hoặc tạm dừng"
           >
             {isPlaying ? <FaPause /> : <FaPlay className="ml-0.5" />}
@@ -960,12 +1003,16 @@ export default function PlayerDetail({ isOpen, onClose }) {
           </button>
         </div>
 
-        <div className="mt-4 flex items-center justify-center gap-3">
+        <div className="mt-3 flex items-center justify-center gap-2.5 min-[390px]:mt-4 min-[390px]:gap-3">
           {likeButton}
           <AddToPlaylistButton
             song={currentSong}
-            triggerClassName="h-11 w-11 bg-white/[0.07] text-white/82"
+            triggerClassName="h-10 w-10 bg-white/[0.07] text-white/82 min-[390px]:h-11 min-[390px]:w-11"
           />
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 min-[390px]:mt-4 min-[390px]:gap-2">
+          <PlayerEnhancementToolbar compact menuPlacement="top" />
         </div>
       </div>
     </div>

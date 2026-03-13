@@ -13,12 +13,14 @@ import {
 import { getAlbumById } from "../api/album.api";
 import ArtistNames from "../components/artist/ArtistNames";
 import OptimizedImage from "../components/common/OptimizedImage";
+import ShareLinkButton from "../components/common/ShareLinkButton";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 import { SongDetailIconButton, SongDetailLink } from "../components/song/SongDetailLink";
 import {
   useEnsureLikedAlbumsLoaded,
   useEnsureLikedSongsLoaded,
 } from "../hooks/useEnsureLibraryState";
+import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
 import useAlbumLikeStore, {
   normalizeAlbumId,
@@ -160,6 +162,7 @@ export default function AlbumDetail() {
 
   const albumId = normalizeAlbumId(album);
   const isLiked = albumId && likedAlbumIds.includes(albumId);
+  const sharePath = albumId ? `/album/${albumId}` : id ? `/album/${id}` : "";
   const artistMeta = album?.artist || {};
   const artistDisplayName =
     album?.artist_name || artistMeta?.name || artistMeta?.alias || "Đang cập nhật";
@@ -207,16 +210,36 @@ export default function AlbumDetail() {
       ].filter((item) => item.value),
     [artistMeta?.alias, artistMeta?.birthday, artistMeta?.national, artistMeta?.realname]
   );
+  const albumMetaDescription = useMemo(() => {
+    const parts = [
+      artistDisplayName,
+      `${songs.length} bài hát`,
+      formatTotalDuration(totalDuration),
+      releaseDate,
+    ].filter(Boolean);
+
+    return parts.length
+      ? `${parts.join(" • ")} trên Khoaluan Music.`
+      : "Khám phá album trên Khoaluan Music.";
+  }, [artistDisplayName, releaseDate, songs.length, totalDuration]);
+
+  usePageMetadata({
+    title: album?.title || "Album",
+    description: albumMetaDescription,
+    image: resolveAssetUrl(album?.cover_url || ""),
+    url: sharePath,
+    type: "music.album",
+  });
 
   if (loading) {
     return (
       <div className="user-page-shell min-h-screen w-full max-w-full space-y-6 px-4 py-6 sm:px-8">
         <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
-          <div className="user-surface h-[320px] animate-pulse bg-white/5" />
-          <div className="user-surface h-[320px] animate-pulse bg-white/5" />
+          <div className="user-surface ui-skeleton h-[320px] bg-white/5" />
+          <div className="user-surface ui-skeleton h-[320px] bg-white/5" />
         </div>
-        <div className="user-surface h-[420px] animate-pulse bg-white/5" />
-        <div className="user-surface h-[280px] animate-pulse bg-white/5" />
+        <div className="user-surface ui-skeleton h-[420px] bg-white/5" />
+        <div className="user-surface ui-skeleton h-[280px] bg-white/5" />
       </div>
     );
   }
@@ -348,6 +371,23 @@ export default function AlbumDetail() {
                   Xem nghệ sĩ
                 </button>
               )}
+
+              <ShareLinkButton
+                path={sharePath}
+                title="Chia sẻ album"
+                shareTitle={album?.title || "Album"}
+                shareText={`Nghe album ${album?.title || "này"} của ${artistDisplayName} trên Khoaluan Music.`}
+                preview={{
+                  eyebrow: "Album",
+                  title: album?.title || "Album",
+                  subtitle: artistDisplayName,
+                  description: `${songs.length} bài hát • ${formatTotalDuration(
+                    totalDuration
+                  )} • ${releaseDate}`,
+                  image: resolveAssetUrl(album?.cover_url || ""),
+                }}
+                className="px-5 py-3"
+              />
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

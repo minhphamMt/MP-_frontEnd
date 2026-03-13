@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiSearch } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { searchAdmin } from "../../api/admin.api";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import { getArtistLabel } from "../../utils/artist";
+import useDebouncedValue from "../../hooks/useDebouncedValue";
 
 const SEARCH_TABS = [
   { id: "all", label: "Tất cả" },
@@ -125,11 +126,12 @@ export default function AdminSearch() {
   const navigate = useNavigate();
 
   const [keyword, setKeyword] = useState("");
-  const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const searchRequestRef = useRef(0);
+  const debouncedKeyword = useDebouncedValue(keyword.trim(), 350);
 
   const query = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -204,9 +206,17 @@ export default function AdminSearch() {
     return { ...first, label: labels[first.type] || "Kết quả" };
   }, [visibleResults]);
 
-  const runSearch = async (rawValue) => {
+  const runSearch = useCallback(async (rawValue) => {
     const trimmed = rawValue.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      searchRequestRef.current += 1;
+      setResults([]);
+      setErrorMessage("");
+      setLoading(false);
+      return;
+    }
+
+    const requestId = ++searchRequestRef.current;
 
     try {
       setLoading(true);
@@ -226,33 +236,32 @@ export default function AdminSearch() {
             ...(itemsSource?.albums ?? []),
             ...(itemsSource?.users ?? []),
           ];
+      if (requestId !== searchRequestRef.current) return;
+
       setResults(list);
       setErrorMessage("");
     } catch (error) {
+      if (requestId !== searchRequestRef.current) return;
       console.error("Search admin failed", error);
       setErrorMessage("Không thể tìm kiếm dữ liệu.");
       setResults([]);
     } finally {
-      setLoading(false);
+      if (requestId === searchRequestRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, []);
 
   useEffect(() => {
     setKeyword(query);
   }, [query]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedKeyword(keyword.trim());
-    }, 350);
-
-    return () => clearTimeout(timer);
-  }, [keyword]);
-
-  useEffect(() => {
     if (!debouncedKeyword) {
+      searchRequestRef.current += 1;
       setResults([]);
       setErrorMessage("");
+      setLoading(false);
       return;
     }
     runSearch(debouncedKeyword);
@@ -262,7 +271,7 @@ export default function AdminSearch() {
         replace: true,
       });
     }
-  }, [debouncedKeyword, navigate, query]);
+  }, [debouncedKeyword, navigate, query, runSearch]);
 
   const handleSubmit = () => {
     const trimmed = keyword.trim();

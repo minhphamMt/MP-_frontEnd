@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  FiClock,
   FiDisc,
   FiHeart,
   FiList,
@@ -17,6 +18,7 @@ import {
 import { getLikedAlbums, getLikedSongs } from "../api/like.api";
 import { getSongById } from "../api/song.api";
 import AlbumCard from "../components/album/AlbumCard";
+import FilterToolbar from "../components/common/FilterToolbar";
 import OptimizedImage from "../components/common/OptimizedImage";
 import Toast from "../components/common/Toast";
 import ArtistFollowSection from "../components/playlists/ArtistFollowSection";
@@ -32,10 +34,18 @@ import {
   filterPlayableSongs,
   toPlayableSong,
 } from "../utils/song";
+import { matchesAnyText, normalizeSearchText } from "../utils/searchText";
 
 const ALBUM_PREVIEW_LIMIT = 6;
 const ARTIST_PREVIEW_LIMIT = 6;
 const LIKED_SONGS_PREVIEW_LIMIT = 10;
+const LIBRARY_SCOPES = [
+  { value: "all", label: "Tất cả" },
+  { value: "playlists", label: "Playlist" },
+  { value: "songs", label: "Bài hát" },
+  { value: "albums", label: "Album" },
+  { value: "artists", label: "Nghệ sĩ" },
+];
 
 const getPlaylistPreviewCount = () => {
   if (typeof window === "undefined") return 1;
@@ -139,6 +149,8 @@ export default function Playlists() {
   const [playlistPreviewCount, setPlaylistPreviewCount] = useState(() =>
     getPlaylistPreviewCount()
   );
+  const [libraryKeyword, setLibraryKeyword] = useState("");
+  const [libraryScope, setLibraryScope] = useState("all");
   const [saving, setSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastTitle, setToastTitle] = useState("");
@@ -401,23 +413,93 @@ export default function Playlists() {
     [followedArtists.length, likedAlbums.length, likedSongs.length, playlists.length]
   );
 
-  const visiblePlaylists = useMemo(
-    () => playlists.slice(0, playlistPreviewCount),
-    [playlistPreviewCount, playlists]
-  );
-  const visibleAlbums = useMemo(
-    () => likedAlbums.slice(0, ALBUM_PREVIEW_LIMIT),
-    [likedAlbums]
-  );
-  const visibleArtists = useMemo(
-    () => followedArtists.slice(0, ARTIST_PREVIEW_LIMIT),
-    [followedArtists]
+  const normalizedLibraryKeyword = useMemo(
+    () => normalizeSearchText(libraryKeyword),
+    [libraryKeyword]
   );
 
-  const hasMorePlaylists = playlists.length > playlistPreviewCount;
-  const hasMoreAlbums = likedAlbums.length > ALBUM_PREVIEW_LIMIT;
-  const hasMoreArtists = followedArtists.length > ARTIST_PREVIEW_LIMIT;
-  const hasMoreLikedSongs = likedSongs.length > LIKED_SONGS_PREVIEW_LIMIT;
+  const filteredPlaylists = useMemo(() => {
+    if (!normalizedLibraryKeyword) return playlists;
+
+    return playlists.filter((playlist) =>
+      matchesAnyText(
+        [
+          playlist?.title,
+          playlist?.name,
+          ...(playlist?.songs || []).flatMap((song) => [
+            song?.title,
+            song?.artist_name,
+            song?.album_title,
+          ]),
+        ],
+        normalizedLibraryKeyword
+      )
+    );
+  }, [normalizedLibraryKeyword, playlists]);
+
+  const filteredLikedSongs = useMemo(() => {
+    if (!normalizedLibraryKeyword) return likedSongs;
+
+    return likedSongs.filter((song) =>
+      matchesAnyText(
+        [song?.title, song?.artist_name, song?.album_title, song?.album],
+        normalizedLibraryKeyword
+      )
+    );
+  }, [likedSongs, normalizedLibraryKeyword]);
+
+  const filteredLikedAlbums = useMemo(() => {
+    if (!normalizedLibraryKeyword) return likedAlbums;
+
+    return likedAlbums.filter((album) =>
+      matchesAnyText(
+        [album?.title, album?.artist_name, album?.artist?.name],
+        normalizedLibraryKeyword
+      )
+    );
+  }, [likedAlbums, normalizedLibraryKeyword]);
+
+  const filteredArtists = useMemo(() => {
+    if (!normalizedLibraryKeyword) return followedArtists;
+
+    return followedArtists.filter((artist) =>
+      matchesAnyText(
+        [artist?.artist_name, artist?.name, artist?.alias],
+        normalizedLibraryKeyword
+      )
+    );
+  }, [followedArtists, normalizedLibraryKeyword]);
+
+  const visiblePlaylists = useMemo(
+    () => filteredPlaylists.slice(0, playlistPreviewCount),
+    [filteredPlaylists, playlistPreviewCount]
+  );
+  const visibleAlbums = useMemo(
+    () => filteredLikedAlbums.slice(0, ALBUM_PREVIEW_LIMIT),
+    [filteredLikedAlbums]
+  );
+  const visibleArtists = useMemo(
+    () => filteredArtists.slice(0, ARTIST_PREVIEW_LIMIT),
+    [filteredArtists]
+  );
+
+  const hasMorePlaylists = filteredPlaylists.length > playlistPreviewCount;
+  const hasMoreAlbums = filteredLikedAlbums.length > ALBUM_PREVIEW_LIMIT;
+  const hasMoreArtists = filteredArtists.length > ARTIST_PREVIEW_LIMIT;
+  const hasMoreLikedSongs =
+    filteredLikedSongs.length > LIKED_SONGS_PREVIEW_LIMIT;
+  const hasLibraryFilter =
+    normalizedLibraryKeyword.length > 0 || libraryScope !== "all";
+  const visibleSection = (scope) =>
+    libraryScope === "all" || libraryScope === scope;
+  const hasFilteredResults =
+    filteredPlaylists.length ||
+    filteredLikedSongs.length ||
+    filteredLikedAlbums.length ||
+    filteredArtists.length;
+  const librarySummaryText = hasLibraryFilter
+    ? `Đang hiển thị ${filteredPlaylists.length} playlist, ${filteredLikedSongs.length} bài hát, ${filteredLikedAlbums.length} album và ${filteredArtists.length} nghệ sĩ khớp bộ lọc hiện tại.`
+    : "Lọc nhanh playlist, bài hát, album và nghệ sĩ ngay trong thư viện mà không cần rời trang.";
 
   return (
     <div className="user-page-shell min-h-screen w-full max-w-full space-y-8 px-4 py-6 sm:px-8">
@@ -547,84 +629,84 @@ export default function Playlists() {
         </div>
       </section>
 
-      <section className="user-surface p-5 sm:p-6">
-        <SectionHeader
-          label="Playlist"
-          title="Playlist tự tạo"
-          description="Những playlist bạn tạo gần đây để mở lại nhanh mỗi khi cần một mood quen thuộc."
-          action={
-            hasMorePlaylists ? (
+      <FilterToolbar
+        value={libraryKeyword}
+        onChange={setLibraryKeyword}
+        placeholder="Tìm playlist, bài hát, album hoặc nghệ sĩ trong thư viện"
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => navigate("/history")}
+              className="user-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold"
+            >
+              <FiClock />
+              Nghe gần đây
+            </button>
+            {hasLibraryFilter ? (
               <button
                 type="button"
-                onClick={() => navigate("/library/playlists")}
+                onClick={() => {
+                  setLibraryKeyword("");
+                  setLibraryScope("all");
+                }}
                 className="user-btn-secondary px-4 py-2 text-sm font-semibold"
               >
-                Xem tất cả
+                Xóa bộ lọc
               </button>
-            ) : null
-          }
+            ) : null}
+          </>
+        }
+        summary={librarySummaryText}
+      >
+        <div className="flex flex-wrap gap-2">
+          {LIBRARY_SCOPES.map((scope) => {
+            const isActive = libraryScope === scope.value;
+            return (
+              <button
+                key={scope.value}
+                type="button"
+                onClick={() => setLibraryScope(scope.value)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                  isActive
+                    ? "bg-emerald-400/16 text-emerald-100 ring-1 ring-inset ring-emerald-300/30"
+                    : "bg-white/[0.05] text-white/65 ring-1 ring-inset ring-white/10 md:hover:bg-white/[0.08] md:hover:text-white"
+                }`}
+              >
+                {scope.label}
+              </button>
+            );
+          })}
+        </div>
+      </FilterToolbar>
+
+      {!loadingPlaylists &&
+      !loadingLikedSongs &&
+      !loadingLikedAlbums &&
+      !loadingArtists &&
+      !hasFilteredResults ? (
+        <EmptyState
+          title="Không có mục nào khớp bộ lọc"
+          description="Thử đổi từ khóa hoặc chuyển lại phạm vi hiển thị để xem thêm nội dung trong thư viện của bạn."
+          actionLabel="Xóa bộ lọc"
+          onAction={() => {
+            setLibraryKeyword("");
+            setLibraryScope("all");
+          }}
         />
+      ) : null}
 
-        {loadingPlaylists ? (
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-            {Array.from({ length: playlistPreviewCount }).map((_, index) => (
-              <div
-                key={`playlist-skeleton-${index}`}
-                className="h-[228px] rounded-[20px] border border-white/10 bg-white/5 animate-pulse"
-              />
-            ))}
-          </div>
-        ) : playlists.length ? (
-          <div className="mt-5">
-            <PlaylistGrid
-              playlists={visiblePlaylists}
-              onOpen={(playlist) =>
-                playlist?.id && navigate(`/playlists/${playlist.id}`)
-              }
-              variant="library"
-            />
-          </div>
-        ) : (
-          <div className="mt-5">
-            <EmptyState
-              title="Bạn chưa có playlist nào"
-              description="Tạo playlist đầu tiên để bắt đầu gom lại những bài hát hợp gu nghe của riêng bạn."
-            />
-          </div>
-        )}
-      </section>
-
-      <section className="user-surface p-5 sm:p-6">
-        {loadingLikedSongs ? (
-          <div className="rounded-[24px] border border-white/10 bg-[#121212] px-5 py-10 text-sm text-white/60">
-            Đang tải bài hát đã thích...
-          </div>
-        ) : (
-          <LikedSongsSection
-            songs={likedSongs}
-            currentSong={currentSong}
-            isPlaying={isPlaying}
-            likedSongIds={likedSongIds}
-            onPlay={(song) => handlePlaySong(song, likedQueue)}
-            onToggleLike={toggleLike}
-            limit={LIKED_SONGS_PREVIEW_LIMIT}
-            showViewAll={hasMoreLikedSongs}
-            onViewAll={() => navigate("/library/liked-songs")}
-          />
-        )}
-      </section>
-
-      <div className="grid gap-8 xl:grid-cols-2">
+      {visibleSection("playlists") ? (
         <section className="user-surface p-5 sm:p-6">
           <SectionHeader
-            label="Album"
-            title="Album yêu thích"
-            description="Những album bạn muốn giữ lại để mở nghe trọn vẹn bất cứ lúc nào."
+            label="Playlist"
+            title="Playlist tự tạo"
+            description="Những playlist bạn tạo gần đây để mở lại nhanh mỗi khi cần một mood quen thuộc."
             action={
-              hasMoreAlbums ? (
+              hasMorePlaylists ? (
                 <button
                   type="button"
-                  onClick={() => navigate("/library/liked-albums")}
+                  onClick={() => navigate("/library/playlists")}
                   className="user-btn-secondary px-4 py-2 text-sm font-semibold"
                 >
                   Xem tất cả
@@ -633,84 +715,187 @@ export default function Playlists() {
             }
           />
 
-          {loadingLikedAlbums ? (
-            <div className="mt-5 grid gap-4 min-[540px]:grid-cols-2">
-              {Array.from({ length: 2 }).map((_, index) => (
+          {loadingPlaylists ? (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {Array.from({ length: playlistPreviewCount }).map((_, index) => (
                 <div
-                  key={`album-skeleton-${index}`}
-                  className="h-[280px] rounded-[24px] border border-white/10 bg-white/5 animate-pulse"
+                  key={`playlist-skeleton-${index}`}
+                  className="ui-skeleton h-[228px] rounded-[20px] border border-white/10"
                 />
               ))}
             </div>
-          ) : likedAlbums.length ? (
-            <div className="mt-5 grid gap-4 min-[540px]:grid-cols-2">
-              {visibleAlbums.map((album) => (
-                <AlbumCard
-                  key={album.id || album.title}
-                  album={album}
-                  variant="library"
-                />
-              ))}
+          ) : filteredPlaylists.length ? (
+            <div className="mt-5">
+              <PlaylistGrid
+                playlists={visiblePlaylists}
+                onOpen={(playlist) =>
+                  playlist?.id && navigate(`/playlists/${playlist.id}`)
+                }
+                variant="library"
+              />
             </div>
           ) : (
             <div className="mt-5">
               <EmptyState
-                title="Chưa có album yêu thích"
-                description="Khi bạn thả tim một album, nó sẽ nằm lại ở đây để bạn mở nghe bất cứ lúc nào."
-                actionLabel="Khám phá thêm album"
-                onAction={() => navigate("/albums")}
+                title={
+                  hasLibraryFilter
+                    ? "Không có playlist khớp"
+                    : "Bạn chưa có playlist nào"
+                }
+                description={
+                  hasLibraryFilter
+                    ? "Thử đổi từ khóa tìm kiếm hoặc chuyển về phạm vi khác để xem thêm playlist."
+                    : "Tạo playlist đầu tiên để bắt đầu gom lại những bài hát hợp gu nghe của riêng bạn."
+                }
               />
             </div>
           )}
         </section>
+      ) : null}
 
+      {visibleSection("songs") ? (
         <section className="user-surface p-5 sm:p-6">
-          <SectionHeader
-            label="Nghệ sĩ"
-            title="Nghệ sĩ theo dõi"
-            description="Những nghệ sĩ bạn yêu thích được giữ lại ở đây để bạn ghé lại nhanh hơn."
-            action={
-              hasMoreArtists ? (
-                <button
-                  type="button"
-                  onClick={() => navigate("/library/followed-artists")}
-                  className="user-btn-secondary px-4 py-2 text-sm font-semibold"
-                >
-                  Xem tất cả
-                </button>
-              ) : null
-            }
-          />
-
-          {loadingArtists ? (
-            <div className="mt-5 grid gap-4 min-[540px]:grid-cols-2">
-              {Array.from({ length: 2 }).map((_, index) => (
-                <div
-                  key={`artist-skeleton-${index}`}
-                  className="h-[280px] rounded-[24px] border border-white/10 bg-white/5 animate-pulse"
-                />
-              ))}
-            </div>
-          ) : followedArtists.length ? (
-            <div className="mt-5">
-              <ArtistFollowSection
-                artists={visibleArtists}
-                cardVariant="library"
-                gridClassName="grid gap-4 min-[540px]:grid-cols-2"
-              />
+          {loadingLikedSongs ? (
+            <div className="rounded-[24px] border border-white/10 bg-[#121212] px-5 py-10 text-sm text-white/60">
+              Đang tải bài hát đã thích...
             </div>
           ) : (
-            <div className="mt-5">
-              <EmptyState
-                title="Bạn chưa theo dõi nghệ sĩ nào"
-                description="Theo dõi nghệ sĩ bạn yêu thích để giữ họ lại trong thư viện riêng."
-                actionLabel="Mở trang khám phá"
-                onAction={() => navigate("/")}
-              />
-            </div>
+            <LikedSongsSection
+              songs={filteredLikedSongs}
+              currentSong={currentSong}
+              isPlaying={isPlaying}
+              likedSongIds={likedSongIds}
+              onPlay={(song) => handlePlaySong(song, filteredLikedSongs)}
+              onToggleLike={toggleLike}
+              limit={LIKED_SONGS_PREVIEW_LIMIT}
+              showViewAll={hasMoreLikedSongs}
+              onViewAll={() => navigate("/library/liked-songs")}
+            />
           )}
         </section>
-      </div>
+      ) : null}
+
+      {(visibleSection("albums") || visibleSection("artists")) && (
+        <div className="grid gap-8 xl:grid-cols-2">
+          {visibleSection("albums") ? (
+            <section className="user-surface p-5 sm:p-6">
+              <SectionHeader
+                label="Album"
+                title="Album yêu thích"
+                description="Những album bạn muốn giữ lại để mở nghe trọn vẹn bất cứ lúc nào."
+                action={
+                  hasMoreAlbums ? (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/library/liked-albums")}
+                      className="user-btn-secondary px-4 py-2 text-sm font-semibold"
+                    >
+                      Xem tất cả
+                    </button>
+                  ) : null
+                }
+              />
+
+              {loadingLikedAlbums ? (
+                <div className="mt-5 grid gap-4 min-[540px]:grid-cols-2">
+                  {Array.from({ length: 2 }).map((_, index) => (
+                    <div
+                      key={`album-skeleton-${index}`}
+                      className="ui-skeleton h-[280px] rounded-[24px] border border-white/10"
+                    />
+                  ))}
+                </div>
+              ) : filteredLikedAlbums.length ? (
+                <div className="mt-5 grid gap-4 min-[540px]:grid-cols-2">
+                  {visibleAlbums.map((album) => (
+                    <AlbumCard
+                      key={album.id || album.title}
+                      album={album}
+                      variant="library"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-5">
+                  <EmptyState
+                    title={
+                      hasLibraryFilter
+                        ? "Không có album khớp"
+                        : "Chưa có album yêu thích"
+                    }
+                    description={
+                      hasLibraryFilter
+                        ? "Thử đổi từ khóa hoặc xóa bộ lọc để xem lại các album bạn đã lưu."
+                        : "Khi bạn thả tim một album, nó sẽ nằm lại ở đây để bạn mở nghe bất cứ lúc nào."
+                    }
+                    actionLabel={hasLibraryFilter ? "" : "Khám phá thêm album"}
+                    onAction={
+                      hasLibraryFilter ? undefined : () => navigate("/albums")
+                    }
+                  />
+                </div>
+              )}
+            </section>
+          ) : null}
+
+          {visibleSection("artists") ? (
+            <section className="user-surface p-5 sm:p-6">
+              <SectionHeader
+                label="Nghệ sĩ"
+                title="Nghệ sĩ theo dõi"
+                description="Những nghệ sĩ bạn yêu thích được giữ lại ở đây để bạn ghé lại nhanh hơn."
+                action={
+                  hasMoreArtists ? (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/library/followed-artists")}
+                      className="user-btn-secondary px-4 py-2 text-sm font-semibold"
+                    >
+                      Xem tất cả
+                    </button>
+                  ) : null
+                }
+              />
+
+              {loadingArtists ? (
+                <div className="mt-5 grid gap-4 min-[540px]:grid-cols-2">
+                  {Array.from({ length: 2 }).map((_, index) => (
+                    <div
+                      key={`artist-skeleton-${index}`}
+                      className="ui-skeleton h-[280px] rounded-[24px] border border-white/10"
+                    />
+                  ))}
+                </div>
+              ) : filteredArtists.length ? (
+                <div className="mt-5">
+                  <ArtistFollowSection
+                    artists={visibleArtists}
+                    cardVariant="library"
+                    gridClassName="grid gap-4 min-[540px]:grid-cols-2"
+                  />
+                </div>
+              ) : (
+                <div className="mt-5">
+                  <EmptyState
+                    title={
+                      hasLibraryFilter
+                        ? "Không có nghệ sĩ khớp"
+                        : "Bạn chưa theo dõi nghệ sĩ nào"
+                    }
+                    description={
+                      hasLibraryFilter
+                        ? "Thử đổi từ khóa hoặc quay lại phạm vi tất cả để xem thêm nghệ sĩ đã theo dõi."
+                        : "Theo dõi nghệ sĩ bạn yêu thích để giữ họ lại trong thư viện riêng."
+                    }
+                    actionLabel={hasLibraryFilter ? "" : "Mở trang khám phá"}
+                    onAction={hasLibraryFilter ? undefined : () => navigate("/")}
+                  />
+                </div>
+              )}
+            </section>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

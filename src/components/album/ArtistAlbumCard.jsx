@@ -7,12 +7,17 @@ import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../common/OptimizedImage";
 import { getArtistLabel } from "../../utils/artist";
 
-export default function ArtistAlbumCard({ artist, variant = "grid" }) {
+export default function ArtistAlbumCard({
+  artist,
+  variant = "grid",
+  density = "cozy",
+}) {
   const navigate = useNavigate();
   const playSong = usePlayerStore((s) => s.playSong);
 
   const isRail = variant === "rail";
   const isLibrary = variant === "library";
+  const isCompact = density === "compact";
   const songCount =
     artist?.song_count ?? artist?.track_count ?? artist?.songs_count ?? artist?.songs?.length ?? 0;
 
@@ -51,10 +56,18 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
       data-card
       onClick={() => navigate(`/artist/${artist.artist_id}`)}
       className={`group relative w-full overflow-hidden p-3 transition-all duration-300 active:scale-[0.98] ${
-        isLibrary ? "rounded-lg border border-white/10 bg-[#181818]" : "user-surface"
+        isLibrary
+          ? `${isCompact ? "rounded-[18px]" : "rounded-lg"} border border-white/10 bg-[#181818]`
+          : "user-surface"
       } ${isRail ? "" : "sm:p-4"}`}
     >
-      <div className={`relative w-full overflow-hidden ${isLibrary ? "aspect-square rounded-lg" : "aspect-square rounded-xl"}`}>
+      <div
+        className={`relative w-full overflow-hidden ${
+          isLibrary
+            ? `aspect-square ${isCompact ? "rounded-[14px]" : "rounded-lg"}`
+            : "aspect-square rounded-xl"
+        }`}
+      >
         <OptimizedImage
           src={resolveAssetUrl(artist.cover_url)}
           alt={artist.artist_name}
@@ -75,15 +88,29 @@ export default function ArtistAlbumCard({ artist, variant = "grid" }) {
         </button>
       </div>
 
-      <div className={`relative mt-3 space-y-1 ${isRail ? "text-left" : "sm:mt-4"}`}>
+      <div
+        className={`relative ${isCompact ? "mt-2.5 space-y-1" : "mt-3 space-y-1"} ${
+          isRail ? "text-left" : "sm:mt-4"
+        }`}
+      >
         <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/50">
           <FiUsers className="text-emerald-300" />
           Nghệ sĩ
         </div>
 
-        <h3 className="truncate text-sm font-semibold text-white sm:text-base">{artist.artist_name}</h3>
+        <h3
+          className={`truncate font-semibold text-white ${
+            isCompact ? "text-[13px] sm:text-sm" : "text-sm sm:text-base"
+          }`}
+        >
+          {artist.artist_name}
+        </h3>
 
-        <div className="flex items-center justify-between gap-2 text-xs text-white/70">
+        <div
+          className={`flex items-center justify-between gap-2 text-white/70 ${
+            isCompact ? "text-[11px] sm:text-xs" : "text-xs"
+          }`}
+        >
           <div className="flex items-center gap-1">
             <FiMusic className="shrink-0 text-white/60" />
             <span>{songCount} bài hát</span>

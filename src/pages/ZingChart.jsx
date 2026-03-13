@@ -2,7 +2,11 @@
 import { Link } from "react-router-dom";
 import { FaPlay, FaRegClock } from "react-icons/fa";
 import { FiExternalLink, FiRefreshCw, FiTrendingUp } from "react-icons/fi";
-import ReactECharts from "echarts-for-react";
+import * as echarts from "echarts/core";
+import { LineChart as ELineChart } from "echarts/charts";
+import { GridComponent, TooltipComponent, LegendComponent } from "echarts/components";
+import { SVGRenderer } from "echarts/renderers";
+import ReactEChartsCore from "echarts-for-react/lib/core";
 import {
   getZingChart,
   getTop5Chart,
@@ -17,9 +21,12 @@ import {
 } from "../utils/song";
 import { getArtistLabel } from "../utils/artist";
 import usePlayerStore from "../store/player.store";
+import ChartLoadingState from "../components/charts/ChartLoadingState";
 import OptimizedImage from "../components/common/OptimizedImage";
 import { resolveAssetUrl } from "../utils/asset";
 import ArtistNames from "../components/artist/ArtistNames";
+
+echarts.use([GridComponent, TooltipComponent, LegendComponent, ELineChart, SVGRenderer]);
 
 const LINE_COLORS = ["#fbbf24", "#60a5fa", "#a78bfa", "#fb7185", "#f97316"];
 
@@ -54,6 +61,7 @@ const PERIOD_OPTIONS = [
 ];
 
 const REGION_GRID_THREE_COL_MIN = 1320;
+const WEEKLY_CHART_HEIGHT = "clamp(238px, 36vw, 420px)";
 
 const toArray = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -411,15 +419,10 @@ export default function ZingChart() {
   const isVerySmall = viewportWidth < 460;
   const isDesktopTwoColumn = viewportWidth >= 1280;
   const showChartLegend = viewportWidth >= 1280;
-  const showRegionChartsInRow = regionGridWidth >= REGION_GRID_THREE_COL_MIN;
+  const showRegionChartsInThreeColumns = regionGridWidth >= REGION_GRID_THREE_COL_MIN;
   const mobileLabelInterval = isMobile
     ? Math.max(0, Math.ceil(weeklyLineData.categories.length / 4) - 1)
     : 0;
-  const chartHeightClass = isMobile
-    ? "h-[238px]"
-    : isTablet
-      ? "h-[300px]"
-      : "h-[420px]";
   const chartMountKey = `${chartBoxSize.width}x${chartBoxSize.height}-${weeklyLineData.categories.length}-${isMobile ? "m" : "d"}`;
 
   const weeklyLineOption = useMemo(() => {
@@ -744,7 +747,7 @@ export default function ZingChart() {
           </div>
         </div>
 
-        <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,1fr)] xl:items-stretch">
+        <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.95fr)] 2xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,1fr)] xl:items-stretch">
           <div
             className="min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-[#121212] p-4 sm:p-5 xl:flex xl:h-full xl:flex-col"
           >
@@ -769,7 +772,8 @@ export default function ZingChart() {
 
             <div
               ref={chartContainerRef}
-              className={`${isDesktopTwoColumn ? "min-h-0 flex-1" : chartHeightClass} min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#101010]`}
+              className={`${isDesktopTwoColumn ? "min-h-0 flex-1" : ""} min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#101010]`}
+              style={{ height: isDesktopTwoColumn ? "100%" : WEEKLY_CHART_HEIGHT }}
               onMouseEnter={() => {
                 if (weeklyLineOption) setIsChartHovered(true);
               }}
@@ -778,20 +782,30 @@ export default function ZingChart() {
               }}
             >
               {trendLoading ? (
-                <div className="p-4 text-sm text-white/60">Đang tải biểu đồ...</div>
+                <ChartLoadingState
+                  height="100%"
+                  className="h-full rounded-none border-0 bg-transparent p-4 sm:p-5"
+                  bars={isMobile ? 4 : 6}
+                />
               ) : weeklyLineOption ? (
                 chartBoxSize.width > 0 && chartBoxSize.height > 0 ? (
-                  <ReactECharts
+                  <ReactEChartsCore
                     key={chartMountKey}
+                    echarts={echarts}
                     option={weeklyLineOption}
                     style={{ height: "100%", width: "100%", minWidth: 0 }}
                     onChartReady={handleChartReady}
                     autoResize={false}
                     notMerge
                     lazyUpdate
+                    opts={{ renderer: "svg" }}
                   />
                 ) : (
-                  <div className="p-4 text-sm text-white/60">Đang khởi tạo biểu đồ...</div>
+                  <ChartLoadingState
+                    height="100%"
+                    className="h-full rounded-none border-0 bg-transparent p-4 sm:p-5"
+                    bars={isMobile ? 4 : 6}
+                  />
                 )
               ) : (
                 <div className="p-4 text-sm text-white/60">Chưa có dữ liệu biểu đồ.</div>
@@ -819,9 +833,25 @@ export default function ZingChart() {
               ) : null}
 
               <div className="space-y-2.5">
-                {!weeklySongs.length && rankingLoading ? (
-                  <div className="text-sm text-white/60">Đang tải bảng xếp hạng...</div>
-                ) : null}
+                {!weeklySongs.length && rankingLoading
+                  ? Array.from({ length: 5 }).map((_, index) => (
+                      <div
+                        key={`ranking-skeleton-${index}`}
+                        className="rounded-2xl border border-white/10 bg-[#151515] px-3 py-2.5"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="ui-skeleton h-5 w-8 rounded-full bg-white/8" />
+                          <div className="ui-skeleton h-11 w-11 rounded-lg bg-white/8" />
+                          <div className="min-w-0 flex-1 space-y-2">
+                            <div className="ui-skeleton h-4 w-3/4 rounded-full bg-white/8" />
+                            <div className="ui-skeleton h-3 w-1/2 rounded-full bg-white/8" />
+                          </div>
+                          <div className="ui-skeleton hidden h-6 w-14 rounded-full bg-white/8 sm:block" />
+                          <div className="ui-skeleton h-8 w-8 rounded-full bg-white/8" />
+                        </div>
+                      </div>
+                    ))
+                  : null}
 
                 {!rankingLoading && !weeklySongs.length ? (
                   <div className="text-sm text-white/60">
@@ -917,9 +947,12 @@ export default function ZingChart() {
 
         <div
           ref={regionGridRef}
-          className={`grid grid-cols-1 gap-4 ${
-            showRegionChartsInRow ? "grid-cols-3" : ""
-          }`}
+          className="grid grid-cols-1 gap-4"
+          style={
+            showRegionChartsInThreeColumns
+              ? { gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }
+              : undefined
+          }
         >
           {REGION_META.map((region) => {
             const songs = regionCharts[region.key] || [];
@@ -946,11 +979,25 @@ export default function ZingChart() {
                 </div>
 
                 <div className="space-y-2.5">
-                  {regionLoading && (
-                    <div className="text-sm text-white/60">
-                      Đang tải dữ liệu khu vực...
-                    </div>
-                  )}
+                  {regionLoading
+                    ? Array.from({ length: 5 }).map((_, index) => (
+                        <div
+                          key={`${region.key}-loading-${index}`}
+                          className="rounded-2xl border border-white/10 bg-[#151515] px-3 py-2.5"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="ui-skeleton h-5 w-8 rounded-full bg-white/8" />
+                            <div className="ui-skeleton h-11 w-11 rounded-lg bg-white/8" />
+                            <div className="min-w-0 flex-1 space-y-2">
+                              <div className="ui-skeleton h-4 w-3/4 rounded-full bg-white/8" />
+                              <div className="ui-skeleton h-3 w-1/2 rounded-full bg-white/8" />
+                            </div>
+                            <div className="ui-skeleton hidden h-6 w-14 rounded-full bg-white/8 sm:block" />
+                            <div className="ui-skeleton h-8 w-8 rounded-full bg-white/8" />
+                          </div>
+                        </div>
+                      ))
+                    : null}
                   {!regionLoading && !songs.length && (
                     <div className="text-sm text-white/60">Chưa có dữ liệu.</div>
                   )}

@@ -14,8 +14,10 @@ import {
 import { getSongById } from "../api/song.api";
 import ArtistNames from "../components/artist/ArtistNames";
 import OptimizedImage from "../components/common/OptimizedImage";
+import ShareLinkButton from "../components/common/ShareLinkButton";
 import AddToPlaylistButton from "../components/playlists/AddToPlaylistButton";
 import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
+import usePageMetadata from "../hooks/usePageMetadata";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { resolveAssetUrl } from "../utils/asset";
 import { formatDateDisplay } from "../utils/date";
@@ -111,6 +113,17 @@ export default function SongDetail() {
   const isActive = normalizeSongId(currentSong) === songId;
   const isLiked = songId && likedSongIds.includes(songId);
   const albumId = song?.album_id || song?.album?.id || null;
+  const sharePath = songId ? `/song/${songId}` : id ? `/song/${id}` : "";
+  const artistShareLabel = useMemo(() => {
+    if (song?.artist_name) return song.artist_name;
+    if (Array.isArray(song?.artists) && song.artists.length) {
+      return song.artists
+        .map((artist) => artist?.name || artist?.alias || "")
+        .filter(Boolean)
+        .join(", ");
+    }
+    return "Nghệ sĩ đang cập nhật";
+  }, [song]);
 
   const releaseDateText = useMemo(
     () =>
@@ -119,6 +132,26 @@ export default function SongDetail() {
       ),
     [song]
   );
+  const songMetaDescription = useMemo(() => {
+    const parts = [
+      artistShareLabel,
+      song?.album_title || "Single",
+      formatDuration(song?.duration || 0),
+      releaseDateText,
+    ].filter(Boolean);
+
+    return parts.length
+      ? `${parts.join(" • ")} trên Khoaluan Music.`
+      : "Khám phá thông tin bài hát trên Khoaluan Music.";
+  }, [artistShareLabel, releaseDateText, song]);
+
+  usePageMetadata({
+    title: song?.title || "Bài hát",
+    description: songMetaDescription,
+    image: resolveAssetUrl(song?.cover_url || ""),
+    url: sharePath,
+    type: "music.song",
+  });
 
   const summaryCards = useMemo(
     () => [
@@ -152,11 +185,11 @@ export default function SongDetail() {
     return (
       <div className="user-page-shell min-h-screen w-full max-w-full space-y-6 px-4 py-6 sm:px-8">
         <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
-          <div className="user-surface h-[320px] animate-pulse bg-white/5" />
-          <div className="user-surface h-[320px] animate-pulse bg-white/5" />
+          <div className="user-surface ui-skeleton h-[320px] bg-white/5" />
+          <div className="user-surface ui-skeleton h-[320px] bg-white/5" />
         </div>
-        <div className="user-surface h-[280px] animate-pulse bg-white/5" />
-        <div className="user-surface h-[220px] animate-pulse bg-white/5" />
+        <div className="user-surface ui-skeleton h-[280px] bg-white/5" />
+        <div className="user-surface ui-skeleton h-[220px] bg-white/5" />
       </div>
     );
   }
@@ -199,8 +232,8 @@ export default function SongDetail() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(29,185,84,0.24),_transparent_38%),linear-gradient(135deg,rgba(255,255,255,0.06),transparent_36%)]" />
         <div className="pointer-events-none absolute -top-24 right-0 h-60 w-60 rounded-full bg-emerald-400/10 blur-3xl" />
 
-        <div className="relative grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
-          <div className="mx-auto w-full max-w-[300px] xl:mx-0">
+        <div className="relative grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
+          <div className="mx-auto w-full max-w-[240px] sm:max-w-[300px] xl:mx-0">
             <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#171717] shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
               {song.cover_url ? (
                 <OptimizedImage
@@ -217,18 +250,18 @@ export default function SongDetail() {
             </div>
           </div>
 
-          <div className="min-w-0 space-y-6">
+          <div className="min-w-0 space-y-5 sm:space-y-6">
             <div className="space-y-3">
               <p className="user-heading-label">Bài hát</p>
-              <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl xl:text-5xl">
+              <h1 className="break-words text-2xl font-black leading-tight text-white sm:text-4xl xl:text-5xl">
                 {song.title}
               </h1>
               <div className="text-sm text-white/78 sm:text-[15px]">
                 <ArtistNames
                   item={song}
                   stopPropagation
-                  className="truncate"
-                  linkClassName="transition md:hover:text-emerald-300 md:hover:underline"
+                  className="break-words sm:truncate"
+                  linkClassName="transition md:hover:text-emerald-300"
                   fallback="Đang cập nhật nghệ sĩ"
                 />
               </div>
@@ -246,11 +279,11 @@ export default function SongDetail() {
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="grid min-w-0 gap-3 min-[520px]:grid-cols-2 sm:flex sm:flex-wrap sm:items-center">
               <button
                 type="button"
                 onClick={handlePlay}
-                className="user-btn-primary inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold"
+                className="user-btn-primary inline-flex w-full min-w-0 items-center justify-center gap-2 px-4 py-3 text-sm font-semibold min-[520px]:w-auto sm:px-6"
               >
                 {isActive && isPlaying ? <FiPause className="text-base" /> : <FiPlay className="text-base" />}
                 {isActive && isPlaying ? "Tạm dừng" : "Phát ngay"}
@@ -265,7 +298,7 @@ export default function SongDetail() {
                     <span>Thêm vào playlist</span>
                   </span>
                 }
-                triggerClassName="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm text-white/80 transition md:hover:bg-white/10"
+                triggerClassName="w-full min-w-0 justify-center rounded-full border border-white/15 bg-white/5 px-4 py-3 text-sm text-white/80 transition min-[520px]:w-auto md:hover:bg-white/10 sm:px-5"
               />
 
               <button
@@ -273,7 +306,7 @@ export default function SongDetail() {
                 onClick={() => {
                   if (songId) toggleLike(songId);
                 }}
-                className={`inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold transition ${
+                className={`inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition min-[520px]:w-auto sm:px-5 ${
                   isLiked
                     ? "border-rose-400/60 bg-rose-500/18 text-rose-100"
                     : "border-white/15 bg-white/5 text-white/80 md:hover:bg-white/10"
@@ -282,16 +315,35 @@ export default function SongDetail() {
                 <FiHeart className={isLiked ? "text-rose-300" : ""} />
                 {isLiked ? "Đã thích" : "Yêu thích"}
               </button>
+
+              <ShareLinkButton
+                path={sharePath}
+                title="Chia sẻ bài hát"
+                shareTitle={song.title}
+                shareText={`Nghe ${song.title} của ${artistShareLabel} trên Khoaluan Music.`}
+                preview={{
+                  eyebrow: "Bài hát",
+                  title: song.title,
+                  subtitle: artistShareLabel,
+                  description: `${song?.album_title || "Single"} • ${formatDuration(
+                    song?.duration || 0
+                  )} • ${formatCount(song?.play_count)} lượt nghe`,
+                  image: resolveAssetUrl(song?.cover_url || ""),
+                }}
+                className="w-full justify-center px-4 py-3 min-[520px]:w-auto sm:px-5"
+              />
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid min-w-0 gap-3 min-[520px]:grid-cols-2 xl:grid-cols-4">
               {summaryCards.map((item) => (
-                <article key={item.label} className="user-soft-card px-4 py-4">
+                <article key={item.label} className="user-soft-card min-w-0 px-4 py-4">
                   <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-white/50">
                     <item.icon className="text-white/60" />
                     <span>{item.label}</span>
                   </div>
-                  <p className="mt-3 truncate text-lg font-bold text-white sm:text-xl">{item.value}</p>
+                  <p className="mt-3 break-words text-lg font-bold leading-snug text-white sm:text-xl sm:truncate">
+                    {item.value}
+                  </p>
                 </article>
               ))}
             </div>
@@ -311,15 +363,19 @@ export default function SongDetail() {
             {infoItems.map((item) => (
               <article key={item.label} className="user-soft-card px-4 py-4">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-white/45">{item.label}</p>
-                <p className="mt-3 text-sm font-semibold text-white sm:text-[15px]">{item.value}</p>
+                <p className="mt-3 break-words text-sm font-semibold text-white sm:text-[15px]">
+                  {item.value}
+                </p>
               </article>
             ))}
           </div>
 
           <div className="space-y-4">
-            <article className="user-soft-card p-5">
+            <article className="user-soft-card break-words p-5">
               <p className="text-[11px] uppercase tracking-[0.22em] text-white/45">Thuộc album</p>
-              <h3 className="mt-3 text-xl font-bold text-white">{song.album_title || "Single độc lập"}</h3>
+              <h3 className="mt-3 break-words text-xl font-bold text-white">
+                {song.album_title || "Single độc lập"}
+              </h3>
               <p className="mt-2 text-sm leading-relaxed text-white/65">
                 {albumId
                   ? "Ca khúc này nằm trong một album, mở ra là bạn có thể nghe trọn vẹn cùng những bài còn lại."
@@ -344,7 +400,7 @@ export default function SongDetail() {
                   item={song}
                   stopPropagation
                   className="text-white"
-                  linkClassName="font-medium transition md:hover:text-emerald-300 md:hover:underline"
+                  linkClassName="font-medium transition md:hover:text-emerald-300"
                   fallback="Đang cập nhật nghệ sĩ"
                 />
               </div>
