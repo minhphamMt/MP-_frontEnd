@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaChartLine } from "react-icons/fa";
 import { BsHeartFill, BsMusicNoteList } from "react-icons/bs";
 import { FiChevronsLeft, FiChevronsRight, FiX } from "react-icons/fi";
@@ -12,6 +12,23 @@ import SidebarItem from "./SidebarItem";
 import SidebarSection from "./SidebarSection";
 
 const SIDEBAR_COLLAPSE_KEY = "sidebar-collapsed";
+const SIDEBAR_WIDTH_KEY = "sidebar-width";
+const SIDEBAR_COMPACT_WIDTH = 92;
+const SIDEBAR_DEFAULT_WIDTH = 258;
+const SIDEBAR_MIN_WIDTH = 224;
+const SIDEBAR_MAX_WIDTH = 336;
+const SIDEBAR_COLLAPSE_THRESHOLD = 156;
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const getSavedSidebarWidth = () => {
+  if (typeof window === "undefined") return SIDEBAR_DEFAULT_WIDTH;
+
+  const storedWidth = Number(window.localStorage.getItem(SIDEBAR_WIDTH_KEY));
+  if (!Number.isFinite(storedWidth)) return SIDEBAR_DEFAULT_WIDTH;
+
+  return clamp(storedWidth, SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH);
+};
 
 export default function Sidebar({ isOpen, onClose }) {
   const role = useAuthStore((state) => state.role);
@@ -26,6 +43,10 @@ export default function Sidebar({ isOpen, onClose }) {
     if (typeof window === "undefined") return true;
     return window.innerWidth >= 1024;
   });
+  const [sidebarWidth, setSidebarWidth] = useState(getSavedSidebarWidth);
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef(null);
+  const resizeCleanupRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -51,7 +72,90 @@ export default function Sidebar({ isOpen, onClose }) {
     window.localStorage.setItem(SIDEBAR_COLLAPSE_KEY, String(isCollapsed));
   }, [isCollapsed]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(SIDEBAR_WIDTH_KEY, String(Math.round(sidebarWidth)));
+  }, [sidebarWidth]);
+
+  useEffect(() => {
+    if (!isResizing || typeof document === "undefined") return undefined;
+
+    const previousCursor = document.body.style.cursor;
+    const previousUserSelect = document.body.style.userSelect;
+
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    return () => {
+      document.body.style.cursor = previousCursor;
+      document.body.style.userSelect = previousUserSelect;
+    };
+  }, [isResizing]);
+
+  useEffect(() => {
+    if (isDesktop) return undefined;
+
+    resizeCleanupRef.current?.();
+    setIsResizing(false);
+    return undefined;
+  }, [isDesktop]);
+
+  useEffect(
+    () => () => {
+      resizeCleanupRef.current?.();
+    },
+    []
+  );
+
+  const stopResize = () => {
+    resizeCleanupRef.current?.();
+  };
+
+  const startResize = (event) => {
+    if (!isDesktop || typeof window === "undefined") return;
+
+    event.preventDefault();
+
+    const sidebar = sidebarRef.current;
+    if (!sidebar) return;
+
+    const rect = sidebar.getBoundingClientRect();
+
+    const cleanup = () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      resizeCleanupRef.current = null;
+      setIsResizing(false);
+    };
+
+    const onMouseMove = (moveEvent) => {
+      const rawWidth = moveEvent.clientX - rect.left;
+
+      if (rawWidth <= SIDEBAR_COLLAPSE_THRESHOLD) {
+        setIsCollapsed(true);
+        return;
+      }
+
+      setIsCollapsed(false);
+      setSidebarWidth(clamp(rawWidth, SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH));
+    };
+
+    const onMouseUp = () => {
+      cleanup();
+    };
+
+    stopResize();
+    setIsResizing(true);
+    resizeCleanupRef.current = cleanup;
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  };
+
   const isCompact = isDesktop && isCollapsed;
+  const desktopSidebarStyle = isDesktop
+    ? { width: `${isCompact ? SIDEBAR_COMPACT_WIDTH : sidebarWidth}px` }
+    : undefined;
 
   return (
     <>
@@ -64,11 +168,11 @@ export default function Sidebar({ isOpen, onClose }) {
       />
 
       <aside
-        className={`sidebar-motion group/sidebar fixed inset-y-0 left-0 z-40 flex h-full w-[276px] sm:w-[304px] ${
-          isCompact ? "lg:w-[92px]" : "lg:w-[246px] xl:w-[258px]"
-        } flex-col overflow-hidden border-r border-white/10 bg-[#040404] text-white shadow-[0_26px_80px_rgba(0,0,0,0.6)] will-change-transform transition-[width,transform] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:static lg:translate-x-0 lg:overflow-visible lg:duration-[280ms] ${
-          isOpen ? "translate-x-0" : "-translate-x-[108%]"
-        }`}
+        ref={sidebarRef}
+        style={desktopSidebarStyle}
+        className={`sidebar-motion group/sidebar fixed inset-y-0 left-0 z-40 flex h-full w-[276px] sm:w-[304px] flex-col overflow-hidden border-r border-white/10 bg-[#040404] text-white shadow-[0_26px_80px_rgba(0,0,0,0.6)] will-change-transform transition-[width,transform] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:static lg:overflow-visible lg:translate-x-0 lg:duration-[280ms] ${
+          isResizing ? "lg:transition-none" : ""
+        } ${isOpen ? "translate-x-0" : "-translate-x-[108%]"}`}
       >
         <div
           className={`relative flex h-[72px] items-center border-b border-white/10 ${
@@ -76,10 +180,7 @@ export default function Sidebar({ isOpen, onClose }) {
           }`}
         >
           {isCompact ? (
-            <div
-              className="flex items-center justify-center"
-              title="Khoaluan Music"
-            >
+            <div className="flex items-center justify-center" title="Khoaluan Music">
               <BrandLogo compact />
             </div>
           ) : (
@@ -123,24 +224,14 @@ export default function Sidebar({ isOpen, onClose }) {
             <>
               <SidebarSection collapsed={isCompact}>
                 <SidebarItem to="/" icon={MdExplore} label="Khám phá" collapsed={isCompact} />
-                <SidebarItem
-                  to="/zing-chart"
-                  icon={FaChartLine}
-                  label="MChart"
-                  collapsed={isCompact}
-                />
+                <SidebarItem to="/zing-chart" icon={FaChartLine} label="MChart" collapsed={isCompact} />
                 <SidebarItem
                   to="/new-release"
                   icon={BsMusicNoteList}
                   label="Nhạc mới"
                   collapsed={isCompact}
                 />
-                <SidebarItem
-                  to="/top-50"
-                  icon={MdLibraryMusic}
-                  label="Top 50"
-                  collapsed={isCompact}
-                />
+                <SidebarItem to="/top-50" icon={MdLibraryMusic} label="Top 50" collapsed={isCompact} />
               </SidebarSection>
 
               {isAuthenticated ? (
@@ -179,6 +270,20 @@ export default function Sidebar({ isOpen, onClose }) {
               ) : null}
             </>
           )}
+        </div>
+
+        <div
+          className="absolute inset-y-0 right-0 z-20 hidden w-4 translate-x-1/2 cursor-col-resize items-center justify-center lg:flex"
+          onMouseDown={startResize}
+          aria-hidden
+        >
+          <span
+            className={`h-28 w-px rounded-full transition ${
+              isResizing
+                ? "bg-[#1db954]/55 opacity-100"
+                : "bg-white/16 opacity-0 group-hover/sidebar:opacity-100 group-focus-within/sidebar:opacity-100"
+            }`}
+          />
         </div>
       </aside>
     </>

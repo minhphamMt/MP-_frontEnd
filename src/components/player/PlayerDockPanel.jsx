@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FiAlignLeft, FiColumns } from "react-icons/fi";
 import usePlayerStore from "../../store/player.store";
 import PlayerDetailLyrics from "./PlayerDetailLyrics";
@@ -8,16 +8,31 @@ const TABS = [
   {
     id: "queue",
     label: "Danh sách phát",
-    description: "Những bài đang phát, vừa đi qua và các bài nối tiếp ngay sau đó.",
     icon: FiColumns,
   },
   {
     id: "lyrics",
     label: "Lời bài hát",
-    description: "Theo dõi từng câu hát và chạm để tua nhanh tới đúng đoạn muốn nghe lại.",
     icon: FiAlignLeft,
   },
 ];
+
+const DOCK_WIDTH_KEY = "player-dock-width";
+const DOCK_DEFAULT_WIDTH = 336;
+const DOCK_MIN_WIDTH = 288;
+const DOCK_MAX_WIDTH = 440;
+const DOCK_CLOSE_THRESHOLD = 228;
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const getSavedDockWidth = () => {
+  if (typeof window === "undefined") return DOCK_DEFAULT_WIDTH;
+
+  const storedWidth = Number(window.localStorage.getItem(DOCK_WIDTH_KEY));
+  if (!Number.isFinite(storedWidth)) return DOCK_DEFAULT_WIDTH;
+
+  return clamp(storedWidth, DOCK_MIN_WIDTH, DOCK_MAX_WIDTH);
+};
 
 export default function PlayerDockPanel() {
   const {
@@ -32,6 +47,10 @@ export default function PlayerDockPanel() {
     closeDockPanel,
     setDockPanelTab,
   } = usePlayerStore();
+  const [panelWidth, setPanelWidth] = useState(getSavedDockWidth);
+  const [isResizing, setIsResizing] = useState(false);
+  const panelRef = useRef(null);
+  const resizeCleanupRef = useRef(null);
 
   useEffect(() => {
     if (!dockPanelOpen || typeof window === "undefined") return undefined;
@@ -46,24 +65,100 @@ export default function PlayerDockPanel() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [closeDockPanel, dockPanelOpen]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(DOCK_WIDTH_KEY, String(Math.round(panelWidth)));
+  }, [panelWidth]);
+
+  useEffect(() => {
+    if (!isResizing || typeof document === "undefined") return undefined;
+
+    const previousCursor = document.body.style.cursor;
+    const previousUserSelect = document.body.style.userSelect;
+
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    return () => {
+      document.body.style.cursor = previousCursor;
+      document.body.style.userSelect = previousUserSelect;
+    };
+  }, [isResizing]);
+
+  useEffect(
+    () => () => {
+      resizeCleanupRef.current?.();
+    },
+    []
+  );
+
+  const stopResize = () => {
+    resizeCleanupRef.current?.();
+  };
+
+  const startResize = (event) => {
+    if (!dockPanelOpen || typeof window === "undefined" || window.innerWidth < 1024) return;
+
+    event.preventDefault();
+
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    const rect = panel.getBoundingClientRect();
+
+    const cleanup = () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      resizeCleanupRef.current = null;
+      setIsResizing(false);
+    };
+
+    const onMouseMove = (moveEvent) => {
+      const rawWidth = rect.right - moveEvent.clientX;
+
+      if (rawWidth <= DOCK_CLOSE_THRESHOLD) {
+        closeDockPanel();
+        cleanup();
+        return;
+      }
+
+      setPanelWidth(clamp(rawWidth, DOCK_MIN_WIDTH, DOCK_MAX_WIDTH));
+    };
+
+    const onMouseUp = () => {
+      cleanup();
+    };
+
+    stopResize();
+    setIsResizing(true);
+    resizeCleanupRef.current = cleanup;
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  };
+
   if (!currentSong) return null;
 
-  const queueCount = Array.isArray(queue) ? queue.length : 0;
+  const panelStyle = { width: dockPanelOpen ? `${panelWidth}px` : "0px" };
+  const innerPanelStyle = { width: `${panelWidth}px` };
 
   return (
     <aside
-      className={`hidden shrink-0 overflow-hidden border-l border-white/10 bg-[#040404] text-white shadow-[-24px_0_60px_rgba(0,0,0,0.32)] transition-[width] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:block ${
-        dockPanelOpen ? "w-[300px] xl:w-[336px] 2xl:w-[360px]" : "w-0"
+      ref={panelRef}
+      style={panelStyle}
+      className={`group/dock relative hidden shrink-0 overflow-hidden border-l border-white/10 bg-[#040404] text-white shadow-[-24px_0_60px_rgba(0,0,0,0.32)] transition-[width] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:block ${
+        isResizing ? "transition-none" : ""
       }`}
       aria-hidden={!dockPanelOpen}
     >
       <div
-        className={`flex h-full w-[300px] flex-col overflow-hidden transition-[transform,opacity] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] xl:w-[336px] 2xl:w-[360px] ${
+        style={innerPanelStyle}
+        className={`flex h-full flex-col overflow-hidden transition-[transform,opacity] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
           dockPanelOpen ? "translate-x-0 opacity-100" : "pointer-events-none translate-x-[108%] opacity-0"
         }`}
       >
-        <div className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] px-3 pb-3 pt-4">
-          <div className="grid grid-cols-2 gap-2 rounded-[22px] border border-white/8 bg-white/[0.03] p-1.5">
+        <div className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] px-3 py-3">
+          <div className="grid grid-cols-2 gap-2 rounded-[20px] border border-white/8 bg-white/[0.03] p-1.5">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = dockPanelTab === tab.id;
@@ -73,30 +168,25 @@ export default function PlayerDockPanel() {
                   key={tab.id}
                   type="button"
                   onClick={() => setDockPanelTab(tab.id)}
-                  className={`flex items-center gap-2 rounded-[18px] px-3 py-2.5 text-left transition ${
+                  className={`flex items-center justify-center gap-2 rounded-[16px] px-3 py-3 text-sm font-semibold transition ${
                     isActive
-                      ? "bg-[linear-gradient(135deg,rgba(29,185,84,0.18),rgba(255,255,255,0.08))] text-white shadow-[0_10px_24px_rgba(29,185,84,0.14)]"
+                      ? "bg-[linear-gradient(135deg,rgba(29,185,84,0.16),rgba(255,255,255,0.08))] text-white shadow-[0_10px_24px_rgba(29,185,84,0.14)]"
                       : "text-white/60 md:hover:bg-white/[0.05] md:hover:text-white"
                   }`}
                 >
                   <span
-                    className={`flex h-9 w-9 items-center justify-center rounded-2xl border transition ${
+                    className={`flex h-8 w-8 items-center justify-center rounded-2xl border transition ${
                       isActive
                         ? "border-[#1db954]/50 bg-[#1db954]/18 text-[#9ff0bc]"
                         : "border-white/10 bg-white/[0.04] text-white/70"
                     }`}
-                      >
-                        <Icon size={16} />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold">{tab.label}</span>
-                        <span className="mt-0.5 block truncate text-[11px] text-white/45">
-                          {tab.id === "queue" ? `${queueCount} bài hiện có` : "Xem lời bài hát"}
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
+                  >
+                    <Icon size={15} />
+                  </span>
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -112,6 +202,22 @@ export default function PlayerDockPanel() {
             />
           )}
         </div>
+      </div>
+
+      <div
+        className={`absolute inset-y-0 left-0 z-20 hidden w-4 -translate-x-1/2 cursor-col-resize items-center justify-center lg:flex ${
+          dockPanelOpen ? "" : "pointer-events-none"
+        }`}
+        onMouseDown={startResize}
+        aria-hidden
+      >
+        <span
+          className={`h-28 w-px rounded-full transition ${
+            isResizing
+              ? "bg-[#1db954]/55 opacity-100"
+              : "bg-white/16 opacity-0 group-hover/dock:opacity-100 group-focus-within/dock:opacity-100"
+          }`}
+        />
       </div>
     </aside>
   );
