@@ -499,7 +499,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
   const detailPanel = (
     <div
-      className={`${glassPanelClass} flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[26px] p-4 sm:p-5 lg:p-6`}
+      className={`${glassPanelClass} flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[26px] p-4 sm:p-5 lg:p-5 xl:p-6`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
@@ -515,82 +515,84 @@ export default function PlayerDetail({ isOpen, onClose }) {
         </span>
       </div>
 
-      <div className="mt-4 flex min-h-0 flex-1 flex-col gap-6">
-        <div
-          className={`grid min-h-0 flex-1 content-center gap-5 md:grid-cols-[minmax(190px,260px)_minmax(0,1fr)] md:items-center lg:grid-cols-[minmax(220px,320px)_minmax(0,1fr)] xl:grid-cols-[minmax(240px,360px)_minmax(0,1fr)] xl:gap-8 ${songSlideClass}`}
-        >
-          <div className="relative mx-auto w-full max-w-[220px] sm:max-w-[260px] md:max-w-none">
-            <div
-              className="pointer-events-none absolute -inset-4 rounded-[34px] opacity-60 blur-3xl"
-              style={{
-                background:
-                  "radial-gradient(circle at 40% 30%, rgba(255,255,255,0.14), transparent 34%), radial-gradient(circle at 65% 72%, rgba(242,178,90,0.16), transparent 42%)",
-              }}
-            />
-            <div className="relative aspect-square overflow-hidden rounded-[28px] bg-black/28 shadow-[0_26px_80px_rgba(0,0,0,0.42)]">
-              {cover ? (
-                <OptimizedImage
-                  src={cover}
-                  alt={currentSong.title}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,#2f2f2f,#111)] text-sm uppercase tracking-[0.32em] text-white/50">
-                  No cover
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="min-w-0 text-center md:text-left">
-            <div className="overflow-visible pb-2">
-              <SongDetailLink
-                song={currentSong}
-                className="overflow-hidden pt-[0.04em] pb-[0.14em] text-[clamp(2.1rem,8vw,5rem)] font-semibold leading-[1.02] tracking-tight text-white transition md:hover:text-emerald-300 md:hover:underline [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]"
-                onNavigate={handleDetailNavigation}
-              >
-                {currentSong.title}
-              </SongDetailLink>
-            </div>
-            <div className="mt-3 overflow-hidden text-sm font-medium text-white/78 sm:text-base lg:text-xl [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
-              <ArtistNames
-                item={currentSong}
-                fallback="Unknown"
-                linkClassName="transition md:hover:text-white"
-                onNavigate={handleDetailNavigation}
+      <div className="mt-4 grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_auto] gap-5 xl:gap-6">
+        <div className="flex min-h-0 items-center">
+          <div
+            className={`mx-auto grid w-full max-w-[1120px] min-h-0 gap-5 md:grid-cols-[minmax(180px,230px)_minmax(0,1fr)] md:items-center lg:grid-cols-[minmax(196px,248px)_minmax(0,1fr)] lg:gap-5 xl:max-w-[1180px] xl:grid-cols-[minmax(220px,286px)_minmax(0,1fr)] xl:gap-6 2xl:max-w-[1240px] 2xl:grid-cols-[minmax(250px,340px)_minmax(0,1fr)] 2xl:gap-8 ${songSlideClass}`}
+          >
+            <div className="relative mx-auto w-full max-w-[210px] sm:max-w-[240px] md:mx-0 md:max-w-none">
+              <div
+                className="pointer-events-none absolute -inset-4 rounded-[34px] opacity-60 blur-3xl"
+                style={{
+                  background:
+                    "radial-gradient(circle at 40% 30%, rgba(255,255,255,0.14), transparent 34%), radial-gradient(circle at 65% 72%, rgba(242,178,90,0.16), transparent 42%)",
+                }}
               />
-            </div>
-            {albumId ? (
-              <div className="mt-3">
-                <Link
-                  to={`/album/${albumId}`}
-                  onClick={handleDetailNavigation}
-                  className="inline-flex max-w-full items-center rounded-full border border-white/14 bg-white/[0.05] px-3 py-1.5 text-sm font-medium text-white/75 transition md:hover:border-emerald-300/40 md:hover:text-emerald-200"
-                >
-                  <span className="truncate">{albumTitle}</span>
-                </Link>
+              <div className="relative aspect-square overflow-hidden rounded-[28px] bg-black/28 shadow-[0_26px_80px_rgba(0,0,0,0.42)]">
+                {cover ? (
+                  <OptimizedImage
+                    src={cover}
+                    alt={currentSong.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,#2f2f2f,#111)] text-sm uppercase tracking-[0.32em] text-white/50">
+                    No cover
+                  </div>
+                )}
               </div>
-            ) : null}
+            </div>
 
-            <div className="mt-5 grid grid-cols-3 gap-2.5 sm:gap-3">
-              {metaCards.map((card) => (
-                <div
-                  key={card.label}
-                  className="rounded-[20px] bg-white/[0.04] px-3 py-3 text-left backdrop-blur-xl"
+            <div className="min-w-0 self-center text-center md:text-left">
+              <div className="overflow-visible pb-2">
+                <SongDetailLink
+                  song={currentSong}
+                  className="overflow-hidden pt-[0.04em] pb-[0.12em] text-[clamp(2.15rem,4.6vw,4.4rem)] font-semibold leading-[0.94] tracking-[-0.04em] text-white transition md:hover:text-emerald-300 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] 2xl:text-[clamp(2.7rem,4.9vw,5.15rem)]"
+                  onNavigate={handleDetailNavigation}
                 >
-                  <div className="text-[10px] uppercase tracking-[0.26em] text-white/42">
-                    {card.label}
-                  </div>
-                  <div className="mt-2 text-sm font-semibold text-white sm:text-base">
-                    {card.value}
-                  </div>
+                  {currentSong.title}
+                </SongDetailLink>
+              </div>
+              <div className="mt-2 overflow-hidden text-sm font-medium text-white/78 sm:text-base lg:text-lg xl:text-xl [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+                <ArtistNames
+                  item={currentSong}
+                  fallback="Unknown"
+                  linkClassName="transition md:hover:text-white"
+                  onNavigate={handleDetailNavigation}
+                />
+              </div>
+              {albumId ? (
+                <div className="mt-3">
+                  <Link
+                    to={`/album/${albumId}`}
+                    onClick={handleDetailNavigation}
+                    className="inline-flex max-w-full items-center rounded-full border border-white/12 bg-white/[0.05] px-3 py-1.5 text-sm font-medium text-white/72 transition md:hover:border-emerald-300/40 md:hover:text-emerald-200"
+                  >
+                    <span className="truncate">{albumTitle}</span>
+                  </Link>
                 </div>
-              ))}
+              ) : null}
+
+              <div className="mt-5 grid grid-cols-3 gap-2 sm:gap-2.5 xl:max-w-[42rem]">
+                {metaCards.map((card) => (
+                  <div
+                    key={card.label}
+                    className="rounded-[18px] bg-white/[0.045] px-3 py-3 text-left backdrop-blur-xl"
+                  >
+                    <div className="text-[10px] uppercase tracking-[0.26em] text-white/42">
+                      {card.label}
+                    </div>
+                    <div className="mt-2 text-sm font-semibold text-white sm:text-[15px] xl:text-base">
+                      {card.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-auto rounded-[24px] bg-black/18 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)] backdrop-blur-2xl sm:p-5">
+        <div className="mx-auto w-full max-w-[1120px] rounded-[24px] bg-black/18 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)] backdrop-blur-2xl sm:p-5 xl:max-w-[1180px] 2xl:max-w-[1240px]">
           <div className="space-y-2">
             <div className="-my-2 px-1 py-2">
               <input
@@ -631,7 +633,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-4 xl:grid-cols-[auto_1fr_minmax(0,220px)] xl:items-center">
+          <div className="mt-5 grid gap-4 xl:grid-cols-[auto_1fr] xl:items-center 2xl:grid-cols-[auto_1fr_minmax(0,220px)]">
             <div className="flex items-center justify-center gap-2 xl:justify-start">
               {likeButton}
               <AddToPlaylistButton
@@ -697,7 +699,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
               </button>
             </div>
 
-            <div className="flex min-w-0 items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3 xl:col-span-2 xl:max-w-[320px] xl:justify-self-end 2xl:col-span-1 2xl:max-w-none">
               <button
                 onClick={toggleMute}
                 className={softButtonClass}
@@ -734,7 +736,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
             </div>
           </div>
 
-          <div className="relative z-20 mt-4 flex flex-wrap items-center justify-center gap-2 xl:justify-end">
+          <div className="relative z-20 mt-4 flex flex-wrap items-center justify-center gap-2 xl:justify-between 2xl:justify-end">
             <PlayerEnhancementToolbar menuPlacement="top" />
           </div>
         </div>
@@ -1081,7 +1083,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
 
       <div className="relative z-10 h-full w-full overflow-hidden">
         <div className="flex h-full min-h-0 flex-col px-3 pb-3 pt-[calc(env(safe-area-inset-top)+8px)] sm:px-5 sm:pb-5 sm:pt-5 lg:px-7 lg:pt-6">
-          <div className="hidden flex-1 lg:grid lg:min-h-0 lg:grid-cols-[minmax(0,1.18fr)_minmax(300px,380px)] lg:gap-5 xl:grid-cols-[minmax(0,1.24fr)_420px]">
+          <div className="hidden flex-1 lg:grid lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_minmax(290px,330px)] lg:gap-4 xl:grid-cols-[minmax(0,1.04fr)_minmax(312px,360px)] xl:gap-5 2xl:grid-cols-[minmax(0,1.14fr)_400px]">
             <div className="min-h-0">{detailPanel}</div>
             <div className="min-h-0">{sidePanel}</div>
           </div>
