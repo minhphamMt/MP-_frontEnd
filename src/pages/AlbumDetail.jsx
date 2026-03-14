@@ -22,9 +22,7 @@ import {
 } from "../hooks/useEnsureLibraryState";
 import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
-import useAlbumLikeStore, {
-  normalizeAlbumId,
-} from "../store/album-like.store";
+import useAlbumLikeStore, { normalizeAlbumId } from "../store/album-like.store";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { resolveAssetUrl } from "../utils/asset";
 import {
@@ -34,22 +32,7 @@ import {
 } from "../utils/artist";
 import { formatDateDisplay } from "../utils/date";
 import { formatDuration, toPlayableSong } from "../utils/song";
-
-const formatTotalDuration = (seconds = 0) => {
-  const total = Number.isFinite(Number(seconds)) ? Math.max(0, Math.round(Number(seconds))) : 0;
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-
-  if (hours > 0) return `${hours} giờ ${minutes} phút`;
-  return formatDuration(total);
-};
-
-const stripHtml = (value = "") =>
-  `${value}`
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+import { formatTotalDuration, stripHtml } from "./artistDetail.shared";
 
 function SectionHeader({ label, title, description, headerActions }) {
   return (
@@ -57,9 +40,13 @@ function SectionHeader({ label, title, description, headerActions }) {
       <div className="min-w-0">
         <p className="user-heading-label">{label}</p>
         <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">{title}</h2>
-        {description && <p className="mt-2 max-w-3xl text-sm text-white/65">{description}</p>}
+        {description ? <p className="mt-2 max-w-3xl text-sm text-white/65">{description}</p> : null}
       </div>
-      {headerActions ? <div className="flex flex-wrap items-center gap-2">{headerActions}</div> : null}
+      {headerActions ? (
+        <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-end">
+          {headerActions}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -75,13 +62,7 @@ export default function AlbumDetail() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const {
-    playSong,
-    currentSong,
-    isPlaying,
-    likedSongIds,
-    toggleLike,
-  } = usePlayerStore();
+  const { playSong, currentSong, isPlaying, likedSongIds, toggleLike } = usePlayerStore();
   const role = useAuthStore((state) => state.role);
   const isArtistRole = role === "ARTIST";
   const canPlay = role !== "ARTIST" && role !== "ADMIN";
@@ -91,6 +72,8 @@ export default function AlbumDetail() {
   const loadAlbum = useCallback(async () => {
     try {
       setLoading(true);
+      setErrorMessage("");
+
       const res = await getAlbumById(id);
       const payload = res?.data?.data ?? res?.data ?? null;
 
@@ -140,9 +123,8 @@ export default function AlbumDetail() {
 
       setAlbum(normalizedAlbum);
       setSongs(normalizedSongs);
-      setErrorMessage("");
-    } catch (err) {
-      console.error("Load album detail error:", err);
+    } catch (error) {
+      console.error("Load album detail error:", error);
       setAlbum(null);
       setSongs([]);
       setErrorMessage("Không thể tải album.");
@@ -159,7 +141,7 @@ export default function AlbumDetail() {
     () => songs.reduce((sum, item) => sum + Number(item?.duration || 0), 0),
     [songs]
   );
-
+  const albumCoverUrl = resolveAssetUrl(album?.cover_url || "");
   const albumId = normalizeAlbumId(album);
   const isLiked = albumId && likedAlbumIds.includes(albumId);
   const sharePath = albumId ? `/album/${albumId}` : id ? `/album/${id}` : "";
@@ -167,7 +149,9 @@ export default function AlbumDetail() {
   const artistDisplayName =
     album?.artist_name || artistMeta?.name || artistMeta?.alias || "Đang cập nhật";
   const artistId = album?.artist_id || artistMeta?.id || null;
-  const releaseDate = album?.release_date ? formatDateDisplay(album.release_date) : "Đang cập nhật";
+  const releaseDate = album?.release_date
+    ? formatDateDisplay(album.release_date)
+    : "Đang cập nhật";
   const artistSummary = useMemo(
     () =>
       artistMeta?.short_bio ||
@@ -175,7 +159,6 @@ export default function AlbumDetail() {
       (artistMeta?.bio ? stripHtml(artistMeta.bio).slice(0, 240).trim() : ""),
     [artistMeta?.bio, artistMeta?.shortBio, artistMeta?.short_bio]
   );
-
   const summaryCards = useMemo(
     () => [
       { icon: FiMusic, label: "Bài hát", value: `${songs.length}` },
@@ -185,7 +168,6 @@ export default function AlbumDetail() {
     ],
     [artistDisplayName, releaseDate, songs.length, totalDuration]
   );
-
   const albumInfoItems = useMemo(
     () => [
       { label: "Tên album", value: album?.title || "Đang cập nhật" },
@@ -196,7 +178,6 @@ export default function AlbumDetail() {
     ],
     [album?.title, artistDisplayName, releaseDate, songs.length, totalDuration]
   );
-
   const artistInfoItems = useMemo(
     () =>
       [
@@ -222,14 +203,31 @@ export default function AlbumDetail() {
       ? `${parts.join(" • ")} trên Khoaluan Music.`
       : "Khám phá album trên Khoaluan Music.";
   }, [artistDisplayName, releaseDate, songs.length, totalDuration]);
+  const sharePreview = useMemo(
+    () => ({
+      eyebrow: "Album",
+      title: album?.title || "Album",
+      subtitle: artistDisplayName,
+      description: `${songs.length} bài hát • ${formatTotalDuration(totalDuration)} • ${releaseDate}`,
+      image: albumCoverUrl,
+    }),
+    [album?.title, albumCoverUrl, artistDisplayName, releaseDate, songs.length, totalDuration]
+  );
 
   usePageMetadata({
     title: album?.title || "Album",
     description: albumMetaDescription,
-    image: resolveAssetUrl(album?.cover_url || ""),
+    image: albumCoverUrl,
     url: sharePath,
     type: "music.album",
   });
+
+  const panelClass =
+    "relative overflow-hidden rounded-[28px] border border-white/10 bg-black/24 p-4 shadow-[0_20px_52px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-5 lg:p-6";
+  const listShellClass =
+    "mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-black/18 backdrop-blur-xl lg:bg-[#121212]";
+  const secondaryActionClass =
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 text-sm font-semibold text-white/84 shadow-[0_12px_28px_rgba(0,0,0,0.22)] transition active:scale-95";
 
   if (loading) {
     return (
@@ -261,85 +259,91 @@ export default function AlbumDetail() {
   }
 
   return (
-    <div className="user-page-shell min-h-screen w-full max-w-full space-y-8 px-4 py-6 sm:px-8">
-      {errorMessage && (
+    <div className="user-page-shell min-h-screen w-full max-w-full space-y-5 px-3 py-4 sm:px-8 lg:space-y-8 lg:px-4 lg:py-6">
+      {errorMessage ? (
         <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
           {errorMessage}
         </div>
-      )}
+      ) : null}
 
-      <section className="user-surface relative overflow-hidden p-5 sm:p-6 lg:p-8">
-        {album.cover_url && (
+      <section className={panelClass}>
+        {albumCoverUrl ? (
           <div
-            className="pointer-events-none absolute inset-0 opacity-20"
+            className="pointer-events-none absolute inset-[-10%] scale-110 opacity-[0.62] blur-[100px]"
             style={{
-              backgroundImage: `url(${resolveAssetUrl(album.cover_url)})`,
+              backgroundImage: `url(${albumCoverUrl})`,
               backgroundPosition: "center",
               backgroundSize: "cover",
+              filter: "saturate(1.03) brightness(0.42) contrast(1.02)",
             }}
           />
-        )}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(29,185,84,0.24),_transparent_38%),linear-gradient(135deg,rgba(255,255,255,0.06),transparent_36%)]" />
-        <div className="pointer-events-none absolute -top-24 right-0 h-60 w-60 rounded-full bg-emerald-400/10 blur-3xl" />
+        ) : null}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_84%_14%,rgba(29,185,84,0.12),transparent_30%),linear-gradient(160deg,rgba(6,8,7,0.76),rgba(2,2,4,0.94))]" />
 
-        <div className="relative grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
-          <div className="mx-auto w-full max-w-[300px] xl:mx-0">
-            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#171717] shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
+        <div className="relative grid gap-5 lg:grid-cols-[minmax(180px,260px)_minmax(0,1fr)] lg:items-center">
+          <div className="relative mx-auto w-full max-w-[min(58vw,260px)] lg:max-w-none">
+            <div
+              className="pointer-events-none absolute -inset-4 rounded-[34px] opacity-60 blur-3xl"
+              style={{
+                background:
+                  "radial-gradient(circle at 40% 30%, rgba(255,255,255,0.14), transparent 34%), radial-gradient(circle at 68% 70%, rgba(29,185,84,0.18), transparent 42%)",
+              }}
+            />
+            <div className="relative aspect-square overflow-hidden rounded-[28px] bg-black/28 shadow-[0_26px_80px_rgba(0,0,0,0.42)]">
               <OptimizedImage
-                src={resolveAssetUrl(album.cover_url)}
+                src={albumCoverUrl}
                 alt={album.title}
-                className="aspect-square h-full w-full object-cover object-center"
+                className="h-full w-full object-cover object-center"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
             </div>
           </div>
 
-          <div className="min-w-0 space-y-6">
-            <div className="space-y-3">
-              <p className="user-heading-label">Album</p>
-              <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl xl:text-5xl">
-                {album.title}
-              </h1>
-              <button
-                type="button"
-                onClick={() => artistId && navigate(`/artist/${artistId}`)}
-                disabled={!artistId}
-                className="inline-flex max-w-full items-center gap-2 text-left text-sm text-white/78 transition md:hover:text-emerald-300 disabled:cursor-default disabled:hover:text-white/78"
-              >
-                <FiUser className="shrink-0" />
-                <span className="truncate">{artistDisplayName}</span>
-              </button>
-              {artistSummary && (
-                <p className="max-w-3xl text-sm leading-relaxed text-white/78 sm:text-[15px]">
-                  {artistSummary}
-                </p>
-              )}
-            </div>
+          <div className="min-w-0 text-center lg:text-left">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-white/42">
+              Album
+            </p>
+            <h1 className="mt-4 text-[clamp(2rem,6vw,4rem)] font-semibold leading-[0.96] tracking-tight text-white">
+              {album.title}
+            </h1>
+            <button
+              type="button"
+              onClick={() => artistId && navigate(`/artist/${artistId}`)}
+              disabled={!artistId}
+              className="mt-3 inline-flex max-w-full items-center gap-2 text-sm font-medium text-white/72 transition md:hover:text-emerald-300 disabled:cursor-default disabled:hover:text-white/72"
+            >
+              <FiUser className="shrink-0" />
+              <span className="truncate">{artistDisplayName}</span>
+            </button>
+            {artistSummary ? (
+              <p className="mx-auto mt-4 max-w-3xl text-sm leading-relaxed text-white/74 lg:mx-0">
+                {artistSummary}
+              </p>
+            ) : null}
 
-            <div className="flex flex-wrap gap-2.5">
-              <span className="user-chip rounded-full px-3 py-1.5 text-xs font-medium">
+            <div className="mt-4 flex flex-wrap justify-center gap-2 lg:justify-start">
+              <span className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[11px] font-medium text-white/72">
                 {songs.length} bài hát
               </span>
-              <span className="user-chip rounded-full px-3 py-1.5 text-xs font-medium">
+              <span className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[11px] font-medium text-white/72">
                 {formatTotalDuration(totalDuration)}
               </span>
-              <span className="user-chip rounded-full px-3 py-1.5 text-xs font-medium">
+              <span className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[11px] font-medium text-white/72">
                 {releaseDate}
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               {canPlay && songs.length > 0 ? (
                 <button
                   type="button"
                   onClick={() => playSong(songs[0], songs)}
-                  className="user-btn-primary inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold"
+                  className="user-btn-primary inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold"
                 >
                   <FiPlay className="text-base" />
                   Phát tất cả
                 </button>
               ) : (
-                <div className="user-btn-secondary inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold text-white/65">
+                <div className={`${secondaryActionClass} text-white/62`}>
                   <FiDisc />
                   Chỉ xem thông tin
                 </div>
@@ -351,53 +355,48 @@ export default function AlbumDetail() {
                   if (!isArtistRole) toggleAlbumLike(albumId);
                 }}
                 disabled={isArtistRole}
-                className={`inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold transition ${
+                className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition ${
                   isLiked
-                    ? "border-rose-400/60 bg-rose-500/18 text-rose-100 md:hover:bg-rose-500/24"
-                    : "border-white/15 bg-white/5 text-white/80 md:hover:bg-white/10"
-                } ${isArtistRole ? "cursor-not-allowed opacity-60" : ""}`}
+                    ? "border-rose-400/60 bg-rose-500/18 text-rose-100"
+                    : "border-white/15 bg-white/[0.07] text-white/84"
+                } ${isArtistRole ? "cursor-not-allowed opacity-60" : "active:scale-95"}`}
               >
                 <FiHeart className={isLiked ? "text-rose-300" : ""} />
                 {isLiked ? "Đã thích album" : "Thích album"}
               </button>
 
-              {artistId && (
+              {artistId ? (
                 <button
                   type="button"
                   onClick={() => navigate(`/artist/${artistId}`)}
-                  className="user-btn-secondary inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold"
+                  className={secondaryActionClass}
                 >
                   <FiUser />
                   Xem nghệ sĩ
                 </button>
-              )}
+              ) : null}
 
               <ShareLinkButton
                 path={sharePath}
                 title="Chia sẻ album"
                 shareTitle={album?.title || "Album"}
                 shareText={`Nghe album ${album?.title || "này"} của ${artistDisplayName} trên Khoaluan Music.`}
-                preview={{
-                  eyebrow: "Album",
-                  title: album?.title || "Album",
-                  subtitle: artistDisplayName,
-                  description: `${songs.length} bài hát • ${formatTotalDuration(
-                    totalDuration
-                  )} • ${releaseDate}`,
-                  image: resolveAssetUrl(album?.cover_url || ""),
-                }}
-                className="px-5 py-3"
+                preview={sharePreview}
+                className="min-h-11 justify-center border-white/15 bg-white/[0.07] text-white/84 shadow-[0_12px_28px_rgba(0,0,0,0.22)]"
               />
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {summaryCards.map((item) => (
-                <article key={item.label} className="user-soft-card px-4 py-4">
-                  <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-white/50">
-                    <item.icon className="text-white/60" />
+                <article
+                  key={item.label}
+                  className="rounded-[18px] bg-white/[0.045] px-3 py-3 text-left backdrop-blur-xl"
+                >
+                  <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/42">
+                    <item.icon className="text-white/58" />
                     <span>{item.label}</span>
                   </div>
-                  <p className="mt-3 truncate text-lg font-bold text-white sm:text-xl">{item.value}</p>
+                  <p className="mt-2 text-sm font-semibold text-white">{item.value}</p>
                 </article>
               ))}
             </div>
@@ -405,7 +404,7 @@ export default function AlbumDetail() {
         </div>
       </section>
 
-      <section className="user-surface p-5 sm:p-6">
+      <section className={panelClass}>
         <SectionHeader
           label="Tracklist"
           title="Danh sách bài hát"
@@ -424,11 +423,11 @@ export default function AlbumDetail() {
         />
 
         {songs.length === 0 ? (
-          <div className="mt-5 rounded-[24px] border border-white/10 bg-[#121212] px-5 py-10 text-center text-sm text-white/60">
+          <div className={`${listShellClass} px-5 py-10 text-center text-sm text-white/60`}>
             Album này hiện chưa có track nào để nghe.
           </div>
         ) : (
-          <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-[#121212]">
+          <div className={listShellClass}>
             <div className="hidden grid-cols-[56px_minmax(0,2.35fr)_minmax(0,1.15fr)_88px_120px] items-center border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/45 lg:grid">
               <span className="text-center">#</span>
               <span>Bài hát</span>
@@ -474,7 +473,7 @@ export default function AlbumDetail() {
                           alt={song.title}
                           className="h-full w-full object-cover"
                         />
-                        {canPlay && (
+                        {canPlay ? (
                           <div
                             className={`absolute inset-0 flex items-center justify-center bg-black/45 transition ${
                               isActive ? "opacity-100" : "opacity-0 md:group-hover:opacity-100"
@@ -488,7 +487,7 @@ export default function AlbumDetail() {
                               )}
                             </span>
                           </div>
-                        )}
+                        ) : null}
                       </div>
 
                       <div className="min-w-0">
@@ -559,7 +558,7 @@ export default function AlbumDetail() {
         )}
       </section>
 
-      <section className="user-surface p-5 sm:p-6">
+      <section className={panelClass}>
         <SectionHeader
           label="Thông tin"
           title="Album và nghệ sĩ"
@@ -580,10 +579,10 @@ export default function AlbumDetail() {
             <article className="user-soft-card p-5">
               <p className="text-[11px] uppercase tracking-[0.22em] text-white/45">Nghệ sĩ phát hành</p>
               <h3 className="mt-3 text-xl font-bold text-white">{artistDisplayName}</h3>
-              {artistSummary && (
+              {artistSummary ? (
                 <p className="mt-2 text-sm leading-relaxed text-white/65">{artistSummary}</p>
-              )}
-              {artistId && (
+              ) : null}
+              {artistId ? (
                 <button
                   type="button"
                   onClick={() => navigate(`/artist/${artistId}`)}
@@ -592,10 +591,10 @@ export default function AlbumDetail() {
                   <FiUser />
                   Mở trang nghệ sĩ
                 </button>
-              )}
+              ) : null}
             </article>
 
-            {artistInfoItems.length > 0 && (
+            {artistInfoItems.length > 0 ? (
               <article className="user-soft-card p-5">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-white/45">Thông tin thêm</p>
                 <div className="mt-4 space-y-3">
@@ -610,7 +609,7 @@ export default function AlbumDetail() {
                   ))}
                 </div>
               </article>
-            )}
+            ) : null}
           </div>
         </div>
       </section>

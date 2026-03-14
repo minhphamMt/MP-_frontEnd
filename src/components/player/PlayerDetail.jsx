@@ -31,6 +31,11 @@ const formatTime = (sec = 0) => {
 
 const ANIM_MS = 450;
 const ANIM_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+const MOBILE_TABS = [
+  { id: "queue", label: "Danh sách phát" },
+  { id: "now", label: "Đang phát" },
+  { id: "lyrics", label: "Lời bài hát" },
+];
 
 function PlayerProgressSection({
   duration = 0,
@@ -337,15 +342,15 @@ export default function PlayerDetail({ isOpen, onClose }) {
     seek?.(time);
   }, [seek, total]);
 
-  const lockCarouselSwipe = () => {
+  const lockCarouselSwipe = useCallback(() => {
     if (unlockSwipeTimerRef.current) {
       clearTimeout(unlockSwipeTimerRef.current);
       unlockSwipeTimerRef.current = null;
     }
     setIsCarouselSwipeLocked(true);
-  };
+  }, []);
 
-  const unlockCarouselSwipe = () => {
+  const unlockCarouselSwipe = useCallback(() => {
     if (unlockSwipeTimerRef.current) {
       clearTimeout(unlockSwipeTimerRef.current);
     }
@@ -353,7 +358,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
       setIsCarouselSwipeLocked(false);
       unlockSwipeTimerRef.current = null;
     }, 80);
-  };
+  }, []);
 
   const focusRangeInteraction = (e) => {
     e.stopPropagation();
@@ -527,11 +532,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     { id: "queue", label: "Danh sách phát" },
     { id: "lyrics", label: "Lời bài hát" },
   ];
-  const mobileTabs = [
-    { id: "queue", label: "Danh sách phát" },
-    { id: "now", label: "Đang phát" },
-    { id: "lyrics", label: "Lời bài hát" },
-  ];
+  const mobileTabs = MOBILE_TABS;
   const activeTabTitle =
     activeTab === "queue" ? "Danh sách phát" : "Lời bài hát";
   const activeTabDescription =
@@ -866,6 +867,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
               currentSong={currentSong}
               isActive={activeTab === "lyrics"}
               onSeek={doSeek}
+              allowManualScroll
             />
           )}
         </div>
@@ -1058,6 +1060,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
             currentSong={currentSong}
             isActive={mobileTab === "lyrics"}
             onSeek={doSeek}
+            allowManualScroll
+            lockHorizontalSwipe
+            onTouchLockStart={lockCarouselSwipe}
+            onTouchLockEnd={unlockCarouselSwipe}
           />
         </div>
       </div>

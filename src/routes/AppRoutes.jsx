@@ -12,6 +12,8 @@ const MainLayout = lazy(() => import("../layouts/MainLayout"));
 const Home = lazy(() => import("../pages/Home"));
 const AlbumDetail = lazy(() => import("../pages/AlbumDetail"));
 const ArtistDetail = lazy(() => import("../pages/ArtistDetail"));
+const ArtistAllSongs = lazy(() => import("../pages/ArtistAllSongs"));
+const ArtistAllAlbums = lazy(() => import("../pages/ArtistAllAlbums"));
 const History = lazy(() => import("../pages/History"));
 const ZingChart = lazy(() => import("../pages/ZingChart"));
 const RegionChart = lazy(() => import("../pages/RegionChart"));
@@ -96,6 +98,8 @@ export default function AppRoutes() {
           <Route path="/albums" element={<Albums />} />
           <Route path="/search" element={<Search />} />
           <Route path="/song/:id" element={<SongDetail />} />
+          <Route path="/artist/:id/songs" element={<ArtistAllSongs />} />
+          <Route path="/artist/:id/albums" element={<ArtistAllAlbums />} />
           <Route path="/artist/:id" element={<ArtistDetail />} />
           <Route path="/album/:id" element={<AlbumDetail />} />
 

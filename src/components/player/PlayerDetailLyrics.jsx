@@ -18,9 +18,23 @@ const resolveLyricIndex = (lyricItems, displayedTimeMs) => {
   return active;
 };
 
-function PlayerDetailLyrics({ currentSong, isActive, onSeek }) {
+function PlayerDetailLyrics({
+  currentSong,
+  isActive,
+  onSeek,
+  allowManualScroll = true,
+  lockHorizontalSwipe = false,
+  onTouchLockStart,
+  onTouchLockEnd,
+}) {
   const lyricsContainerRef = useRef(null);
   const lastLyricIndexRef = useRef(-1);
+  const gestureRef = useRef({
+    startX: 0,
+    startY: 0,
+    direction: null,
+    verticalLockActive: false,
+  });
   const [lyricIndex, setLyricIndex] = useState(-1);
   const songId = normalizeSongId(currentSong);
   const ensureLyricsLoaded = usePlayerStore((state) => state.ensureLyricsLoaded);
@@ -89,6 +103,66 @@ function PlayerDetailLyrics({ currentSong, isActive, onSeek }) {
     onSeek?.(Math.max(0, startMs / 1000));
   };
 
+  const resetGesture = () => {
+    gestureRef.current = {
+      startX: 0,
+      startY: 0,
+      direction: null,
+      verticalLockActive: false,
+    };
+  };
+
+  const handleGestureStart = (event) => {
+    if (!lockHorizontalSwipe) return;
+    const touch = event.touches?.[0];
+    if (!touch) return;
+
+    gestureRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      direction: null,
+      verticalLockActive: false,
+    };
+  };
+
+  const handleGestureMove = (event) => {
+    if (!lockHorizontalSwipe) return;
+    const touch = event.touches?.[0];
+    if (!touch) return;
+
+    const gesture = gestureRef.current;
+    const deltaX = touch.clientX - gesture.startX;
+    const deltaY = touch.clientY - gesture.startY;
+
+    if (!gesture.direction) {
+      if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) return;
+      gesture.direction =
+        Math.abs(deltaX) > Math.abs(deltaY) * 1.12 ? "x" : "y";
+    }
+
+    if (gesture.direction === "y" && !gesture.verticalLockActive) {
+      gesture.verticalLockActive = true;
+      onTouchLockStart?.(event);
+    }
+  };
+
+  const handleGestureEnd = (event) => {
+    const gesture = gestureRef.current;
+    if (gesture.verticalLockActive) {
+      onTouchLockEnd?.(event);
+    }
+    resetGesture();
+  };
+
+  useEffect(
+    () => () => {
+      if (gestureRef.current.verticalLockActive) {
+        onTouchLockEnd?.();
+      }
+    },
+    [onTouchLockEnd]
+  );
+
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       {lyricsLoading ? (
@@ -110,8 +184,18 @@ function PlayerDetailLyrics({ currentSong, isActive, onSeek }) {
       {!lyricsLoading && !lyricsError && lyricItems.length > 0 ? (
         <div
           ref={lyricsContainerRef}
-          data-mobile-sheet-scroll="true"
-          className="mt-1 flex-1 space-y-2 overflow-y-auto pr-1 scrollbar-hidden"
+          data-mobile-sheet-scroll={allowManualScroll ? "true" : undefined}
+          onTouchStartCapture={lockHorizontalSwipe ? handleGestureStart : undefined}
+          onTouchMoveCapture={lockHorizontalSwipe ? handleGestureMove : undefined}
+          onTouchEndCapture={lockHorizontalSwipe ? handleGestureEnd : undefined}
+          onTouchCancelCapture={lockHorizontalSwipe ? handleGestureEnd : undefined}
+          className={`mt-1 flex-1 space-y-2 scrollbar-hidden ${
+            allowManualScroll
+              ? `overflow-y-auto pr-1 ${
+                  lockHorizontalSwipe ? "overscroll-y-contain" : ""
+                }`
+              : "overflow-y-hidden pr-0 overscroll-y-none [touch-action:none]"
+          }`}
         >
           {lyricItems.map((item, index) => {
             const isLineActive = index === lyricIndex;

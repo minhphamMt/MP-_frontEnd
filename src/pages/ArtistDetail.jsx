@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  FiChevronDown,
-  FiChevronUp,
+  FiArrowRight,
   FiClock,
   FiDisc,
   FiHeart,
@@ -11,9 +10,6 @@ import {
   FiPlay,
   FiUser,
 } from "react-icons/fi";
-import { getAlbums } from "../api/album.api";
-import { getArtistById } from "../api/artist.api";
-import { getArtistSongs } from "../api/song.api";
 import AlbumCard from "../components/album/AlbumCard";
 import ArtistNames from "../components/artist/ArtistNames";
 import FollowArtistButton from "../components/artist/FollowArtistButton";
@@ -25,151 +21,22 @@ import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
 import usePageMetadata from "../hooks/usePageMetadata";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { resolveAssetUrl } from "../utils/asset";
-import {
-  getArtistLabel,
-  getPrimaryArtistId,
-  normalizeArtists,
-} from "../utils/artist";
 import { formatDateDisplay } from "../utils/date";
-import { formatDuration, toPlayableSong } from "../utils/song";
-
-const SONG_PREVIEW_LIMIT = 10;
-const ALBUM_PREVIEW_LIMIT = 5;
-
-const extractData = (response) => response?.data?.data ?? response?.data ?? null;
-
-const toArray = (value) => {
-  if (Array.isArray(value)) return value;
-  if (!value || typeof value !== "object") return [];
-  if (Array.isArray(value.items)) return value.items;
-  if (Array.isArray(value.rows)) return value.rows;
-  if (Array.isArray(value.data)) return value.data;
-  if (Array.isArray(value.albums)) return value.albums;
-  if (Array.isArray(value.songs)) return value.songs;
-  return [];
-};
-
-const formatTotalDuration = (seconds = 0) => {
-  const total = Number.isFinite(Number(seconds)) ? Math.max(0, Math.round(Number(seconds))) : 0;
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-
-  if (hours > 0) {
-    return `${hours} giờ ${minutes} phút`;
-  }
-
-  return formatDuration(total);
-};
-
-const stripHtml = (value = "") =>
-  `${value}`
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-const createBioMarkup = (bio = "") => {
-  if (!bio) return { __html: "" };
-
-  let normalized = bio;
-  normalized = normalized.replace(/\r\n/g, "\n");
-  normalized = normalized.replace(/\n{2,}/g, "\n");
-  normalized = normalized.replace(/<br\s*\/?>/gi, "<br />");
-  normalized = normalized.replace(/(<br \/>){2,}/gi, "<br />");
-  normalized = normalized.replace(/(\n\s*)*(<br \/>)(\s*\n)*/gi, "<br />");
-  normalized = normalized.trim();
-
-  return { __html: normalized };
-};
-
-const getTimestamp = (item) => {
-  const raw =
-    item?.release_date ||
-    item?.releaseDate ||
-    item?.published_at ||
-    item?.publishedAt ||
-    item?.created_at ||
-    item?.createdAt ||
-    item?.updated_at ||
-    item?.updatedAt ||
-    "";
-
-  if (!raw) return 0;
-  const time = new Date(raw).getTime();
-  return Number.isFinite(time) ? time : 0;
-};
-
-const normalizeArtistProfile = (artist, fallback = {}) => {
-  if (!artist && !fallback?.id && !fallback?.name) return null;
-
-  return {
-    id:
-      artist?.id ??
-      artist?.artist_id ??
-      artist?.artistId ??
-      fallback?.id ??
-      null,
-    name:
-      artist?.name ||
-      artist?.artist_name ||
-      artist?.alias ||
-      fallback?.name ||
-      "Nghệ sĩ",
-    alias: artist?.alias || fallback?.alias || "",
-    realname: artist?.realname || fallback?.realname || "",
-    birthday: artist?.birthday || fallback?.birthday || "",
-    national: artist?.national || fallback?.national || "",
-    cover:
-      artist?.cover_url ||
-      artist?.cover ||
-      artist?.avatar_url ||
-      fallback?.cover ||
-      fallback?.avatar ||
-      "",
-    avatar:
-      artist?.avatar_url ||
-      artist?.avatar ||
-      artist?.cover_url ||
-      fallback?.avatar ||
-      fallback?.cover ||
-      "",
-    bio: artist?.bio || fallback?.bio || "",
-    shortBio:
-      artist?.short_bio ||
-      artist?.shortBio ||
-      fallback?.shortBio ||
-      fallback?.short_bio ||
-      "",
-  };
-};
-
-const normalizeAlbum = (album, artist) => {
-  if (!album || typeof album !== "object") return null;
-
-  return {
-    ...album,
-    id: album.id ?? album.album_id ?? album.albumId ?? null,
-    title: album.title ?? album.name ?? "Album",
-    cover_url:
-      album.cover_url ||
-      album.cover ||
-      album.thumbnail ||
-      album.image_url ||
-      "",
-    artist_name: getArtistLabel(
-      album,
-      artist?.name || album.artist_name || album.artist?.name || album.creator?.name || ""
-    ),
-  };
-};
+import { formatDuration } from "../utils/song";
+import {
+  ALBUM_PREVIEW_LIMIT,
+  SONG_PREVIEW_LIMIT,
+  createBioMarkup,
+  fetchArtistDetailData,
+  formatTotalDuration,
+  stripHtml,
+} from "./artistDetail.shared";
 
 function SectionHeader({
   label,
   title,
   description,
   countLabel,
-  toggleLabel,
-  onToggle,
   headerActions,
 }) {
   return (
@@ -177,27 +44,19 @@ function SectionHeader({
       <div className="min-w-0">
         <p className="user-heading-label">{label}</p>
         <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">{title}</h2>
-        {description && <p className="mt-2 max-w-3xl text-sm text-white/65">{description}</p>}
+        {description ? <p className="mt-2 max-w-3xl text-sm text-white/65">{description}</p> : null}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {countLabel && (
-          <span className="user-chip inline-flex items-center rounded-full px-3 py-1 text-xs font-medium">
-            {countLabel}
-          </span>
-        )}
-        {headerActions}
-        {toggleLabel && onToggle && (
-          <button
-            type="button"
-            onClick={onToggle}
-            className="user-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold"
-          >
-            {toggleLabel.expanded ? <FiChevronUp /> : <FiChevronDown />}
-            {toggleLabel.text}
-          </button>
-        )}
-      </div>
+      {countLabel || headerActions ? (
+        <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-end">
+          {countLabel ? (
+            <span className="user-chip inline-flex items-center rounded-full px-3 py-1 text-xs font-medium">
+              {countLabel}
+            </span>
+          ) : null}
+          {headerActions}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -211,95 +70,20 @@ export default function ArtistDetail() {
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [showAllSongs, setShowAllSongs] = useState(false);
-  const [showAllAlbums, setShowAllAlbums] = useState(false);
 
-  const {
-    playSong,
-    currentSong,
-    isPlaying,
-    likedSongIds,
-    toggleLike,
-  } = usePlayerStore();
-
-  useEffect(() => {
-    setShowAllSongs(false);
-    setShowAllAlbums(false);
-  }, [id]);
+  const { playSong, currentSong, isPlaying, likedSongIds, toggleLike } = usePlayerStore();
 
   const loadArtist = useCallback(async () => {
     try {
       setLoading(true);
       setErrorMessage("");
 
-      const [artistResult, songsResult, albumsResult] = await Promise.allSettled([
-        getArtistById(id),
-        getArtistSongs(id),
-        getAlbums({ artist_id: id, limit: 100 }),
-      ]);
+      const nextData = await fetchArtistDetailData(id);
+      setArtist(nextData.artist);
+      setSongs(nextData.songs);
+      setAlbums(nextData.albums);
 
-      const artistPayload =
-        artistResult.status === "fulfilled" ? extractData(artistResult.value) : null;
-      const songsPayload =
-        songsResult.status === "fulfilled" ? extractData(songsResult.value) : null;
-      const albumsPayload =
-        albumsResult.status === "fulfilled" ? extractData(albumsResult.value) : null;
-
-      const artistFromSongs = songsPayload?.artist ?? null;
-      const rawSongs = toArray(songsPayload?.songs ?? songsPayload?.data ?? songsPayload);
-      const rawAlbums = toArray(albumsPayload);
-
-      const inferredName =
-        artistPayload?.name ||
-        artistPayload?.alias ||
-        artistFromSongs?.name ||
-        artistFromSongs?.alias ||
-        getArtistLabel(rawSongs[0], "") ||
-        getArtistLabel(rawAlbums[0], "");
-
-      const resolvedArtist = normalizeArtistProfile(artistPayload || artistFromSongs, {
-        id,
-        name: inferredName,
-      });
-
-      const nextSongs = rawSongs
-        .map((song) => {
-          const fallbackArtists = normalizeArtists({
-            artist_id: resolvedArtist?.id ?? id,
-            artist_name:
-              resolvedArtist?.name ||
-              resolvedArtist?.alias ||
-              song?.artist_name ||
-              song?.artist?.name ||
-              "",
-          });
-          const artists = normalizeArtists({
-            ...song,
-            artists: song?.artists || fallbackArtists,
-          });
-
-          return toPlayableSong({
-            ...song,
-            artist_name: getArtistLabel(
-              { ...song, artists },
-              resolvedArtist?.name || resolvedArtist?.alias || ""
-            ),
-            artist_id: getPrimaryArtistId({ ...song, artists }) ?? resolvedArtist?.id ?? id,
-            artists,
-          });
-        })
-        .filter((song) => song?.id);
-
-      const nextAlbums = rawAlbums
-        .map((album) => normalizeAlbum(album, resolvedArtist))
-        .filter((album) => album?.id || album?.title)
-        .sort((first, second) => getTimestamp(second) - getTimestamp(first));
-
-      setArtist(resolvedArtist);
-      setSongs(nextSongs);
-      setAlbums(nextAlbums);
-
-      if (!resolvedArtist && !nextSongs.length && !nextAlbums.length) {
+      if (!nextData.artist && !nextData.songs.length && !nextData.albums.length) {
         setErrorMessage("Không tìm thấy nghệ sĩ.");
       }
     } catch (error) {
@@ -321,13 +105,11 @@ export default function ArtistDetail() {
     () => songs.reduce((sum, song) => sum + Number(song?.duration || 0), 0),
     [songs]
   );
-
   const artistSummary = useMemo(() => {
     const source = artist?.shortBio || stripHtml(artist?.bio || "");
     if (!source) return "";
     return source.length > 240 ? `${source.slice(0, 240).trim()}...` : source;
   }, [artist?.bio, artist?.shortBio]);
-
   const artistInfoItems = useMemo(
     () =>
       [
@@ -344,12 +126,15 @@ export default function ArtistDetail() {
       ].filter((item) => item.value),
     [artist]
   );
-
   const heroMetrics = useMemo(
     () => [
       { icon: FiMusic, label: "Bài hát", value: `${songs.length}` },
       { icon: FiDisc, label: "Album", value: `${albums.length}` },
-      { icon: FiClock, label: "Tổng thời lượng", value: formatTotalDuration(totalDuration) },
+      {
+        icon: FiClock,
+        label: "Tổng thời lượng",
+        value: formatTotalDuration(totalDuration),
+      },
       {
         icon: FiUser,
         label: artist?.national ? "Quốc gia" : "Thông tin",
@@ -361,16 +146,24 @@ export default function ArtistDetail() {
     [albums.length, artist?.birthday, artist?.national, songs.length, totalDuration]
   );
 
-  const visibleSongs = showAllSongs ? songs : songs.slice(0, SONG_PREVIEW_LIMIT);
-  const visibleAlbums = showAllAlbums ? albums : albums.slice(0, ALBUM_PREVIEW_LIMIT);
-
-  const hiddenSongCount = Math.max(0, songs.length - SONG_PREVIEW_LIMIT);
-  const hiddenAlbumCount = Math.max(0, albums.length - ALBUM_PREVIEW_LIMIT);
+  const previewSongs = useMemo(
+    () => songs.slice(0, SONG_PREVIEW_LIMIT),
+    [songs]
+  );
+  const previewAlbums = useMemo(
+    () => albums.slice(0, ALBUM_PREVIEW_LIMIT),
+    [albums]
+  );
+  const hiddenSongCount = Math.max(0, songs.length - previewSongs.length);
+  const hiddenAlbumCount = Math.max(0, albums.length - previewAlbums.length);
 
   const coverUrl = resolveAssetUrl(artist?.cover || artist?.avatar);
   const portraitUrl = resolveAssetUrl(artist?.avatar || artist?.cover);
+  const heroBackdropUrl = coverUrl || portraitUrl;
   const activeSongId = normalizeSongId(currentSong);
   const sharePath = artist?.id ? `/artist/${artist.id}` : id ? `/artist/${id}` : "";
+  const songsPath = artist?.id ? `/artist/${artist.id}/songs` : `/artist/${id}/songs`;
+  const albumsPath = artist?.id ? `/artist/${artist.id}/albums` : `/artist/${id}/albums`;
   const artistMetaDescription = useMemo(() => {
     const parts = [
       `${songs.length} bài hát`,
@@ -383,6 +176,17 @@ export default function ArtistDetail() {
       ? `${parts.join(" • ")} trên Khoaluan Music.`
       : "Khám phá nghệ sĩ trên Khoaluan Music.";
   }, [albums.length, artistSummary, songs.length, totalDuration]);
+  const sharePreview = useMemo(
+    () => ({
+      eyebrow: "Nghệ sĩ",
+      title: artist?.name || artist?.alias || "Nghệ sĩ",
+      subtitle: artist?.national || `${songs.length} bài hát • ${albums.length} album`,
+      description:
+        artistSummary || `${songs.length} bài hát • ${albums.length} album trên Khoaluan Music.`,
+      image: coverUrl || portraitUrl,
+    }),
+    [albums.length, artist?.alias, artist?.name, artist?.national, artistSummary, coverUrl, portraitUrl, songs.length]
+  );
 
   usePageMetadata({
     title: artist?.name || artist?.alias || "Nghệ sĩ",
@@ -391,6 +195,16 @@ export default function ArtistDetail() {
     url: sharePath,
     type: "profile",
   });
+
+  const mobileSectionClass =
+    "relative overflow-hidden rounded-[28px] border border-white/10 bg-black/24 p-4 shadow-[0_20px_52px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-5 lg:rounded-[18px] lg:bg-[#151515] lg:p-6 lg:shadow-[0_12px_28px_rgba(0,0,0,0.34)]";
+  const mobileCardShellClass =
+    "rounded-[22px] bg-black/18 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)] backdrop-blur-2xl sm:p-5";
+  const mobileListShellClass =
+    "mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-black/18 backdrop-blur-xl lg:bg-[#121212]";
+  const mobileSecondaryButtonClass =
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 text-sm font-semibold text-white/84 shadow-[0_12px_28px_rgba(0,0,0,0.22)] transition active:scale-95";
+  const heroActionGroupClass = "flex flex-wrap items-center justify-center gap-3 xl:justify-start";
 
   if (loading) {
     return (
@@ -422,15 +236,137 @@ export default function ArtistDetail() {
   }
 
   return (
-    <div className="user-page-shell min-h-screen w-full max-w-full space-y-8 px-4 py-6 sm:px-8">
-      {errorMessage && (
+    <div className="user-page-shell min-h-screen w-full max-w-full space-y-5 px-3 py-4 sm:px-8 lg:space-y-8 lg:px-4 lg:py-6">
+      {errorMessage ? (
         <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
           {errorMessage}
         </div>
-      )}
+      ) : null}
 
-      <section className="user-surface relative overflow-hidden p-5 sm:p-6 lg:p-8">
-        {coverUrl && (
+      <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-black/30 p-3.5 shadow-[0_24px_70px_rgba(0,0,0,0.34)] backdrop-blur-2xl lg:hidden">
+        {heroBackdropUrl ? (
+          <div
+            className="pointer-events-none absolute inset-[-12%] scale-110 opacity-[0.68] blur-[82px]"
+            style={{
+              backgroundImage: `url(${heroBackdropUrl})`,
+              backgroundPosition: "center",
+              backgroundSize: "cover",
+              filter: "saturate(1.04) brightness(0.44) contrast(1.02)",
+            }}
+          />
+        ) : null}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(29,185,84,0.14),transparent_30%),linear-gradient(160deg,rgba(6,8,7,0.76),rgba(2,2,4,0.94))]" />
+
+        <div className="relative overflow-hidden rounded-[26px] bg-black/14 px-4 pb-4 pt-4">
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.32em] text-white/42">
+            Nghệ sĩ
+          </p>
+
+          <div className="mt-4 flex flex-col items-center text-center">
+            <div className="relative mx-auto w-full max-w-[min(56vw,224px)]">
+              <div
+                className="pointer-events-none absolute -inset-4 rounded-[34px] opacity-60 blur-3xl"
+                style={{
+                  background:
+                    "radial-gradient(circle at 40% 30%, rgba(255,255,255,0.14), transparent 34%), radial-gradient(circle at 68% 70%, rgba(29,185,84,0.18), transparent 42%)",
+                }}
+              />
+              <div className="relative aspect-square overflow-hidden rounded-[28px] bg-black/28 shadow-[0_26px_80px_rgba(0,0,0,0.42)]">
+                {portraitUrl ? (
+                  <OptimizedImage
+                    src={portraitUrl}
+                    alt={artist?.name || "Nghệ sĩ"}
+                    className="h-full w-full object-cover object-center"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,#2f2f2f,#111)] text-6xl font-black text-white/35">
+                    {(artist?.name || "A").trim().charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-5 min-w-0">
+              <h1 className="overflow-hidden px-2 pt-[0.04em] pb-[0.12em] text-[clamp(2rem,8vw,3.1rem)] font-semibold leading-[1.02] tracking-tight text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+                {artist?.name || "Nghệ sĩ"}
+              </h1>
+              {artist?.alias && artist.alias !== artist.name ? (
+                <p className="mt-1 text-sm font-medium text-white/66">{artist.alias}</p>
+              ) : null}
+              {artistSummary ? (
+                <p className="mt-3 text-sm leading-relaxed text-white/72 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:4]">
+                  {artistSummary}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <span className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[11px] font-medium text-white/72">
+                {songs.length} bài hát
+              </span>
+              <span className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[11px] font-medium text-white/72">
+                {albums.length} album
+              </span>
+              <span className="rounded-full bg-white/[0.06] px-3 py-1.5 text-[11px] font-medium text-white/72">
+                {formatTotalDuration(totalDuration)}
+              </span>
+            </div>
+          </div>
+
+          <div className={`mt-5 ${mobileCardShellClass}`}>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {songs.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => playSong(songs[0], songs)}
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[radial-gradient(circle_at_28%_24%,#9dfabd,#4ad67f_56%,#249956)] px-5 text-sm font-semibold text-[#062512] shadow-[0_0_34px_rgba(75,220,126,0.42)] transition active:scale-95"
+                >
+                  <FiPlay className="text-base" />
+                  Phát tất cả
+                </button>
+              ) : (
+                <div className={`${mobileSecondaryButtonClass} text-white/62`}>
+                  <FiMusic />
+                  Chưa có bài hát
+                </div>
+              )}
+
+              <FollowArtistButton
+                artist={artist}
+                size="lg"
+                className="inline-flex min-h-12 items-center justify-center border-white/15 bg-white/[0.08] text-white shadow-[0_12px_28px_rgba(0,0,0,0.22)]"
+              />
+
+              <ShareLinkButton
+                path={sharePath}
+                title="Chia sẻ nghệ sĩ"
+                shareTitle={artist?.name || artist?.alias || "Nghệ sĩ"}
+                shareText={`Khám phá ${artist?.name || artist?.alias || "nghệ sĩ này"} trên Khoaluan Music.`}
+                preview={sharePreview}
+                className="min-h-12 justify-center border-white/15 bg-white/[0.08] text-white shadow-[0_12px_28px_rgba(0,0,0,0.22)]"
+              />
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {heroMetrics.map((item) => (
+                <article
+                  key={item.label}
+                  className="rounded-[18px] bg-white/[0.045] px-3 py-3 text-left backdrop-blur-xl"
+                >
+                  <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/42">
+                    <item.icon className="text-white/58" />
+                    <span>{item.label}</span>
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-white">{item.value}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="user-surface relative hidden overflow-hidden p-5 sm:p-6 lg:block lg:p-8">
+        {coverUrl ? (
           <div
             className="pointer-events-none absolute inset-0 opacity-20"
             style={{
@@ -439,7 +375,7 @@ export default function ArtistDetail() {
               backgroundSize: "cover",
             }}
           />
-        )}
+        ) : null}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(29,185,84,0.24),_transparent_38%),linear-gradient(135deg,rgba(255,255,255,0.06),transparent_36%)]" />
         <div className="pointer-events-none absolute -top-24 right-0 h-60 w-60 rounded-full bg-emerald-400/10 blur-3xl" />
 
@@ -462,22 +398,22 @@ export default function ArtistDetail() {
           </div>
 
           <div className="min-w-0 space-y-6">
-            <div className="space-y-3">
+            <div className="space-y-3 text-center xl:text-left">
               <p className="user-heading-label">Nghệ sĩ</p>
               <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl xl:text-5xl">
                 {artist?.name || "Nghệ sĩ"}
               </h1>
-              {artist?.alias && artist.alias !== artist.name && (
+              {artist?.alias && artist.alias !== artist.name ? (
                 <p className="text-base text-white/65">{artist.alias}</p>
-              )}
-              {artistSummary && (
-                <p className="max-w-3xl text-sm leading-relaxed text-white/78 sm:text-[15px]">
+              ) : null}
+              {artistSummary ? (
+                <p className="mx-auto max-w-3xl text-sm leading-relaxed text-white/78 sm:text-[15px] xl:mx-0">
                   {artistSummary}
                 </p>
-              )}
+              ) : null}
             </div>
 
-            <div className="flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap justify-center gap-2.5 xl:justify-start">
               <span className="user-chip rounded-full px-3 py-1.5 text-xs font-medium">
                 {songs.length} bài hát
               </span>
@@ -489,8 +425,8 @@ export default function ArtistDetail() {
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              {songs.length > 0 && (
+            <div className={heroActionGroupClass}>
+              {songs.length > 0 ? (
                 <button
                   type="button"
                   onClick={() => playSong(songs[0], songs)}
@@ -499,22 +435,14 @@ export default function ArtistDetail() {
                   <FiPlay className="text-base" />
                   Phát tất cả
                 </button>
-              )}
+              ) : null}
               <FollowArtistButton artist={artist} size="lg" />
               <ShareLinkButton
                 path={sharePath}
                 title="Chia sẻ nghệ sĩ"
                 shareTitle={artist?.name || artist?.alias || "Nghệ sĩ"}
                 shareText={`Khám phá ${artist?.name || artist?.alias || "nghệ sĩ này"} trên Khoaluan Music.`}
-                preview={{
-                  eyebrow: "Nghệ sĩ",
-                  title: artist?.name || artist?.alias || "Nghệ sĩ",
-                  subtitle: artist?.national || `${songs.length} bài hát • ${albums.length} album`,
-                  description:
-                    artistSummary ||
-                    `${songs.length} bài hát • ${albums.length} album trên Khoaluan Music.`,
-                  image: coverUrl || portraitUrl,
-                }}
+                preview={sharePreview}
                 className="px-5 py-3"
               />
             </div>
@@ -534,49 +462,47 @@ export default function ArtistDetail() {
         </div>
       </section>
 
-      <section className="user-surface p-4 sm:p-5 lg:p-6">
+      <section className={mobileSectionClass}>
         <SectionHeader
           label="Danh mục"
           title="Bài hát của nghệ sĩ"
           description={
-            songs.length > SONG_PREVIEW_LIMIT
+            hiddenSongCount > 0
               ? "Một vài ca khúc nổi bật được mở ra trước để bạn bắt nhịp nhanh hơn."
               : "Những ca khúc đang có mặt trong thư viện của nghệ sĩ."
           }
           countLabel={`${songs.length} bài hát`}
           headerActions={
-            songs.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => playSong(songs[0], songs)}
-                className="user-btn-primary inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold"
-              >
-                <FiPlay />
-                Phát tất cả
-              </button>
-            ) : null
-          }
-          toggleLabel={
-            hiddenSongCount > 0 || showAllSongs
-              ? {
-                  expanded: showAllSongs,
-                  text: showAllSongs ? "Thu gọn danh sách" : `Xem thêm ${hiddenSongCount} bài hát`,
-                }
-              : null
-          }
-          onToggle={
-            hiddenSongCount > 0 || showAllSongs
-              ? () => setShowAllSongs((prev) => !prev)
-              : undefined
+            <>
+              {songs.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => playSong(songs[0], songs)}
+                  className="user-btn-primary inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold"
+                >
+                  <FiPlay />
+                  Phát tất cả
+                </button>
+              ) : null}
+              {songs.length > 0 ? (
+                <Link
+                  to={songsPath}
+                  className="user-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold"
+                >
+                  Xem tất cả
+                  <FiArrowRight />
+                </Link>
+              ) : null}
+            </>
           }
         />
 
         {songs.length === 0 ? (
-          <div className="mt-5 rounded-[24px] border border-white/10 bg-[#121212] px-5 py-10 text-center text-sm text-white/60">
+          <div className={`${mobileListShellClass} px-5 py-10 text-center text-sm text-white/60`}>
             Nghệ sĩ này chưa có ca khúc nào trong thư viện.
           </div>
         ) : (
-          <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-[#121212]">
+          <div className={mobileListShellClass}>
             <div className="hidden grid-cols-[56px_minmax(0,2.4fr)_minmax(0,1.2fr)_88px_120px] items-center border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/45 lg:grid">
               <span className="text-center">#</span>
               <span>Bài hát</span>
@@ -586,7 +512,7 @@ export default function ArtistDetail() {
             </div>
 
             <div className="divide-y divide-white/8">
-              {visibleSongs.map((song, index) => {
+              {previewSongs.map((song, index) => {
                 const songId = normalizeSongId(song);
                 const isActive = activeSongId === songId;
                 const isLiked = songId && likedSongIds.includes(songId);
@@ -706,48 +632,46 @@ export default function ArtistDetail() {
         )}
       </section>
 
-      <section className="user-surface p-4 sm:p-5 lg:p-6">
+      <section className={mobileSectionClass}>
         <SectionHeader
           label="Album"
           title="Album của nghệ sĩ"
           description={
-            albums.length > ALBUM_PREVIEW_LIMIT
+            hiddenAlbumCount > 0
               ? "Một vài album nổi bật được mở ra trước để bạn xem nhanh hơn."
               : "Những album đang có mặt trong thư viện của nghệ sĩ."
           }
           countLabel={`${albums.length} album`}
-          toggleLabel={
-            hiddenAlbumCount > 0 || showAllAlbums
-              ? {
-                  expanded: showAllAlbums,
-                  text: showAllAlbums ? "Thu gọn album" : `Xem thêm ${hiddenAlbumCount} album`,
-                }
-              : null
-          }
-          onToggle={
-            hiddenAlbumCount > 0 || showAllAlbums
-              ? () => setShowAllAlbums((prev) => !prev)
-              : undefined
+          headerActions={
+            albums.length > 0 ? (
+              <Link
+                to={albumsPath}
+                className="user-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold"
+              >
+                Xem tất cả
+                <FiArrowRight />
+              </Link>
+            ) : null
           }
         />
 
         {albums.length === 0 ? (
-          <div className="mt-5 rounded-[24px] border border-white/10 bg-[#121212] px-5 py-10 text-center text-sm text-white/60">
+          <div className={`${mobileListShellClass} px-5 py-10 text-center text-sm text-white/60`}>
             Nghệ sĩ này chưa có album nào trong thư viện.
           </div>
         ) : (
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
-            {visibleAlbums.map((album) => (
+            {previewAlbums.map((album) => (
               <AlbumCard key={album.id || album.title} album={album} variant="library" />
             ))}
           </div>
         )}
       </section>
 
-      {(artist?.bio || artistInfoItems.length > 0) && (
+      {(artist?.bio || artistInfoItems.length > 0) ? (
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.75fr)]">
-          {artist?.bio && (
-            <section className="user-surface relative overflow-hidden p-5 sm:p-6">
+          {artist?.bio ? (
+            <section className={mobileSectionClass}>
               <div className="pointer-events-none absolute inset-0 bg-white/[0.02]" />
               <div className="relative">
                 <p className="user-heading-label">Giới thiệu</p>
@@ -757,10 +681,10 @@ export default function ArtistDetail() {
                 />
               </div>
             </section>
-          )}
+          ) : null}
 
-          {artistInfoItems.length > 0 && (
-            <section className="user-surface relative overflow-hidden p-5 sm:p-6">
+          {artistInfoItems.length > 0 ? (
+            <section className={mobileSectionClass}>
               <div className="pointer-events-none absolute inset-0 bg-white/[0.02]" />
               <div className="relative">
                 <p className="user-heading-label">Thông tin thêm</p>
@@ -777,9 +701,9 @@ export default function ArtistDetail() {
                 </div>
               </div>
             </section>
-          )}
+          ) : null}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
