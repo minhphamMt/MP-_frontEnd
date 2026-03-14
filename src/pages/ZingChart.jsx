@@ -634,18 +634,40 @@ export default function ZingChart() {
       }
     };
 
-    const downplayAll = () => {
-      weeklyLineData.series.forEach((_, seriesIndex) => {
-        safeDispatch({
-          type: "downplay",
-          seriesIndex,
-        });
+    let previousSeries = null;
+    let previousPoint = null;
+
+    const hasReadyPoint = (seriesIndex, dataIndex) => {
+      try {
+        const model = chart.getModel?.();
+        const seriesModel = model?.getSeriesByIndex?.(seriesIndex);
+        const data = seriesModel?.getData?.();
+        return Boolean(data && data.count() > dataIndex);
+      } catch {
+        return false;
+      }
+    };
+
+    const clearPreviousHighlight = () => {
+      if (previousSeries == null || previousPoint == null) return;
+      if (!hasReadyPoint(previousSeries, previousPoint)) {
+        previousSeries = null;
+        previousPoint = null;
+        return;
+      }
+      safeDispatch({
+        type: "downplay",
+        seriesIndex: previousSeries,
+        dataIndex: previousPoint,
       });
+      previousSeries = null;
+      previousPoint = null;
     };
 
     const runStep = () => {
       if (!chartRef.current || chartRef.current !== chart) return;
-      downplayAll();
+      if (!hasReadyPoint(currentSeries, currentPoint)) return;
+      clearPreviousHighlight();
       safeDispatch({
         type: "highlight",
         seriesIndex: currentSeries,
@@ -656,6 +678,8 @@ export default function ZingChart() {
         seriesIndex: currentSeries,
         dataIndex: currentPoint,
       });
+      previousSeries = currentSeries;
+      previousPoint = currentPoint;
 
       currentPoint += 1;
       if (currentPoint >= weeklyLineData.categories.length) {
@@ -664,15 +688,16 @@ export default function ZingChart() {
       }
     };
 
-    runStep();
+    const startTimer = setTimeout(runStep, 0);
     autoHoverTimerRef.current = setInterval(runStep, isMobile ? 1800 : 1400);
 
     return () => {
+      clearTimeout(startTimer);
       if (autoHoverTimerRef.current) {
         clearInterval(autoHoverTimerRef.current);
         autoHoverTimerRef.current = null;
       }
-      downplayAll();
+      clearPreviousHighlight();
       safeDispatch({ type: "hideTip" });
     };
   }, [isChartHovered, isMobile, trendLoading, weeklyLineData]);
