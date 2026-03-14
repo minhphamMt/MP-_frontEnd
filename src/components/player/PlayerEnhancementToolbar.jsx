@@ -132,6 +132,9 @@ export default function PlayerEnhancementToolbar({
   className = "",
   align = "right",
   menuPlacement,
+  wrap = true,
+  compactLabelClass = "",
+  showShare = true,
 }) {
   const currentSong = usePlayerStore((state) => state.currentSong);
   const playbackRate = usePlayerStore((state) => state.playbackRate);
@@ -188,6 +191,9 @@ export default function PlayerEnhancementToolbar({
     return "Nghệ sĩ";
   }, [currentSong]);
   const resolvedPlacement = menuPlacement || (compact ? "top" : "bottom");
+  const resolvedCompactLabelClass = compact
+    ? compactLabelClass || "max-[390px]:hidden"
+    : "";
 
   const buttonClass = compact
     ? "inline-flex h-10 items-center gap-2 rounded-full border border-[#2a2d30] bg-[#141618] px-3 text-xs font-semibold text-white/78 shadow-[0_10px_24px_rgba(0,0,0,0.22)] transition md:hover:bg-[#1a1d1f] md:hover:text-white md:hover:border-[#373b3f] max-[390px]:h-9 max-[390px]:w-9 max-[390px]:justify-center max-[390px]:gap-0 max-[390px]:px-0"
@@ -196,7 +202,10 @@ export default function PlayerEnhancementToolbar({
   return (
     <div
       ref={containerRef}
-      className={["flex flex-wrap items-center gap-2", className].join(" ")}
+      className={[
+        wrap ? "flex flex-wrap items-center gap-2" : "flex flex-nowrap items-center gap-2",
+        className,
+      ].join(" ")}
     >
       <div ref={speedAnchorRef} className="relative">
         <button
@@ -206,7 +215,7 @@ export default function PlayerEnhancementToolbar({
           aria-label="Tốc độ phát"
         >
           <FiSliders className="text-[15px] text-white/60" />
-          <span className={compact ? "max-[390px]:hidden" : ""}>{playbackRate}x</span>
+          <span className={resolvedCompactLabelClass}>{playbackRate}x</span>
         </button>
         <ToolbarMenu
           open={activeMenu === "speed"}
@@ -259,7 +268,7 @@ export default function PlayerEnhancementToolbar({
           <FiClock
             className={`text-[15px] ${sleepTimerEndsAt ? "text-white/72" : "text-white/56"}`}
           />
-          <span className={compact ? "max-[390px]:hidden" : ""}>{timerLabel}</span>
+          <span className={resolvedCompactLabelClass}>{timerLabel}</span>
         </button>
         <ToolbarMenu
           open={activeMenu === "timer"}
@@ -300,7 +309,7 @@ export default function PlayerEnhancementToolbar({
         </ToolbarMenu>
       </div>
 
-      {currentSongId ? (
+      {showShare && currentSongId ? (
         <ShareLinkButton
           path={`/song/${currentSongId}`}
           title={compact ? "Chia sẻ" : "Chia sẻ bài hát"}

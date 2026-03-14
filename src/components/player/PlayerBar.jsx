@@ -228,8 +228,8 @@ export default function PlayerBar() {
           </div>
         </div>
 
-        <div className="hidden h-24 items-center px-6 sm:flex">
-          <div className="flex min-w-0 w-1/3 items-center gap-3">
+        <div className="hidden h-24 items-center gap-4 px-4 lg:px-5 xl:px-6 sm:flex">
+          <div className="flex min-w-0 w-[30%] items-center gap-3">
             <div className="h-14 w-14 overflow-hidden rounded-xl bg-white/10">
               <OptimizedImage
                 src={resolveAssetUrl(currentSong.cover_url)}
@@ -265,7 +265,7 @@ export default function PlayerBar() {
             </button>
           </div>
 
-          <div className="flex flex-1 flex-col items-center gap-2">
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-2">
             <div className="flex items-center gap-5 text-lg">
               <button onClick={playPrev} className="text-white/70 md:hover:text-white">
                 <FaBackwardStep />
@@ -301,7 +301,7 @@ export default function PlayerBar() {
             </div>
           </div>
 
-          <div className="flex w-1/3 items-center justify-end gap-3 xl:gap-4">
+          <div className="flex min-w-0 w-[32%] items-center justify-end gap-2 lg:gap-3 xl:gap-3.5">
             <button
               onClick={() => setShowDetail(true)}
               className="text-white/70 md:hover:text-white"
@@ -327,7 +327,7 @@ export default function PlayerBar() {
               </span>
             </button>
 
-            <div className="flex min-w-[140px] items-center gap-2">
+            <div className="flex min-w-[108px] max-w-[148px] flex-1 items-center gap-2 xl:min-w-[124px] xl:max-w-[164px]">
               <button
                 onClick={toggleMute}
                 className="text-white/70 md:hover:text-white"
@@ -354,7 +354,9 @@ export default function PlayerBar() {
             <PlayerEnhancementToolbar
               compact
               menuPlacement="top"
-              className="hidden xl:flex"
+              wrap={false}
+              compactLabelClass="hidden 2xl:inline"
+              className="hidden shrink-0 xl:flex"
             />
 
             <button
@@ -362,7 +364,7 @@ export default function PlayerBar() {
               onClick={() =>
                 dockPanelOpen ? closeDockPanel() : openDockPanel(dockPanelTab || "queue")
               }
-              className={`hidden h-10 w-10 items-center justify-center rounded-xl border transition lg:flex ${
+              className={`hidden shrink-0 h-10 w-10 items-center justify-center rounded-xl border transition lg:flex ${
                 dockPanelOpen
                   ? "border-[#1db954]/40 bg-[#1db954]/14 text-[#9ff0bc] shadow-[0_10px_24px_rgba(29,185,84,0.16)]"
                   : "border-white/10 bg-[#111111] text-white/70 md:hover:border-white/20 md:hover:bg-[#191919] md:hover:text-white"

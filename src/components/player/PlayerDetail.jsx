@@ -17,6 +17,7 @@ import { resolveAssetUrl } from "../../utils/asset";
 import PlayerDetailLyrics from "./PlayerDetailLyrics";
 import PlayerDetailQueue from "./PlayerDetailQueue";
 import OptimizedImage from "../common/OptimizedImage";
+import ShareLinkButton from "../common/ShareLinkButton";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import ArtistNames from "../artist/ArtistNames";
 import PlayerEnhancementToolbar from "./PlayerEnhancementToolbar";
@@ -509,6 +510,15 @@ export default function PlayerDetail({ isOpen, onClose }) {
   const albumId = currentSong?.album_id || currentSong?.album?.id || null;
   const albumTitle =
     currentSong?.album_title || currentSong?.album?.title || "Single";
+  const currentArtistLabel =
+    currentSong?.artist_name ||
+    (Array.isArray(currentSong?.artists)
+      ? currentSong.artists
+          .map((artist) => artist?.name || artist?.alias || "")
+          .filter(Boolean)
+          .join(", ")
+      : "") ||
+    "Nghệ sĩ";
   const normalizedIndex = Number.isFinite(currentIndex) ? currentIndex : 0;
   const queueCount = Array.isArray(queue) ? queue.length : 0;
   const safeQueueSize = Math.max(queueCount, normalizedIndex + 1, 1);
@@ -580,6 +590,29 @@ export default function PlayerDetail({ isOpen, onClose }) {
       <FiHeart />
     </button>
   );
+  const shareButton = currentSongId ? (
+    <ShareLinkButton
+      path={`/song/${currentSongId}`}
+      title="Chia sẻ"
+      shareTitle={currentSong?.title || "Bài hát"}
+      shareText={`Nghe ${currentSong?.title || "bài hát này"} của ${currentArtistLabel} trên Khoaluan Music.`}
+      preview={{
+        eyebrow: "Đang phát",
+        title: currentSong?.title || "Bài hát",
+        subtitle: currentArtistLabel,
+        description: "Mở nhanh trang bài hát đang phát để nghe và chia sẻ.",
+        image:
+          currentSong?.cover_url ||
+          currentSong?.thumbnail_m ||
+          currentSong?.thumbnail ||
+          currentSong?.image_url ||
+          cover ||
+          "",
+      }}
+      compact
+      className="h-11 w-11 border-white/10 bg-white/[0.07] text-white/82 md:hover:bg-white/[0.12]"
+    />
+  ) : null;
 
   const detailPanel = (
     <div
@@ -693,6 +726,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 song={currentSong}
                 triggerClassName="h-11 w-11 bg-white/[0.07] text-white/82 md:hover:bg-white/[0.12]"
               />
+              {shareButton}
             </div>
 
             <div className="flex items-center justify-center gap-2.5 text-lg sm:gap-3 sm:text-xl">
@@ -789,8 +823,8 @@ export default function PlayerDetail({ isOpen, onClose }) {
             </div>
           </div>
 
-          <div className="relative z-20 mt-4 flex flex-wrap items-center justify-center gap-2 xl:justify-between 2xl:justify-end">
-            <PlayerEnhancementToolbar menuPlacement="top" />
+          <div className="relative z-20 mt-4 flex items-center justify-center xl:justify-end">
+            <PlayerEnhancementToolbar menuPlacement="top" wrap={false} showShare={false} />
           </div>
         </div>
       </div>
