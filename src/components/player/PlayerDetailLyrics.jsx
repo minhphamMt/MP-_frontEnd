@@ -93,6 +93,7 @@ function PlayerDetailLyrics({
     line.scrollIntoView({
       behavior: lastLyricIndexRef.current < 0 ? "auto" : "smooth",
       block: "center",
+      inline: "nearest",
     });
     lastLyricIndexRef.current = lyricIndex;
   }, [isActive, lyricIndex]);
@@ -164,7 +165,7 @@ function PlayerDetailLyrics({
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {lyricsLoading ? (
         <div className="text-sm text-white/56">
           {"\u0110ang t\u1ea3i l\u1eddi b\u00e0i h\u00e1t..."}
@@ -189,7 +190,7 @@ function PlayerDetailLyrics({
           onTouchMoveCapture={lockHorizontalSwipe ? handleGestureMove : undefined}
           onTouchEndCapture={lockHorizontalSwipe ? handleGestureEnd : undefined}
           onTouchCancelCapture={lockHorizontalSwipe ? handleGestureEnd : undefined}
-          className={`mt-1 flex-1 space-y-2 scrollbar-hidden ${
+          className={`mt-1 flex-1 space-y-2 overflow-x-hidden scrollbar-hidden ${
             allowManualScroll
               ? `overflow-y-auto pr-1 ${
                   lockHorizontalSwipe ? "overscroll-y-contain" : ""
@@ -206,7 +207,7 @@ function PlayerDetailLyrics({
                 type="button"
                 data-lyric-index={index}
                 onClick={() => handleLyricClick(item)}
-                className={`relative block w-full px-1 py-1.5 text-left transition ${
+                className={`relative block w-full max-w-full overflow-hidden px-1 py-1.5 text-left transition ${
                   isLineActive
                     ? "translate-x-2 text-white"
                     : "text-white/40 md:hover:text-white/60"
@@ -216,7 +217,7 @@ function PlayerDetailLyrics({
                   <span className="absolute left-0 top-1/2 h-7 w-[3px] -translate-y-1/2 rounded-full bg-white/85" />
                 ) : null}
                 <span
-                  className={`block leading-[1.75] transition ${
+                  className={`block break-words leading-[1.75] transition ${
                     isLineActive
                       ? "text-[1.04rem] font-semibold sm:text-[1.1rem]"
                       : "text-[0.95rem] sm:text-[1rem]"

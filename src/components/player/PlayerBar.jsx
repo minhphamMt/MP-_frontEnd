@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FaBackwardStep, FaForwardStep, FaPause, FaPlay } from "react-icons/fa6";
 import { FiColumns } from "react-icons/fi";
 import {
@@ -18,9 +18,50 @@ import { resolveAssetUrl } from "../../utils/asset";
 import PlayerDetail from "./PlayerDetail";
 import PlayerEnhancementToolbar from "./PlayerEnhancementToolbar";
 import { SongDetailLink } from "../song/SongDetailLink";
+import { useShallow } from "zustand/react/shallow";
 
 const formatTime = (t = 0) =>
   `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+
+function PlayerBarMobileProgress({ duration = 0 }) {
+  const currentTime = usePlayerStore((state) => state.currentTime);
+  const progress = duration ? Math.min(100, (currentTime / duration) * 100) : 0;
+
+  return (
+    <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white/10">
+      <div
+        className="h-full transition-all"
+        style={{
+          width: `${progress}%`,
+          background: "#1db954",
+        }}
+      />
+    </div>
+  );
+}
+
+function PlayerBarDesktopProgress({ duration = 0, onSeek }) {
+  const currentTime = usePlayerStore((state) => state.currentTime);
+  const progress = duration ? Math.min(100, (currentTime / duration) * 100) : 0;
+
+  return (
+    <div className="flex w-full items-center gap-3 text-xs text-white/60">
+      <span className="w-10 text-right">{formatTime(currentTime)}</span>
+      <input
+        type="range"
+        min={0}
+        max={duration || 0}
+        value={currentTime}
+        onChange={(event) => onSeek(Number(event.target.value))}
+        className="player-slider flex-1"
+        style={{
+          background: `linear-gradient(to right, #1db954 ${progress}%, rgba(255,255,255,0.2) ${progress}%)`,
+        }}
+      />
+      <span className="w-10">{formatTime(duration)}</span>
+    </div>
+  );
+}
 
 export default function PlayerBar() {
   const [showDetail, setShowDetail] = useState(false);
@@ -30,7 +71,6 @@ export default function PlayerBar() {
   const {
     currentSong,
     isPlaying,
-    currentTime,
     duration,
     volume,
     muted,
@@ -51,7 +91,32 @@ export default function PlayerBar() {
     dockPanelTab,
     openDockPanel,
     closeDockPanel,
-  } = usePlayerStore();
+  } = usePlayerStore(
+    useShallow((state) => ({
+      currentSong: state.currentSong,
+      isPlaying: state.isPlaying,
+      duration: state.duration,
+      volume: state.volume,
+      muted: state.muted,
+      repeatMode: state.repeatMode,
+      pause: state.pause,
+      resume: state.resume,
+      playNext: state.playNext,
+      playPrev: state.playPrev,
+      seek: state.seek,
+      toggleMute: state.toggleMute,
+      setVolume: state.setVolume,
+      toggleRepeatMode: state.toggleRepeatMode,
+      likedSongIds: state.likedSongIds,
+      toggleLike: state.toggleLike,
+      lastPlayedLoading: state.lastPlayedLoading,
+      ensureLastPlayedLoaded: state.ensureLastPlayedLoaded,
+      dockPanelOpen: state.dockPanelOpen,
+      dockPanelTab: state.dockPanelTab,
+      openDockPanel: state.openDockPanel,
+      closeDockPanel: state.closeDockPanel,
+    }))
+  );
 
   useEnsureLikedSongsLoaded(Boolean(currentSong));
 
@@ -126,6 +191,9 @@ export default function PlayerBar() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentSong]);
 
+  const handleOpenDetail = useCallback(() => setShowDetail(true), []);
+  const handleCloseDetail = useCallback(() => setShowDetail(false), []);
+
   if (!currentSong) {
     const isInitializingPlayer = !isAuthReady || (isAuthenticated && lastPlayedLoading);
 
@@ -138,7 +206,6 @@ export default function PlayerBar() {
     );
   }
 
-  const progress = duration ? Math.min(100, (currentTime / duration) * 100) : 0;
   const volumePercent = Math.round((volume ?? 0) * 100);
   const displayVolumePercent = muted ? 0 : volumePercent;
   const volumeGradient = `linear-gradient(to right, #1db954 ${displayVolumePercent}%, rgba(255,255,255,0.2) ${displayVolumePercent}%)`;
@@ -157,7 +224,7 @@ export default function PlayerBar() {
           className={`relative flex items-center gap-3 px-3 py-2.5 sm:hidden ${
             showDetail ? "hidden" : ""
           }`}
-          onClick={() => setShowDetail(true)}
+          onClick={handleOpenDetail}
         >
           <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md bg-white/10">
             <OptimizedImage
@@ -217,15 +284,7 @@ export default function PlayerBar() {
             <FaForwardStep />
           </button>
 
-          <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white/10">
-            <div
-              className="h-full transition-all"
-              style={{
-                width: `${progress}%`,
-                background: "#1db954",
-              }}
-            />
-          </div>
+          <PlayerBarMobileProgress duration={duration} />
         </div>
 
         <div className="hidden h-24 items-center gap-4 px-4 lg:px-5 xl:px-6 sm:flex">
@@ -284,26 +343,12 @@ export default function PlayerBar() {
               </button>
             </div>
 
-            <div className="flex w-full items-center gap-3 text-xs text-white/60">
-              <span className="w-10 text-right">{formatTime(currentTime)}</span>
-              <input
-                type="range"
-                min={0}
-                max={duration || 0}
-                value={currentTime}
-                onChange={(event) => seek(Number(event.target.value))}
-                className="player-slider flex-1"
-                style={{
-                  background: `linear-gradient(to right, #1db954 ${progress}%, rgba(255,255,255,0.2) ${progress}%)`,
-                }}
-              />
-              <span className="w-10">{formatTime(duration)}</span>
-            </div>
+            <PlayerBarDesktopProgress duration={duration} onSeek={seek} />
           </div>
 
           <div className="flex min-w-0 w-[32%] items-center justify-end gap-2 lg:gap-3 xl:gap-3.5">
             <button
-              onClick={() => setShowDetail(true)}
+              onClick={handleOpenDetail}
               className="text-white/70 md:hover:text-white"
               aria-label="Mở trình phát mở rộng"
               title="Mở trình phát mở rộng"
@@ -378,7 +423,7 @@ export default function PlayerBar() {
         </div>
       </div>
 
-      <PlayerDetail isOpen={showDetail} onClose={() => setShowDetail(false)} />
+      <PlayerDetail isOpen={showDetail} onClose={handleCloseDetail} />
     </>
   );
 }

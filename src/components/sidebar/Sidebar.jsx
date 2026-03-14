@@ -34,7 +34,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const role = useAuthStore((state) => state.role);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isArtist = role === "ARTIST";
-  const isAdmin = role === "ADMIN";
+  const isAdmin = role === "ADMIN"; 
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "true";

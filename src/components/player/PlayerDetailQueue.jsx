@@ -98,6 +98,7 @@ function PlayerDetailQueue({ queue = [], currentIndex = 0, playAt, onNavigate })
           tabIndex={0}
           data-reorder-item="true"
           data-reorder-index={index}
+          data-current={isCurrent ? "true" : "false"}
           onClick={handleSelect}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
@@ -105,7 +106,7 @@ function PlayerDetailQueue({ queue = [], currentIndex = 0, playAt, onNavigate })
               handleSelect();
             }
           }}
-          className={`group flex w-full cursor-grab items-center gap-3 rounded-[18px] px-3 py-3 text-left transition active:cursor-grabbing ${
+          className={`player-detail-queue-item group flex w-full cursor-grab items-center gap-3 rounded-[18px] px-3 py-3 text-left transition-[background-color,opacity,transform,box-shadow] duration-200 active:cursor-grabbing ${
             isCurrent
               ? "bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04))] text-white"
               : "bg-white/[0.045] text-white/90 md:hover:bg-white/[0.08]"
@@ -227,7 +228,7 @@ function PlayerDetailQueue({ queue = [], currentIndex = 0, playAt, onNavigate })
 
       <div
         data-mobile-sheet-scroll="true"
-        className="mt-5 min-h-0 flex-1 space-y-6 overflow-y-auto pr-1 scrollbar-hidden"
+        className="player-detail-queue-scroll mt-5 min-h-0 flex-1 space-y-6 overflow-y-auto pr-1 scrollbar-hidden"
       >
         {played.length ? (
           <div className="space-y-2.5">
