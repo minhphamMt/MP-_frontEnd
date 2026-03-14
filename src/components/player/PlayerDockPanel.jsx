@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { FiAlignLeft, FiColumns } from "react-icons/fi";
 import usePlayerStore from "../../store/player.store";
+import { useShallow } from "zustand/react/shallow";
 import PlayerDetailLyrics from "./PlayerDetailLyrics";
 import PlayerDetailQueue from "./PlayerDetailQueue";
 
@@ -39,14 +40,25 @@ export default function PlayerDockPanel() {
     currentSong,
     queue,
     currentIndex,
-    currentTime,
     playAt,
     seek,
     dockPanelOpen,
     dockPanelTab,
     closeDockPanel,
     setDockPanelTab,
-  } = usePlayerStore();
+  } = usePlayerStore(
+    useShallow((state) => ({
+      currentSong: state.currentSong,
+      queue: state.queue,
+      currentIndex: state.currentIndex,
+      playAt: state.playAt,
+      seek: state.seek,
+      dockPanelOpen: state.dockPanelOpen,
+      dockPanelTab: state.dockPanelTab,
+      closeDockPanel: state.closeDockPanel,
+      setDockPanelTab: state.setDockPanelTab,
+    }))
+  );
   const [panelWidth, setPanelWidth] = useState(getSavedDockWidth);
   const [isResizing, setIsResizing] = useState(false);
   const panelRef = useRef(null);
@@ -190,13 +202,12 @@ export default function PlayerDockPanel() {
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 px-3 py-3">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-3">
           {dockPanelTab === "queue" ? (
             <PlayerDetailQueue queue={queue} currentIndex={currentIndex} playAt={playAt} />
           ) : (
             <PlayerDetailLyrics
               currentSong={currentSong}
-              displayedTime={currentTime}
               onSeek={seek}
               isActive={dockPanelOpen && dockPanelTab === "lyrics"}
             />
