@@ -243,21 +243,21 @@ export default function ArtistDetail() {
         </div>
       ) : null}
 
-      <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-black/30 p-3.5 shadow-[0_24px_70px_rgba(0,0,0,0.34)] backdrop-blur-2xl lg:hidden">
+      <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-black/20 p-3.5 shadow-[0_24px_70px_rgba(0,0,0,0.28)] backdrop-blur-2xl lg:hidden">
         {heroBackdropUrl ? (
           <div
-            className="pointer-events-none absolute inset-[-12%] scale-110 opacity-[0.68] blur-[82px]"
+            className="pointer-events-none absolute inset-[-12%] scale-110 opacity-[0.56] blur-[78px]"
             style={{
               backgroundImage: `url(${heroBackdropUrl})`,
               backgroundPosition: "center",
               backgroundSize: "cover",
-              filter: "saturate(1.04) brightness(0.44) contrast(1.02)",
+              filter: "saturate(1.03) brightness(0.56) contrast(1.01)",
             }}
           />
         ) : null}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(29,185,84,0.14),transparent_30%),linear-gradient(160deg,rgba(6,8,7,0.76),rgba(2,2,4,0.94))]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(29,185,84,0.14),transparent_30%),linear-gradient(160deg,rgba(10,12,12,0.58),rgba(4,4,5,0.84))]" />
 
-        <div className="relative overflow-hidden rounded-[26px] bg-black/14 px-4 pb-4 pt-4">
+        <div className="relative overflow-hidden rounded-[26px] bg-black/10 px-4 pb-4 pt-4">
           <p className="text-center text-[11px] font-semibold uppercase tracking-[0.32em] text-white/42">
             Nghệ sĩ
           </p>
@@ -271,7 +271,7 @@ export default function ArtistDetail() {
                     "radial-gradient(circle at 40% 30%, rgba(255,255,255,0.14), transparent 34%), radial-gradient(circle at 68% 70%, rgba(29,185,84,0.18), transparent 42%)",
                 }}
               />
-              <div className="relative aspect-square overflow-hidden rounded-[28px] bg-black/28 shadow-[0_26px_80px_rgba(0,0,0,0.42)]">
+              <div className="relative aspect-square overflow-hidden rounded-[28px] bg-black/18 shadow-[0_26px_80px_rgba(0,0,0,0.38)]">
                 {portraitUrl ? (
                   <OptimizedImage
                     src={portraitUrl}

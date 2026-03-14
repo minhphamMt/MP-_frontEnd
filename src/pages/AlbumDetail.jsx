@@ -222,6 +222,8 @@ export default function AlbumDetail() {
     type: "music.album",
   });
 
+  const heroPanelClass =
+    "relative overflow-hidden rounded-[28px] border border-white/10 bg-black/18 p-4 shadow-[0_20px_52px_rgba(0,0,0,0.26)] backdrop-blur-2xl sm:p-5 lg:p-6";
   const panelClass =
     "relative overflow-hidden rounded-[28px] border border-white/10 bg-black/24 p-4 shadow-[0_20px_52px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-5 lg:p-6";
   const listShellClass =
@@ -266,19 +268,19 @@ export default function AlbumDetail() {
         </div>
       ) : null}
 
-      <section className={panelClass}>
+      <section className={heroPanelClass}>
         {albumCoverUrl ? (
           <div
-            className="pointer-events-none absolute inset-[-10%] scale-110 opacity-[0.62] blur-[100px]"
+            className="pointer-events-none absolute inset-[-10%] scale-110 opacity-[0.5] blur-[88px]"
             style={{
               backgroundImage: `url(${albumCoverUrl})`,
               backgroundPosition: "center",
               backgroundSize: "cover",
-              filter: "saturate(1.03) brightness(0.42) contrast(1.02)",
+              filter: "saturate(1.03) brightness(0.56) contrast(1.01)",
             }}
           />
         ) : null}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_84%_14%,rgba(29,185,84,0.12),transparent_30%),linear-gradient(160deg,rgba(6,8,7,0.76),rgba(2,2,4,0.94))]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_84%_14%,rgba(29,185,84,0.12),transparent_30%),linear-gradient(160deg,rgba(10,12,12,0.58),rgba(4,4,5,0.82))]" />
 
         <div className="relative grid gap-5 lg:grid-cols-[minmax(180px,260px)_minmax(0,1fr)] lg:items-center">
           <div className="relative mx-auto w-full max-w-[min(58vw,260px)] lg:max-w-none">
@@ -289,7 +291,7 @@ export default function AlbumDetail() {
                   "radial-gradient(circle at 40% 30%, rgba(255,255,255,0.14), transparent 34%), radial-gradient(circle at 68% 70%, rgba(29,185,84,0.18), transparent 42%)",
               }}
             />
-            <div className="relative aspect-square overflow-hidden rounded-[28px] bg-black/28 shadow-[0_26px_80px_rgba(0,0,0,0.42)]">
+            <div className="relative aspect-square overflow-hidden rounded-[28px] bg-black/18 shadow-[0_26px_80px_rgba(0,0,0,0.38)]">
               <OptimizedImage
                 src={albumCoverUrl}
                 alt={album.title}
