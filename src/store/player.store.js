@@ -52,6 +52,8 @@ const audio = new Audio();
 const lyricRequests = new Map();
 let sleepTimerId = null;
 let rememberedDockTab = "queue";
+let lastMediaMetadataKey = "";
+let lastMediaPositionStateKey = "";
 const PLAYBACK_RATE_DEFAULT = 1;
 const PLAYBACK_RATE_MIN = 0.75;
 const PLAYBACK_RATE_MAX = 1.5;
@@ -69,17 +71,29 @@ const rememberDockTab = (tab) => {
   rememberedDockTab = tab;
 };
 
+const buildMediaMetadataKey = (song) => {
+  if (!song) return "";
+
+  return [
+    normalizeSongId(song),
+    song.title || "",
+    getArtistLabel(song, "Unknown Artist"),
+    song.album_title || "",
+    song.cover_url || "",
+  ].join("|");
+};
+
 const resolveMediaArtwork = (song) => {
   const artwork = song?.cover_url;
   if (!artwork) return [];
 
   return [
-    { src: artwork, sizes: "96x96", type: "image/png" },
-    { src: artwork, sizes: "128x128", type: "image/png" },
-    { src: artwork, sizes: "192x192", type: "image/png" },
-    { src: artwork, sizes: "256x256", type: "image/png" },
-    { src: artwork, sizes: "384x384", type: "image/png" },
-    { src: artwork, sizes: "512x512", type: "image/png" },
+    { src: artwork, sizes: "96x96" },
+    { src: artwork, sizes: "128x128" },
+    { src: artwork, sizes: "192x192" },
+    { src: artwork, sizes: "256x256" },
+    { src: artwork, sizes: "384x384" },
+    { src: artwork, sizes: "512x512" },
   ];
 };
 
@@ -139,20 +153,48 @@ const syncMediaSession = () => {
   mediaSession.playbackState = isPlaying ? "playing" : "paused";
 
   if (currentSong) {
-    mediaSession.metadata = new MediaMetadata({
-      title: currentSong.title || "Không rõ",
-      artist: getArtistLabel(currentSong, "Unknown Artist"),
-      album: currentSong.album_title || "",
-      artwork: resolveMediaArtwork(currentSong),
-    });
+    const mediaMetadataKey = buildMediaMetadataKey(currentSong);
+
+    if (mediaMetadataKey !== lastMediaMetadataKey) {
+      if (typeof MediaMetadata === "function") {
+        mediaSession.metadata = new MediaMetadata({
+          title: currentSong.title || "Không rõ",
+          artist: getArtistLabel(currentSong, "Unknown Artist"),
+          album: currentSong.album_title || "",
+          artwork: resolveMediaArtwork(currentSong),
+        });
+      }
+      lastMediaMetadataKey = mediaMetadataKey;
+      lastMediaPositionStateKey = "";
+    }
+  } else if (lastMediaMetadataKey) {
+    mediaSession.metadata = null;
+    lastMediaMetadataKey = "";
+    lastMediaPositionStateKey = "";
   }
 
-  if (typeof mediaSession.setPositionState === "function" && Number.isFinite(audio.duration) && audio.duration > 0) {
-    mediaSession.setPositionState({
-      duration: audio.duration,
-      playbackRate: audio.playbackRate || 1,
-      position: Math.min(audio.currentTime || 0, audio.duration),
-    });
+  if (
+    currentSong &&
+    typeof mediaSession.setPositionState === "function" &&
+    Number.isFinite(audio.duration) &&
+    audio.duration > 0
+  ) {
+    const positionStateKey = [
+      Math.round((audio.currentTime || 0) * 2) / 2,
+      Math.round((audio.duration || 0) * 2) / 2,
+      audio.playbackRate || 1,
+    ].join("|");
+
+    if (positionStateKey !== lastMediaPositionStateKey) {
+      mediaSession.setPositionState({
+        duration: audio.duration,
+        playbackRate: audio.playbackRate || 1,
+        position: Math.min(audio.currentTime || 0, audio.duration),
+      });
+      lastMediaPositionStateKey = positionStateKey;
+    }
+  } else {
+    lastMediaPositionStateKey = "";
   }
 };
 

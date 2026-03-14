@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { FiCheck, FiClock, FiSliders } from "react-icons/fi";
 import ShareLinkButton from "../common/ShareLinkButton";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
@@ -23,24 +24,108 @@ const formatRemaining = (endsAt) => {
   return minutes ? `${hours}g ${minutes}p` : `${hours}g`;
 };
 
-function ToolbarMenu({ open, children, align = "right", placement = "bottom" }) {
+function ToolbarMenu({
+  open,
+  children,
+  align = "right",
+  placement = "bottom",
+  floating = false,
+  anchorRef,
+  menuRef,
+}) {
+  const [floatingStyle, setFloatingStyle] = useState(null);
+
+  useLayoutEffect(() => {
+    if (!open || !floating || typeof window === "undefined") {
+      setFloatingStyle(null);
+      return undefined;
+    }
+
+    const updatePosition = () => {
+      const anchor = anchorRef?.current;
+      if (!anchor) return;
+
+      const rect = anchor.getBoundingClientRect();
+      const viewportPadding = 16;
+      const gap = 12;
+      const estimatedHeight = 232;
+      const menuWidth = Math.min(
+        220,
+        Math.max(190, window.innerWidth - viewportPadding * 2)
+      );
+
+      let left = rect.right - menuWidth;
+      if (align === "left") left = rect.left;
+      if (align === "center") {
+        left = rect.left + rect.width / 2 - menuWidth / 2;
+      }
+
+      left = Math.min(
+        window.innerWidth - viewportPadding - menuWidth,
+        Math.max(viewportPadding, left)
+      );
+
+      const canPlaceAbove = rect.top >= estimatedHeight + gap + viewportPadding;
+      const canPlaceBelow =
+        window.innerHeight - rect.bottom >= estimatedHeight + gap + viewportPadding;
+
+      let useTopPlacement = placement === "top";
+      if (useTopPlacement && !canPlaceAbove && canPlaceBelow) {
+        useTopPlacement = false;
+      } else if (!useTopPlacement && !canPlaceBelow && canPlaceAbove) {
+        useTopPlacement = true;
+      }
+
+      setFloatingStyle({
+        left: `${left}px`,
+        top: useTopPlacement ? `${rect.top - gap}px` : `${rect.bottom + gap}px`,
+        transform: useTopPlacement ? "translateY(-100%)" : "none",
+        width: `${menuWidth}px`,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [align, anchorRef, floating, open, placement]);
+
   if (!open) return null;
 
   const placementClass =
     placement === "top"
       ? "bottom-[calc(100%+0.75rem)] origin-bottom"
       : "top-[calc(100%+0.75rem)] origin-top";
-
-  return (
+  const alignClass =
+    align === "left"
+      ? "left-0"
+      : align === "center"
+      ? "left-1/2 -translate-x-1/2"
+      : "right-0";
+  const menu = (
     <div
-      className={`absolute z-[90] min-w-[190px] overflow-hidden rounded-[24px] bg-[#0c0d0e]/98 p-2 shadow-[0_28px_80px_rgba(0,0,0,0.58)] ring-1 ring-inset ring-[#1c2021] backdrop-blur-2xl ${placementClass} ${
-        align === "left" ? "left-0" : "right-0"
-      }`}
+      ref={menuRef}
+      className={`${
+        floating
+          ? "fixed z-[1200] max-w-[220px]"
+          : `absolute z-[90] min-w-[190px] ${placementClass} ${alignClass}`
+      } overflow-hidden rounded-[24px] bg-[#0c0d0e]/98 p-2 shadow-[0_28px_80px_rgba(0,0,0,0.58)] ring-1 ring-inset ring-[#1c2021] backdrop-blur-2xl`}
+      style={floating ? floatingStyle || undefined : undefined}
     >
       <div className="absolute inset-x-0 top-0 h-16 bg-[radial-gradient(circle_at_top,_rgba(29,185,84,0.16),_transparent_72%)]" />
       <div className="relative">{children}</div>
     </div>
   );
+
+  if (floating && typeof document !== "undefined") {
+    return createPortal(menu, document.body);
+  }
+
+  return menu;
 }
 
 export default function PlayerEnhancementToolbar({
@@ -58,18 +143,28 @@ export default function PlayerEnhancementToolbar({
   const [activeMenu, setActiveMenu] = useState(null);
   const [tick, setTick] = useState(Date.now());
   const containerRef = useRef(null);
+  const speedAnchorRef = useRef(null);
+  const speedMenuRef = useRef(null);
+  const timerAnchorRef = useRef(null);
+  const timerMenuRef = useRef(null);
 
   useEffect(() => {
     if (!activeMenu) return undefined;
 
     const handleClickOutside = (event) => {
-      if (!containerRef.current?.contains(event.target)) {
-        setActiveMenu(null);
-      }
+      const target = event.target;
+      if (containerRef.current?.contains(target)) return;
+      if (speedMenuRef.current?.contains(target)) return;
+      if (timerMenuRef.current?.contains(target)) return;
+      setActiveMenu(null);
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, [activeMenu]);
 
   useEffect(() => {
@@ -104,7 +199,7 @@ export default function PlayerEnhancementToolbar({
       ref={containerRef}
       className={["flex flex-wrap items-center gap-2", className].join(" ")}
     >
-      <div className="relative">
+      <div ref={speedAnchorRef} className="relative">
         <button
           type="button"
           onClick={() => setActiveMenu((prev) => (prev === "speed" ? null : "speed"))}
@@ -114,7 +209,14 @@ export default function PlayerEnhancementToolbar({
           <FiSliders className="text-[15px] text-emerald-200/78" />
           <span className={compact ? "max-[390px]:hidden" : ""}>{playbackRate}x</span>
         </button>
-        <ToolbarMenu open={activeMenu === "speed"} align={align} placement={resolvedPlacement}>
+        <ToolbarMenu
+          open={activeMenu === "speed"}
+          align={compact ? "left" : align}
+          placement={resolvedPlacement}
+          floating={compact}
+          anchorRef={speedAnchorRef}
+          menuRef={speedMenuRef}
+        >
           <div className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">
             Tốc độ phát
           </div>
@@ -144,7 +246,7 @@ export default function PlayerEnhancementToolbar({
         </ToolbarMenu>
       </div>
 
-      <div className="relative">
+      <div ref={timerAnchorRef} className="relative">
         <button
           type="button"
           onClick={() => setActiveMenu((prev) => (prev === "timer" ? null : "timer"))}
@@ -160,7 +262,14 @@ export default function PlayerEnhancementToolbar({
           />
           <span className={compact ? "max-[390px]:hidden" : ""}>{timerLabel}</span>
         </button>
-        <ToolbarMenu open={activeMenu === "timer"} align={align} placement={resolvedPlacement}>
+        <ToolbarMenu
+          open={activeMenu === "timer"}
+          align={compact ? "right" : align}
+          placement={resolvedPlacement}
+          floating={compact}
+          anchorRef={timerAnchorRef}
+          menuRef={timerMenuRef}
+        >
           <div className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">
             Hẹn giờ dừng
           </div>

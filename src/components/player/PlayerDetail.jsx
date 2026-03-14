@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaBackwardStep,
@@ -242,10 +242,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
     if (!isSeeking) setSeekValue(displayedTime);
   }, [displayedTime, isSeeking]);
 
-  const doSeek = (nextTime) => {
+  const doSeek = useCallback((nextTime) => {
     const time = Math.max(0, Math.min(total, Number(nextTime) || 0));
     seek?.(time);
-  };
+  }, [seek, total]);
 
   const onSeekStart = () => setIsSeeking(true);
   const onSeekChange = (e) => setSeekValue(Number(e.target.value));
@@ -291,7 +291,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
     unlockCarouselSwipe();
   };
 
-  const exitPlayerFullscreen = async () => {
+  const exitPlayerFullscreen = useCallback(async () => {
     if (typeof document === "undefined") return;
     if (!document.fullscreenElement || !fullscreenByPlayerRef.current) return;
 
@@ -302,18 +302,18 @@ export default function PlayerDetail({ isOpen, onClose }) {
     } finally {
       fullscreenByPlayerRef.current = false;
     }
-  };
+  }, []);
 
-  const handleClose = async () => {
+  const handleClose = useCallback(async () => {
     await exitPlayerFullscreen();
     onClose?.();
-  };
+  }, [exitPlayerFullscreen, onClose]);
 
-  const handleDetailNavigation = () => {
+  const handleDetailNavigation = useCallback(() => {
     void handleClose();
-  };
+  }, [handleClose]);
 
-  const toggleFullscreen = async () => {
+  const toggleFullscreen = useCallback(async () => {
     if (typeof document === "undefined") return;
 
     try {
@@ -328,17 +328,17 @@ export default function PlayerDetail({ isOpen, onClose }) {
     } catch (error) {
       console.error("Toggle fullscreen failed", error);
     }
-  };
+  }, []);
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     isPlaying ? pause() : resume();
-  };
+  }, [isPlaying, pause, resume]);
 
-  const handleVolumeChange = (value) => {
+  const handleVolumeChange = useCallback((value) => {
     const next = Number(value);
     if (muted && next > 0) toggleMute();
     setVolume(next);
-  };
+  }, [muted, setVolume, toggleMute]);
 
   const resetMobileGesture = () => {
     mobileGestureRef.current = {
@@ -812,7 +812,6 @@ export default function PlayerDetail({ isOpen, onClose }) {
           ) : (
             <PlayerDetailLyrics
               currentSong={currentSong}
-              displayedTime={displayedTime}
               isActive={activeTab === "lyrics"}
               onSeek={doSeek}
             />
@@ -1033,7 +1032,6 @@ export default function PlayerDetail({ isOpen, onClose }) {
         <div className="flex h-full min-h-0 flex-col overflow-hidden px-3 py-3">
           <PlayerDetailLyrics
             currentSong={currentSong}
-            displayedTime={displayedTime}
             isActive={mobileTab === "lyrics"}
             onSeek={doSeek}
           />

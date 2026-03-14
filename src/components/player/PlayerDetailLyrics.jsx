@@ -1,16 +1,27 @@
-import { useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 
 const EMPTY_LYRICS = [];
+const resolveLyricIndex = (lyricItems, displayedTimeMs) => {
+  if (!lyricItems.length) return -1;
 
-export default function PlayerDetailLyrics({
-  currentSong,
-  displayedTime,
-  isActive,
-  onSeek,
-}) {
+  let active = -1;
+
+  for (let index = 0; index < lyricItems.length; index += 1) {
+    const item = lyricItems[index];
+    const start = Number(item?.start_time ?? item?.startTime ?? 0);
+
+    if (displayedTimeMs >= start) active = index;
+    else break;
+  }
+
+  return active;
+};
+
+function PlayerDetailLyrics({ currentSong, isActive, onSeek }) {
   const lyricsContainerRef = useRef(null);
   const lastLyricIndexRef = useRef(-1);
+  const [lyricIndex, setLyricIndex] = useState(-1);
   const songId = normalizeSongId(currentSong);
   const ensureLyricsLoaded = usePlayerStore((state) => state.ensureLyricsLoaded);
   const lyricItems = usePlayerStore((state) =>
@@ -25,6 +36,7 @@ export default function PlayerDetailLyrics({
 
   useEffect(() => {
     lastLyricIndexRef.current = -1;
+    setLyricIndex(-1);
   }, [songId]);
 
   useEffect(() => {
@@ -32,22 +44,29 @@ export default function PlayerDetailLyrics({
     ensureLyricsLoaded(songId);
   }, [ensureLyricsLoaded, songId]);
 
-  const lyricIndex = useMemo(() => {
-    if (!lyricItems.length) return -1;
+  useEffect(() => {
+    const audio = usePlayerStore.getState().audio;
+    if (!audio) return undefined;
 
-    const ms = Math.floor(displayedTime * 1000);
-    let active = -1;
+    const syncLyricIndex = () => {
+      const nextIndex = resolveLyricIndex(
+        lyricItems,
+        Math.floor((audio.currentTime || 0) * 1000)
+      );
+      setLyricIndex((previous) => (previous === nextIndex ? previous : nextIndex));
+    };
 
-    for (let i = 0; i < lyricItems.length; i += 1) {
-      const item = lyricItems[i];
-      const start = Number(item?.start_time ?? item?.startTime ?? 0);
+    syncLyricIndex();
+    audio.addEventListener("timeupdate", syncLyricIndex);
+    audio.addEventListener("seeked", syncLyricIndex);
+    audio.addEventListener("loadedmetadata", syncLyricIndex);
 
-      if (ms >= start) active = i;
-      else break;
-    }
-
-    return active;
-  }, [displayedTime, lyricItems]);
+    return () => {
+      audio.removeEventListener("timeupdate", syncLyricIndex);
+      audio.removeEventListener("seeked", syncLyricIndex);
+      audio.removeEventListener("loadedmetadata", syncLyricIndex);
+    };
+  }, [lyricItems, songId]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -57,7 +76,10 @@ export default function PlayerDetailLyrics({
     const line = container?.querySelector(`[data-lyric-index="${lyricIndex}"]`);
     if (!line) return;
 
-    line.scrollIntoView({ behavior: "smooth", block: "center" });
+    line.scrollIntoView({
+      behavior: lastLyricIndexRef.current < 0 ? "auto" : "smooth",
+      block: "center",
+    });
     lastLyricIndexRef.current = lyricIndex;
   }, [isActive, lyricIndex]);
 
@@ -134,3 +156,5 @@ export default function PlayerDetailLyrics({
     </div>
   );
 }
+
+export default memo(PlayerDetailLyrics);
