@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useShallow } from "zustand/react/shallow";
 import {
   FaBackwardStep,
   FaForwardStep,
@@ -31,6 +32,77 @@ const formatTime = (sec = 0) => {
 const ANIM_MS = 450;
 const ANIM_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
+function PlayerProgressSection({
+  duration = 0,
+  fallbackDuration = 0,
+  onSeek,
+  onInteractionStart,
+  onInteractionMove,
+  onInteractionEnd,
+  outerClassName = "space-y-2",
+  rangeWrapperClassName = "-my-2 px-1 py-2",
+  timeClassName = "flex items-center justify-between px-1 text-[11px] text-white/64 sm:text-xs",
+}) {
+  const currentTime = usePlayerStore((state) => state.currentTime);
+  const [isSeeking, setIsSeeking] = useState(false);
+  const [seekValue, setSeekValue] = useState(0);
+  const total = Number(duration || fallbackDuration || 0) || 0;
+  const displayedTime = isSeeking ? seekValue : Number(currentTime || 0);
+
+  useEffect(() => {
+    if (!isSeeking) {
+      setSeekValue(displayedTime);
+    }
+  }, [displayedTime, isSeeking]);
+
+  const commitSeek = useCallback(() => {
+    setIsSeeking(false);
+    onSeek?.(Math.max(0, Math.min(total, Number(seekValue) || 0)));
+  }, [onSeek, seekValue, total]);
+
+  return (
+    <div className={outerClassName}>
+      <div className={rangeWrapperClassName}>
+        <input
+          type="range"
+          min={0}
+          max={total || 0}
+          step={0.1}
+          value={Math.min(displayedTime, total || 0)}
+          onPointerDownCapture={onInteractionStart}
+          onPointerMoveCapture={onInteractionMove}
+          onPointerUpCapture={onInteractionEnd}
+          onPointerCancelCapture={onInteractionEnd}
+          onTouchStartCapture={onInteractionStart}
+          onTouchMoveCapture={onInteractionMove}
+          onTouchEndCapture={onInteractionEnd}
+          onTouchCancelCapture={onInteractionEnd}
+          onMouseDownCapture={onInteractionStart}
+          onMouseUpCapture={onInteractionEnd}
+          onPointerDown={() => setIsSeeking(true)}
+          onPointerUp={commitSeek}
+          onPointerCancel={commitSeek}
+          onMouseDown={() => setIsSeeking(true)}
+          onTouchStart={() => setIsSeeking(true)}
+          onChange={(event) => setSeekValue(Number(event.target.value))}
+          onMouseUp={commitSeek}
+          onTouchEnd={commitSeek}
+          className="player-detail-range h-2.5 w-full cursor-pointer"
+          style={{
+            "--range-progress": `${
+              total > 0 ? (Math.min(displayedTime, total) / total) * 100 : 0
+            }%`,
+          }}
+        />
+      </div>
+      <div className={timeClassName}>
+        <span>{formatTime(displayedTime)}</span>
+        <span>{formatTime(total)}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function PlayerDetail({ isOpen, onClose }) {
   const {
     currentSong,
@@ -46,7 +118,6 @@ export default function PlayerDetail({ isOpen, onClose }) {
     toggleShuffle,
     repeatMode,
     toggleRepeatMode,
-    currentTime,
     duration,
     seek,
     volume,
@@ -57,7 +128,33 @@ export default function PlayerDetail({ isOpen, onClose }) {
     toggleLike,
     appendRecommendationsToQueue,
     recommendationLoading,
-  } = usePlayerStore();
+  } = usePlayerStore(
+    useShallow((state) => ({
+      currentSong: state.currentSong,
+      queue: state.queue,
+      currentIndex: state.currentIndex,
+      isPlaying: state.isPlaying,
+      pause: state.pause,
+      resume: state.resume,
+      playNext: state.playNext,
+      playPrev: state.playPrev,
+      playAt: state.playAt,
+      shuffle: state.shuffle,
+      toggleShuffle: state.toggleShuffle,
+      repeatMode: state.repeatMode,
+      toggleRepeatMode: state.toggleRepeatMode,
+      duration: state.duration,
+      seek: state.seek,
+      volume: state.volume,
+      muted: state.muted,
+      setVolume: state.setVolume,
+      toggleMute: state.toggleMute,
+      likedSongIds: state.likedSongIds,
+      toggleLike: state.toggleLike,
+      appendRecommendationsToQueue: state.appendRecommendationsToQueue,
+      recommendationLoading: state.recommendationLoading,
+    }))
+  );
 
   const [activeTab, setActiveTab] = useState("queue");
   const [mobileTab, setMobileTab] = useState("now");
@@ -66,8 +163,6 @@ export default function PlayerDetail({ isOpen, onClose }) {
   const [phase, setPhase] = useState("closed");
   const [backdropReady, setBackdropReady] = useState(false);
   const [songSlideClass, setSongSlideClass] = useState("");
-  const [isSeeking, setIsSeeking] = useState(false);
-  const [seekValue, setSeekValue] = useState(0);
   const [fallbackDuration, setFallbackDuration] = useState(0);
   const [mobileDragOffset, setMobileDragOffset] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -236,23 +331,11 @@ export default function PlayerDetail({ isOpen, onClose }) {
   }, [mounted, currentSong]);
 
   const total = Number(duration || fallbackDuration || 0) || 0;
-  const displayedTime = isSeeking ? seekValue : Number(currentTime || 0);
-
-  useEffect(() => {
-    if (!isSeeking) setSeekValue(displayedTime);
-  }, [displayedTime, isSeeking]);
 
   const doSeek = useCallback((nextTime) => {
     const time = Math.max(0, Math.min(total, Number(nextTime) || 0));
     seek?.(time);
   }, [seek, total]);
-
-  const onSeekStart = () => setIsSeeking(true);
-  const onSeekChange = (e) => setSeekValue(Number(e.target.value));
-  const onSeekCommit = () => {
-    setIsSeeking(false);
-    doSeek(seekValue);
-  };
 
   const lockCarouselSwipe = () => {
     if (unlockSwipeTimerRef.current) {
@@ -593,45 +676,14 @@ export default function PlayerDetail({ isOpen, onClose }) {
         </div>
 
         <div className="mx-auto w-full max-w-[1120px] rounded-[24px] bg-black/18 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)] backdrop-blur-2xl sm:p-5 xl:max-w-[1180px] 2xl:max-w-[1240px]">
-          <div className="space-y-2">
-            <div className="-my-2 px-1 py-2">
-              <input
-                type="range"
-              min={0}
-              max={total || 0}
-              step={0.1}
-              value={Math.min(displayedTime, total || 0)}
-              onPointerDownCapture={handleSliderInteractionStart}
-              onPointerMoveCapture={handleSliderInteractionMove}
-              onPointerUpCapture={handleSliderInteractionEnd}
-              onPointerCancelCapture={handleSliderInteractionEnd}
-              onTouchStartCapture={handleSliderInteractionStart}
-              onTouchMoveCapture={handleSliderInteractionMove}
-              onTouchEndCapture={handleSliderInteractionEnd}
-              onTouchCancelCapture={handleSliderInteractionEnd}
-              onMouseDownCapture={handleSliderInteractionStart}
-              onMouseUpCapture={handleSliderInteractionEnd}
-              onPointerDown={onSeekStart}
-              onPointerUp={onSeekCommit}
-              onPointerCancel={onSeekCommit}
-                onMouseDown={onSeekStart}
-                onTouchStart={onSeekStart}
-                onChange={onSeekChange}
-                onMouseUp={onSeekCommit}
-                onTouchEnd={onSeekCommit}
-                className="player-detail-range h-2.5 w-full cursor-pointer"
-                style={{
-                  "--range-progress": `${
-                    total > 0 ? (Math.min(displayedTime, total) / total) * 100 : 0
-                  }%`,
-                }}
-              />
-            </div>
-            <div className="flex items-center justify-between px-1 text-[11px] text-white/64 sm:text-xs">
-              <span>{formatTime(displayedTime)}</span>
-              <span>{formatTime(total)}</span>
-            </div>
-          </div>
+          <PlayerProgressSection
+            duration={duration}
+            fallbackDuration={fallbackDuration}
+            onSeek={doSeek}
+            onInteractionStart={handleSliderInteractionStart}
+            onInteractionMove={handleSliderInteractionMove}
+            onInteractionEnd={handleSliderInteractionEnd}
+          />
 
           <div className="mt-5 grid gap-4 xl:grid-cols-[auto_1fr] xl:items-center 2xl:grid-cols-[auto_1fr_minmax(0,220px)]">
             <div className="flex items-center justify-center gap-2 xl:justify-start">
@@ -911,45 +963,17 @@ export default function PlayerDetail({ isOpen, onClose }) {
       <div
         className={`mt-auto shrink-0 rounded-[22px] bg-black/18 p-3.5 shadow-[0_18px_48px_rgba(0,0,0,0.18)] backdrop-blur-2xl min-[390px]:rounded-[24px] min-[390px]:p-4 ${songSlideClass}`}
       >
-        <div className="space-y-1.5 min-[390px]:space-y-2">
-          <div className="-my-1 px-1 py-1">
-            <input
-              type="range"
-              min={0}
-              max={total || 0}
-              step={0.1}
-              value={Math.min(displayedTime, total || 0)}
-              onPointerDownCapture={handleSliderInteractionStart}
-              onPointerMoveCapture={handleSliderInteractionMove}
-              onPointerUpCapture={handleSliderInteractionEnd}
-              onPointerCancelCapture={handleSliderInteractionEnd}
-              onTouchStartCapture={handleSliderInteractionStart}
-              onTouchMoveCapture={handleSliderInteractionMove}
-              onTouchEndCapture={handleSliderInteractionEnd}
-              onTouchCancelCapture={handleSliderInteractionEnd}
-              onMouseDownCapture={handleSliderInteractionStart}
-              onMouseUpCapture={handleSliderInteractionEnd}
-              onPointerDown={onSeekStart}
-              onPointerUp={onSeekCommit}
-              onPointerCancel={onSeekCommit}
-              onMouseDown={onSeekStart}
-              onTouchStart={onSeekStart}
-              onChange={onSeekChange}
-              onMouseUp={onSeekCommit}
-              onTouchEnd={onSeekCommit}
-              className="player-detail-range h-2.5 w-full cursor-pointer"
-              style={{
-                "--range-progress": `${
-                  total > 0 ? (Math.min(displayedTime, total) / total) * 100 : 0
-                }%`,
-              }}
-            />
-          </div>
-          <div className="flex items-center justify-between px-1 text-[11px] text-white/64">
-            <span>{formatTime(displayedTime)}</span>
-            <span>{formatTime(total)}</span>
-          </div>
-        </div>
+        <PlayerProgressSection
+          duration={duration}
+          fallbackDuration={fallbackDuration}
+          onSeek={doSeek}
+          onInteractionStart={handleSliderInteractionStart}
+          onInteractionMove={handleSliderInteractionMove}
+          onInteractionEnd={handleSliderInteractionEnd}
+          outerClassName="space-y-1.5 min-[390px]:space-y-2"
+          rangeWrapperClassName="-my-1 px-1 py-1"
+          timeClassName="flex items-center justify-between px-1 text-[11px] text-white/64"
+        />
 
         <div className="mt-4 flex items-center justify-center gap-2.5 max-[390px]:mt-3 min-[390px]:gap-3">
           <button

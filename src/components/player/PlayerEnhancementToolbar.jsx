@@ -113,10 +113,9 @@ function ToolbarMenu({
         floating
           ? "fixed z-[1200] max-w-[220px]"
           : `absolute z-[90] min-w-[190px] ${placementClass} ${alignClass}`
-      } overflow-hidden rounded-[24px] bg-[#0c0d0e]/98 p-2 shadow-[0_28px_80px_rgba(0,0,0,0.58)] ring-1 ring-inset ring-[#1c2021] backdrop-blur-2xl`}
+      } overflow-hidden rounded-[22px] border border-[#25292b] bg-[#111315] p-2 shadow-[0_18px_40px_rgba(0,0,0,0.4)]`}
       style={floating ? floatingStyle || undefined : undefined}
     >
-      <div className="absolute inset-x-0 top-0 h-16 bg-[radial-gradient(circle_at_top,_rgba(29,185,84,0.16),_transparent_72%)]" />
       <div className="relative">{children}</div>
     </div>
   );
@@ -191,8 +190,8 @@ export default function PlayerEnhancementToolbar({
   const resolvedPlacement = menuPlacement || (compact ? "top" : "bottom");
 
   const buttonClass = compact
-    ? "inline-flex h-10 items-center gap-2 rounded-full bg-[#111314] px-3 text-xs font-semibold text-white/80 ring-1 ring-inset ring-[#202425] shadow-[0_12px_28px_rgba(0,0,0,0.24)] transition md:hover:bg-[#171a1c] md:hover:text-white md:hover:ring-[#2a2f30] max-[390px]:h-9 max-[390px]:w-9 max-[390px]:justify-center max-[390px]:gap-0 max-[390px]:px-0"
-    : "inline-flex h-11 items-center gap-2 rounded-full bg-[#111314] px-4 text-sm font-semibold text-white/82 ring-1 ring-inset ring-[#202425] shadow-[0_12px_28px_rgba(0,0,0,0.24)] transition md:hover:bg-[#171a1c] md:hover:text-white md:hover:ring-[#2a2f30]";
+    ? "inline-flex h-10 items-center gap-2 rounded-full border border-[#2a2d30] bg-[#141618] px-3 text-xs font-semibold text-white/78 shadow-[0_10px_24px_rgba(0,0,0,0.22)] transition md:hover:bg-[#1a1d1f] md:hover:text-white md:hover:border-[#373b3f] max-[390px]:h-9 max-[390px]:w-9 max-[390px]:justify-center max-[390px]:gap-0 max-[390px]:px-0"
+    : "inline-flex h-11 items-center gap-2 rounded-full border border-[#2a2d30] bg-[#141618] px-4 text-sm font-semibold text-white/80 shadow-[0_10px_24px_rgba(0,0,0,0.22)] transition md:hover:bg-[#1a1d1f] md:hover:text-white md:hover:border-[#373b3f]";
 
   return (
     <div
@@ -203,10 +202,10 @@ export default function PlayerEnhancementToolbar({
         <button
           type="button"
           onClick={() => setActiveMenu((prev) => (prev === "speed" ? null : "speed"))}
-          className={`${buttonClass} ${activeMenu === "speed" ? "bg-[#171b1c] text-white ring-[#2c3c33]" : ""}`}
+          className={`${buttonClass} ${activeMenu === "speed" ? "border-[#3d4246] bg-[#1d2022] text-white" : ""}`}
           aria-label="Tốc độ phát"
         >
-          <FiSliders className="text-[15px] text-emerald-200/78" />
+          <FiSliders className="text-[15px] text-white/60" />
           <span className={compact ? "max-[390px]:hidden" : ""}>{playbackRate}x</span>
         </button>
         <ToolbarMenu
@@ -217,7 +216,7 @@ export default function PlayerEnhancementToolbar({
           anchorRef={speedAnchorRef}
           menuRef={speedMenuRef}
         >
-          <div className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">
+          <div className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/38">
             Tốc độ phát
           </div>
           <div className="space-y-1">
@@ -233,8 +232,8 @@ export default function PlayerEnhancementToolbar({
                   }}
                   className={`flex w-full items-center justify-between rounded-[18px] px-3 py-2.5 text-sm transition ${
                     isActive
-                      ? "bg-[linear-gradient(135deg,rgba(29,185,84,0.18),rgba(255,255,255,0.08))] text-emerald-50 shadow-[0_10px_24px_rgba(29,185,84,0.14)]"
-                      : "text-white/75 md:hover:bg-white/[0.06] md:hover:text-white"
+                      ? "border border-[#3a3f43] bg-[#1b1f21] text-white"
+                      : "border border-transparent text-white/68 md:hover:border-[#2f3437] md:hover:bg-[#181b1d] md:hover:text-white"
                   }`}
                 >
                   <span>{option}x</span>
@@ -252,13 +251,13 @@ export default function PlayerEnhancementToolbar({
           onClick={() => setActiveMenu((prev) => (prev === "timer" ? null : "timer"))}
           className={`${buttonClass} ${
             sleepTimerEndsAt
-              ? "bg-[linear-gradient(135deg,rgba(245,158,11,0.18),rgba(255,255,255,0.06))] text-amber-50 ring-[#4d3820]"
+              ? "border-[#3d4246] bg-[#1d2022] text-white"
               : ""
           }`}
           aria-label="Hẹn giờ dừng phát"
         >
           <FiClock
-            className={`text-[15px] ${sleepTimerEndsAt ? "text-amber-200" : "text-white/64"}`}
+            className={`text-[15px] ${sleepTimerEndsAt ? "text-white/72" : "text-white/56"}`}
           />
           <span className={compact ? "max-[390px]:hidden" : ""}>{timerLabel}</span>
         </button>
@@ -270,7 +269,7 @@ export default function PlayerEnhancementToolbar({
           anchorRef={timerAnchorRef}
           menuRef={timerMenuRef}
         >
-          <div className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">
+          <div className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/38">
             Hẹn giờ dừng
           </div>
           <div className="space-y-1">
@@ -288,8 +287,8 @@ export default function PlayerEnhancementToolbar({
                   }}
                   className={`flex w-full items-center justify-between rounded-[18px] px-3 py-2.5 text-sm transition ${
                     isActive
-                      ? "bg-[linear-gradient(135deg,rgba(245,158,11,0.18),rgba(255,255,255,0.06))] text-amber-50 shadow-[0_10px_24px_rgba(245,158,11,0.12)]"
-                      : "text-white/75 md:hover:bg-white/[0.06] md:hover:text-white"
+                      ? "border border-[#3a3f43] bg-[#1b1f21] text-white"
+                      : "border border-transparent text-white/68 md:hover:border-[#2f3437] md:hover:bg-[#181b1d] md:hover:text-white"
                   }`}
                 >
                   <span>{option.label}</span>

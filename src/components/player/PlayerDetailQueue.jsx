@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { FiTrash2 } from "react-icons/fi";
 import { resolveAssetUrl } from "../../utils/asset";
 import usePlayerStore from "../../store/player.store";
@@ -25,9 +25,13 @@ function PlayerDetailQueue({ queue = [], currentIndex = 0, playAt, onNavigate })
   const moveQueueItem = usePlayerStore((state) => state.moveQueueItem);
   const removeFromQueue = usePlayerStore((state) => state.removeFromQueue);
   const clearQueue = usePlayerStore((state) => state.clearQueue);
+  const handleReorder = useCallback(
+    (fromIndex, toIndex) => moveQueueItem(fromIndex, toIndex),
+    [moveQueueItem]
+  );
   const { draggingIndex, dropTarget, startDrag, shouldSuppressClick } = usePointerReorder({
     itemCount: queue.length,
-    onReorder: (fromIndex, toIndex) => moveQueueItem(fromIndex, toIndex),
+    onReorder: handleReorder,
   });
 
   const activeIndex = useMemo(() => {
@@ -123,12 +127,14 @@ function PlayerDetailQueue({ queue = [], currentIndex = 0, playAt, onNavigate })
             <GripDots />
           </button>
 
-          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-black/28">
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-black/28 [transform:translateZ(0)] [backface-visibility:hidden]">
             {cover ? (
               <OptimizedImage
                 src={cover}
                 alt={song?.title}
-                className="h-full w-full object-cover"
+                loading="eager"
+                decoding="sync"
+                className="h-full w-full object-cover [transform:translateZ(0)] [backface-visibility:hidden]"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,#2b2b2b,#111)] text-[10px] uppercase tracking-[0.2em] text-white/35">
