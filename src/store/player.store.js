@@ -49,11 +49,16 @@ const extractLyricsFromResponse = (payload) => {
 };
 
 const audio = new Audio();
+audio.preload = "auto";
+audio.playsInline = true;
+audio.setAttribute("playsinline", "");
+audio.setAttribute("webkit-playsinline", "");
 const lyricRequests = new Map();
 let sleepTimerId = null;
 let rememberedDockTab = "queue";
 let lastMediaMetadataKey = "";
 let lastMediaPositionStateKey = "";
+let shouldResumePlayback = false;
 const PLAYBACK_RATE_DEFAULT = 1;
 const PLAYBACK_RATE_MIN = 0.75;
 const PLAYBACK_RATE_MAX = 1.5;
@@ -69,6 +74,83 @@ const getAutoOpenDockTab = () => null;
 const rememberDockTab = (tab) => {
   if (!PLAYER_DOCK_TABS.has(tab)) return;
   rememberedDockTab = tab;
+};
+
+const syncPlaybackState = () => {
+  const isPlaying = Boolean(audio.src) && !audio.paused && !audio.ended;
+
+  if (usePlayerStore.getState().isPlaying !== isPlaying) {
+    usePlayerStore.setState({ isPlaying });
+  }
+
+  return isPlaying;
+};
+
+const attemptPlayback = async () => {
+  if (!shouldResumePlayback || !audio.src) {
+    syncPlaybackState();
+    return false;
+  }
+
+  try {
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.then === "function") {
+      await playPromise;
+    }
+  } catch {
+    syncPlaybackState();
+    return false;
+  }
+
+  return syncPlaybackState();
+};
+
+const primeAudioSource = (
+  src,
+  playbackRate,
+  { autoplay = false, resetTime = true } = {}
+) => {
+  shouldResumePlayback = autoplay;
+  audio.playbackRate = playbackRate;
+
+  const nextSource = src || "";
+  const currentSource = audio.currentSrc || audio.src || "";
+  const sourceChanged = currentSource !== nextSource;
+
+  if (sourceChanged) {
+    audio.pause();
+    audio.src = nextSource;
+  }
+
+  if (resetTime) {
+    try {
+      audio.currentTime = 0;
+    } catch {
+      // Safari can reject seeking before metadata exists for a fresh source.
+    }
+  }
+
+  if (!autoplay) {
+    syncPlaybackState();
+    return;
+  }
+
+  void attemptPlayback();
+};
+
+const retryPendingPlayback = () => {
+  if (!shouldResumePlayback || !audio.src) {
+    syncPlaybackState();
+    return;
+  }
+
+  if (!audio.paused) {
+    shouldResumePlayback = false;
+    syncPlaybackState();
+    return;
+  }
+
+  void attemptPlayback();
 };
 
 const buildMediaMetadataKey = (song) => {
@@ -148,9 +230,11 @@ const syncMediaSession = () => {
   }
 
   const mediaSession = navigator.mediaSession;
-  const { currentSong, isPlaying } = usePlayerStore.getState();
+  const { currentSong } = usePlayerStore.getState();
+  const playbackState =
+    Boolean(audio.src) && !audio.paused && !audio.ended ? "playing" : "paused";
 
-  mediaSession.playbackState = isPlaying ? "playing" : "paused";
+  mediaSession.playbackState = playbackState;
 
   if (currentSong) {
     const mediaMetadataKey = buildMediaMetadataKey(currentSong);
@@ -266,17 +350,17 @@ const usePlayerStore = create((set, get) => ({
     });
 
     const { playbackRate } = get();
-    audio.src = playable.audio_url;
-    audio.playbackRate = playbackRate;
-    audio.load();
-    audio.play();
+    primeAudioSource(playable.audio_url, playbackRate, {
+      autoplay: true,
+    });
 
     set({
       currentSong: playable,
       queue: updatedQueue,
       currentIndex: targetIndex !== -1 ? targetIndex : 0,
-      isPlaying: true,
+      isPlaying: false,
       currentTime: 0,
+      duration: 0,
       hasRecordedPlay: false,
       shuffleHistory: [],
       lastPlayedLoading: false,
@@ -304,13 +388,26 @@ const usePlayerStore = create((set, get) => ({
   },
 
   pause: () => {
+    shouldResumePlayback = false;
     audio.pause();
     set({ isPlaying: false });
   },
 
   resume: () => {
-    audio.play();
-    set({ isPlaying: true });
+    const { currentSong, playbackRate } = get();
+    if (!currentSong?.audio_url) return;
+
+    const currentSource = audio.currentSrc || audio.src || "";
+    if (currentSource !== currentSong.audio_url) {
+      primeAudioSource(currentSong.audio_url, playbackRate, {
+        autoplay: true,
+        resetTime: false,
+      });
+      return;
+    }
+
+    shouldResumePlayback = true;
+    void attemptPlayback();
   },
 
   togglePlay: () => {
@@ -726,6 +823,7 @@ const usePlayerStore = create((set, get) => ({
       clearTimeout(sleepTimerId);
       sleepTimerId = null;
     }
+    shouldResumePlayback = false;
     audio.pause();
     audio.currentTime = 0;
     audio.src = "";
@@ -830,9 +928,9 @@ const usePlayerStore = create((set, get) => ({
       }
 
       const { playbackRate } = get();
-      audio.src = playable.audio_url;
-      audio.playbackRate = playbackRate;
-      audio.load();
+      primeAudioSource(playable.audio_url, playbackRate, {
+        autoplay: false,
+      });
 
       set({
         currentSong: playable,
@@ -840,6 +938,7 @@ const usePlayerStore = create((set, get) => ({
         currentIndex: 0,
         isPlaying: false,
         currentTime: 0,
+        duration: 0,
         hasRecordedPlay: false,
         lastPlayedLoading: false,
         lastPlayedLoaded: true,
@@ -946,12 +1045,24 @@ const usePlayerStore = create((set, get) => ({
 ===================== */
 audio.addEventListener("loadedmetadata", () => {
   usePlayerStore.setState({ duration: audio.duration || 0 });
+  retryPendingPlayback();
   syncMediaSession();
 });
 
+audio.addEventListener("loadeddata", retryPendingPlayback);
+audio.addEventListener("canplay", retryPendingPlayback);
+audio.addEventListener("canplaythrough", retryPendingPlayback);
+
 audio.addEventListener("playing", () => {
   // Re-apply handlers once playback is active so iOS lock screen picks track controls.
+  shouldResumePlayback = false;
+  syncPlaybackState();
   setupMediaSession();
+  syncMediaSession();
+});
+
+audio.addEventListener("pause", () => {
+  syncPlaybackState();
   syncMediaSession();
 });
 
@@ -968,9 +1079,12 @@ audio.addEventListener("timeupdate", () => {
 
 audio.addEventListener("ended", () => {
   const state = usePlayerStore.getState();
+  usePlayerStore.setState({ currentTime: audio.duration || 0 });
+  syncPlaybackState();
   if (state.repeatMode === "one") {
+    shouldResumePlayback = true;
     audio.currentTime = 0;
-    audio.play();
+    void attemptPlayback();
     return;
   }
   state.playNext();
