@@ -54,11 +54,13 @@ audio.playsInline = true;
 audio.setAttribute("playsinline", "");
 audio.setAttribute("webkit-playsinline", "");
 const lyricRequests = new Map();
+const queueHydrationRequests = new Map();
 let sleepTimerId = null;
 let rememberedDockTab = "queue";
 let lastMediaMetadataKey = "";
 let lastMediaPositionStateKey = "";
 let shouldResumePlayback = false;
+const UPCOMING_QUEUE_HYDRATION_LIMIT = 2;
 const PLAYBACK_RATE_DEFAULT = 1;
 const PLAYBACK_RATE_MIN = 0.75;
 const PLAYBACK_RATE_MAX = 1.5;
@@ -75,6 +77,26 @@ const rememberDockTab = (tab) => {
   if (!PLAYER_DOCK_TABS.has(tab)) return;
   rememberedDockTab = tab;
 };
+
+const attachAudioToDom = () => {
+  if (typeof document === "undefined" || audio.isConnected) return;
+
+  audio.id = "app-background-audio";
+  audio.hidden = true;
+  audio.setAttribute("aria-hidden", "true");
+  audio.setAttribute("tabindex", "-1");
+  (document.body || document.documentElement)?.appendChild(audio);
+};
+
+if (typeof document !== "undefined") {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", attachAudioToDom, {
+      once: true,
+    });
+  } else {
+    attachAudioToDom();
+  }
+}
 
 const syncPlaybackState = () => {
   const isPlaying = Boolean(audio.src) && !audio.paused && !audio.ended;
@@ -151,6 +173,62 @@ const retryPendingPlayback = () => {
   }
 
   void attemptPlayback();
+};
+
+const hydrateQueueSong = async (song) => {
+  const songId = normalizeSongId(song);
+  if (!songId || song?.audio_url) return song;
+
+  if (queueHydrationRequests.has(songId)) {
+    return queueHydrationRequests.get(songId);
+  }
+
+  const request = fetchPlayableSong(song, getSongById)
+    .then((hydrated) => hydrated || song)
+    .finally(() => {
+      queueHydrationRequests.delete(songId);
+    });
+
+  queueHydrationRequests.set(songId, request);
+  return request;
+};
+
+const hydrateUpcomingQueueSongs = async (
+  startIndex,
+  limit = UPCOMING_QUEUE_HYDRATION_LIMIT
+) => {
+  const { queue } = usePlayerStore.getState();
+  if (!Array.isArray(queue) || !queue.length) return;
+
+  const candidates = [];
+  for (let offset = 1; offset <= limit; offset += 1) {
+    const item = queue[startIndex + offset];
+    if (!item) break;
+    if (item.audio_url) continue;
+    candidates.push(item);
+  }
+
+  if (!candidates.length) return;
+
+  const hydratedEntries = await Promise.all(
+    candidates.map(async (item) => {
+      const hydrated = await hydrateQueueSong(item);
+      const songId = normalizeSongId(hydrated);
+
+      if (!songId || !hydrated?.audio_url) return null;
+      return [songId, hydrated];
+    })
+  );
+
+  const hydratedMap = new Map(hydratedEntries.filter(Boolean));
+  if (!hydratedMap.size) return;
+
+  usePlayerStore.setState((state) => ({
+    queue: state.queue.map((item) => {
+      const hydrated = hydratedMap.get(normalizeSongId(item));
+      return hydrated ? { ...item, ...hydrated } : item;
+    }),
+  }));
 };
 
 const buildMediaMetadataKey = (song) => {
@@ -385,6 +463,8 @@ const usePlayerStore = create((set, get) => ({
     if (updatedQueue.length <= 1) {
       get().appendRecommendationsToQueue();
     }
+
+    void hydrateUpcomingQueueSongs(targetIndex !== -1 ? targetIndex : 0);
   },
 
   pause: () => {
@@ -809,6 +889,7 @@ const usePlayerStore = create((set, get) => ({
       set((state) => ({
         queue: [...state.queue, ...newSongs],
       }));
+      void hydrateUpcomingQueueSongs(get().currentIndex);
       return true;
     } catch (error) {
       console.error("Load recommendations for queue failed", error);
@@ -944,6 +1025,7 @@ const usePlayerStore = create((set, get) => ({
         lastPlayedLoaded: true,
       });
       get().preloadLyricsForSong(playable);
+      void hydrateUpcomingQueueSongs(0);
       return playable;
     } catch (err) {
       console.error("Load last played song failed", err);
