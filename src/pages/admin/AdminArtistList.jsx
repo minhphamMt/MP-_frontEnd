@@ -15,6 +15,12 @@ import { resolveAssetUrl } from "../../utils/asset";
 import { formatDateDisplay } from "../../utils/date";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import { confirmAdminAction } from "../../utils/adminDialog";
+import { searchAdmin } from "../../api/admin.api";
+import {
+  extractAdminSearchItems,
+  filterAdminSearchItemsByType,
+} from "../../utils/adminSearch";
+import useDebouncedValue from "../../hooks/useDebouncedValue";
 
 const formatDateInput = (value) => {
   if (!value) return "";
@@ -34,6 +40,7 @@ export default function AdminArtistList() {
   const [toast, setToast] = useState({ title: "", message: "" });
   const [editingArtist, setEditingArtist] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
+  const debouncedKeyword = useDebouncedValue(keyword.trim(), 320);
   const [editPayload, setEditPayload] = useState({
     name: "",
     alias: "",
@@ -47,19 +54,34 @@ export default function AdminArtistList() {
     user_id: "",
   });
 
-  const loadArtists = async () => {
+  const loadArtists = async (searchTerm = "") => {
     try {
       setLoading(true);
-      const trimmedKeyword = keyword.trim();
-      const res = await getArtists({
-        page: 1,
-        limit: 100,
-        ...(trimmedKeyword ? { keyword: trimmedKeyword, q: trimmedKeyword } : {}),
-      });
-      const payload = res?.data?.data ?? res?.data ?? [];
-      const list = Array.isArray(payload)
-        ? payload
-        : payload.items || payload.artists || [];
+      let list = [];
+
+      if (searchTerm) {
+        const res = await searchAdmin({
+          q: searchTerm,
+          keyword: searchTerm,
+          page: 1,
+          limit: 100,
+        });
+        const payload = res?.data?.data ?? res?.data ?? [];
+        list = filterAdminSearchItemsByType(
+          extractAdminSearchItems(payload),
+          "artist"
+        );
+      } else {
+        const res = await getArtists({
+          page: 1,
+          limit: 200,
+        });
+        const payload = res?.data?.data ?? res?.data ?? [];
+        list = Array.isArray(payload)
+          ? payload
+          : payload.items || payload.artists || [];
+      }
+
       setArtists(list);
       setErrorMessage("");
     } catch (error) {
@@ -72,8 +94,8 @@ export default function AdminArtistList() {
   };
 
   useEffect(() => {
-    loadArtists();
-  }, [keyword]);
+    loadArtists(debouncedKeyword);
+  }, [debouncedKeyword]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -87,22 +109,6 @@ export default function AdminArtistList() {
     navigate(location.pathname, { replace: true, state: {} });
   }, [location, navigate]);
 
-  const filteredArtists = useMemo(() => {
-    const normalized = keyword.trim().toLowerCase();
-    if (!normalized) return artists;
-    return artists.filter((artist) =>
-      [
-        artist.name,
-        artist.alias,
-        artist.realname,
-        artist.zing_artist_id,
-        `${artist.id}`,
-      ]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(normalized))
-    );
-  }, [artists, keyword]);
-
   const handleDelete = async (artist) => {
     const confirmed = await confirmAdminAction({
       title: "Xóa mềm nghệ sĩ",
@@ -114,7 +120,7 @@ export default function AdminArtistList() {
     if (!confirmed) return;
     try {
       await deleteArtist(artist.id);
-      await loadArtists();
+      await loadArtists(keyword.trim());
       setToast({ title: "Thành công", message: "Đã xoá mềm nghệ sĩ." });
     } catch (error) {
       console.error("Delete artist failed", error);
@@ -195,7 +201,7 @@ export default function AdminArtistList() {
       }
 
       await updateArtist(editingArtist.id, payload);
-      await loadArtists();
+      await loadArtists(keyword.trim());
       setEditingArtist(null);
       setAvatarFile(null);
       setToast({ title: "Thành công", message: "Đã cập nhật nghệ sĩ." });
@@ -220,7 +226,7 @@ export default function AdminArtistList() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={loadArtists}
+            onClick={() => loadArtists(keyword.trim())}
             className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
           >
             <FiRefreshCw /> Làm mới
@@ -261,13 +267,13 @@ export default function AdminArtistList() {
               Đang tải dữ liệu...
             </div>
           )}
-          {!loading && filteredArtists.length === 0 && (
+          {!loading && artists.length === 0 && (
             <div className="px-4 py-6 text-sm text-white/60">
               Không có nghệ sĩ phù hợp.
             </div>
           )}
           {!loading &&
-            filteredArtists.map((artist) => (
+            artists.map((artist) => (
               <div
                 key={artist.id}
                 className="grid grid-cols-[1fr_auto] gap-4 px-4 py-4 text-sm text-white/80 lg:grid-cols-[1.4fr_0.8fr_0.6fr]"

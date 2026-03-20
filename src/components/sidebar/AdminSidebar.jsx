@@ -14,12 +14,6 @@ export default function AdminSidebar({ collapsed = false }) {
           label="Dashboard"
           collapsed={collapsed}
         />
-        <SidebarItem
-          to="/admin/search"
-          icon={FiShield}
-          label="Global Search"
-          collapsed={collapsed}
-        />
       </SidebarSection>
 
       <SidebarSection title="Nội dung" collapsed={collapsed}>

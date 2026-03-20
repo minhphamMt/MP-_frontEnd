@@ -9,7 +9,7 @@ export default defineConfig(() => {
   return {
     plugins: [
       react({
-        jsxRuntime: "automatic", // đảm bảo không lỗi React is not defined
+        jsxRuntime: "automatic",
       }),
 
       enablePWA
@@ -24,19 +24,21 @@ export default defineConfig(() => {
               start_url: "/",
               display: "standalone",
               orientation: "portrait",
-              background_color: "#000000",
-              theme_color: "#000000",
+              background_color: "#050705",
+              theme_color: "#050705",
 
               icons: [
                 {
                   src: "/web-app-manifest-192x192.png",
                   sizes: "192x192",
                   type: "image/png",
+                  purpose: "maskable",
                 },
                 {
                   src: "/web-app-manifest-512x512.png",
                   sizes: "512x512",
                   type: "image/png",
+                  purpose: "maskable",
                 },
               ],
             },

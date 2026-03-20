@@ -7,7 +7,7 @@ import useAuthStore from "../../store/auth.store";
 export default function Header({ onMenuClick }) {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const showSearch = user?.role !== "ARTIST" && user?.role !== "ADMIN";
+  const showSearch = user?.role !== "ARTIST";
 
   return (
     <header className="relative z-40 flex h-[72px] items-center gap-3 border-b border-white/10 bg-[#0b0b0b]/95 px-4 backdrop-blur-md sm:gap-4 sm:px-6">

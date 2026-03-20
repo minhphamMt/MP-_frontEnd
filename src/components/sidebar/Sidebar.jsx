@@ -156,6 +156,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const desktopSidebarStyle = isDesktop
     ? { width: `${isCompact ? SIDEBAR_COMPACT_WIDTH : sidebarWidth}px` }
     : undefined;
+  const toggleSidebarCollapse = () => setIsCollapsed((prev) => !prev);
 
   return (
     <>
@@ -180,26 +181,36 @@ export default function Sidebar({ isOpen, onClose }) {
           }`}
         >
           {isCompact ? (
-            <div className="flex items-center justify-center" title="Khoaluan Music">
-              <BrandLogo compact />
-            </div>
+            <button
+              type="button"
+              onClick={toggleSidebarCollapse}
+              className="group/compact-toggle relative hidden h-12 w-12 items-center justify-center overflow-hidden rounded-[18px] border border-white/10 bg-[#0b0d0b] shadow-[0_12px_24px_rgba(0,0,0,0.28)] transition duration-300 lg:flex md:hover:border-emerald-300/24 md:hover:bg-[#111411]"
+              aria-label="Mở rộng menu"
+              title="Mở rộng menu"
+            >
+              <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(110,231,183,0.14),transparent_55%)] opacity-0 transition duration-300 group-hover/compact-toggle:opacity-100 group-focus-visible/compact-toggle:opacity-100" />
+              <span className="relative flex items-center justify-center transition duration-300 group-hover/compact-toggle:-translate-x-1 group-focus-visible/compact-toggle:-translate-x-1">
+                <BrandLogo compact className="pointer-events-none transition duration-300 group-hover/compact-toggle:scale-[0.96] group-focus-visible/compact-toggle:scale-[0.96]" />
+              </span>
+              <span className="pointer-events-none absolute right-[5px] top-1/2 flex h-7 w-7 -translate-y-1/2 translate-x-2 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] text-white/76 opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.24)] transition duration-300 group-hover/compact-toggle:translate-x-0 group-hover/compact-toggle:opacity-100 group-focus-visible/compact-toggle:translate-x-0 group-focus-visible/compact-toggle:opacity-100">
+                <FiChevronsRight size={13} />
+              </span>
+            </button>
           ) : (
             <BrandLogo />
           )}
 
-          <button
-            type="button"
-            onClick={() => setIsCollapsed((prev) => !prev)}
-            className={`absolute right-3 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#151515] p-2 text-white/80 transition lg:flex ${
-              isCompact
-                ? "opacity-100 md:hover:border-white/30 md:hover:bg-[#202020] md:hover:text-white"
-                : "pointer-events-none opacity-0 md:group-hover/sidebar:pointer-events-auto md:group-hover/sidebar:opacity-100 md:group-focus-within/sidebar:pointer-events-auto md:group-focus-within/sidebar:opacity-100 md:hover:border-white/30 md:hover:bg-[#202020] md:hover:text-white"
-            }`}
-            aria-label={isCompact ? "Mở rộng menu" : "Thu gọn menu"}
-            title={isCompact ? "Mở rộng menu" : "Thu gọn menu"}
-          >
-            {isCompact ? <FiChevronsRight size={15} /> : <FiChevronsLeft size={15} />}
-          </button>
+          {!isCompact ? (
+            <button
+              type="button"
+              onClick={toggleSidebarCollapse}
+              className="absolute right-3 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#151515] p-2 text-white/80 transition lg:flex pointer-events-none opacity-0 md:group-hover/sidebar:pointer-events-auto md:group-hover/sidebar:opacity-100 md:group-focus-within/sidebar:pointer-events-auto md:group-focus-within/sidebar:opacity-100 md:hover:border-white/30 md:hover:bg-[#202020] md:hover:text-white"
+              aria-label="Thu gọn menu"
+              title="Thu gọn menu"
+            >
+              <FiChevronsLeft size={15} />
+            </button>
+          ) : null}
 
           <button
             onClick={onClose}
@@ -289,3 +300,4 @@ export default function Sidebar({ isOpen, onClose }) {
     </>
   );
 }
+

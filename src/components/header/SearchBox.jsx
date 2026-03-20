@@ -17,6 +17,10 @@ import { searchAdmin } from "../../api/admin.api";
 import { getSongById } from "../../api/song.api";
 import { fetchPlayableSong, toPlayableSong } from "../../utils/song";
 import { getArtistLabel } from "../../utils/artist";
+import {
+  extractAdminSearchItems,
+  normalizeAdminSearchType,
+} from "../../utils/adminSearch";
 import usePlayerStore from "../../store/player.store";
 import { saveSearchHistory } from "../../api/search.api";
 import useAuthStore from "../../store/auth.store";
@@ -166,61 +170,11 @@ export default function SearchBox() {
       if (isAdmin) {
         const res = await searchAdmin({ q: trimmed, limit: 8, page: 1 });
         const payload = res?.data?.data ?? res?.data ?? {};
-        const itemsSource =
-          payload.items || payload.results || payload.data || payload;
-        const items = Array.isArray(itemsSource)
-          ? itemsSource
-          : [
-              ...(itemsSource?.songs ?? []),
-              ...(itemsSource?.artists ?? []),
-              ...(itemsSource?.albums ?? []),
-              ...(itemsSource?.users ?? []),
-            ];
+        const items = extractAdminSearchItems(payload);
 
         const normalized = items
           .map((item) => {
-            let type =
-              item.type || item.entity_type || item.entityType || item.kind;
-            const rawType = `${type || ""}`.toLowerCase();
-
-            if (rawType.includes("playlist")) return null;
-            if (
-              item.playlist_id ||
-              item.playlistId ||
-              item.owner_id ||
-              item.ownerId ||
-              item.is_public !== undefined ||
-              item.privacy !== undefined
-            ) {
-              return null;
-            }
-
-            if (!type && (item.display_name || item.email)) type = "user";
-            if (!type && item.role === "ARTIST") type = "artist";
-            if (
-              !type &&
-              item.title &&
-              (item.play_count !== undefined ||
-                item.audio_url ||
-                item.audio_path ||
-                item.duration !== undefined ||
-                item.album_id ||
-                item.album_title ||
-                item.weekly_play_count !== undefined)
-            )
-              type = "song";
-            if (
-              !type &&
-              item.title &&
-              (item.release_date ||
-                item.zing_album_id ||
-                item.artist_name ||
-                item.artist_id)
-            )
-              type = "album";
-            if (!type && item.name) type = "artist";
-
-            const normalizedType = (type || "").toLowerCase();
+            const normalizedType = normalizeAdminSearchType(item);
             if (!["artist", "song", "album", "user"].includes(normalizedType)) {
               return null;
             }
@@ -336,7 +290,7 @@ export default function SearchBox() {
   }, []);
 
   const handleSearch = useCallback(
-    async (rawValue, { triggerAdminResults = false } = {}) => {
+    async (rawValue, { openResultsPage = false } = {}) => {
       const value = rawValue.trim();
       if (!value) return;
       setKeyword(value);
@@ -357,8 +311,8 @@ export default function SearchBox() {
           console.error("Lưu lịch sử tìm kiếm thất bại", err);
         }
       }
-    if (isAdmin) {
-        if (triggerAdminResults) {
+      if (isAdmin) {
+        if (openResultsPage) {
           navigate(`/admin/search?q=${encodeURIComponent(value)}`);
           setOpen(false);
           return;
@@ -375,7 +329,7 @@ export default function SearchBox() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    handleSearch(keyword, { triggerAdminResults: isAdmin });
+    handleSearch(keyword, { openResultsPage: isAdmin });
   };
 
 const handleResultNavigate = async (item) => {
@@ -442,8 +396,6 @@ const handleResultNavigate = async (item) => {
       } else {
         navigate(`/admin/users?keyword=${encodeURIComponent(label)}`);
       }
-    } else {
-      navigate(`/admin/search?q=${encodeURIComponent(label)}`);
     }
     setOpen(false);
     setKeyword("");
@@ -664,7 +616,11 @@ const handleResultNavigate = async (item) => {
                     <button
                       type="button"
                       key={item.id || item.keyword}
-                       onClick={() => handleSearch(item.keyword || "")}
+                       onClick={() =>
+                         handleSearch(item.keyword || "", {
+                           openResultsPage: isAdmin,
+                         })
+                       }
                       className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white transition md:hover:bg-white/[0.08]"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white/70">

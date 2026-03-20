@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   FiEdit2,
   FiEye,
@@ -8,11 +8,16 @@ import {
   FiUser,
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
-import { deleteUser, listUsers } from "../../api/admin.api";
+import { deleteUser, listUsers, searchAdmin } from "../../api/admin.api";
 import Toast from "../../components/common/Toast";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import { resolveAssetUrl } from "../../utils/asset";
 import { confirmAdminAction } from "../../utils/adminDialog";
+import {
+  extractAdminSearchItems,
+  filterAdminSearchItemsByType,
+} from "../../utils/adminSearch";
+import useDebouncedValue from "../../hooks/useDebouncedValue";
 
 const getUserAvatar = (user) =>
   user?.avatar_url ||
@@ -40,15 +45,32 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [toast, setToast] = useState({ title: "", message: "" });
+  const debouncedKeyword = useDebouncedValue(keyword.trim(), 320);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async (searchTerm = "") => {
     try {
       setLoading(true);
-      const res = await listUsers({ page: 1, limit: 100 });
-      const payload = res?.data?.data ?? res?.data ?? [];
-      const list = Array.isArray(payload)
-        ? payload
-        : payload.items || payload.users || [];
+      let list = [];
+
+      if (searchTerm) {
+        const res = await searchAdmin({
+          q: searchTerm,
+          keyword: searchTerm,
+          page: 1,
+          limit: 100,
+        });
+        const payload = res?.data?.data ?? res?.data ?? [];
+        list = filterAdminSearchItemsByType(
+          extractAdminSearchItems(payload),
+          "user"
+        );
+      } else {
+        const res = await listUsers({ page: 1, limit: 200 });
+        const payload = res?.data?.data ?? res?.data ?? [];
+        list = Array.isArray(payload)
+          ? payload
+          : payload.items || payload.users || [];
+      }
       setUsers(list);
       setErrorMessage("");
     } catch (error) {
@@ -58,11 +80,11 @@ export default function AdminUsers() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    loadUsers(debouncedKeyword);
+  }, [debouncedKeyword, loadUsers]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -79,16 +101,6 @@ export default function AdminUsers() {
     );
   }, [location, navigate]);
 
-  const filteredUsers = useMemo(() => {
-    const normalized = keyword.trim().toLowerCase();
-    if (!normalized) return users;
-    return users.filter((user) =>
-      [user.display_name, user.name, user.email, `${user.id}`]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(normalized))
-    );
-  }, [keyword, users]);
-
   const handleDelete = async (user) => {
     const confirmed = await confirmAdminAction({
       title: "Xóa người dùng",
@@ -101,7 +113,7 @@ export default function AdminUsers() {
 
     try {
       await deleteUser(user.id);
-      await loadUsers();
+      await loadUsers(keyword.trim());
       setToast({ title: "Thành công", message: "Đã xóa người dùng." });
     } catch (error) {
       console.error("Delete user failed", error);
@@ -122,7 +134,7 @@ export default function AdminUsers() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={loadUsers}
+            onClick={() => loadUsers(keyword.trim())}
             className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
           >
             <FiRefreshCw /> Làm mới
@@ -166,14 +178,14 @@ export default function AdminUsers() {
             </div>
           )}
 
-          {!loading && filteredUsers.length === 0 && (
+          {!loading && users.length === 0 && (
             <div className="px-4 py-6 text-sm text-white/60">
               Không có người dùng phù hợp.
             </div>
           )}
 
           {!loading &&
-            filteredUsers.map((user) => (
+            users.map((user) => (
               <div
                 key={user.id}
                 className="grid grid-cols-1 gap-4 px-4 py-4 text-sm text-white/80 lg:grid-cols-[1.2fr_1fr_0.7fr_0.8fr] lg:items-center"

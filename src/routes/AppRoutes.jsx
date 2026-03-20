@@ -1,13 +1,15 @@
 ﻿import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import ProtectedRoute from "./ProtectedRoute";
+import { Navigate, Route, Routes } from "react-router-dom";
 import useAuthStore from "../store/auth.store";
+import { getRoleHomePath } from "../utils/roleRoute";
+import ProtectedRoute from "./ProtectedRoute";
 
 const Login = lazy(() => import("../pages/Login"));
 const ArtistAuth = lazy(() => import("../pages/ArtistAuth"));
 const VerifyEmail = lazy(() => import("../pages/VerifyEmail"));
 const ArtistRequest = lazy(() => import("../pages/ArtistRequest"));
 const Forbidden = lazy(() => import("../pages/Forbidden"));
+const NotFound = lazy(() => import("../pages/NotFound"));
 const MainLayout = lazy(() => import("../layouts/MainLayout"));
 const Home = lazy(() => import("../pages/Home"));
 const AlbumDetail = lazy(() => import("../pages/AlbumDetail"));
@@ -66,12 +68,13 @@ const fallback = (
 
 function HomeEntryRoute() {
   const role = useAuthStore((state) => state.role);
-  if (role === "ADMIN") {
-    return <Navigate to="/admin/dashboard" replace />;
+  const authContext = useAuthStore((state) => state.authContext);
+  const landingPath = getRoleHomePath({ role, authContext });
+
+  if (landingPath !== "/") {
+    return <Navigate to={landingPath} replace />;
   }
-  if (role === "ARTIST") {
-    return <Navigate to="/artist/dashboard" replace />;
-  }
+
   return <Home />;
 }
 
@@ -79,34 +82,37 @@ export default function AppRoutes() {
   return (
     <Suspense fallback={fallback}>
       <Routes>
-        {/* ===== PUBLIC ===== */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Login initialMode="register" />} />
         <Route path="/artist-auth" element={<ArtistAuth />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/403" element={<Forbidden />} />
 
-        {/* ===== APP LAYOUT (shared) ===== */}
+        <Route element={<ProtectedRoute allowedRoles={["USER", "ARTIST"]} />}>
+          <Route path="/artist-request" element={<ArtistRequest />} />
+        </Route>
+
         <Route element={<MainLayout />}>
-          <Route path="/" element={<HomeEntryRoute />} />
-          <Route path="/zing-chart" element={<ZingChart />} />
-          <Route path="/zing-chart/region/:region" element={<RegionChart />} />
-          <Route path="/new-release" element={<NewRelease />} />
-          <Route path="/top-50" element={<Top50Genres />} />
-          <Route path="/top-50/:id" element={<Top50GenreDetail />} />
-          <Route path="/top-100" element={<Navigate to="/top-50" replace />} />
-          <Route path="/albums" element={<Albums />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/song/:id" element={<SongDetail />} />
-          <Route path="/artist/:id/songs" element={<ArtistAllSongs />} />
-          <Route path="/artist/:id/albums" element={<ArtistAllAlbums />} />
-          <Route path="/artist/:id" element={<ArtistDetail />} />
-          <Route path="/album/:id" element={<AlbumDetail />} />
+          <Route path="/403" element={<Forbidden />} />
+          <Route path="/404" element={<NotFound />} />
 
-          {/* ===== AUTHENTICATED USER/ARTIST FEATURES ===== */}
-          <Route
-            element={<ProtectedRoute allowedRoles={["USER", "ARTIST", "ADMIN"]} />}
-          >
+          <Route element={<ProtectedRoute allowGuests allowedRoles={["USER"]} />}>
+            <Route path="/" element={<HomeEntryRoute />} />
+            <Route path="/zing-chart" element={<ZingChart />} />
+            <Route path="/zing-chart/region/:region" element={<RegionChart />} />
+            <Route path="/new-release" element={<NewRelease />} />
+            <Route path="/top-50" element={<Top50Genres />} />
+            <Route path="/top-50/:id" element={<Top50GenreDetail />} />
+            <Route path="/top-100" element={<Navigate to="/top-50" replace />} />
+            <Route path="/albums" element={<Albums />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/song/:id" element={<SongDetail />} />
+            <Route path="/artist/:id/songs" element={<ArtistAllSongs />} />
+            <Route path="/artist/:id/albums" element={<ArtistAllAlbums />} />
+            <Route path="/artist/:id" element={<ArtistDetail />} />
+            <Route path="/album/:id" element={<AlbumDetail />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={["USER"]} />}>
             <Route path="/history" element={<History />} />
             <Route path="/me" element={<Profile />} />
             <Route path="/playlists" element={<Playlists />} />
@@ -117,12 +123,8 @@ export default function AppRoutes() {
             <Route path="/library/playlists" element={<LibraryPlaylists />} />
           </Route>
 
-          {/* ===== ARTIST ROLE ===== */}
-          <Route element={<ProtectedRoute allowedRoles={["ARTIST", "ADMIN"]} />}>
-            <Route
-              path="/artist"
-              element={<Navigate to="/artist/dashboard" replace />}
-            />
+          <Route element={<ProtectedRoute allowedRoles={["ARTIST"]} />}>
+            <Route path="/artist" element={<Navigate to="/artist/dashboard" replace />} />
             <Route path="/artist/dashboard" element={<ArtistDashboard />} />
             <Route path="/artist/profile" element={<ArtistProfile />} />
             <Route path="/artist/albums" element={<ArtistAlbums />} />
@@ -134,12 +136,8 @@ export default function AppRoutes() {
             <Route path="/artist/trash" element={<Trash />} />
           </Route>
 
-          {/* ===== ADMIN ===== */}
           <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-            <Route
-              path="/admin"
-              element={<Navigate to="/admin/dashboard" replace />}
-            />
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route
               path="/admin/analytics"
@@ -152,10 +150,7 @@ export default function AppRoutes() {
             <Route path="/admin/artists" element={<AdminArtistList />} />
             <Route path="/admin/artists/new" element={<AdminArtistForm />} />
             <Route path="/admin/artists/:id/edit" element={<AdminArtistForm />} />
-            <Route
-              path="/admin/artist-requests"
-              element={<AdminArtistRequests />}
-            />
+            <Route path="/admin/artist-requests" element={<AdminArtistRequests />} />
             <Route path="/admin/search" element={<AdminSearch />} />
             <Route path="/admin/songs" element={<AdminSongManagement />} />
             <Route path="/admin/songs/:id/edit" element={<AdminSongForm />} />
@@ -171,16 +166,9 @@ export default function AppRoutes() {
             <Route path="/admin/trash" element={<Trash />} />
           </Route>
 
+          <Route path="*" element={<NotFound />} />
         </Route>
-
-        <Route element={<ProtectedRoute allowedRoles={["USER", "ARTIST"]} />}>
-          <Route path="/artist-request" element={<ArtistRequest />} />
-        </Route>
-
-        {/* ===== FALLBACK ===== */}
-        <Route path="*" element={<Forbidden />} />
       </Routes>
     </Suspense>
   );
 }
-

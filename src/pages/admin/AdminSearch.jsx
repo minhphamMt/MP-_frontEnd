@@ -5,6 +5,10 @@ import { searchAdmin } from "../../api/admin.api";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import { getArtistLabel } from "../../utils/artist";
+import {
+  extractAdminSearchItems,
+  normalizeAdminSearchType,
+} from "../../utils/adminSearch";
 import useDebouncedValue from "../../hooks/useDebouncedValue";
 
 const SEARCH_TABS = [
@@ -14,58 +18,6 @@ const SEARCH_TABS = [
   { id: "artist", label: "Nghệ sĩ" },
   { id: "user", label: "Hồ sơ" },
 ];
-
-const normalizeType = (item) => {
-  const rawType = `${item.type || item.entity_type || item.entityType || item.kind || ""}`
-    .toLowerCase()
-    .trim();
-
-  if (rawType.includes("playlist")) return null;
-  if (
-    item.playlist_id ||
-    item.playlistId ||
-    item.owner_id ||
-    item.ownerId ||
-    item.is_public !== undefined ||
-    item.privacy !== undefined
-  ) {
-    return null;
-  }
-
-  if (["user", "profile"].includes(rawType)) return "user";
-  if (["artist"].includes(rawType)) return "artist";
-  if (["album"].includes(rawType)) return "album";
-  if (["song", "track"].includes(rawType)) return "song";
-
-  if (item.display_name || item.email) return "user";
-  if (item.role === "ARTIST") return "artist";
-  if (item.alias || item.realname || item.zing_artist_id) return "artist";
-  if (item.name && !item.title) return "artist";
-
-  if (
-    item.title &&
-    (item.play_count !== undefined ||
-      item.audio_url ||
-      item.audio_path ||
-      item.duration !== undefined ||
-      item.weekly_play_count !== undefined)
-  ) {
-    return "song";
-  }
-
-  if (
-    item.title &&
-    (item.release_date ||
-      item.zing_album_id ||
-      item.artist_name ||
-      item.artist_id ||
-      item.album_type)
-  ) {
-    return "album";
-  }
-
-  return null;
-};
 
 const getResultImage = (item, type) => {
   if (!item) return "";
@@ -142,7 +94,7 @@ export default function AdminSearch() {
     () =>
       results
         .map((item) => {
-          const type = normalizeType(item);
+          const type = normalizeAdminSearchType(item);
           if (!["artist", "song", "album", "user"].includes(type)) {
             return null;
           }
@@ -227,15 +179,7 @@ export default function AdminSearch() {
         limit: 50,
       });
       const payload = res?.data?.data ?? res?.data ?? [];
-      const itemsSource = payload.items || payload.results || payload.data || payload;
-      const list = Array.isArray(itemsSource)
-        ? itemsSource
-        : [
-            ...(itemsSource?.songs ?? []),
-            ...(itemsSource?.artists ?? []),
-            ...(itemsSource?.albums ?? []),
-            ...(itemsSource?.users ?? []),
-          ];
+      const list = extractAdminSearchItems(payload);
       if (requestId !== searchRequestRef.current) return;
 
       setResults(list);

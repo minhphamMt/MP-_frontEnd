@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import { getMyHistory } from "../api/history.api";
 import { getSongById } from "../api/song.api";
@@ -20,6 +20,13 @@ const HISTORY_RANGE_OPTIONS = [
   { value: "7d", label: "7 ngày" },
   { value: "30d", label: "30 ngày" },
 ];
+
+const getHistoryRangeWindowMs = (range) => {
+  if (range === "24h") return 24 * 60 * 60 * 1000;
+  if (range === "7d") return 7 * 24 * 60 * 60 * 1000;
+  if (range === "30d") return 30 * 24 * 60 * 60 * 1000;
+  return null;
+};
 
 const formatRelativeTime = (timestamp) => {
   if (!timestamp) return "";
@@ -89,10 +96,14 @@ const dedupeHistoryItems = (items) => {
 };
 
 const normalizeHistoryMeta = (meta, page, itemCount) => {
+  const resolvedLimit =
+    meta?.limit || meta?.perPage || meta?.per_page || DEFAULT_LIMIT;
+
   const nextMeta = {
     ...(meta || {}),
     page: meta?.page || meta?.currentPage || meta?.pageNumber || page,
-    limit: meta?.limit || meta?.perPage || meta?.per_page || DEFAULT_LIMIT,
+    limit: resolvedLimit,
+    itemCount,
   };
 
   const hasExplicitPaging =
@@ -101,8 +112,8 @@ const normalizeHistoryMeta = (meta, page, itemCount) => {
     typeof nextMeta.has_next === "boolean" ||
     typeof nextMeta.has_more === "boolean";
 
-  if (!hasExplicitPaging && itemCount < DEFAULT_LIMIT) {
-    nextMeta.has_more = false;
+  if (!hasExplicitPaging) {
+    nextMeta.has_more = itemCount >= resolvedLimit;
   }
 
   return nextMeta;
@@ -128,10 +139,10 @@ const isWithinHistoryRange = (timestamp, range) => {
   if (!Number.isFinite(listenedAt)) return false;
 
   const diff = Date.now() - listenedAt;
-  if (range === "24h") return diff <= 24 * 60 * 60 * 1000;
-  if (range === "7d") return diff <= 7 * 24 * 60 * 60 * 1000;
-  if (range === "30d") return diff <= 30 * 24 * 60 * 60 * 1000;
-  return true;
+  const windowMs = getHistoryRangeWindowMs(range);
+  if (!windowMs) return true;
+
+  return diff <= windowMs;
 };
 
 export default function History() {
@@ -142,13 +153,12 @@ export default function History() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [historyRange, setHistoryRange] = useState("all");
-  const [hydratingFilteredHistory, setHydratingFilteredHistory] = useState(false);
   const sentinelRef = useRef(null);
 
   const { playSong, likedSongIds, toggleLike, currentSong, isPlaying } =
     usePlayerStore();
 
-  const getHasMoreFromMeta = useCallback((nextMeta, totalLoaded = history.length) => {
+  const getHasMoreFromMeta = useCallback((nextMeta) => {
     if (!nextMeta) return false;
 
     const page = nextMeta.page || nextMeta.currentPage || nextMeta.pageNumber || 1;
@@ -161,10 +171,15 @@ export default function History() {
 
     const total = nextMeta.total;
     const limit = nextMeta.limit || nextMeta.perPage || nextMeta.per_page;
-    if (total && limit) return totalLoaded < total;
+    if (total && limit) return page * limit < total;
+
+    const lastBatchSize = nextMeta.itemCount;
+    if (typeof lastBatchSize === "number") {
+      return lastBatchSize >= (limit || DEFAULT_LIMIT);
+    }
 
     return false;
-  }, [history.length]);
+  }, []);
 
   const loadHistory = useCallback(async (page = 1, append = false) => {
     if (append) setLoadingMore(true);
@@ -219,11 +234,27 @@ export default function History() {
     playSong(playable, updatedQueue);
   };
 
-  const hasMore = useMemo(
-    () => getHasMoreFromMeta(meta, history.length),
-    [getHasMoreFromMeta, history.length, meta]
+  const serverHasMore = useMemo(
+    () => getHasMoreFromMeta(meta),
+    [getHasMoreFromMeta, meta]
   );
   const shouldUseInfiniteScroll = historyRange === "all";
+  const reachedFilterBoundary = useMemo(() => {
+    if (historyRange === "all" || !history.length) return false;
+
+    const oldestLoadedItem = history[history.length - 1];
+    const windowMs = getHistoryRangeWindowMs(historyRange);
+    if (!windowMs) return false;
+
+    const listenedAt = new Date(oldestLoadedItem?.listened_at).getTime();
+    if (!Number.isFinite(listenedAt)) return false;
+
+    return Date.now() - listenedAt > windowMs;
+  }, [history, historyRange]);
+  const hasMore = useMemo(() => {
+    if (historyRange === "all") return serverHasMore;
+    return serverHasMore && !reachedFilterBoundary;
+  }, [historyRange, reachedFilterBoundary, serverHasMore]);
 
   const currentPage = useMemo(
     () => meta?.page || meta?.currentPage || meta?.pageNumber || 1,
@@ -231,55 +262,19 @@ export default function History() {
   );
 
   const loadMoreHistory = useCallback(() => {
-    if (!shouldUseInfiniteScroll || loading || loadingMore || !hasMore) return;
+    if (loading || loadingMore || !hasMore) return;
     loadHistory(currentPage + 1, true);
-  }, [currentPage, hasMore, loadHistory, loading, loadingMore, shouldUseInfiniteScroll]);
-
-  const hydrateAllHistoryForRange = useCallback(async () => {
-    if (hydratingFilteredHistory || loading || historyRange === "all") return;
-    if (!getHasMoreFromMeta(meta, history.length)) return;
-
-    setHydratingFilteredHistory(true);
-    try {
-      let accumulated = [...history];
-      let nextMeta = meta;
-      let nextPage = currentPage + 1;
-      let nextHasMore = getHasMoreFromMeta(nextMeta, accumulated.length);
-
-      while (nextHasMore) {
-        const res = await getMyHistory({ page: nextPage, limit: DEFAULT_LIMIT });
-        const { items, meta: responseMeta } = extractHistoryPayload(res);
-        const normalized = items.map(normalizeHistoryItem);
-        const hydrated = await hydrateSongArtists(normalized, getSongById);
-        accumulated = dedupeHistoryItems([...accumulated, ...hydrated]);
-        nextMeta = normalizeHistoryMeta(responseMeta, nextPage, items.length);
-        if (!items.length) break;
-        nextHasMore = getHasMoreFromMeta(nextMeta, accumulated.length);
-        nextPage += 1;
-      }
-
-      setHistory(accumulated);
-      setMeta(nextMeta);
-    } catch (error) {
-      console.error("Hydrate full history for filtered view failed", error);
-    } finally {
-      setHydratingFilteredHistory(false);
-    }
-  }, [
-    currentPage,
-    getHasMoreFromMeta,
-    history,
-    history.length,
-    historyRange,
-    hydratingFilteredHistory,
-    loading,
-    meta,
-  ]);
+  }, [currentPage, hasMore, loadHistory, loading, loadingMore]);
 
   useEffect(() => {
-    if (historyRange === "all") return;
-    hydrateAllHistoryForRange();
-  }, [historyRange, hydrateAllHistoryForRange]);
+    if (historyRange === "all" || loading || loadingMore || !hasMore) return;
+
+    const timer = window.setTimeout(() => {
+      loadMoreHistory();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [hasMore, historyRange, loadMoreHistory, loading, loadingMore]);
 
   useEffect(() => {
     if (!shouldUseInfiniteScroll) return undefined;
@@ -306,10 +301,16 @@ export default function History() {
 
   const statusText = useMemo(() => {
     if (loading) return "Đang tải lịch sử...";
-    if (hydratingFilteredHistory) {
-      return "Đang tải đủ lịch sử để hiển thị trọn bộ kết quả đã lọc...";
-    }
     if (!shouldUseInfiniteScroll) {
+      if (loadingMore) {
+        return "Đang tải thêm lịch sử để mở rộng kết quả đã lọc...";
+      }
+      if (hasMore) {
+        return `Đã tìm thấy ${filteredHistory.length} mục. Đang tiếp tục tải thêm kết quả phù hợp...`;
+      }
+      if (reachedFilterBoundary) {
+        return `Đã tải xong toàn bộ ${filteredHistory.length} mục thỏa mốc thời gian hiện tại.`;
+      }
       return `Đang hiển thị đầy đủ ${filteredHistory.length} mục theo mốc thời gian đã chọn.`;
     }
     if (loadingMore) return "Đang tải thêm bài đã nghe...";
@@ -319,9 +320,9 @@ export default function History() {
     filteredHistory.length,
     hasMore,
     history.length,
-    hydratingFilteredHistory,
     loading,
     loadingMore,
+    reachedFilterBoundary,
     shouldUseInfiniteScroll,
   ]);
 
@@ -527,7 +528,7 @@ export default function History() {
                   </div>
 
                   <div className="hidden truncate text-xs text-white/70 xl:block">
-                    {item.album_title || "—"}
+                    {item.album_title || "-"}
                   </div>
 
                   <div className="hidden items-center justify-end gap-4 text-xs text-white/70 xl:flex">
@@ -609,3 +610,4 @@ export default function History() {
     </div>
   );
 }
+

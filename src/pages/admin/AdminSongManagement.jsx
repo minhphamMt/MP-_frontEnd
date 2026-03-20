@@ -4,6 +4,7 @@ import { FiEdit2, FiRefreshCw, FiSearch, FiTrash2, FiX } from "react-icons/fi";
 import {
   listAdminSongs,
   listGenres,
+  searchAdmin,
   updateAdminSong,
   listUsers,
 } from "../../api/admin.api";
@@ -14,7 +15,12 @@ import useAuthStore from "../../store/auth.store";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import Toast from "../../components/common/Toast";
 import { confirmAdminAction } from "../../utils/adminDialog";
+import {
+  extractAdminSearchItems,
+  filterAdminSearchItemsByType,
+} from "../../utils/adminSearch";
 import { getArtistLabel } from "../../utils/artist";
+import useDebouncedValue from "../../hooks/useDebouncedValue";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tất cả" },
@@ -56,6 +62,7 @@ export default function AdminSongManagement() {
   const [coverFile, setCoverFile] = useState(null);
   const [showAllGenres, setShowAllGenres] = useState(false);
   const role = useAuthStore((state) => state.role);
+  const debouncedKeyword = useDebouncedValue(keyword.trim(), 320);
   const [editPayload, setEditPayload] = useState({
     title: "",
     artist_id: "",
@@ -80,19 +87,38 @@ export default function AdminSongManagement() {
     }
   };
 
-  const loadSongs = async () => {
+  const loadSongs = async (searchTerm = "", statusValue = statusFilter) => {
     try {
       setLoading(true);
-      const res = await listAdminSongs({
-        page: 1,
-        limit: 100,
-        ...(keyword.trim() ? { keyword: keyword.trim(), q: keyword.trim() } : {}),
-        ...(statusFilter ? { status: statusFilter } : {}),
-      });
-      const payload = res?.data?.data ?? res?.data ?? [];
-      const list = Array.isArray(payload)
-        ? payload
-        : payload.items || payload.songs || [];
+      let list = [];
+
+      if (searchTerm) {
+        const res = await searchAdmin({
+          q: searchTerm,
+          keyword: searchTerm,
+          page: 1,
+          limit: 100,
+        });
+        const payload = res?.data?.data ?? res?.data ?? [];
+        list = filterAdminSearchItemsByType(
+          extractAdminSearchItems(payload),
+          "song"
+        );
+        if (statusValue) {
+          list = list.filter((song) => song?.status === statusValue);
+        }
+      } else {
+        const res = await listAdminSongs({
+          page: 1,
+          limit: 200,
+          ...(statusValue ? { status: statusValue } : {}),
+        });
+        const payload = res?.data?.data ?? res?.data ?? [];
+        list = Array.isArray(payload)
+          ? payload
+          : payload.items || payload.songs || [];
+      }
+
       setSongs(list);
       setErrorMessage("");
     } catch (error) {
@@ -151,8 +177,8 @@ export default function AdminSongManagement() {
   }, [location.search]);
 
   useEffect(() => {
-    loadSongs();
-  }, [keyword, statusFilter]);
+    loadSongs(debouncedKeyword, statusFilter);
+  }, [debouncedKeyword, statusFilter]);
 
   const handleEdit = (song) => {
     if (!song?.id) return;
@@ -205,7 +231,7 @@ export default function AdminSongManagement() {
       await updateAdminSong(editingSong.id, payload);
       setEditingSong(null);
       setCoverFile(null);
-      await loadSongs();
+      await loadSongs(keyword.trim(), statusFilter);
     } catch (error) {
       console.error("Update song failed", error);
       setToast({ title: "Lỗi", message: "Không thể cập nhật bài hát." });
@@ -225,14 +251,18 @@ export default function AdminSongManagement() {
     try {
       await deleteSong(editingSong.id);
       setEditingSong(null);
-      await loadSongs();
+      await loadSongs(keyword.trim(), statusFilter);
     } catch (error) {
       console.error("Soft delete song failed", error);
       setToast({ title: "Lỗi", message: "Không thể xóa mềm bài hát." });
     }
   };
 
-  const filteredSongs = useMemo(() => songs, [songs]);
+  const filteredSongs = useMemo(() => {
+    return songs.filter((song) =>
+      statusFilter ? song?.status === statusFilter : true
+    );
+  }, [songs, statusFilter]);
   const artistOptions = useMemo(() => {
     const mapped = artists.map((artist) => ({
       id: `${artist.id}`,
@@ -330,7 +360,7 @@ export default function AdminSongManagement() {
           </h1>
         </div>
         <button
-          onClick={loadSongs}
+          onClick={() => loadSongs(keyword.trim(), statusFilter)}
           className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
         >
           <FiRefreshCw /> Làm mới
