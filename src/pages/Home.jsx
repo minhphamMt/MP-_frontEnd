@@ -17,7 +17,12 @@ import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import useRecommendationSessionStore from "../store/recommendation-session.store";
-import { filterPlayableSongs, fetchPlayableSong, toPlayableSong } from "../utils/song";
+import {
+  filterPlayableSongs,
+  fetchPlayableSong,
+  formatDuration,
+  toPlayableSong,
+} from "../utils/song";
 import { resolveAssetUrl } from "../utils/asset";
 import { getArtistLabel } from "../utils/artist";
 import {
@@ -26,7 +31,7 @@ import {
 } from "../utils/seo";
 
 const HOME_HISTORY_LIMIT = 60;
-const CONTINUE_SONGS_LIMIT = 6;
+const CONTINUE_SONGS_LIMIT = 5;
 const RECOMMENDATION_DESKTOP_LIMIT = 9;
 const RECOMMENDATION_TABLET_LIMIT = 8;
 const SM_BREAKPOINT = 640;
@@ -52,15 +57,10 @@ const formatRelativeTime = (timestamp) => {
   return `${Math.floor(hours / 24)} ngày trước`;
 };
 
-const progressPercent = (item, fallbackDuration = 0) => {
-  const ratio = Number(item?.progress_ratio ?? item?.progress_percent ?? item?.progress ?? 0);
-  if (ratio > 0) return Math.min(100, Math.max(0, Math.round(ratio > 1 ? ratio : ratio * 100)));
-
-  const listened = Number(item?.listened_seconds ?? item?.current_time ?? item?.position ?? 0) || 0;
-  const duration = Number(item?.duration ?? item?.song?.duration ?? fallbackDuration ?? 0) || 0;
-  if (!listened || !duration) return 0;
-  return Math.min(100, Math.max(0, Math.round((listened / duration) * 100)));
-};
+const formatContinueMeta = (song) =>
+  [formatRelativeTime(song?.listened_at), song?.duration ? formatDuration(song.duration) : null]
+    .filter(Boolean)
+    .join(" • ");
 
 const dedupeSongIds = (items = []) => {
   const seen = new Set();
@@ -90,7 +90,6 @@ const buildContinueSongs = (historyItems = []) => {
       return {
         ...song,
         listened_at: listenedAt,
-        progressPercent: progressPercent(item, song.duration),
         continueKey: `${historyId}-${index}`,
       };
     })
@@ -538,6 +537,11 @@ export default function Home() {
   }, [currentSong, songs]);
 
   const continueQueue = useMemo(() => continueSongs.map((song) => ({ ...song })), [continueSongs]);
+  const primaryContinueSong = continueSongs[0] || null;
+  const secondaryContinueSongs = useMemo(
+    () => continueSongs.slice(1),
+    [continueSongs]
+  );
   const weeklyQueue = useMemo(() => weeklyTop.map((song) => ({ ...song })), [weeklyTop]);
   const maxTopMetric = Math.max(...weeklyTop.map((song) => Number(song?.metric || 0)), 1);
   const recommendationLimit =
@@ -566,6 +570,14 @@ export default function Home() {
       rememberRecommendationSeed(seedSongId, { resetUsedSeeds });
     }
   };
+
+  const handleContinuePlay = useCallback(
+    async (song) => {
+      const playable = (await fetchPlayableSong(song, getSongById)) || song;
+      if (playable?.id) playSong(playable, continueQueue);
+    },
+    [continueQueue, playSong]
+  );
 
   return (
     <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:space-y-12 sm:px-8">
@@ -634,78 +646,171 @@ export default function Home() {
         }
       >
         {!isAuthenticated ? (
-          <div className="rounded-2xl border border-white/10 bg-[#151515] p-4 text-sm text-white/70">
-            Đăng nhập để lưu tiến độ nghe và tiếp tục bài hát mọi lúc.
-            <Link to="/login" className="ml-2 font-semibold text-emerald-300 md:hover:underline">
-              Đăng nhập ngay
-            </Link>
+          <div className="rounded-[24px] border border-emerald-400/15 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.14),transparent_36%),linear-gradient(135deg,#141414,#0d0d0d)] p-4 sm:p-5">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="max-w-2xl space-y-1.5">
+                <p className="user-heading-label">CÁ NHÂN HÓA</p>
+                <h3 className="text-lg font-extrabold text-white sm:text-xl">
+                  Đăng nhập để giữ lại những bài vừa nghe
+                </h3>
+                <p className="text-sm leading-6 text-white/66">
+                  Mở lại nhanh bài hát bạn vừa nghe gần đây mà không phải tìm lại từ đầu.
+                </p>
+              </div>
+
+              <Link
+                to="/login"
+                className="user-btn-primary inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold"
+              >
+                Đăng nhập
+                <FiChevronRight />
+              </Link>
+            </div>
           </div>
         ) : continueLoading ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: CONTINUE_SONGS_LIMIT }).map((_, idx) => (
-              <div key={idx} className="rounded-2xl border border-white/10 bg-[#151515] p-3">
-                <div className="ui-skeleton h-14 rounded-xl" />
-              </div>
+          <div className="space-y-3">
+            <div className="ui-skeleton h-[108px] rounded-[24px]" />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {Array.from({ length: CONTINUE_SONGS_LIMIT - 1 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-[20px] border border-white/10 bg-[#151515] p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="ui-skeleton h-12 w-12 rounded-2xl" />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="ui-skeleton-line h-4 w-[76%]" />
+                      <div className="ui-skeleton-line h-3 w-[54%]" />
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
+          </div>
         ) : !continueSongs.length ? (
-          <div className="rounded-2xl border border-white/10 bg-[#151515] p-4 text-sm text-white/70">
-            Chưa có bài nào để tiếp tục nghe.
+          <div className="rounded-[24px] border border-dashed border-white/12 bg-[linear-gradient(135deg,#151515,#101010)] p-4 sm:p-5">
+            <p className="user-heading-label">CHƯA CÓ DỮ LIỆU</p>
+            <h3 className="mt-2 text-lg font-extrabold text-white sm:text-xl">
+              Chưa có bài nào để tiếp tục nghe
+            </h3>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/66">
+              Khi bạn nghe nhạc, phần này sẽ gợi lại những bài vừa mở gần đây để quay lại nhanh
+              hơn ngay trên trang chủ.
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {continueSongs.map((song) => (
+          <div className="space-y-3">
+            {primaryContinueSong ? (
               <article
-                key={song.continueKey || `${song.id}-${song.listened_at || song.title}`}
-                className="group rounded-2xl border border-white/10 bg-[#151515] p-3 transition md:hover:border-white/20 md:hover:bg-[#1a1a1a]"
+                className="overflow-hidden rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_32%),linear-gradient(135deg,#151515,#101010)] p-3.5 transition-colors duration-200 md:hover:border-emerald-300/15 md:hover:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.14),transparent_34%),linear-gradient(135deg,#171717,#111111)] sm:p-4"
               >
-                <div className="flex items-center gap-3">
-                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-[18px] border border-white/10 bg-white/5 shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
                     <img
-                      src={resolveAssetUrl(song.cover_url)}
-                      alt={song.title}
+                      src={resolveAssetUrl(primaryContinueSong.cover_url) || "/logo-brand.png"}
+                      alt={primaryContinueSong.title}
                       className="h-full w-full object-cover"
                       loading="lazy"
                     />
                   </div>
+
                   <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-white/60">
+                      <span className="rounded-full border border-emerald-300/15 bg-emerald-400/10 px-2.5 py-1 text-emerald-100">
+                        Vừa nghe gần đây
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <FiClock size={11} />
+                        {formatRelativeTime(primaryContinueSong.listened_at)}
+                      </span>
+                    </div>
+
                     <SongDetailLink
-                      song={song}
-                      className="truncate text-sm font-semibold text-white transition md:hover:text-emerald-300 md:hover:underline"
+                      song={primaryContinueSong}
+                      className="mt-2 block truncate text-lg font-extrabold text-white transition md:hover:text-emerald-200 md:hover:underline sm:text-[1.35rem]"
                     >
-                      {song.title}
+                      {primaryContinueSong.title}
                     </SongDetailLink>
                     <ArtistNames
-                      item={song}
+                      item={primaryContinueSong}
                       stopPropagation
-                      className="truncate text-xs text-white/60"
-                      linkClassName="transition md:hover:text-emerald-300 md:hover:underline"
+                      className="mt-1 text-sm text-white/64"
+                      linkClassName="transition md:hover:text-emerald-200 md:hover:underline"
                     />
-                    <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-white/50">
-                      <FiClock size={11} />
-                      {formatRelativeTime(song.listened_at)}
+                    <p className="mt-2 text-xs text-white/48 sm:text-sm">
+                      Nghe lại từ đầu • {formatContinueMeta(primaryContinueSong)}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const playable = (await fetchPlayableSong(song, getSongById)) || song;
-                      if (playable?.id) playSong(playable, continueQueue);
-                    }}
-                    className="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-300/45 bg-emerald-500/20 text-emerald-200 transition md:hover:scale-105 md:hover:bg-emerald-500/35"
-                    aria-label={`Phát ${song.title}`}
-                  >
-                    <FiPlay size={14} />
-                  </button>
-                </div>
-                <div className="mt-2 h-1.5 rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-emerald-300"
-                    style={{ width: `${Math.max(6, song.progressPercent || 0)}%` }}
-                  />
+
+                  <div className="flex items-center gap-2 sm:pl-2">
+                    <button
+                      type="button"
+                      onClick={() => handleContinuePlay(primaryContinueSong)}
+                      className="user-btn-primary inline-flex items-center gap-2 px-4 py-2 text-sm font-bold"
+                    >
+                      <FiPlay />
+                      <span>Nghe lại</span>
+                    </button>
+                    <SongDetailLink
+                      song={primaryContinueSong}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/12 bg-white/[0.06] text-white/82 transition md:hover:border-white/20 md:hover:bg-white/[0.1] md:hover:text-white"
+                      aria-label={`Mở chi tiết ${primaryContinueSong.title}`}
+                    >
+                      <FiChevronRight size={16} />
+                    </SongDetailLink>
+                  </div>
                 </div>
               </article>
-            ))}
+            ) : null}
+
+            {secondaryContinueSongs.length ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {secondaryContinueSongs.map((song) => (
+                  <article
+                    key={song.continueKey || `${song.id}-${song.listened_at || song.title}`}
+                    className="rounded-[20px] border border-white/10 bg-[linear-gradient(135deg,#151515,#101010)] p-3 transition-colors duration-200 md:hover:border-white/16 md:hover:bg-[#171717]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-white/8 bg-white/5">
+                        <img
+                          src={resolveAssetUrl(song.cover_url) || "/logo-brand.png"}
+                          alt={song.title}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <SongDetailLink
+                          song={song}
+                          className="block truncate text-sm font-bold text-white transition md:hover:text-emerald-300 md:hover:underline"
+                        >
+                          {song.title}
+                        </SongDetailLink>
+                        <ArtistNames
+                          item={song}
+                          stopPropagation
+                          className="mt-0.5 truncate text-[12px] text-white/56"
+                          linkClassName="transition md:hover:text-emerald-300 md:hover:underline"
+                        />
+                        <p className="mt-1 text-[11px] text-white/45">
+                          {formatContinueMeta(song)}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleContinuePlay(song)}
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-300/35 bg-emerald-500/16 text-emerald-100 transition-colors duration-200 md:hover:bg-emerald-500/28"
+                        aria-label={`Phát ${song.title}`}
+                      >
+                        <FiPlay size={14} />
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : null}
           </div>
         )}
       </Section>

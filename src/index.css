@@ -12,9 +12,27 @@ html {
   text-size-adjust: 100%;
 }
 
+@media (max-width: 1680px) {
+  html {
+    font-size: 14.35px;
+  }
+}
+
+@media (max-width: 1536px) {
+  html {
+    font-size: 14px;
+  }
+}
+
 @media (max-width: 1280px) {
   html {
-    font-size: 14.5px;
+    font-size: 13.75px;
+  }
+}
+
+@media (max-width: 1024px) {
+  html {
+    font-size: 13.55px;
   }
 }
 
