@@ -51,7 +51,6 @@ export default function AdminArtistList() {
     bio: "",
     avatar_url: "",
     cover_url: "",
-    user_id: "",
   });
 
   const loadArtists = async (searchTerm = "") => {
@@ -144,7 +143,6 @@ export default function AdminArtistList() {
         bio: payload.bio || "",
         avatar_url: payload.avatar_url || "",
         cover_url: payload.cover_url || "",
-        user_id: payload.user_id ? `${payload.user_id}` : "",
       });
       setAvatarFile(null);
     } catch (error) {
@@ -466,17 +464,6 @@ export default function AdminArtistList() {
                         }))
                       }
                       className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/80 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
-                    />
-                    <input
-                      value={editPayload.user_id}
-                      onChange={(event) =>
-                        setEditPayload((prev) => ({
-                          ...prev,
-                          user_id: event.target.value,
-                        }))
-                      }
-                      placeholder="User ID liên kết (tuỳ chọn)"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
                     <input
                       value={editPayload.cover_url}

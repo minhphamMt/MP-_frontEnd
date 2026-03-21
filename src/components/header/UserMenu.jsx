@@ -13,6 +13,7 @@ export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const displayName = user?.display_name || user?.email || "User";
+  const profilePath = "/me";
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -33,7 +34,7 @@ export default function UserMenu() {
 
   const handleNavigateProfile = () => {
     setIsOpen(false);
-    navigate("/me");
+    navigate(profilePath);
   };
 
   const handleLogout = () => {

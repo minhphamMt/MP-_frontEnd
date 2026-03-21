@@ -20,7 +20,6 @@ const emptyArtistPayload = {
   bio: "",
   avatar_url: "",
   cover_url: "",
-  user_id: "",
 };
 
 const formatDateInput = (value) => {
@@ -86,7 +85,6 @@ export default function AdminArtistForm() {
           bio: payload.bio || "",
           avatar_url: payload.avatar_url || "",
           cover_url: payload.cover_url || "",
-          user_id: payload.user_id ? `${payload.user_id}` : "",
         });
         setErrorMessage("");
       } catch (error) {
@@ -276,12 +274,6 @@ export default function AdminArtistForm() {
                       value={formValues.birthday}
                       onChange={handleChange("birthday")}
                       className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/80 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
-                    />
-                    <input
-                      value={formValues.user_id}
-                      onChange={handleChange("user_id")}
-                      placeholder="User ID liên kết (tuỳ chọn)"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
                     <input
                       value={formValues.avatar_url}

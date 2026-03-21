@@ -35,6 +35,7 @@ const Profile = lazy(() => import("../pages/Profile"));
 const ArtistDashboard = lazy(() => import("../pages/artist/ArtistDashboard"));
 const ArtistAlbums = lazy(() => import("../pages/artist/ArtistAlbums"));
 const ArtistAlbumForm = lazy(() => import("../pages/artist/ArtistAlbumForm"));
+const ArtistAlbumDetail = lazy(() => import("../pages/artist/ArtistAlbumDetail"));
 const ArtistSongs = lazy(() => import("../pages/artist/ArtistSongs"));
 const ArtistSongForm = lazy(() => import("../pages/artist/ArtistSongForm"));
 const ArtistProfile = lazy(() => import("../pages/artist/ArtistProfile"));
@@ -112,9 +113,12 @@ export default function AppRoutes() {
             <Route path="/album/:id" element={<AlbumDetail />} />
           </Route>
 
+          <Route element={<ProtectedRoute allowedRoles={["USER", "ARTIST", "ADMIN"]} />}>
+            <Route path="/me" element={<Profile />} />
+          </Route>
+
           <Route element={<ProtectedRoute allowedRoles={["USER"]} />}>
             <Route path="/history" element={<History />} />
-            <Route path="/me" element={<Profile />} />
             <Route path="/playlists" element={<Playlists />} />
             <Route path="/playlists/:id" element={<PlaylistDetail />} />
             <Route path="/library/followed-artists" element={<FollowedArtists />} />
@@ -129,6 +133,7 @@ export default function AppRoutes() {
             <Route path="/artist/profile" element={<ArtistProfile />} />
             <Route path="/artist/albums" element={<ArtistAlbums />} />
             <Route path="/artist/albums/new" element={<ArtistAlbumForm />} />
+            <Route path="/artist/albums/:id" element={<ArtistAlbumDetail />} />
             <Route path="/artist/albums/:id/edit" element={<ArtistAlbumForm />} />
             <Route path="/artist/songs" element={<ArtistSongs />} />
             <Route path="/artist/songs/new" element={<ArtistSongForm />} />

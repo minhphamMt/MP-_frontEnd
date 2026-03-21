@@ -22,6 +22,12 @@ export default function ArtistSidebar({ collapsed = false }) {
 
       <SidebarSection title="Tài khoản" collapsed={collapsed}>
         <SidebarItem
+          to="/me"
+          icon={FiUser}
+          label="Trang cá nhân"
+          collapsed={collapsed}
+        />
+        <SidebarItem
           to="/artist/profile"
           icon={FiUser}
           label="Hồ sơ nghệ sĩ"

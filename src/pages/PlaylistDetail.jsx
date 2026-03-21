@@ -482,7 +482,7 @@ export default function PlaylistDetail() {
     ],
     [likedSongsInPlaylistCount, playlistSongs, uniqueArtistCount]
   );
-  const sharePath = playlist?.id ? `/playlists/${playlist.id}` : id ? `/playlists/${id}` : "";
+  const playlistPath = playlist?.id ? `/playlists/${playlist.id}` : id ? `/playlists/${id}` : "";
   const playlistMetaDescription = useMemo(() => {
     const parts = [
       `${playlistSongs.length} bài hát`,
@@ -499,7 +499,7 @@ export default function PlaylistDetail() {
     title: playlist?.title || "Playlist",
     description: playlistMetaDescription,
     image: playlistCover,
-    url: sharePath,
+    url: playlistPath,
     type: "music.playlist",
   });
 
@@ -651,8 +651,8 @@ export default function PlaylistDetail() {
                 Xóa playlist
               </button>
 
-              <ShareLinkButton
-                path={sharePath}
+              {false && <ShareLinkButton
+                path={playlistPath}
                 title="Chia sẻ playlist"
                 shareTitle={playlist?.title || "Playlist"}
                 shareText={`Nghe playlist ${playlist?.title || "này"} trên Khoaluan Music.`}
@@ -666,7 +666,7 @@ export default function PlaylistDetail() {
                   image: playlistCover,
                 }}
                 className="px-5 py-3"
-              />
+              />}
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

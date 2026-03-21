@@ -154,7 +154,7 @@ export default function ArtistAlbums() {
           <ArtistAlbumTile
             key={album.id}
             album={album}
-            onView={() => navigate(`/album/${album.id}`)}
+            onView={() => navigate(`/artist/albums/${album.id}`)}
             onEdit={() => navigate(`/artist/albums/${album.id}/edit`)}
             onDelete={() => handleDelete(album.id)}
           />
