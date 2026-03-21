@@ -28,6 +28,7 @@ export default function Forbidden() {
     title: "403 - Không có quyền truy cập",
     description:
       "Trang bạn vừa mở không thuộc khu vực được phép cho vai trò hiện tại trên Khoaluan Music.",
+    robots: "noindex, nofollow",
   });
 
   return (

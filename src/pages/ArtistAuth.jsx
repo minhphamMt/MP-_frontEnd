@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
 
 const formVariants = {
@@ -119,6 +120,18 @@ export default function ArtistAuth() {
       ? "Đăng nhập tài khoản nghệ sĩ để gửi yêu cầu xét duyệt."
       : "Tạo tài khoản nghệ sĩ mới để bắt đầu đăng ký.";
   }, [mode]);
+
+  const artistAuthDescription =
+    mode === "login"
+      ? "Đăng nhập cổng nghệ sĩ Khoaluan Music để gửi yêu cầu xét duyệt và quản lý hành trình xác thực."
+      : "Đăng ký tài khoản nghệ sĩ trên Khoaluan Music để bắt đầu quy trình xét duyệt.";
+
+  usePageMetadata({
+    title: mode === "login" ? "Đăng nhập nghệ sĩ" : "Đăng ký nghệ sĩ",
+    description: artistAuthDescription,
+    url: "/artist-auth",
+    robots: "noindex, nofollow",
+  });
 
   const handleNavigate = (nextMode) => {
     setMode(nextMode);

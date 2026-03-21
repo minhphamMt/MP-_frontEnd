@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getNewReleaseChart } from "../api/chart.api";
+import usePageMetadata from "../hooks/usePageMetadata";
 import SongTable from "../components/song/SongTable";
+import { resolveAssetUrl } from "../utils/asset";
+import { buildCollectionPageJsonLd } from "../utils/seo";
 import { filterPlayableSongs } from "../utils/song";
 
 const PAGE_SIZE = 20;
@@ -96,7 +99,7 @@ export default function NewRelease() {
 
   useEffect(() => {
     const target = sentinelRef.current;
-    if (!target) return;
+    if (!target) return undefined;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -121,6 +124,32 @@ export default function NewRelease() {
     if (!hasMore && songs.length) return "Đã tải toàn bộ bài hát mới.";
     return "Kéo xuống để tải thêm bài hát.";
   }, [hasMore, loading, loadingMore, songs.length]);
+  const newReleaseMetaDescription = useMemo(
+    () =>
+      songs.length
+        ? `${songs.length} bài hát mới phát hành đang có trong BXH Nhạc Mới trên Khoaluan Music.`
+        : "Cập nhật những bài hát mới phát hành trên Khoaluan Music.",
+    [songs.length]
+  );
+  const heroImage = resolveAssetUrl(songs[0]?.cover_url) || "/logo-brand.png";
+  const newReleaseJsonLd = useMemo(
+    () =>
+      buildCollectionPageJsonLd({
+        name: "BXH Nhạc Mới",
+        description: newReleaseMetaDescription,
+        url: "/new-release",
+        image: heroImage,
+      }),
+    [heroImage, newReleaseMetaDescription]
+  );
+
+  usePageMetadata({
+    title: "BXH Nhạc Mới",
+    description: newReleaseMetaDescription,
+    image: heroImage,
+    url: "/new-release",
+    jsonLd: newReleaseJsonLd,
+  });
 
   return (
     <div className="user-page-shell min-h-screen px-4 py-6 sm:px-8">
@@ -132,8 +161,7 @@ export default function NewRelease() {
           BXH Nhạc Mới
         </h1>
         <p className="mt-2 text-sm text-white/60">
-          Những ca khúc phát hành gần đây. Kéo xuống cuối danh sách để tải
-          thêm.
+          Những ca khúc phát hành gần đây. Kéo xuống cuối danh sách để tải thêm.
         </p>
       </div>
 

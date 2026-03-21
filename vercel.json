@@ -1,8 +1,68 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/((?!.*\\.[a-zA-Z0-9]+$).*)",
-      "destination": "/index.html"
+      "handle": "filesystem"
+    },
+    {
+      "src": "^/top-100/?$",
+      "status": 308,
+      "headers": {
+        "Location": "/top-50"
+      }
+    },
+    {
+      "src": "^/artist/?$",
+      "status": 307,
+      "headers": {
+        "Location": "/artist/dashboard"
+      }
+    },
+    {
+      "src": "^/admin/?$",
+      "status": 307,
+      "headers": {
+        "Location": "/admin/dashboard"
+      }
+    },
+    {
+      "src": "^/artist/[0-9]+(?:/[^/]+)?/songs/?$",
+      "dest": "/__seo/artist-public-songs/index.html"
+    },
+    {
+      "src": "^/artist/[0-9]+(?:/[^/]+)?/albums/?$",
+      "dest": "/__seo/artist-public-albums/index.html"
+    },
+    {
+      "src": "^/artist/[0-9]+(?:/[^/]+)?/?$",
+      "dest": "/__seo/artist-public/index.html"
+    },
+    {
+      "src": "^/song(?:/.*)?/?$",
+      "dest": "/__seo/song/index.html"
+    },
+    {
+      "src": "^/album(?:/.*)?/?$",
+      "dest": "/__seo/album/index.html"
+    },
+    {
+      "src": "^/top-50/[^/]+/?$",
+      "dest": "/__seo/top-50-genre/index.html"
+    },
+    {
+      "src": "^/playlists(?:/.*)?/?$",
+      "dest": "/__seo/playlists/index.html"
+    },
+    {
+      "src": "^/library(?:/.*)?/?$",
+      "dest": "/__seo/library/index.html"
+    },
+    {
+      "src": "^/artist/(dashboard|profile|albums(?:/.*)?|songs(?:/.*)?|trash)/?$",
+      "dest": "/__seo/artist-app/index.html"
+    },
+    {
+      "src": "^/admin(?:/.*)?/?$",
+      "dest": "/__seo/admin-app/index.html"
     }
   ]
 }

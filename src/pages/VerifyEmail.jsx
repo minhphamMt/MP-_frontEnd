@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
 
 export default function VerifyEmail() {
@@ -19,6 +20,17 @@ export default function VerifyEmail() {
   const [notice, setNotice] = useState(
     "Nhập mã xác thực 6 số được gửi qua email để hoàn tất đăng ký."
   );
+
+  usePageMetadata({
+    title: "Xác nhận email",
+    description:
+      "Xác nhận email để hoàn tất đăng ký tài khoản trên Khoaluan Music.",
+    url:
+      intent === "artist"
+        ? `/verify-email?intent=artist${email ? `&email=${encodeURIComponent(email)}` : ""}`
+        : `/verify-email${email ? `?email=${encodeURIComponent(email)}` : ""}`,
+    robots: "noindex, nofollow",
+  });
 
   const handleVerify = async () => {
     if (!email.trim()) {

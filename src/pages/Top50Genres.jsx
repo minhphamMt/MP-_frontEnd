@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiChevronRight } from "react-icons/fi";
 import { getTop50ByGenres } from "../api/chart.api";
+import usePageMetadata from "../hooks/usePageMetadata";
 import { filterPlayableSongs } from "../utils/song";
 import { resolveAssetUrl } from "../utils/asset";
 import OptimizedImage from "../components/common/OptimizedImage";
 import { normalizeArtists } from "../utils/artist";
+import { buildCollectionPageJsonLd } from "../utils/seo";
 
 /* ================= utils ================= */
 const normalizeTopGenres = (payload) => {
@@ -128,6 +130,30 @@ export default function Top50Genres() {
       </div>
     );
   }, [genres, loading]);
+
+  const top50MetaDescription = useMemo(() => {
+    return genres.length
+      ? `${genres.length} thể loại đang có trong Top 50 trên Khoaluan Music, giúp bạn khám phá nhanh playlist nổi bật theo từng gu nghe.`
+      : "Khám phá Top 50 theo thể loại trên Khoaluan Music.";
+  }, [genres.length]);
+  const top50JsonLd = useMemo(
+    () =>
+      buildCollectionPageJsonLd({
+        name: "Top 50 theo thể loại",
+        description: top50MetaDescription,
+        url: "/top-50",
+        image: resolveAssetUrl(genres[0]?.songs?.[0]?.cover_url) || "/logo-brand.png",
+      }),
+    [genres, top50MetaDescription]
+  );
+
+  usePageMetadata({
+    title: "Top 50 theo thể loại",
+    description: top50MetaDescription,
+    image: resolveAssetUrl(genres[0]?.songs?.[0]?.cover_url) || "/logo-brand.png",
+    url: "/top-50",
+    jsonLd: top50JsonLd,
+  });
 
   return (
      <div className="user-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">

@@ -5,6 +5,7 @@ import { useEnsureLikedAlbumsLoaded } from "../../hooks/useEnsureLibraryState";
 import useAlbumLikeStore, { normalizeAlbumId } from "../../store/album-like.store";
 import usePlayerStore from "../../store/player.store";
 import { resolveAssetUrl } from "../../utils/asset";
+import { getAlbumPath } from "../../utils/entityPath";
 import OptimizedImage from "../common/OptimizedImage";
 import { getArtistLabel, getPrimaryArtistId, normalizeArtists } from "../../utils/artist";
 import { toPlayableSong } from "../../utils/song";
@@ -56,7 +57,7 @@ export default function AlbumCard({ album, variant = "rail", density = "cozy" })
   return (
     <div
       data-card
-      onClick={() => navigate(`/album/${album.id}`)}
+      onClick={() => navigate(getAlbumPath(album) || "/albums")}
       className={`group relative cursor-pointer overflow-hidden p-3 transition-all duration-300 ${isRail ? "w-44 shrink-0 sm:w-60 sm:p-4 lg:w-64" : "w-full sm:p-4"} ${
         isLibrary
           ? `${isCompact ? "rounded-[18px]" : "rounded-lg"} border border-white/10 bg-[#181818]`

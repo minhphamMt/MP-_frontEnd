@@ -5,6 +5,7 @@ import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { formatDuration, fetchPlayableSong } from "../../utils/song";
 import { getSongById } from "../../api/song.api";
 import { resolveAssetUrl } from "../../utils/asset";
+import { getAlbumPath } from "../../utils/entityPath";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import OptimizedImage from "../common/OptimizedImage";
 import ArtistNames from "../artist/ArtistNames";
@@ -93,10 +94,14 @@ export default function SongTable({ title, subtitle, songs, loading, onRefresh, 
             <span className="text-right">Thời gian</span>
           </div>
 
-          <div className="divide-y divide-white/10">
-            {songs.map((song, index) => {
-              const songId = normalizeSongId(song);
-              const isActive = normalizeSongId(currentSong) === songId;
+	          <div className="divide-y divide-white/10">
+	            {songs.map((song, index) => {
+	              const songId = normalizeSongId(song);
+	              const albumPath = getAlbumPath({
+	                id: song.album_id,
+	                title: song.album_title,
+	              });
+	              const isActive = normalizeSongId(currentSong) === songId;
               const isLiked = songId && likedSongIds.includes(songId);
               const order = song.rank ?? index + 1;
               return (
@@ -142,11 +147,11 @@ export default function SongTable({ title, subtitle, songs, loading, onRefresh, 
                     </div>
                   </div>
 
-                  <div className="hidden truncate text-xs text-white/70 xl:block">
-                    {song.album_id && song.album_title ? (
-                      <Link to={`/album/${song.album_id}`} onClick={(e) => e.stopPropagation()} className="md:hover:underline">
-                        {song.album_title}
-                      </Link>
+	                  <div className="hidden truncate text-xs text-white/70 xl:block">
+	                    {albumPath && song.album_title ? (
+	                      <Link to={albumPath} onClick={(e) => e.stopPropagation()} className="md:hover:underline">
+	                        {song.album_title}
+	                      </Link>
                     ) : (
                       song.album_title || "-"
                     )}

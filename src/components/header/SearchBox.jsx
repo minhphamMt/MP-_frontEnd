@@ -26,6 +26,7 @@ import { saveSearchHistory } from "../../api/search.api";
 import useAuthStore from "../../store/auth.store";
 import { createPortal } from "react-dom";
 import { resolveAssetUrl } from "../../utils/asset";
+import { getAlbumPath, getArtistPath, getSongPath } from "../../utils/entityPath";
 import OptimizedImage from "../common/OptimizedImage";
 import useDebouncedValue from "../../hooks/useDebouncedValue";
 
@@ -403,17 +404,17 @@ const handleResultNavigate = async (item) => {
   }
 
   if (item.type === "artist") {
-    const targetId = getSearchItemId(item);
-    if (!targetId) return;
-    navigate(`/artist/${targetId}`);
+    const targetPath = getArtistPath(item);
+    if (!targetPath) return;
+    navigate(targetPath);
   } else if (item.type === "album") {
-    const targetId = getSearchItemId(item);
-    if (!targetId) return;
-    navigate(`/album/${targetId}`);
+    const targetPath = getAlbumPath(item);
+    if (!targetPath) return;
+    navigate(targetPath);
   } else if (item.type === "song") {
-    const targetId = getSearchItemId(item);
-    if (!targetId) return;
-    navigate(`/song/${targetId}`);
+    const targetPath = getSongPath(item);
+    if (!targetPath) return;
+    navigate(targetPath);
   }
 
   setOpen(false);

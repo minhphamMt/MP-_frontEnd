@@ -4,6 +4,9 @@ import { FiChevronLeft } from "react-icons/fi";
 import { getTop50ByGenres } from "../api/chart.api";
 import { getSongById } from "../api/song.api";
 import SongTable from "../components/song/SongTable";
+import usePageMetadata from "../hooks/usePageMetadata";
+import { resolveAssetUrl } from "../utils/asset";
+import { buildCollectionPageJsonLd } from "../utils/seo";
 import { filterPlayableSongs, hydrateSongArtists } from "../utils/song";
 
 /* ================= utils ================= */
@@ -71,6 +74,31 @@ export default function Top50GenreDetail() {
 
   const title = entry?.genre?.name || "Top 50";
   const songs = entry?.songs || [];
+  const detailMetaDescription = useMemo(
+    () =>
+      songs.length
+        ? `Top 50 bài hát nổi bật của thể loại ${title} trên Khoaluan Music.`
+        : `Khám phá thể loại ${title} trong chuyên mục Top 50 của Khoaluan Music.`,
+    [songs.length, title]
+  );
+  const detailJsonLd = useMemo(
+    () =>
+      buildCollectionPageJsonLd({
+        name: `Top 50 ${title}`,
+        description: detailMetaDescription,
+        url: `/top-50/${id}`,
+        image: resolveAssetUrl(songs[0]?.cover_url) || "/logo-brand.png",
+      }),
+    [detailMetaDescription, id, songs, title]
+  );
+
+  usePageMetadata({
+    title: `Top 50 ${title}`,
+    description: detailMetaDescription,
+    image: resolveAssetUrl(songs[0]?.cover_url) || "/logo-brand.png",
+    url: `/top-50/${id}`,
+    jsonLd: detailJsonLd,
+  });
 
   const header = useMemo(
     () => (

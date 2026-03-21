@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { FiArrowLeft, FiDisc, FiMusic, FiPlay, FiUser } from "react-icons/fi";
 import AlbumCard from "../components/album/AlbumCard";
 import OptimizedImage from "../components/common/OptimizedImage";
@@ -7,6 +7,15 @@ import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
 import usePageMetadata from "../hooks/usePageMetadata";
 import usePlayerStore from "../store/player.store";
 import { resolveAssetUrl } from "../utils/asset";
+import {
+  getArtistAlbumsPath,
+  getArtistPath,
+  getArtistSongsPath,
+} from "../utils/entityPath";
+import {
+  buildBreadcrumbJsonLd,
+  buildCollectionPageJsonLd,
+} from "../utils/seo";
 import {
   fetchArtistDetailData,
   formatTotalDuration,
@@ -17,6 +26,8 @@ export default function ArtistAllAlbums() {
   useEnsureLikedSongsLoaded();
 
   const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [artist, setArtist] = useState(null);
   const [songs, setSongs] = useState([]);
   const [albums, setAlbums] = useState([]);
@@ -64,8 +75,27 @@ export default function ArtistAllAlbums() {
   }, [artist?.bio, artist?.shortBio]);
   const portraitUrl = resolveAssetUrl(artist?.avatar || artist?.cover);
   const backdropUrl = resolveAssetUrl(artist?.cover || artist?.avatar);
-  const artistPath = artist?.id ? `/artist/${artist.id}` : `/artist/${id}`;
-  const songsPath = artist?.id ? `/artist/${artist.id}/songs` : `/artist/${id}/songs`;
+  const artistPath = getArtistPath(artist || { id }) || `/artist/${id}`;
+  const songsPath = getArtistSongsPath(artist || { id }) || `${artistPath}/songs`;
+  const albumsPath = getArtistAlbumsPath(artist || { id }) || `${artistPath}/albums`;
+  const artistAlbumsJsonLd = useMemo(
+    () => [
+      buildCollectionPageJsonLd({
+        name: artist?.name ? `${artist.name} - Album` : "Album nghệ sĩ",
+        description: artist?.name
+          ? `${albums.length} album của ${artist.name} trên Khoaluan Music.`
+          : "Danh sách album của nghệ sĩ trên Khoaluan Music.",
+        url: albumsPath,
+        image: portraitUrl || backdropUrl || "/logo-brand.png",
+      }),
+      buildBreadcrumbJsonLd([
+        { name: "Trang chủ", url: "/" },
+        { name: artist?.name || "Nghệ sĩ", url: artistPath },
+        { name: "Album", url: albumsPath },
+      ]),
+    ],
+    [albums.length, albumsPath, artist?.name, artistPath, backdropUrl, portraitUrl]
+  );
 
   usePageMetadata({
     title: artist?.name ? `${artist.name} - Album` : "Album nghệ sĩ",
@@ -73,9 +103,15 @@ export default function ArtistAllAlbums() {
       ? `${albums.length} album của ${artist.name} trên Khoaluan Music.`
       : "Danh sách album của nghệ sĩ trên Khoaluan Music.",
     image: portraitUrl || backdropUrl,
-    url: artistPath,
+    url: albumsPath,
     type: "website",
+    jsonLd: artistAlbumsJsonLd,
   });
+
+  useEffect(() => {
+    if (!artist || !albumsPath || location.pathname === albumsPath) return;
+    navigate(albumsPath, { replace: true });
+  }, [albumsPath, artist, location.pathname, navigate]);
 
   const panelClass =
     "relative overflow-hidden rounded-[28px] border border-white/10 bg-black/24 p-4 shadow-[0_20px_52px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-5 lg:p-6";

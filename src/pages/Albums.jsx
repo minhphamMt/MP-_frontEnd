@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiHeart } from "react-icons/fi";
 import { getAlbumById, getAlbums } from "../api/album.api";
 import SongTable from "../components/song/SongTable";
 import { useEnsureLikedAlbumsLoaded } from "../hooks/useEnsureLibraryState";
+import usePageMetadata from "../hooks/usePageMetadata";
 import useAlbumLikeStore, {
   normalizeAlbumId,
 } from "../store/album-like.store";
+import { resolveAssetUrl } from "../utils/asset";
 import { getArtistLabel } from "../utils/artist";
+import { buildCollectionPageJsonLd } from "../utils/seo";
 import { filterPlayableSongs } from "../utils/song";
 
 export default function Albums() {
@@ -67,6 +70,30 @@ export default function Albums() {
   useEffect(() => {
     loadAlbums();
   }, [loadAlbums]);
+
+  const albumsMetaDescription = useMemo(() => {
+    return albums.length
+      ? `${albums.length} album nổi bật đang có trên Khoaluan Music, sẵn sàng để bạn khám phá theo nghệ sĩ và tracklist.`
+      : "Khám phá album nổi bật từ nghệ sĩ yêu thích trên Khoaluan Music.";
+  }, [albums.length]);
+  const albumsJsonLd = useMemo(
+    () =>
+      buildCollectionPageJsonLd({
+        name: "Album trên Khoaluan Music",
+        description: albumsMetaDescription,
+        url: "/albums",
+        image: resolveAssetUrl(albums[0]?.cover_url) || "/logo-brand.png",
+      }),
+    [albums, albumsMetaDescription]
+  );
+
+  usePageMetadata({
+    title: "Album nổi bật",
+    description: albumsMetaDescription,
+    image: resolveAssetUrl(albums[0]?.cover_url) || "/logo-brand.png",
+    url: "/albums",
+    jsonLd: albumsJsonLd,
+  });
 
   return (
     <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:px-8">

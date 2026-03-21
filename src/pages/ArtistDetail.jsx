@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   FiArrowRight,
   FiClock,
@@ -22,6 +22,17 @@ import usePageMetadata from "../hooks/usePageMetadata";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { resolveAssetUrl } from "../utils/asset";
 import { formatDateDisplay } from "../utils/date";
+import {
+  getAlbumPath,
+  getArtistAlbumsPath,
+  getArtistPath,
+  getArtistSongsPath,
+  getSongPath,
+} from "../utils/entityPath";
+import {
+  buildBreadcrumbJsonLd,
+  buildMusicGroupJsonLd,
+} from "../utils/seo";
 import { formatDuration } from "../utils/song";
 import {
   ALBUM_PREVIEW_LIMIT,
@@ -65,6 +76,8 @@ export default function ArtistDetail() {
   useEnsureLikedSongsLoaded();
 
   const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [artist, setArtist] = useState(null);
   const [songs, setSongs] = useState([]);
   const [albums, setAlbums] = useState([]);
@@ -161,9 +174,9 @@ export default function ArtistDetail() {
   const portraitUrl = resolveAssetUrl(artist?.avatar || artist?.cover);
   const heroBackdropUrl = coverUrl || portraitUrl;
   const activeSongId = normalizeSongId(currentSong);
-  const sharePath = artist?.id ? `/artist/${artist.id}` : id ? `/artist/${id}` : "";
-  const songsPath = artist?.id ? `/artist/${artist.id}/songs` : `/artist/${id}/songs`;
-  const albumsPath = artist?.id ? `/artist/${artist.id}/albums` : `/artist/${id}/albums`;
+  const sharePath = getArtistPath(artist || { id }) || "";
+  const songsPath = getArtistSongsPath(artist || { id }) || "";
+  const albumsPath = getArtistAlbumsPath(artist || { id }) || "";
   const artistMetaDescription = useMemo(() => {
     const parts = [
       `${songs.length} bài hát`,
@@ -188,12 +201,42 @@ export default function ArtistDetail() {
     [albums.length, artist?.alias, artist?.name, artist?.national, artistSummary, coverUrl, portraitUrl, songs.length]
   );
 
+  const artistJsonLd = useMemo(
+    () => [
+      buildMusicGroupJsonLd({
+        name: artist?.name || artist?.alias || "Nghệ sĩ",
+        description: artistMetaDescription,
+        url: sharePath,
+        image: coverUrl || portraitUrl || "/logo-brand.png",
+        albumUrls: albums
+          .slice(0, 10)
+          .map((album) => getAlbumPath(album))
+          .filter(Boolean),
+        trackUrls: songs
+          .slice(0, 10)
+          .map((song) => getSongPath(song))
+          .filter(Boolean),
+      }),
+      buildBreadcrumbJsonLd([
+        { name: "Trang chủ", url: "/" },
+        { name: "Nghệ sĩ", url: sharePath },
+      ]),
+    ],
+    [albums, artist?.alias, artist?.name, artistMetaDescription, coverUrl, portraitUrl, sharePath, songs]
+  );
+
+  useEffect(() => {
+    if (!artist || !sharePath || location.pathname === sharePath) return;
+    navigate(sharePath, { replace: true });
+  }, [artist, location.pathname, navigate, sharePath]);
+
   usePageMetadata({
     title: artist?.name || artist?.alias || "Nghệ sĩ",
     description: artistMetaDescription,
     image: coverUrl || portraitUrl,
     url: sharePath,
     type: "profile",
+    jsonLd: artistJsonLd,
   });
 
   const mobileSectionClass =
@@ -587,7 +630,12 @@ export default function ArtistDetail() {
                     <div className="hidden min-w-0 text-sm text-white/60 lg:block">
                       {song.album_id && song.album_title ? (
                         <Link
-                          to={`/album/${song.album_id}`}
+                          to={
+                            getAlbumPath({
+                              id: song.album_id,
+                              title: song.album_title,
+                            }) || `/album/${song.album_id}`
+                          }
                           onClick={(event) => event.stopPropagation()}
                           className="truncate transition md:hover:text-emerald-300 md:hover:underline"
                         >

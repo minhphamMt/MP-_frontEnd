@@ -3,12 +3,17 @@ import { Link } from "react-router-dom";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
 import { formatDuration } from "../../utils/song";
 import { resolveAssetUrl } from "../../utils/asset";
+import { getAlbumPath } from "../../utils/entityPath";
 import OptimizedImage from "../common/OptimizedImage";
 import ArtistNames from "../artist/ArtistNames";
 import { SongDetailLink } from "./SongDetailLink";
 
 export default function SongRow({ song, queue }) {
   const { playSong, currentSong, isPlaying } = usePlayerStore();
+  const albumPath = getAlbumPath({
+    id: song?.album_id,
+    title: song?.album_title,
+  });
 
   const isActive = normalizeSongId(currentSong) === normalizeSongId(song);
 
@@ -58,11 +63,11 @@ export default function SongRow({ song, queue }) {
             linkClassName="min-w-0 truncate text-white/70 transition md:hover:text-emerald-300 md:hover:underline"
           />
 
-          {song.album_id && song.album_title && (
+          {albumPath && song.album_title && (
             <>
               <span className="flex-shrink-0 opacity-40">.</span>
               <Link
-                to={`/album/${song.album_id}`}
+                to={albumPath}
                 onClick={(e) => e.stopPropagation()}
                 className="min-w-0 truncate text-white/70 transition md:hover:text-emerald-300 md:hover:underline"
               >

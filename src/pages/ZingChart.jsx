@@ -12,6 +12,7 @@ import {
   getTop5Chart,
   getRegionCharts,
 } from "../api/chart.api";
+import usePageMetadata from "../hooks/usePageMetadata";
 import { getSongById } from "../api/song.api";
 import {
   fetchPlayableSong,
@@ -25,6 +26,7 @@ import ChartLoadingState from "../components/charts/ChartLoadingState";
 import OptimizedImage from "../components/common/OptimizedImage";
 import { resolveAssetUrl } from "../utils/asset";
 import ArtistNames from "../components/artist/ArtistNames";
+import { buildCollectionPageJsonLd } from "../utils/seo";
 
 echarts.use([GridComponent, TooltipComponent, LegendComponent, ELineChart, SVGRenderer]);
 
@@ -727,6 +729,33 @@ export default function ZingChart() {
     const max = Math.max(...weeklySongs.map((song) => getSongMetric(song)), 0);
     return max || 1;
   }, [getSongMetric, weeklySongs]);
+  const chartHeroImage =
+    getSongCover(weeklySongs[0]) ||
+    getSongCover(regionCharts.vietnam?.[0]) ||
+    "/logo-brand.png";
+  const chartMetaDescription = useMemo(() => {
+    return activePeriodMeta?.description
+      ? `${activePeriodMeta.description} Theo dõi MChart và top bài hát theo khu vực trên Khoaluan Music.`
+      : "Theo dõi MChart, top bài hát nổi bật trong tuần và bảng xếp hạng theo khu vực trên Khoaluan Music.";
+  }, [activePeriodMeta]);
+  const chartJsonLd = useMemo(
+    () =>
+      buildCollectionPageJsonLd({
+        name: "MChart",
+        description: chartMetaDescription,
+        url: "/zing-chart",
+        image: chartHeroImage,
+      }),
+    [chartHeroImage, chartMetaDescription]
+  );
+
+  usePageMetadata({
+    title: "MChart",
+    description: chartMetaDescription,
+    image: chartHeroImage,
+    url: "/zing-chart",
+    jsonLd: chartJsonLd,
+  });
 
   return (
     <div className="user-page-shell min-h-screen w-full min-w-0 space-y-6 overflow-x-hidden px-4 py-6 pb-28 sm:space-y-8 sm:px-8 sm:pb-8">

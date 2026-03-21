@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getRegionCharts } from "../api/chart.api";
 import { getSongById } from "../api/song.api";
+import usePageMetadata from "../hooks/usePageMetadata";
 import SongTable from "../components/song/SongTable";
+import { resolveAssetUrl } from "../utils/asset";
+import { buildCollectionPageJsonLd } from "../utils/seo";
 import { filterPlayableSongs, hydrateSongArtists } from "../utils/song";
 
 const REGION_CONFIG = {
@@ -59,6 +62,29 @@ export default function RegionChart() {
 
     loadChart();
   }, [config, loadChart, navigate]);
+
+  const regionTitle = config?.title || "BXH khu vực";
+  const regionMetaDescription = config
+    ? `${config.title} trên Khoaluan Music. ${config.subtitle}.`
+    : "Bảng xếp hạng khu vực trên Khoaluan Music.";
+  const regionImage = resolveAssetUrl(songs[0]?.cover_url) || "/logo-brand.png";
+  const regionJsonLd = config
+    ? buildCollectionPageJsonLd({
+        name: config.title,
+        description: regionMetaDescription,
+        url: `/zing-chart/region/${normalizedRegion}`,
+        image: regionImage,
+      })
+    : undefined;
+
+  usePageMetadata({
+    title: regionTitle,
+    description: regionMetaDescription,
+    image: regionImage,
+    url: config ? `/zing-chart/region/${normalizedRegion}` : "/zing-chart",
+    robots: config ? "index, follow" : "noindex, nofollow",
+    jsonLd: regionJsonLd,
+  });
 
   if (!config) return null;
 

@@ -22,6 +22,7 @@ import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import ArtistNames from "../artist/ArtistNames";
 import PlayerEnhancementToolbar from "./PlayerEnhancementToolbar";
 import { SongDetailLink } from "../song/SongDetailLink";
+import { getAlbumPath, getSongPath } from "../../utils/entityPath";
 
 const formatTime = (sec = 0) => {
   const s = Math.max(0, Math.floor(sec || 0));
@@ -510,6 +511,11 @@ export default function PlayerDetail({ isOpen, onClose }) {
   const albumId = currentSong?.album_id || currentSong?.album?.id || null;
   const albumTitle =
     currentSong?.album_title || currentSong?.album?.title || "Single";
+  const albumPath = getAlbumPath({
+    id: albumId,
+    title: albumTitle,
+  });
+  const currentSongPath = getSongPath(currentSong);
   const currentArtistLabel =
     currentSong?.artist_name ||
     (Array.isArray(currentSong?.artists)
@@ -592,7 +598,7 @@ export default function PlayerDetail({ isOpen, onClose }) {
   );
   const shareButton = currentSongId ? (
     <ShareLinkButton
-      path={`/song/${currentSongId}`}
+      path={currentSongPath || `/song/${currentSongId}`}
       title="Chia sẻ"
       shareTitle={currentSong?.title || "Bài hát"}
       shareText={`Nghe ${currentSong?.title || "bài hát này"} của ${currentArtistLabel} trên Khoaluan Music.`}
@@ -678,10 +684,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
                   onNavigate={handleDetailNavigation}
                 />
               </div>
-              {albumId ? (
+              {albumPath ? (
                 <div className="mt-3">
                   <Link
-                    to={`/album/${albumId}`}
+                    to={albumPath}
                     onClick={handleDetailNavigation}
                     className="inline-flex max-w-full items-center rounded-full border border-white/12 bg-white/[0.05] px-3 py-1.5 text-sm font-medium text-white/72 transition md:hover:border-emerald-300/40 md:hover:text-emerald-200"
                   >
@@ -979,10 +985,10 @@ export default function PlayerDetail({ isOpen, onClose }) {
                 onNavigate={handleDetailNavigation}
               />
             </div>
-            {albumId ? (
+            {albumPath ? (
               <div className="mt-2 flex justify-center px-3">
                 <Link
-                  to={`/album/${albumId}`}
+                  to={albumPath}
                   onClick={handleDetailNavigation}
                   className="inline-flex max-w-full items-center rounded-full border border-white/14 bg-white/[0.05] px-3 py-1.5 text-xs font-medium text-white/72 transition"
                 >

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { FiCheck, FiClock, FiSliders } from "react-icons/fi";
 import ShareLinkButton from "../common/ShareLinkButton";
 import usePlayerStore, { normalizeSongId } from "../../store/player.store";
+import { getSongPath } from "../../utils/entityPath";
 
 const TIMER_OPTIONS = [
   { value: 0, label: "Tắt hẹn giờ" },
@@ -180,6 +181,7 @@ export default function PlayerEnhancementToolbar({
     [sleepTimerEndsAt, tick]
   );
   const currentSongId = normalizeSongId(currentSong);
+  const currentSongPath = getSongPath(currentSong);
   const currentArtistLabel = useMemo(() => {
     if (currentSong?.artist_name) return currentSong.artist_name;
     if (Array.isArray(currentSong?.artists) && currentSong.artists.length) {
@@ -311,7 +313,7 @@ export default function PlayerEnhancementToolbar({
 
       {showShare && currentSongId ? (
         <ShareLinkButton
-          path={`/song/${currentSongId}`}
+          path={currentSongPath || `/song/${currentSongId}`}
           title={compact ? "Chia sẻ" : "Chia sẻ bài hát"}
           shareTitle={currentSong?.title || "Bài hát"}
           shareText={`Nghe ${currentSong?.title || "bài hát này"} của ${currentArtistLabel} trên Khoaluan Music.`}

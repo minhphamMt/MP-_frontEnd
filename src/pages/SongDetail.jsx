@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   FiBarChart2,
   FiClock,
@@ -21,6 +21,11 @@ import usePageMetadata from "../hooks/usePageMetadata";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { resolveAssetUrl } from "../utils/asset";
 import { formatDateDisplay } from "../utils/date";
+import { getAlbumPath, getArtistPath, getSongPath } from "../utils/entityPath";
+import {
+  buildBreadcrumbJsonLd,
+  buildMusicRecordingJsonLd,
+} from "../utils/seo";
 import {
   fetchPlayableSong,
   formatDuration,
@@ -59,6 +64,7 @@ export default function SongDetail() {
   useEnsureLikedSongsLoaded();
 
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [song, setSong] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -113,7 +119,11 @@ export default function SongDetail() {
   const isActive = normalizeSongId(currentSong) === songId;
   const isLiked = songId && likedSongIds.includes(songId);
   const albumId = song?.album_id || song?.album?.id || null;
-  const sharePath = songId ? `/song/${songId}` : id ? `/song/${id}` : "";
+  const albumPath = getAlbumPath({
+    id: albumId,
+    title: song?.album_title,
+  });
+  const sharePath = getSongPath(song || { id }) || "";
   const artistShareLabel = useMemo(() => {
     if (song?.artist_name) return song.artist_name;
     if (Array.isArray(song?.artists) && song.artists.length) {
@@ -144,6 +154,34 @@ export default function SongDetail() {
       ? `${parts.join(" • ")} trên Khoaluan Music.`
       : "Khám phá thông tin bài hát trên Khoaluan Music.";
   }, [artistShareLabel, releaseDateText, song]);
+  const songJsonLd = useMemo(
+    () => [
+      buildMusicRecordingJsonLd({
+        name: song?.title || "Bài hát",
+        description: songMetaDescription,
+        url: sharePath,
+        image: resolveAssetUrl(song?.cover_url || "") || "/logo-brand.png",
+        duration: song?.duration,
+        datePublished:
+          song?.release_date || song?.releaseDate || song?.published_at || undefined,
+        artistName: artistShareLabel,
+        artistUrl: getArtistPath(song) || undefined,
+        albumName: song?.album_title || undefined,
+        albumUrl: albumPath || undefined,
+        interactionCount: song?.play_count,
+      }),
+      buildBreadcrumbJsonLd([
+        { name: "Trang chủ", url: "/" },
+        { name: song?.title || "Bài hát", url: sharePath },
+      ]),
+    ],
+    [albumPath, artistShareLabel, sharePath, song, songMetaDescription]
+  );
+
+  useEffect(() => {
+    if (!song || !sharePath || location.pathname === sharePath) return;
+    navigate(sharePath, { replace: true });
+  }, [location.pathname, navigate, sharePath, song]);
 
   usePageMetadata({
     title: song?.title || "Bài hát",
@@ -151,6 +189,7 @@ export default function SongDetail() {
     image: resolveAssetUrl(song?.cover_url || ""),
     url: sharePath,
     type: "music.song",
+    jsonLd: songJsonLd,
   });
 
   const summaryCards = useMemo(
@@ -381,12 +420,12 @@ export default function SongDetail() {
                   ? "Ca khúc này nằm trong một album, mở ra là bạn có thể nghe trọn vẹn cùng những bài còn lại."
                   : "Ca khúc này đang được phát hành như một bản single riêng."}
               </p>
-              {albumId && (
-                <button
-                  type="button"
-                  onClick={() => navigate(`/album/${albumId}`)}
-                  className="user-btn-secondary mt-4 inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold"
-                >
+	              {albumPath && (
+	                <button
+	                  type="button"
+	                  onClick={() => navigate(albumPath)}
+	                  className="user-btn-secondary mt-4 inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold"
+	                >
                   <FiDisc />
                   Mở trang album
                 </button>

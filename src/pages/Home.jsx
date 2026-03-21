@@ -13,12 +13,17 @@ import ArtistNames from "../components/artist/ArtistNames";
 import Section from "../components/section/Section";
 import SongCard from "../components/song/SongCard";
 import { SongDetailLink } from "../components/song/SongDetailLink";
+import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import useRecommendationSessionStore from "../store/recommendation-session.store";
 import { filterPlayableSongs, fetchPlayableSong, toPlayableSong } from "../utils/song";
 import { resolveAssetUrl } from "../utils/asset";
 import { getArtistLabel } from "../utils/artist";
+import {
+  buildCollectionPageJsonLd,
+  buildWebSiteJsonLd,
+} from "../utils/seo";
 
 const HOME_HISTORY_LIMIT = 60;
 const CONTINUE_SONGS_LIMIT = 6;
@@ -479,6 +484,37 @@ export default function Home() {
     resolveAssetUrl(newAlbums?.[0]?.cover_url) ||
     resolveAssetUrl(artistAlbums?.[0]?.cover_url) ||
     "";
+  const homeMetaDescription = useMemo(() => {
+    const highlights = [];
+
+    if (weeklyTop.length) {
+      highlights.push(`cập nhật MChart với ${weeklyTop.length} bài hát nổi bật trong tuần`);
+    }
+
+    if (newAlbums.length) {
+      highlights.push(`khám phá ${newAlbums.length} album phát hành gần đây`);
+    }
+
+    if (artistAlbums.length) {
+      highlights.push("theo dõi nghệ sĩ và gợi ý nghe nhạc cá nhân hóa");
+    }
+
+    return highlights.length
+      ? `${highlights.join(", ")} trên Khoaluan Music.`
+      : "Nghe nhạc trực tuyến, khám phá album mới, MChart và nghệ sĩ nổi bật trên Khoaluan Music.";
+  }, [artistAlbums.length, newAlbums.length, weeklyTop.length]);
+  const homeJsonLd = useMemo(
+    () => [
+      buildWebSiteJsonLd(),
+      buildCollectionPageJsonLd({
+        name: "Trang chủ Khoaluan Music",
+        description: homeMetaDescription,
+        url: "/",
+        image: featuredCover || "/logo-brand.png",
+      }),
+    ],
+    [featuredCover, homeMetaDescription]
+  );
 
   const reasonById = useMemo(() => {
     const map = new Map();
@@ -512,6 +548,14 @@ export default function Home() {
     () => songs.slice(0, recommendationLimit),
     [recommendationLimit, songs]
   );
+
+  usePageMetadata({
+    title: "Nghe nhạc trực tuyến",
+    description: homeMetaDescription,
+    image: featuredCover || "/logo-brand.png",
+    url: "/",
+    jsonLd: homeJsonLd,
+  });
 
   const refreshRecommendations = async () => {
     const historyItems = await loadUserHistory({ force: true });

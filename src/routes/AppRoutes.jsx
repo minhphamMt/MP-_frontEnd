@@ -107,10 +107,15 @@ export default function AppRoutes() {
             <Route path="/albums" element={<Albums />} />
             <Route path="/search" element={<Search />} />
             <Route path="/song/:id" element={<SongDetail />} />
+            <Route path="/song/:id/:slug" element={<SongDetail />} />
             <Route path="/artist/:id/songs" element={<ArtistAllSongs />} />
+            <Route path="/artist/:id/:slug/songs" element={<ArtistAllSongs />} />
             <Route path="/artist/:id/albums" element={<ArtistAllAlbums />} />
+            <Route path="/artist/:id/:slug/albums" element={<ArtistAllAlbums />} />
             <Route path="/artist/:id" element={<ArtistDetail />} />
+            <Route path="/artist/:id/:slug" element={<ArtistDetail />} />
             <Route path="/album/:id" element={<AlbumDetail />} />
+            <Route path="/album/:id/:slug" element={<AlbumDetail />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={["USER", "ARTIST", "ADMIN"]} />}>

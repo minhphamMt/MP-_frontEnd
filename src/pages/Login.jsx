@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
 import { signInWithGoogle, signOutFirebaseSession } from "../utils/firebase";
 
@@ -174,6 +175,18 @@ export default function Login({ initialMode = "login" }) {
         : "Tạo tài khoản miễn phí và bắt đầu hành trình âm nhạc của bạn.",
     [mode]
   );
+
+  const authMetaDescription =
+    mode === "login"
+      ? "Đăng nhập Khoaluan Music để tiếp tục nghe nhạc, lưu lịch sử và quản lý thư viện cá nhân."
+      : "Tạo tài khoản Khoaluan Music để lưu playlist, theo dõi nghệ sĩ và cá nhân hóa trải nghiệm nghe nhạc.";
+
+  usePageMetadata({
+    title: mode === "login" ? "Đăng nhập" : "Đăng ký",
+    description: authMetaDescription,
+    url: mode === "login" ? "/login" : "/register",
+    robots: "noindex, nofollow",
+  });
 
   const showError = (message) => {
     setErrorPopup(message);

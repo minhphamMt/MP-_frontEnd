@@ -5,7 +5,7 @@ import AlbumCard from "../components/album/AlbumCard";
 import ArtistAlbumCard from "../components/album/ArtistAlbumCard";
 import OptimizedImage from "../components/common/OptimizedImage";
 import SongRow from "../components/song/SongRow";
-import { getSongDetailPath } from "../components/song/SongDetailLink";
+import usePageMetadata from "../hooks/usePageMetadata";
 import {
   extractSearchCollections,
   getSearchHistory,
@@ -15,6 +15,7 @@ import {
 import useAuthStore from "../store/auth.store";
 import { resolveAssetUrl } from "../utils/asset";
 import { getArtistLabel } from "../utils/artist";
+import { getAlbumPath, getArtistPath, getSongPath } from "../utils/entityPath";
 import { filterPlayableSongs } from "../utils/song";
 
 const PAGE_LIMIT = 18;
@@ -104,9 +105,9 @@ const getHistoryKeyword = (item) =>
 
 const getTopResultLink = (item) => {
   if (!item) return null;
-  if (item.type === "Song") return getSongDetailPath(item.raw);
-  if (item.type === "Artist") return item.raw?.artist_id ? `/artist/${item.raw.artist_id}` : null;
-  if (item.type === "Album") return item.raw?.id ? `/album/${item.raw.id}` : null;
+  if (item.type === "Song") return getSongPath(item.raw);
+  if (item.type === "Artist") return getArtistPath(item.raw);
+  if (item.type === "Album") return getAlbumPath(item.raw);
   return null;
 };
 
@@ -306,6 +307,18 @@ export default function Search() {
   }, [activeTab, artists.length, albums.length, songs.length, totalCount]);
 
   const topResultLink = getTopResultLink(topResult);
+  const searchMetaTitle = keyword ? `Tìm kiếm: ${keyword}` : "Tìm kiếm";
+  const searchMetaDescription = keyword
+    ? `Kết quả tìm kiếm cho "${keyword}" trên Khoaluan Music.`
+    : "Trang tìm kiếm nội dung trên Khoaluan Music.";
+
+  usePageMetadata({
+    title: searchMetaTitle,
+    description: searchMetaDescription,
+    image: topResult?.image ? resolveAssetUrl(topResult.image) : "/logo-brand.png",
+    url: keyword ? `/search?q=${encodeURIComponent(keyword)}` : "/search",
+    robots: "noindex, follow",
+  });
 
   return (
     <div className="user-page-shell min-h-screen w-full max-w-full space-y-6 overflow-x-hidden px-3 py-5 pb-12 sm:space-y-8 sm:px-6 sm:py-6">

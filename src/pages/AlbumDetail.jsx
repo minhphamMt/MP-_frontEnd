@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   FiCalendar,
   FiClock,
@@ -31,6 +31,11 @@ import {
   normalizeArtists,
 } from "../utils/artist";
 import { formatDateDisplay } from "../utils/date";
+import { getAlbumPath, getArtistPath, getSongPath } from "../utils/entityPath";
+import {
+  buildBreadcrumbJsonLd,
+  buildMusicAlbumJsonLd,
+} from "../utils/seo";
 import { formatDuration, toPlayableSong } from "../utils/song";
 import { formatTotalDuration, stripHtml } from "./artistDetail.shared";
 
@@ -56,6 +61,7 @@ export default function AlbumDetail() {
   useEnsureLikedAlbumsLoaded();
 
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [album, setAlbum] = useState(null);
   const [songs, setSongs] = useState([]);
@@ -144,11 +150,18 @@ export default function AlbumDetail() {
   const albumCoverUrl = resolveAssetUrl(album?.cover_url || "");
   const albumId = normalizeAlbumId(album);
   const isLiked = albumId && likedAlbumIds.includes(albumId);
-  const sharePath = albumId ? `/album/${albumId}` : id ? `/album/${id}` : "";
+  const sharePath = getAlbumPath(album || { id }) || "";
   const artistMeta = album?.artist || {};
   const artistDisplayName =
     album?.artist_name || artistMeta?.name || artistMeta?.alias || "Đang cập nhật";
   const artistId = album?.artist_id || artistMeta?.id || null;
+  const artistPath =
+    getArtistPath({
+      id: artistId,
+      artist_id: artistId,
+      artist_name: artistDisplayName,
+      name: artistDisplayName,
+    }) || "";
   const releaseDate = album?.release_date
     ? formatDateDisplay(album.release_date)
     : "Đang cập nhật";
@@ -213,6 +226,47 @@ export default function AlbumDetail() {
     }),
     [album?.title, albumCoverUrl, artistDisplayName, releaseDate, songs.length, totalDuration]
   );
+  const albumJsonLd = useMemo(
+    () => [
+      buildMusicAlbumJsonLd({
+        name: album?.title || "Album",
+        description: albumMetaDescription,
+        url: sharePath,
+        image: albumCoverUrl || "/logo-brand.png",
+        artistName: artistDisplayName,
+        artistUrl: artistPath || undefined,
+        datePublished: album?.release_date || undefined,
+        numTracks: songs.length,
+        tracks: songs.slice(0, 12).map((song) => ({
+          name: song.title,
+          url: getSongPath(song) || undefined,
+          duration: song.duration,
+          artistName: getArtistLabel(song, artistDisplayName),
+          artistUrl: getArtistPath(song) || artistPath || undefined,
+        })),
+      }),
+      buildBreadcrumbJsonLd([
+        { name: "Trang chủ", url: "/" },
+        { name: "Album", url: "/albums" },
+        { name: album?.title || "Album", url: sharePath },
+      ]),
+    ],
+    [
+      album?.release_date,
+      album?.title,
+      albumCoverUrl,
+      albumMetaDescription,
+      artistDisplayName,
+      artistPath,
+      sharePath,
+      songs,
+    ]
+  );
+
+  useEffect(() => {
+    if (!album || !sharePath || location.pathname === sharePath) return;
+    navigate(sharePath, { replace: true });
+  }, [album, location.pathname, navigate, sharePath]);
 
   usePageMetadata({
     title: album?.title || "Album",
@@ -220,6 +274,7 @@ export default function AlbumDetail() {
     image: albumCoverUrl,
     url: sharePath,
     type: "music.album",
+    jsonLd: albumJsonLd,
   });
 
   const heroPanelClass =
@@ -309,8 +364,8 @@ export default function AlbumDetail() {
             </h1>
             <button
               type="button"
-              onClick={() => artistId && navigate(`/artist/${artistId}`)}
-              disabled={!artistId}
+	              onClick={() => artistPath && navigate(artistPath)}
+	              disabled={!artistPath}
               className="mt-3 inline-flex max-w-full items-center gap-2 text-sm font-medium text-white/72 transition md:hover:text-emerald-300 disabled:cursor-default disabled:hover:text-white/72"
             >
               <FiUser className="shrink-0" />
@@ -367,12 +422,12 @@ export default function AlbumDetail() {
                 {isLiked ? "Đã thích album" : "Thích album"}
               </button>
 
-              {artistId ? (
-                <button
-                  type="button"
-                  onClick={() => navigate(`/artist/${artistId}`)}
-                  className={secondaryActionClass}
-                >
+	              {artistPath ? (
+	                <button
+	                  type="button"
+	                  onClick={() => navigate(artistPath)}
+	                  className={secondaryActionClass}
+	                >
                   <FiUser />
                   Xem nghệ sĩ
                 </button>
@@ -584,12 +639,12 @@ export default function AlbumDetail() {
               {artistSummary ? (
                 <p className="mt-2 text-sm leading-relaxed text-white/65">{artistSummary}</p>
               ) : null}
-              {artistId ? (
-                <button
-                  type="button"
-                  onClick={() => navigate(`/artist/${artistId}`)}
-                  className="user-btn-secondary mt-4 inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold"
-                >
+	              {artistPath ? (
+	                <button
+	                  type="button"
+	                  onClick={() => navigate(artistPath)}
+	                  className="user-btn-secondary mt-4 inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold"
+	                >
                   <FiUser />
                   Mở trang nghệ sĩ
                 </button>

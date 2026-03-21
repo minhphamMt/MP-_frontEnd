@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import usePlayerStore from "../../store/player.store";
 import FollowArtistButton from "../artist/FollowArtistButton";
 import { resolveAssetUrl } from "../../utils/asset";
+import { getArtistPath } from "../../utils/entityPath";
 import OptimizedImage from "../common/OptimizedImage";
 import { getArtistLabel } from "../../utils/artist";
 
@@ -54,7 +55,7 @@ export default function ArtistAlbumCard({
   return (
     <div
       data-card
-      onClick={() => navigate(`/artist/${artist.artist_id}`)}
+      onClick={() => navigate(getArtistPath(artist) || "/")}
       className={`group relative w-full overflow-hidden p-3 transition-all duration-300 active:scale-[0.98] ${
         isLibrary
           ? `${isCompact ? "rounded-[18px]" : "rounded-lg"} border border-white/10 bg-[#181818]`

@@ -1,12 +1,7 @@
 import { FiExternalLink } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import { normalizeSongId } from "../../store/player.store";
+import { getSongPath } from "../../utils/entityPath";
 import { stripUnderlineClasses } from "../../utils/linkClass";
-
-export function getSongDetailPath(song) {
-  const songId = normalizeSongId(song);
-  return songId ? `/song/${songId}` : null;
-}
 
 export function SongDetailLink({
   song,
@@ -16,7 +11,7 @@ export function SongDetailLink({
   stopPropagation = true,
   onNavigate,
 }) {
-  const path = getSongDetailPath(song);
+  const path = getSongPath(song);
   const cleanedClassName = stripUnderlineClasses(className);
 
   if (!path) {
@@ -47,7 +42,7 @@ export function SongDetailIconButton({
   title = "Xem thông tin bài hát",
   onNavigate,
 }) {
-  const path = getSongDetailPath(song);
+  const path = getSongPath(song);
 
   if (!path) return null;
 

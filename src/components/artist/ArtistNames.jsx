@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { getArtistLabel, normalizeArtists } from "../../utils/artist";
+import { getArtistPath } from "../../utils/entityPath";
 import { stripUnderlineClasses } from "../../utils/linkClass";
 
 export default function ArtistNames({
@@ -36,7 +37,7 @@ export default function ArtistNames({
           <span key={key}>
             {artist?.id ? (
               <Link
-                to={`/artist/${artist.id}`}
+                to={getArtistPath(artist)}
                 onClick={handleClick}
                 className={[
                   "no-underline hover:no-underline focus:no-underline",

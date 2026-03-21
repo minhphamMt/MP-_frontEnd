@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   FiArrowLeft,
   FiClock,
@@ -17,6 +17,16 @@ import { useEnsureLikedSongsLoaded } from "../hooks/useEnsureLibraryState";
 import usePageMetadata from "../hooks/usePageMetadata";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { resolveAssetUrl } from "../utils/asset";
+import {
+  getAlbumPath,
+  getArtistAlbumsPath,
+  getArtistPath,
+  getArtistSongsPath,
+} from "../utils/entityPath";
+import {
+  buildBreadcrumbJsonLd,
+  buildCollectionPageJsonLd,
+} from "../utils/seo";
 import { formatDuration } from "../utils/song";
 import {
   fetchArtistDetailData,
@@ -28,6 +38,8 @@ export default function ArtistAllSongs() {
   useEnsureLikedSongsLoaded();
 
   const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [artist, setArtist] = useState(null);
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -73,8 +85,27 @@ export default function ArtistAllSongs() {
   const portraitUrl = resolveAssetUrl(artist?.avatar || artist?.cover);
   const backdropUrl = resolveAssetUrl(artist?.cover || artist?.avatar);
   const activeSongId = normalizeSongId(currentSong);
-  const artistPath = artist?.id ? `/artist/${artist.id}` : `/artist/${id}`;
-  const albumsPath = artist?.id ? `/artist/${artist.id}/albums` : `/artist/${id}/albums`;
+  const artistPath = getArtistPath(artist || { id }) || `/artist/${id}`;
+  const albumsPath = getArtistAlbumsPath(artist || { id }) || `${artistPath}/albums`;
+  const songsPath = getArtistSongsPath(artist || { id }) || `${artistPath}/songs`;
+  const artistSongsJsonLd = useMemo(
+    () => [
+      buildCollectionPageJsonLd({
+        name: artist?.name ? `${artist.name} - Bài hát` : "Bài hát nghệ sĩ",
+        description: artist?.name
+          ? `${songs.length} bài hát của ${artist.name} trên Khoaluan Music.`
+          : "Danh sách bài hát của nghệ sĩ trên Khoaluan Music.",
+        url: songsPath,
+        image: portraitUrl || backdropUrl || "/logo-brand.png",
+      }),
+      buildBreadcrumbJsonLd([
+        { name: "Trang chủ", url: "/" },
+        { name: artist?.name || "Nghệ sĩ", url: artistPath },
+        { name: "Bài hát", url: songsPath },
+      ]),
+    ],
+    [artist?.name, artistPath, backdropUrl, portraitUrl, songs.length, songsPath]
+  );
 
   usePageMetadata({
     title: artist?.name ? `${artist.name} - Bài hát` : "Bài hát nghệ sĩ",
@@ -82,9 +113,15 @@ export default function ArtistAllSongs() {
       ? `${songs.length} bài hát • ${formatTotalDuration(totalDuration)} của ${artist.name} trên Khoaluan Music.`
       : "Danh sách bài hát của nghệ sĩ trên Khoaluan Music.",
     image: portraitUrl || backdropUrl,
-    url: artistPath,
+    url: songsPath,
     type: "website",
+    jsonLd: artistSongsJsonLd,
   });
+
+  useEffect(() => {
+    if (!artist || !songsPath || location.pathname === songsPath) return;
+    navigate(songsPath, { replace: true });
+  }, [artist, location.pathname, navigate, songsPath]);
 
   const panelClass =
     "relative overflow-hidden rounded-[28px] border border-white/10 bg-black/24 p-4 shadow-[0_20px_52px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-5 lg:p-6";
@@ -320,7 +357,12 @@ export default function ArtistAllSongs() {
                     <div className="hidden min-w-0 text-sm text-white/60 lg:block">
                       {song.album_id && song.album_title ? (
                         <Link
-                          to={`/album/${song.album_id}`}
+                          to={
+                            getAlbumPath({
+                              id: song.album_id,
+                              title: song.album_title,
+                            }) || `/album/${song.album_id}`
+                          }
                           onClick={(event) => event.stopPropagation()}
                           className="truncate transition md:hover:text-emerald-300 md:hover:underline"
                         >
