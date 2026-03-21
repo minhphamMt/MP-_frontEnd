@@ -35,6 +35,15 @@ const resetSessionStores = async () => {
   } catch (error) {
     console.warn("Failed to reset artist follow store", error);
   }
+
+  try {
+    const { default: useRecommendationSessionStore } = await import(
+      "./recommendation-session.store"
+    );
+    useRecommendationSessionStore.getState().resetForAuthChange?.();
+  } catch (error) {
+    console.warn("Failed to reset recommendation session store", error);
+  }
 };
 
 const safeParseJson = (value) => {

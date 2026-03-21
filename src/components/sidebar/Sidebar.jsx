@@ -1,7 +1,7 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { FaChartLine } from "react-icons/fa";
 import { BsHeartFill, BsMusicNoteList } from "react-icons/bs";
-import { FiChevronsLeft, FiChevronsRight, FiX } from "react-icons/fi";
+import { FiChevronsLeft, FiChevronsRight, FiFolder, FiUsers, FiX } from "react-icons/fi";
 import { MdAlbum, MdExplore, MdHistory, MdLibraryMusic, MdPlaylistPlay } from "react-icons/md";
 
 import useAuthStore from "../../store/auth.store";
@@ -253,23 +253,29 @@ export default function Sidebar({ isOpen, onClose }) {
                     label="Nghe gần đây"
                     collapsed={isCompact}
                   />
-                  <SidebarItem
-                    to="/playlists"
-                    icon={MdPlaylistPlay}
-                    label="Thư viện"
-                    collapsed={isCompact}
-                  />
-                  <SidebarItem
-                    to="/library/liked-songs"
-                    icon={BsHeartFill}
-                    label="Bài hát yêu thích"
-                    collapsed={isCompact}
-                  />
-                  <SidebarItem
-                    to="/library/playlists"
-                    icon={MdPlaylistPlay}
-                    label="Playlist đã tạo"
-                    collapsed={isCompact}
+	                  <SidebarItem
+	                    to="/playlists"
+	                    icon={FiFolder}
+	                    label="Thư viện"
+	                    collapsed={isCompact}
+	                  />
+	                  <SidebarItem
+	                    to="/library/liked-songs"
+	                    icon={BsHeartFill}
+	                    label="Bài hát yêu thích"
+	                    collapsed={isCompact}
+	                  />
+	                  <SidebarItem
+	                    to="/library/followed-artists"
+	                    icon={FiUsers}
+	                    label="Nghệ sĩ đã thích"
+	                    collapsed={isCompact}
+	                  />
+	                  <SidebarItem
+	                    to="/library/playlists"
+	                    icon={MdPlaylistPlay}
+	                    label="Playlist đã tạo"
+	                    collapsed={isCompact}
                   />
                   <SidebarItem
                     to="/library/liked-albums"
