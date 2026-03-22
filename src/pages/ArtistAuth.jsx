@@ -487,7 +487,7 @@ export default function ArtistAuth() {
         </form>
       </AuthCard>
       <p className="pointer-events-none absolute left-1/2 top-full mt-4 -translate-x-1/2 whitespace-nowrap text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/34">
-        KLTN MINH PHẠM CS64
+        KLTN MINH PHẠM CS64-NEU
       </p>
     </MotionDiv>
   );
@@ -507,6 +507,7 @@ export default function ArtistAuth() {
       <AuthModal
         open={forgotOpen}
         onClose={() => setForgotOpen(false)}
+        theme="artist"
         icon={<FiRadio size={18} />}
         title="Khôi phục mật khẩu"
         description={isResetStep ? "Nhập mã và mật khẩu mới." : "Nhập email artist để nhận mã xác thực."}

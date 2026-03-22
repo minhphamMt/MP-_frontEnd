@@ -589,7 +589,7 @@ export default function Login({ initialMode = "login" }) {
         </form>
       </AuthCard>
       <p className="pointer-events-none absolute left-1/2 top-full mt-4 -translate-x-1/2 whitespace-nowrap text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/34">
-        KLTN MINH PHẠM CS64
+        KLTN MINH PHẠM CS64-NEU
       </p>
     </MotionDiv>
   );
@@ -616,6 +616,7 @@ export default function Login({ initialMode = "login" }) {
       <AuthModal
         open={awaitingVerification}
         onClose={() => setAwaitingVerification(false)}
+        theme="listener"
         icon={<FiMail size={18} />}
         title="Xác thực email"
         description="Nhập mã 6 số để hoàn tất đăng ký."
@@ -647,6 +648,7 @@ export default function Login({ initialMode = "login" }) {
       <AuthModal
         open={forgotOpen}
         onClose={() => setForgotOpen(false)}
+        theme="listener"
         icon={<FiMusic size={18} />}
         title="Khôi phục mật khẩu"
         description={isResetStep ? "Nhập mã và mật khẩu mới." : "Nhập email để nhận mã xác thực."}

@@ -137,9 +137,13 @@ export default function ArtistRequest() {
   const currentStatusMeta = statusMeta[status] || null;
   const StatusIcon = currentStatusMeta?.icon || FiFileText;
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setAuthContext("default");
+    if (typeof window !== "undefined") {
+      window.location.replace("/artist-auth");
+      return;
+    }
     navigate("/artist-auth", { replace: true });
   };
 

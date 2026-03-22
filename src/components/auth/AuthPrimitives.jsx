@@ -4,6 +4,11 @@ import { FiCheck, FiEye, FiEyeOff, FiX } from "react-icons/fi";
 
 const MotionDiv = motion.div;
 
+const modalThemeClasses = {
+  listener: "auth-shell-listener",
+  artist: "auth-shell-artist",
+};
+
 const cardVariants = {
   hero: "auth-hero-card",
   main: "auth-main-card",
@@ -11,10 +16,10 @@ const cardVariants = {
 };
 
 const messageTones = {
-  error: "border-rose-500/35 bg-rose-500/10 text-rose-100",
-  success: "border-emerald-400/30 bg-emerald-500/10 text-emerald-100",
-  info: "border-sky-400/30 bg-sky-500/10 text-sky-100",
-  warning: "border-amber-400/30 bg-amber-500/10 text-amber-100",
+  error: "auth-ui-message--error",
+  success: "auth-ui-message--success",
+  info: "auth-ui-message--info",
+  warning: "auth-ui-message--warning",
 };
 
 export function AuthCard({ variant = "main", className = "", children }) {
@@ -35,11 +40,7 @@ export function AuthPill({ children, muted = false, className = "" }) {
 }
 
 export function AuthMessage({ tone = "error", className = "", children }) {
-  return (
-    <div className={clsx("rounded-[18px] border px-4 py-3 text-sm", messageTones[tone] ?? messageTones.error, className)}>
-      {children}
-    </div>
-  );
+  return <div className={clsx("auth-ui-message", messageTones[tone] ?? messageTones.error, className)}>{children}</div>;
 }
 
 export function AuthTabs({ items, value, onChange, className = "" }) {
@@ -193,29 +194,34 @@ export function AuthModal({
   title,
   description,
   children,
+  theme = "listener",
   className = "",
 }) {
+  const themeClassName = modalThemeClasses[theme] ?? modalThemeClasses.listener;
+
   return (
     <AnimatePresence>
       {open ? (
         <MotionDiv
-          className="auth-ui-modal-backdrop"
+          className={clsx("auth-ui-modal-backdrop", themeClassName)}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
           <MotionDiv
-            className={clsx("auth-main-card w-full max-w-[460px] rounded-[28px] p-5 sm:p-6", className)}
+            className={clsx("auth-ui-modal-card auth-main-card w-full max-w-[460px] rounded-[28px] p-5 sm:p-6", className)}
             initial={{ opacity: 0, y: 14, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 14, scale: 0.985 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
+            role="dialog"
+            aria-modal="true"
           >
             <div className="mb-5 flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
                 {icon ? (
                   <div
-                    className="auth-soft-card flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px]"
+                    className="auth-ui-modal-icon auth-soft-card flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px]"
                     style={{ color: "rgb(var(--auth-accent-rgb))" }}
                   >
                     {icon}
@@ -227,7 +233,12 @@ export function AuthModal({
                 </div>
               </div>
 
-              <button type="button" onClick={onClose} className="auth-ui-icon-button" aria-label="Đóng">
+              <button
+                type="button"
+                onClick={onClose}
+                className="auth-ui-icon-button auth-ui-modal-close"
+                aria-label="Đóng"
+              >
                 <FiX size={16} />
               </button>
             </div>

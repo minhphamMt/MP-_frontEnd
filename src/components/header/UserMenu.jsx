@@ -23,7 +23,7 @@ export default function UserMenu({ isArtistWorkspace = false }) {
     ? "flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-sky-200/[0.14] bg-[#182337] text-sm font-semibold text-slate-100/90 transition md:hover:border-sky-200/[0.3] md:hover:bg-[#22324d]"
     : "flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-[#1a1a1a] text-sm font-semibold text-white/85 transition md:hover:border-white/30 md:hover:bg-[#242424]";
   const menuClassName = isArtistWorkspace
-    ? "absolute right-0 mt-2 w-52 overflow-hidden rounded-2xl border border-sky-200/[0.14] bg-[#101a2c]/96 p-1.5 text-sm text-white shadow-[0_20px_50px_rgba(2,6,18,0.45)] ring-1 ring-inset ring-sky-100/[0.03] backdrop-blur-xl"
+    ? "absolute right-0 mt-2 w-52 overflow-hidden rounded-2xl border border-sky-200/[0.16] bg-[#101b2d] p-1.5 text-sm text-white shadow-[0_24px_56px_rgba(2,6,18,0.52)] ring-1 ring-inset ring-sky-100/[0.04]"
     : "absolute right-0 mt-2 w-52 overflow-hidden rounded-2xl border border-white/15 bg-[#121212] p-1.5 text-sm text-white shadow-[0_20px_50px_rgba(0,0,0,0.45)]";
   const menuItemClassName = isArtistWorkspace
     ? "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition md:hover:bg-sky-400/[0.07]"
@@ -51,9 +51,13 @@ export default function UserMenu({ isArtistWorkspace = false }) {
     navigate(profilePath);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsOpen(false);
-    logout();
+    await logout();
+    if (typeof window !== "undefined" && authPath === "/artist-auth") {
+      window.location.replace(authPath);
+      return;
+    }
     navigate(authPath, { replace: true });
   };
 
