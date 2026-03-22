@@ -9,10 +9,10 @@ export default function Header({ onMenuClick, isArtistWorkspace = false }) {
   const user = useAuthStore((state) => state.user);
   const showSearch = user?.role !== "ARTIST";
   const headerClassName = isArtistWorkspace
-    ? "border-sky-200/[0.08] bg-[#0c1321]/94 shadow-[0_18px_36px_rgba(2,6,18,0.22)]"
+    ? "border-sky-200/[0.1] bg-[#0f182a]/94 shadow-[0_18px_36px_rgba(3,8,18,0.24)]"
     : "border-white/10 bg-[#0b0b0b]/95";
   const navButtonClassName = isArtistWorkspace
-    ? "border-sky-200/[0.12] bg-[#141e31] text-slate-100/88 md:hover:border-sky-200/[0.26] md:hover:bg-[#1b2942] md:hover:text-white"
+    ? "border-sky-200/[0.14] bg-[#182337] text-slate-100/90 md:hover:border-sky-200/[0.28] md:hover:bg-[#22324d] md:hover:text-white"
     : "border-white/10 bg-[#1a1a1a] text-white/85 md:hover:border-white/20 md:hover:bg-[#242424] md:hover:text-white";
 
   return (
@@ -21,6 +21,7 @@ export default function Header({ onMenuClick, isArtistWorkspace = false }) {
     >
       <div className="relative flex items-center gap-2">
         <button
+          type="button"
           onClick={onMenuClick}
           className={`group flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-200 active:scale-95 lg:hidden ${navButtonClassName}`}
           title="Mở menu"
@@ -29,6 +30,7 @@ export default function Header({ onMenuClick, isArtistWorkspace = false }) {
           <FiMenu />
         </button>
         <button
+          type="button"
           onClick={() => navigate(-1)}
           className={`group hidden h-10 w-10 items-center justify-center rounded-full border transition-all duration-200 active:scale-95 sm:flex ${navButtonClassName}`}
           title="Quay lại"
@@ -37,6 +39,7 @@ export default function Header({ onMenuClick, isArtistWorkspace = false }) {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate(1)}
           className={`group hidden h-10 w-10 items-center justify-center rounded-full border transition-all duration-200 active:scale-95 sm:flex ${navButtonClassName}`}
           title="Tiến tới"

@@ -12,6 +12,7 @@ import { APP_TOAST_EVENT } from "../utils/appToast";
 
 export default function MainLayout() {
   const mainRef = useRef(null);
+  const previousPathnameRef = useRef(null);
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [authToastMessage, setAuthToastMessage] = useState("");
@@ -66,6 +67,20 @@ export default function MainLayout() {
     }
 
     window.scrollTo({ top: 0, behavior: "auto" });
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (previousPathnameRef.current === null) {
+      previousPathnameRef.current = location.pathname;
+      return undefined;
+    }
+
+    if (previousPathnameRef.current === location.pathname) {
+      return undefined;
+    }
+
+    previousPathnameRef.current = location.pathname;
+
     if (!isSidebarOpen) return undefined;
 
     const frameId = window.requestAnimationFrame(() => {
@@ -74,6 +89,33 @@ export default function MainLayout() {
 
     return () => window.cancelAnimationFrame(frameId);
   }, [isSidebarOpen, location.pathname]);
+
+  useEffect(() => {
+    if (typeof document === "undefined" || typeof window === "undefined") return undefined;
+    if (!isSidebarOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+    const syncBodyLock = () => {
+      if (window.innerWidth >= 1024) {
+        document.body.style.overflow = previousOverflow;
+        document.body.style.touchAction = previousTouchAction;
+        return;
+      }
+
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+    };
+
+    syncBodyLock();
+    window.addEventListener("resize", syncBodyLock);
+
+    return () => {
+      window.removeEventListener("resize", syncBodyLock);
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    };
+  }, [isSidebarOpen]);
 
   return (
     <div className="flex h-screen flex-col bg-[#000000] text-white">
@@ -95,7 +137,7 @@ export default function MainLayout() {
             isAdminRoute
               ? "admin-main-surface bg-[#0a0a0a]"
               : isArtistWorkspaceRoute
-                ? "artist-main-surface bg-[#090d18]"
+                ? "artist-main-surface bg-[#0c1623]"
                 : "user-main-surface bg-[#0a0a0a]"
           }`}
         >

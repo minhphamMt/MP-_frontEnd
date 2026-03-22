@@ -417,8 +417,7 @@ body {
   background: rgba(0, 0, 0, 0.34);
 }
 
-.admin-content,
-.artist-content {
+.admin-content {
   --workspace-panel: #111111;
   --workspace-surface: #151515;
   --workspace-border: rgba(255, 255, 255, 0.08);
@@ -426,7 +425,22 @@ body {
   --workspace-fg: rgba(255, 255, 255, 0.92);
   --workspace-muted: rgba(179, 179, 179, 0.88);
   --workspace-accent: #1db954;
+  --workspace-accent-rgb: 29, 185, 84;
   --workspace-accent-soft: rgba(29, 185, 84, 0.16);
+  color: var(--workspace-fg);
+  font-family: "Segoe UI", "Noto Sans", "Tahoma", Arial, sans-serif;
+}
+
+.artist-content {
+  --workspace-panel: #101a2b;
+  --workspace-surface: #152134;
+  --workspace-border: rgba(143, 176, 205, 0.16);
+  --workspace-border-strong: rgba(206, 225, 241, 0.24);
+  --workspace-fg: rgba(244, 248, 255, 0.94);
+  --workspace-muted: rgba(191, 205, 223, 0.82);
+  --workspace-accent: #84bee8;
+  --workspace-accent-rgb: 132, 190, 232;
+  --workspace-accent-soft: rgba(132, 190, 232, 0.14);
   color: var(--workspace-fg);
   font-family: "Segoe UI", "Noto Sans", "Tahoma", Arial, sans-serif;
 }
@@ -465,25 +479,29 @@ body {
 }
 
 .artist-main-surface::before {
-  background: rgba(255, 255, 255, 0.01);
+  background:
+    radial-gradient(circle at top, rgba(132, 190, 232, 0.12), transparent 44%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent 34%);
 }
 
 .artist-main-surface::after {
-  background: rgba(0, 0, 0, 0.34);
+  background: linear-gradient(180deg, rgba(5, 10, 18, 0.08), rgba(4, 8, 14, 0.38));
 }
 
 .artist-content .artist-soft-card,
 .artist-content .artist-kpi {
   border-radius: 14px;
   border: 1px solid var(--workspace-border);
-  background: rgba(255, 255, 255, 0.02);
+  background:
+    linear-gradient(180deg, rgba(var(--workspace-accent-rgb), 0.045), transparent 26%),
+    rgba(255, 255, 255, 0.018);
 }
 
 .artist-content .artist-label {
   font-size: 10px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: rgba(179, 179, 179, 0.86);
+  color: var(--workspace-muted);
 }
 
 .artist-content .artist-input,
@@ -492,7 +510,8 @@ body {
   width: 100%;
   border-radius: 16px;
   border: 1px solid var(--workspace-border);
-  background: #1f1f1f;
+  background:
+    linear-gradient(180deg, rgba(var(--workspace-accent-rgb), 0.028), rgba(21, 33, 52, 0.96));
   color: var(--workspace-fg);
   outline: none;
   transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
@@ -511,9 +530,9 @@ body {
   -moz-appearance: none;
   padding-right: 3rem !important;
   background-image:
-    linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.72) 50%),
-    linear-gradient(45deg, rgba(255, 255, 255, 0.72) 50%, transparent 50%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+    linear-gradient(135deg, transparent 50%, rgba(220, 234, 248, 0.72) 50%),
+    linear-gradient(45deg, rgba(220, 234, 248, 0.72) 50%, transparent 50%),
+    linear-gradient(180deg, rgba(var(--workspace-accent-rgb), 0.045), rgba(255, 255, 255, 0.02));
   background-position:
     calc(100% - 20px) calc(50% - 3px),
     calc(100% - 14px) calc(50% - 3px),
@@ -527,23 +546,23 @@ body {
 
 .ui-select:hover,
 .artist-content .artist-select:hover {
-  border-color: rgba(255, 255, 255, 0.18) !important;
-  background-color: #232323 !important;
+  border-color: rgba(var(--workspace-accent-rgb), 0.22) !important;
+  background-color: #18263b !important;
 }
 
 .ui-select:focus,
 .artist-content .artist-select:focus {
-  border-color: rgba(29, 185, 84, 0.62) !important;
-  background-color: #222222 !important;
+  border-color: rgba(var(--workspace-accent-rgb), 0.62) !important;
+  background-color: #1b2a41 !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 0 3px rgba(29, 185, 84, 0.14),
+    0 0 0 3px rgba(var(--workspace-accent-rgb), 0.14),
     0 12px 28px rgba(0, 0, 0, 0.22) !important;
 }
 
 .ui-select option,
 .artist-content .artist-select option {
-  background: #141414;
+  background: #132034;
   color: rgba(255, 255, 255, 0.92);
 }
 
@@ -555,30 +574,32 @@ body {
 
 .artist-content .artist-input::placeholder,
 .artist-content .artist-textarea::placeholder {
-  color: rgba(179, 179, 179, 0.72);
+  color: rgba(191, 205, 223, 0.62);
 }
 
 .artist-content .artist-input:focus,
 .artist-content .artist-select:focus,
 .artist-content .artist-textarea:focus {
-  border-color: rgba(29, 185, 84, 0.62);
-  background: #222222;
-  box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.14);
+  border-color: rgba(var(--workspace-accent-rgb), 0.62);
+  background:
+    linear-gradient(180deg, rgba(var(--workspace-accent-rgb), 0.042), rgba(24, 37, 58, 0.98));
+  box-shadow: 0 0 0 3px rgba(var(--workspace-accent-rgb), 0.14);
 }
 
 .artist-content .artist-btn-primary {
   border-radius: 9999px;
-  border: 1px solid rgba(29, 185, 84, 0.44);
-  background: var(--workspace-accent);
-  color: #041209;
+  border: 1px solid rgba(var(--workspace-accent-rgb), 0.38);
+  background: linear-gradient(180deg, rgba(var(--workspace-accent-rgb), 0.94), rgba(var(--workspace-accent-rgb), 0.82));
+  color: #07111d;
   font-weight: 700;
-  box-shadow: 0 10px 28px rgba(29, 185, 84, 0.26);
+  box-shadow: 0 10px 28px rgba(var(--workspace-accent-rgb), 0.2);
 }
 
 .artist-content .artist-btn-secondary {
   border-radius: 9999px;
   border: 1px solid var(--workspace-border);
-  background: rgba(255, 255, 255, 0.03);
+  background:
+    linear-gradient(180deg, rgba(var(--workspace-accent-rgb), 0.04), rgba(255, 255, 255, 0.03));
   color: var(--workspace-fg);
 }
 
@@ -598,13 +619,15 @@ body {
 @media (hover: hover) and (pointer: fine) {
   .artist-content .artist-btn-primary:hover {
     transform: translateY(-1px);
-    filter: brightness(1.06);
+    box-shadow: 0 16px 36px rgba(var(--workspace-accent-rgb), 0.24);
+    filter: brightness(1.03);
   }
 
   .artist-content .artist-btn-secondary:hover {
     transform: translateY(-1px);
     border-color: var(--workspace-border-strong);
-    background: rgba(255, 255, 255, 0.09);
+    background:
+      linear-gradient(180deg, rgba(var(--workspace-accent-rgb), 0.06), rgba(255, 255, 255, 0.05));
   }
 
   .artist-content .artist-btn-danger:hover {
@@ -997,44 +1020,44 @@ body {
 }
 
 .auth-shell-listener {
-  --auth-accent-rgb: 96 226 165;
-  --auth-glow-rgb: 103 205 151;
-  --auth-grid-rgb: 122 244 187;
-  --auth-grid-strong-rgb: 219 255 235;
+  --auth-accent-rgb: 123 212 176;
+  --auth-glow-rgb: 89 170 136;
+  --auth-grid-rgb: 108 191 157;
+  --auth-grid-strong-rgb: 200 231 216;
   --auth-shell-bg: #0d1813;
-  --auth-shell-card: 19 24 34;
-  --auth-shell-card-soft: 15 20 29;
-  --auth-shell-border: 176 230 204;
+  --auth-shell-card: 24 35 31;
+  --auth-shell-card-soft: 18 26 24;
+  --auth-shell-border: 143 181 163;
 }
 
 .auth-shell-artist {
-  --auth-accent-rgb: 122 194 255;
-  --auth-glow-rgb: 117 176 255;
-  --auth-grid-rgb: 140 206 255;
-  --auth-grid-strong-rgb: 221 239 255;
+  --auth-accent-rgb: 132 190 232;
+  --auth-glow-rgb: 94 149 204;
+  --auth-grid-rgb: 118 178 219;
+  --auth-grid-strong-rgb: 206 225 241;
   --auth-shell-bg: #0c1623;
-  --auth-shell-card: 18 24 37;
-  --auth-shell-card-soft: 13 18 31;
-  --auth-shell-border: 179 215 245;
+  --auth-shell-card: 23 30 45;
+  --auth-shell-card-soft: 16 22 34;
+  --auth-shell-border: 143 176 205;
 }
 
 .auth-shell-backdrop {
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.05), transparent 16%),
-    linear-gradient(180deg, rgb(var(--auth-glow-rgb) / 0.14), transparent 36%),
-    linear-gradient(90deg, rgb(var(--auth-accent-rgb) / 0.05), transparent 18%, transparent 82%, rgb(var(--auth-accent-rgb) / 0.05)),
-    linear-gradient(180deg, rgb(11 18 28), rgb(8 13 20) 46%, rgb(6 10 16) 100%);
+    linear-gradient(180deg, rgb(255 255 255 / 0.075), transparent 16%),
+    linear-gradient(180deg, rgb(var(--auth-glow-rgb) / 0.2), transparent 38%),
+    linear-gradient(90deg, rgb(var(--auth-accent-rgb) / 0.075), transparent 16%, transparent 84%, rgb(var(--auth-accent-rgb) / 0.075)),
+    linear-gradient(180deg, rgb(15 23 35), rgb(10 16 24) 48%, rgb(7 11 17) 100%);
 }
 
 .auth-shell-atmosphere {
   background:
-    linear-gradient(180deg, rgb(var(--auth-grid-strong-rgb) / 0.05), transparent 22%),
-    linear-gradient(90deg, transparent 0, rgb(var(--auth-accent-rgb) / 0.045) 50%, transparent 100%);
-  opacity: 0.54;
+    linear-gradient(180deg, rgb(var(--auth-grid-strong-rgb) / 0.07), transparent 24%),
+    linear-gradient(90deg, transparent 0, rgb(var(--auth-accent-rgb) / 0.06) 50%, transparent 100%);
+  opacity: 0.66;
 }
 
 .auth-shell-tunnel-layer {
-  opacity: 0.96;
+  opacity: 1;
 }
 
 .auth-shell-tunnel-svg {
@@ -1050,18 +1073,18 @@ body {
 }
 
 .auth-tunnel-line--minor {
-  stroke: rgb(var(--auth-grid-rgb) / 0.12);
+  stroke: rgb(var(--auth-grid-rgb) / 0.17);
   stroke-width: 0.8;
 }
 
 .auth-tunnel-line--major {
-  stroke: rgb(var(--auth-grid-rgb) / 0.28);
+  stroke: rgb(var(--auth-grid-rgb) / 0.36);
   stroke-width: 1.18;
 }
 
 .auth-tunnel-portal {
   fill: rgb(var(--auth-shell-bg) / 0.12);
-  stroke: rgb(var(--auth-grid-strong-rgb) / 0.4);
+  stroke: rgb(var(--auth-grid-strong-rgb) / 0.5);
   stroke-width: 1.2;
   vector-effect: non-scaling-stroke;
 }
@@ -1306,9 +1329,10 @@ body {
 .auth-main-card,
 .auth-hero-card,
 .auth-soft-card {
-  border: 1px solid rgb(var(--auth-shell-border) / 0.14);
+  border: 1px solid rgb(var(--auth-shell-border) / 0.18);
   background:
-    linear-gradient(180deg, rgb(var(--auth-shell-card) / 0.96), rgb(var(--auth-shell-card-soft) / 0.98));
+    linear-gradient(180deg, rgb(var(--auth-accent-rgb) / 0.036), transparent 24%),
+    linear-gradient(180deg, rgb(var(--auth-shell-card) / 0.96), rgb(var(--auth-shell-card-soft) / 0.985));
   box-shadow:
     0 26px 80px rgb(0 0 0 / 0.36),
     inset 0 1px 0 rgb(255 255 255 / 0.05);
@@ -1317,17 +1341,20 @@ body {
 
 .auth-main-card {
   background:
-    linear-gradient(180deg, rgb(var(--auth-shell-card) / 0.96), rgb(var(--auth-shell-card-soft) / 0.98));
+    linear-gradient(180deg, rgb(var(--auth-accent-rgb) / 0.04), transparent 24%),
+    linear-gradient(180deg, rgb(var(--auth-shell-card) / 0.968), rgb(var(--auth-shell-card-soft) / 0.992));
 }
 
 .auth-hero-card {
   background:
-    linear-gradient(180deg, rgb(var(--auth-shell-card) / 0.84), rgb(var(--auth-shell-card-soft) / 0.9));
+    linear-gradient(180deg, rgb(var(--auth-accent-rgb) / 0.03), transparent 20%),
+    linear-gradient(180deg, rgb(var(--auth-shell-card) / 0.88), rgb(var(--auth-shell-card-soft) / 0.935));
 }
 
 .auth-soft-card {
   background:
-    linear-gradient(180deg, rgb(var(--auth-shell-card-soft) / 0.82), rgb(var(--auth-shell-card-soft) / 0.9));
+    linear-gradient(180deg, rgb(var(--auth-accent-rgb) / 0.024), transparent 24%),
+    linear-gradient(180deg, rgb(var(--auth-shell-card-soft) / 0.87), rgb(var(--auth-shell-card-soft) / 0.94));
   box-shadow:
     0 12px 32px rgb(0 0 0 / 0.2),
     inset 0 1px 0 rgb(255 255 255 / 0.03);
@@ -1397,8 +1424,14 @@ body {
 .auth-ui-textarea {
   width: 100%;
   border-radius: 1.15rem;
-  border: 1px solid rgb(255 255 255 / 0.08);
-  background: rgb(4 6 10 / 0.88);
+  border: 1px solid rgb(var(--auth-shell-border) / 0.16);
+  background:
+    linear-gradient(
+      180deg,
+      rgb(var(--auth-accent-rgb) / 0.024),
+      rgb(var(--auth-shell-card-soft) / 0.82) 22%,
+      rgb(7 10 14 / 0.94)
+    );
   color: white;
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.03),
@@ -1423,17 +1456,23 @@ body {
 
 .auth-ui-input::placeholder,
 .auth-ui-textarea::placeholder {
-  color: rgb(255 255 255 / 0.28);
+  color: rgb(255 255 255 / 0.34);
 }
 
 .auth-ui-input:focus,
 .auth-ui-textarea:focus {
   outline: none;
-  border-color: rgb(var(--auth-accent-rgb) / 0.5);
-  background: rgb(5 8 12 / 0.96);
+  border-color: rgb(var(--auth-accent-rgb) / 0.44);
+  background:
+    linear-gradient(
+      180deg,
+      rgb(var(--auth-accent-rgb) / 0.045),
+      rgb(var(--auth-shell-card) / 0.92) 18%,
+      rgb(8 11 16 / 0.97)
+    );
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.04),
-    0 0 0 4px rgb(var(--auth-accent-rgb) / 0.1);
+    0 0 0 4px rgb(var(--auth-accent-rgb) / 0.12);
 }
 
 .auth-ui-input:disabled,
@@ -1449,8 +1488,9 @@ body {
   height: 2.5rem;
   width: 2.5rem;
   border-radius: 999px;
-  border: 1px solid rgb(255 255 255 / 0.08);
-  background: rgb(255 255 255 / 0.04);
+  border: 1px solid rgb(var(--auth-shell-border) / 0.14);
+  background:
+    linear-gradient(180deg, rgb(var(--auth-accent-rgb) / 0.024), rgb(var(--auth-shell-card-soft) / 0.78));
   color: rgb(255 255 255 / 0.62);
   transition:
     border-color 160ms ease,
@@ -1460,8 +1500,9 @@ body {
 }
 
 .auth-ui-icon-button:hover {
-  border-color: rgb(255 255 255 / 0.14);
-  background: rgb(255 255 255 / 0.07);
+  border-color: rgb(var(--auth-shell-border) / 0.22);
+  background:
+    linear-gradient(180deg, rgb(var(--auth-accent-rgb) / 0.038), rgb(var(--auth-shell-card) / 0.82));
   color: white;
 }
 
@@ -1488,15 +1529,16 @@ body {
 }
 
 .auth-ui-primary {
-  border: 1px solid rgb(var(--auth-accent-rgb) / 0.18);
-  background: rgb(var(--auth-accent-rgb));
+  border: 1px solid rgb(var(--auth-accent-rgb) / 0.16);
+  background:
+    linear-gradient(180deg, rgb(var(--auth-accent-rgb) / 0.82), rgb(var(--auth-accent-rgb) / 0.72));
   color: rgb(5 10 16 / 0.92);
-  box-shadow: 0 16px 34px rgb(var(--auth-accent-rgb) / 0.2);
+  box-shadow: 0 14px 30px rgb(var(--auth-accent-rgb) / 0.14);
 }
 
 .auth-ui-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 20px 42px rgb(var(--auth-accent-rgb) / 0.24);
+  box-shadow: 0 18px 36px rgb(var(--auth-accent-rgb) / 0.18);
 }
 
 .auth-ui-primary:disabled,
@@ -1508,15 +1550,17 @@ body {
 }
 
 .auth-ui-secondary {
-  border: 1px solid rgb(255 255 255 / 0.08);
-  background: rgb(255 255 255 / 0.04);
+  border: 1px solid rgb(var(--auth-shell-border) / 0.14);
+  background:
+    linear-gradient(180deg, rgb(var(--auth-accent-rgb) / 0.026), rgb(var(--auth-shell-card-soft) / 0.78));
   color: rgb(255 255 255 / 0.82);
 }
 
 .auth-ui-secondary:hover {
   transform: translateY(-1px);
-  border-color: rgb(255 255 255 / 0.14);
-  background: rgb(255 255 255 / 0.07);
+  border-color: rgb(var(--auth-shell-border) / 0.22);
+  background:
+    linear-gradient(180deg, rgb(var(--auth-accent-rgb) / 0.04), rgb(var(--auth-shell-card) / 0.84));
 }
 
 .auth-ui-link {

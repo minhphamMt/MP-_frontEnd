@@ -21,20 +21,20 @@ export default function SidebarItem({
       {({ isActive }) => {
         const itemClassName = isActive
           ? isArtistTone
-            ? "border border-sky-300/55 bg-[#7dcff6] text-[#05111f] shadow-[0_12px_30px_rgba(96,165,250,0.26)]"
+            ? "border border-sky-300/38 bg-[#84bee8] text-[#07111d] shadow-[0_12px_30px_rgba(132,190,232,0.22)]"
             : "border border-[#1db954]/80 bg-[#1db954] text-[#041409] shadow-[0_10px_26px_rgba(29,185,84,0.3)]"
           : isArtistTone
-            ? "border border-transparent text-slate-100/76 md:hover:border-sky-200/[0.14] md:hover:bg-[#131d31] md:hover:text-white"
+            ? "border border-transparent text-slate-100/78 md:hover:border-sky-200/[0.14] md:hover:bg-[#18253a] md:hover:text-white"
             : "border border-transparent text-white/75 md:hover:border-white/15 md:hover:bg-[#1a1a1a] md:hover:text-white";
         const iconClassName = isActive
           ? isArtistTone
-            ? "border-sky-200/50 bg-[#d5effd] text-[#0b2746]"
+            ? "border-sky-200/48 bg-[#dcecf9] text-[#123459]"
             : "border-[#0f8f3f]/45 bg-[#1ed760] text-[#03200e]"
           : isArtistTone
-            ? "border-sky-200/[0.08] bg-[#101827] text-slate-100/80 md:group-hover/sidebar-item:border-sky-200/[0.18] md:group-hover/sidebar-item:bg-[#17233b]"
+            ? "border-sky-200/[0.1] bg-[#152133] text-slate-100/80 md:group-hover/sidebar-item:border-sky-200/[0.18] md:group-hover/sidebar-item:bg-[#1d2c45]"
             : "border-white/10 bg-[#181818] text-white/80 md:group-hover/sidebar-item:border-white/20 md:group-hover/sidebar-item:bg-[#222222]";
         const tooltipClassName = isArtistTone
-          ? "pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[70] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-sky-200/[0.12] bg-[#0f1728]/96 px-3 py-2 text-xs font-semibold text-white opacity-0 shadow-[0_12px_30px_rgba(2,6,18,0.35)] backdrop-blur transition duration-200 lg:block md:translate-x-2 md:group-hover/sidebar-item:translate-x-0 md:group-hover/sidebar-item:opacity-100"
+          ? "pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[70] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-sky-200/[0.12] bg-[#101a2c]/96 px-3 py-2 text-xs font-semibold text-white opacity-0 shadow-[0_12px_30px_rgba(2,6,18,0.35)] backdrop-blur transition duration-200 lg:block md:translate-x-2 md:group-hover/sidebar-item:translate-x-0 md:group-hover/sidebar-item:opacity-100"
           : "pointer-events-none absolute left-[calc(100%+12px)] top-1/2 z-[70] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-white/12 bg-[#111111]/95 px-3 py-2 text-xs font-semibold text-white opacity-0 shadow-[0_12px_30px_rgba(0,0,0,0.35)] backdrop-blur transition duration-200 lg:block md:translate-x-2 md:group-hover/sidebar-item:translate-x-0 md:group-hover/sidebar-item:opacity-100";
 
         return (

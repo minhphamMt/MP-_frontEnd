@@ -23,7 +23,7 @@ export default function ArtistAlbumTile({ album, onEdit, onDelete, onView }) {
   const statusClassName =
     album?.status === "approved"
       ? "rounded-full border border-sky-300/30 bg-sky-400/12 px-3 py-1 text-sky-100"
-      : "rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70";
+      : "rounded-full border border-sky-200/[0.14] bg-sky-400/[0.08] px-3 py-1 text-slate-100/72";
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-sky-200/[0.1] bg-[#0f1727]/88 shadow-[0_20px_60px_rgba(2,6,18,0.38)] transition md:hover:-translate-y-1 md:hover:border-sky-300/28 md:hover:bg-[#142038]">
@@ -60,7 +60,7 @@ export default function ArtistAlbumTile({ album, onEdit, onDelete, onView }) {
 
         <div className="mt-auto flex flex-wrap items-center gap-2 text-xs">
           {album?.zing_album_id && (
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70">
+            <span className="rounded-full border border-sky-200/[0.12] bg-sky-400/[0.07] px-3 py-1 text-slate-100/72">
               Zing ID: {album.zing_album_id}
             </span>
           )}
@@ -71,7 +71,7 @@ export default function ArtistAlbumTile({ album, onEdit, onDelete, onView }) {
           <button
             type="button"
             onClick={onView}
-            className="artist-btn-secondary inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/85 transition md:hover:border-white/30 md:hover:bg-white/10"
+            className="artist-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm"
           >
             <FiEye />
             Xem chi tiết
@@ -79,7 +79,7 @@ export default function ArtistAlbumTile({ album, onEdit, onDelete, onView }) {
           <button
             type="button"
             onClick={onEdit}
-            className="artist-btn-secondary inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/85 transition md:hover:border-white/30 md:hover:bg-white/10"
+            className="artist-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm"
           >
             <FiEdit2 />
             Chỉnh sửa

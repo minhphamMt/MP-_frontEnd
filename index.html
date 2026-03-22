@@ -38,14 +38,14 @@
     <meta name="theme-color" content="#050705" />
     <style>
       :root {
-        --boot-accent: 96, 226, 165;
-        --boot-glow: 103, 205, 151;
-        --boot-grid: 122, 244, 187;
-        --boot-grid-strong: 219, 255, 235;
+        --boot-accent: 123, 212, 176;
+        --boot-glow: 89, 170, 136;
+        --boot-grid: 108, 191, 157;
+        --boot-grid-strong: 200, 231, 216;
         --boot-bg: #0b1611;
-        --boot-card: 19, 24, 34;
-        --boot-card-soft: 15, 20, 29;
-        --boot-border: 176, 230, 204;
+        --boot-card: 24, 35, 31;
+        --boot-card-soft: 18, 26, 24;
+        --boot-border: 143, 181, 163;
       }
 
       html,
@@ -55,14 +55,14 @@
       }
 
       html[data-boot-theme="artist"] {
-        --boot-accent: 122, 194, 255;
-        --boot-glow: 117, 176, 255;
-        --boot-grid: 140, 206, 255;
-        --boot-grid-strong: 221, 239, 255;
+        --boot-accent: 132, 190, 232;
+        --boot-glow: 94, 149, 204;
+        --boot-grid: 118, 178, 219;
+        --boot-grid-strong: 206, 225, 241;
         --boot-bg: #0b1420;
-        --boot-card: 18, 24, 37;
-        --boot-card-soft: 13, 18, 31;
-        --boot-border: 179, 215, 245;
+        --boot-card: 23, 30, 45;
+        --boot-card-soft: 16, 22, 34;
+        --boot-border: 143, 176, 205;
       }
 
       #app-boot-intro {
@@ -71,10 +71,10 @@
         z-index: 4000;
         overflow: hidden;
         background:
-          linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 16%),
-          linear-gradient(180deg, rgba(var(--boot-glow), 0.14), transparent 36%),
-          linear-gradient(90deg, rgba(var(--boot-accent), 0.05), transparent 18%, transparent 82%, rgba(var(--boot-accent), 0.05)),
-          linear-gradient(180deg, rgb(11, 18, 28), rgb(8, 13, 20) 46%, rgb(6, 10, 16) 100%);
+          linear-gradient(180deg, rgba(255, 255, 255, 0.075), transparent 16%),
+          linear-gradient(180deg, rgba(var(--boot-glow), 0.2), transparent 38%),
+          linear-gradient(90deg, rgba(var(--boot-accent), 0.075), transparent 16%, transparent 84%, rgba(var(--boot-accent), 0.075)),
+          linear-gradient(180deg, rgb(15, 23, 35), rgb(10, 16, 24) 48%, rgb(7, 11, 17) 100%);
         color: #fff;
         opacity: 1;
         visibility: visible;
@@ -94,118 +94,44 @@
         pointer-events: none;
       }
 
-      #app-boot-intro::before {
-        content: "";
-        position: absolute;
-        left: -10%;
-        right: -10%;
-        top: -12%;
-        bottom: auto;
-        height: 54%;
-        transform-origin: center top;
-        transform: perspective(1280px) rotateX(-70deg) scaleY(1.08);
-        background-image:
-          linear-gradient(to right, rgba(var(--boot-grid), 0.2) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(var(--boot-grid), 0.2) 1px, transparent 1px),
-          linear-gradient(to right, rgba(var(--boot-grid), 0.085) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(var(--boot-grid), 0.085) 1px, transparent 1px);
-        background-size: 24px 24px, 24px 24px, 12px 12px, 12px 12px;
-        background-position: center bottom;
-        opacity: 0.94;
-        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 1) 0, rgba(0, 0, 0, 1) 78%, transparent 100%);
-      }
-
+      #app-boot-intro::before,
       #app-boot-intro::after {
-        content: "";
+        content: none;
+      }
+
+      .boot-intro__tunnel-layer {
         position: absolute;
-        left: -10%;
-        right: -10%;
-        bottom: -14%;
-        height: 54%;
-        transform-origin: center bottom;
-        transform: perspective(1280px) rotateX(70deg) scaleY(1.08);
-        background-image:
-          linear-gradient(to right, rgba(var(--boot-grid), 0.24) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(var(--boot-grid), 0.24) 1px, transparent 1px),
-          linear-gradient(to right, rgba(var(--boot-grid), 0.1) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(var(--boot-grid), 0.1) 1px, transparent 1px);
-        background-size: 24px 24px, 24px 24px, 12px 12px, 12px 12px;
-        opacity: 0.9;
-        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.94) 0, rgba(0, 0, 0, 1) 20%, transparent 100%);
+        inset: 0;
+        opacity: 1;
       }
 
-      .boot-intro__fine-grid {
-        position: absolute;
-        left: -10%;
-        right: -10%;
-        bottom: -14%;
-        height: 54%;
-        transform-origin: center bottom;
-        transform: perspective(1280px) rotateX(70deg) scaleY(1.08);
-        background-image:
-          linear-gradient(to right, rgba(var(--boot-grid), 0.1) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(var(--boot-grid), 0.1) 1px, transparent 1px);
-        background-size: 12px 12px;
-        opacity: 0.3;
-        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.94) 0, rgba(0, 0, 0, 1) 20%, transparent 100%);
+      .boot-intro__tunnel-svg {
+        display: block;
+        width: 100%;
+        height: 100%;
       }
 
-      .boot-intro__tunnel-wall {
-        position: absolute;
-        top: 0;
-        bottom: 18%;
-        width: 38%;
-        background:
-          linear-gradient(to right, rgba(var(--boot-grid), 0.24) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(var(--boot-grid), 0.24) 1px, transparent 1px),
-          linear-gradient(to right, rgba(var(--boot-grid), 0.1) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(var(--boot-grid), 0.1) 1px, transparent 1px),
-          linear-gradient(180deg, rgba(var(--boot-accent), 0.08), transparent 58%);
-        background-size: 24px 24px, 24px 24px, 12px 12px, 12px 12px, auto;
-        opacity: 0.82;
-        filter: drop-shadow(0 0 20px rgba(var(--boot-accent), 0.06));
-        mask-image: linear-gradient(
-          180deg,
-          transparent 0,
-          rgba(0, 0, 0, 1) 6%,
-          rgba(0, 0, 0, 1) 94%,
-          transparent 100%
-        );
+      .boot-tunnel-line {
+        fill: none;
+        stroke-linecap: square;
+        vector-effect: non-scaling-stroke;
       }
 
-      .boot-intro__tunnel-wall--left {
-        left: -8%;
-        clip-path: polygon(0 0, 100% 20%, 100% 80%, 0 100%);
-        transform-origin: left center;
-        transform: perspective(1320px) rotateY(64deg) scaleX(1.04);
+      .boot-tunnel-line--minor {
+        stroke: rgba(var(--boot-grid), 0.17);
+        stroke-width: 0.8;
       }
 
-      .boot-intro__tunnel-wall--right {
-        right: -8%;
-        clip-path: polygon(0 20%, 100% 0, 100% 100%, 0 80%);
-        transform-origin: right center;
-        transform: perspective(1320px) rotateY(-64deg) scaleX(1.04);
+      .boot-tunnel-line--major {
+        stroke: rgba(var(--boot-grid), 0.36);
+        stroke-width: 1.18;
       }
 
-      .boot-intro__portal {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: min(42vw, 780px);
-        height: min(64vh, 680px);
-        transform: translate(-50%, -50%);
-        border: 1px solid rgba(var(--boot-grid-strong), 0.42);
-        background:
-          linear-gradient(to right, rgba(var(--boot-grid), 0.26) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(var(--boot-grid), 0.26) 1px, transparent 1px),
-          linear-gradient(to right, rgba(var(--boot-grid), 0.12) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(var(--boot-grid), 0.12) 1px, transparent 1px),
-          linear-gradient(180deg, rgba(var(--boot-bg), 0.08), rgba(var(--boot-bg), 0.01));
-        background-size: 24px 24px, 24px 24px, 12px 12px, 12px 12px, auto;
-        box-shadow:
-          inset 0 0 0 1px rgba(var(--boot-grid-strong), 0.06),
-          0 0 46px rgba(var(--boot-accent), 0.06);
-        opacity: 0.72;
+      .boot-tunnel-portal {
+        fill: rgba(var(--boot-bg), 0.12);
+        stroke: rgba(var(--boot-grid-strong), 0.5);
+        stroke-width: 1.2;
+        vector-effect: non-scaling-stroke;
       }
 
       .boot-intro__atmosphere {
@@ -213,8 +139,8 @@
         inset: 0 0 auto 0;
         height: 56%;
         background:
-          linear-gradient(180deg, rgba(var(--boot-grid-strong), 0.05), transparent 22%),
-          linear-gradient(90deg, transparent 0, rgba(var(--boot-accent), 0.045) 50%, transparent 100%);
+          linear-gradient(180deg, rgba(var(--boot-grid-strong), 0.07), transparent 24%),
+          linear-gradient(90deg, transparent 0, rgba(var(--boot-accent), 0.06) 50%, transparent 100%);
         opacity: 0.42;
       }
 
@@ -248,8 +174,10 @@
       .boot-intro__card {
         width: min(100%, 430px);
         border-radius: 32px;
-        border: 1px solid rgba(var(--boot-border), 0.14);
-        background: linear-gradient(180deg, rgba(var(--boot-card), 0.96), rgba(var(--boot-card-soft), 0.98));
+        border: 1px solid rgba(var(--boot-border), 0.18);
+        background:
+          linear-gradient(180deg, rgba(var(--boot-accent), 0.04), transparent 24%),
+          linear-gradient(180deg, rgba(var(--boot-card), 0.968), rgba(var(--boot-card-soft), 0.992));
         box-shadow:
           0 26px 80px rgba(0, 0, 0, 0.36),
           inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -281,7 +209,8 @@
         padding: 12px;
         border-radius: 30px;
         border: 1px solid rgba(var(--boot-border), 0.08);
-        background: linear-gradient(180deg, rgba(var(--boot-accent), 0.05), rgba(5, 7, 10, 0.96));
+        background:
+          linear-gradient(180deg, rgba(var(--boot-accent), 0.04), rgba(var(--boot-card-soft), 0.88) 22%, rgba(5, 7, 10, 0.96));
         box-shadow:
           0 18px 40px rgba(0, 0, 0, 0.35),
           inset 0 1px 0 rgba(255, 255, 255, 0.03);
@@ -394,18 +323,6 @@
         .boot-intro__logo-frame::before {
           border-radius: 26px;
         }
-
-        #app-boot-intro::before {
-          background-size: 20px 20px, 20px 20px, 10px 10px, 10px 10px;
-        }
-
-        #app-boot-intro::after {
-          background-size: 20px 20px, 20px 20px, 10px 10px, 10px 10px;
-        }
-
-        .boot-intro__fine-grid {
-          background-size: 10px 10px;
-        }
       }
     </style>
     <script>
@@ -424,11 +341,10 @@
 
   <body>
     <div id="app-boot-intro" aria-hidden="true">
+      <div class="boot-intro__tunnel-layer">
+        <svg class="boot-intro__tunnel-svg" id="boot-intro-tunnel-svg" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-hidden="true"></svg>
+      </div>
       <div class="boot-intro__atmosphere"></div>
-      <div class="boot-intro__tunnel-wall boot-intro__tunnel-wall--left"></div>
-      <div class="boot-intro__tunnel-wall boot-intro__tunnel-wall--right"></div>
-      <div class="boot-intro__portal"></div>
-      <div class="boot-intro__fine-grid"></div>
       <div class="boot-intro__noise"></div>
       <div class="boot-intro__vignette"></div>
       <div class="boot-intro__stage">
@@ -450,6 +366,89 @@
         </div>
       </div>
     </div>
+    <script>
+      (function () {
+        var svg = document.getElementById("boot-intro-tunnel-svg");
+        if (!svg || svg.dataset.ready === "true") return;
+
+        var NS = "http://www.w3.org/2000/svg";
+        var width = 1600;
+        var height = 900;
+        var portalSize = 280;
+        var innerLeft = (width - portalSize) / 2;
+        var innerRight = innerLeft + portalSize;
+        var innerTop = (height - portalSize) / 2;
+        var innerBottom = innerTop + portalSize;
+
+        function lerp(a, b, t) {
+          return a + (b - a) * t;
+        }
+
+        function addLine(group, className, x1, y1, x2, y2) {
+          var line = document.createElementNS(NS, "line");
+          line.setAttribute("class", className);
+          line.setAttribute("x1", x1.toFixed(2));
+          line.setAttribute("y1", y1.toFixed(2));
+          line.setAttribute("x2", x2.toFixed(2));
+          line.setAttribute("y2", y2.toFixed(2));
+          group.appendChild(line);
+        }
+
+        function createGroup() {
+          return document.createElementNS(NS, "g");
+        }
+
+        var minorGroup = createGroup();
+        var majorGroup = createGroup();
+
+        for (var i = 0; i <= 40; i += 1) {
+          var t = i / 40;
+          var xOuter = lerp(0, width, t);
+          var xInner = lerp(innerLeft, innerRight, t);
+          addLine(i % 4 === 0 ? majorGroup : minorGroup, i % 4 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", xOuter, 0, xInner, innerTop);
+          addLine(i % 4 === 0 ? majorGroup : minorGroup, i % 4 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", xOuter, height, xInner, innerBottom);
+        }
+
+        for (var j = 0; j <= 18; j += 1) {
+          var h = j / 18;
+          addLine(j % 3 === 0 ? majorGroup : minorGroup, j % 3 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", lerp(0, innerLeft, h), lerp(0, innerTop, h), lerp(width, innerRight, h), lerp(0, innerTop, h));
+          addLine(j % 3 === 0 ? majorGroup : minorGroup, j % 3 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", lerp(0, innerLeft, h), lerp(height, innerBottom, h), lerp(width, innerRight, h), lerp(height, innerBottom, h));
+        }
+
+        for (var k = 0; k <= 30; k += 1) {
+          var v = k / 30;
+          addLine(k % 3 === 0 ? majorGroup : minorGroup, k % 3 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", 0, lerp(0, height, v), innerLeft, lerp(innerTop, innerBottom, v));
+          addLine(k % 3 === 0 ? majorGroup : minorGroup, k % 3 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", width, lerp(0, height, v), innerRight, lerp(innerTop, innerBottom, v));
+        }
+
+        for (var m = 0; m <= 14; m += 1) {
+          var s = m / 14;
+          var xLeft = lerp(0, innerLeft, s);
+          var xRight = lerp(width, innerRight, s);
+          addLine(m % 3 === 0 ? majorGroup : minorGroup, m % 3 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", xLeft, lerp(0, innerTop, s), xLeft, lerp(height, innerBottom, s));
+          addLine(m % 3 === 0 ? majorGroup : minorGroup, m % 3 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", xRight, lerp(0, innerTop, s), xRight, lerp(height, innerBottom, s));
+        }
+
+        for (var n = 0; n <= 10; n += 1) {
+          var p = n / 10;
+          addLine(n % 2 === 0 ? majorGroup : minorGroup, n % 2 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", lerp(innerLeft, innerRight, p), innerTop, lerp(innerLeft, innerRight, p), innerBottom);
+          addLine(n % 2 === 0 ? majorGroup : minorGroup, n % 2 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", innerLeft, lerp(innerTop, innerBottom, p), innerRight, lerp(innerTop, innerBottom, p));
+        }
+
+        svg.appendChild(minorGroup);
+        svg.appendChild(majorGroup);
+
+        var rect = document.createElementNS(NS, "rect");
+        rect.setAttribute("class", "boot-tunnel-portal");
+        rect.setAttribute("x", innerLeft);
+        rect.setAttribute("y", innerTop);
+        rect.setAttribute("width", portalSize);
+        rect.setAttribute("height", portalSize);
+        rect.setAttribute("rx", 2);
+        svg.appendChild(rect);
+        svg.dataset.ready = "true";
+      })();
+    </script>
     <div id="root"></div>
     <script src="https://unpkg.com/animejs@4.2.2/lib/anime.min.js"></script>
     <script type="module" src="/src/main.jsx"></script>
