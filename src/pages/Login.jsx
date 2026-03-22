@@ -606,7 +606,7 @@ export default function Login({ initialMode = "login" }) {
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
-            className="fixed right-4 top-4 z-[70] w-[min(92vw,360px)] rounded-xl border border-rose-500/60 bg-rose-600/95 px-4 py-3 text-sm text-white shadow-xl"
+            className="auth-ui-floating-alert"
           >
             {errorPopup}
           </MotionDiv>

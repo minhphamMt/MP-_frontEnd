@@ -1702,6 +1702,25 @@ body {
   flex-shrink: 0;
 }
 
+.auth-ui-floating-alert {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 140;
+  width: min(92vw, 380px);
+  border-radius: 18px;
+  border: 1px solid rgb(244 63 94 / 0.5);
+  background:
+    linear-gradient(180deg, rgb(244 63 94 / 0.95), rgb(159 18 57 / 0.96));
+  padding: 0.95rem 1rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: rgb(255 245 247 / 0.98);
+  box-shadow:
+    0 24px 60px rgb(40 4 16 / 0.44),
+    inset 0 1px 0 rgb(255 255 255 / 0.14);
+}
+
 .auth-form-wrap {
   filter: drop-shadow(0 24px 80px rgb(0 0 0 / 0.34));
 }

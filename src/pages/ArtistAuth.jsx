@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { FiMusic, FiRadio } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
@@ -86,6 +86,7 @@ export default function ArtistAuth() {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [errorPopup, setErrorPopup] = useState("");
 
   const [displayName, setDisplayName] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
@@ -106,6 +107,17 @@ export default function ArtistAuth() {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
+
+  useEffect(() => {
+    if (!errorPopup) return undefined;
+    const timeoutId = setTimeout(() => setErrorPopup(""), 3500);
+    return () => clearTimeout(timeoutId);
+  }, [errorPopup]);
+
+  const showError = (message) => {
+    setLoginError(message);
+    setErrorPopup(message);
+  };
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -151,13 +163,13 @@ export default function ArtistAuth() {
       });
 
       if (!hasArtistIntent(user)) {
-        setLoginError("Tài khoản này chưa đăng ký yêu cầu trở thành nghệ sĩ.");
+        showError("Tài khoản này chưa đăng ký yêu cầu trở thành nghệ sĩ.");
         logout();
         return;
       }
 
       if (rejectNonArtistLogin(user.role)) {
-        setLoginError("Tài khoản này không thể đăng nhập vào cổng nghệ sĩ.");
+        showError("Tài khoản này không thể đăng nhập vào cổng nghệ sĩ.");
         logout();
         return;
       }
@@ -169,7 +181,7 @@ export default function ArtistAuth() {
       return navigateWithIntro("/artist-request");
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || "Đăng nhập thất bại, thử lại nhé.";
-      setLoginError(msg);
+      showError(msg);
     }
   };
 
@@ -228,7 +240,7 @@ export default function ArtistAuth() {
 
   const handleForgotPasswordRequest = async () => {
     if (!forgotEmail) {
-      setLoginError("Vui lòng nhập email để nhận mã xác thực.");
+      showError("Vui lòng nhập email để nhận mã xác thực.");
       return;
     }
 
@@ -242,21 +254,21 @@ export default function ArtistAuth() {
         err?.response?.data?.message ||
         err?.message ||
         "Không thể gửi mã đặt lại mật khẩu, vui lòng thử lại.";
-      setLoginError(msg);
+      showError(msg);
     }
   };
 
   const handleConfirmResetPassword = async () => {
     if (!forgotEmail || !forgotCode || !forgotNewPassword) {
-      setLoginError("Vui lòng nhập đầy đủ email, mã xác thực và mật khẩu mới.");
+      showError("Vui lòng nhập đầy đủ email, mã xác thực và mật khẩu mới.");
       return;
     }
     if (!/^\d{6}$/.test(forgotCode.trim())) {
-      setLoginError("Mã xác thực phải gồm đúng 6 chữ số.");
+      showError("Mã xác thực phải gồm đúng 6 chữ số.");
       return;
     }
     if (forgotNewPassword.length < 6) {
-      setLoginError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      showError("Mật khẩu mới phải có ít nhất 6 ký tự.");
       return;
     }
 
@@ -280,7 +292,7 @@ export default function ArtistAuth() {
         err?.response?.data?.message ||
         err?.message ||
         "Không thể đặt lại mật khẩu, vui lòng thử lại.";
-      setLoginError(msg);
+      showError(msg);
     }
   };
 
@@ -494,6 +506,19 @@ export default function ArtistAuth() {
 
   return (
     <>
+      <AnimatePresence>
+        {errorPopup ? (
+          <MotionDiv
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            className="auth-ui-floating-alert"
+          >
+            {errorPopup}
+          </MotionDiv>
+        ) : null}
+      </AnimatePresence>
+
       <AuthShell
         theme="artist"
         showHeader={false}
