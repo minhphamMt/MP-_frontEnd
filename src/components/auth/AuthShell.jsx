@@ -72,9 +72,76 @@ const tunnelLines = (() => {
   };
 })();
 
+const tunnelMusic = (() => {
+  const { width, height } = TUNNEL_VIEWBOX;
+  const { innerLeft, portalSize } = tunnelLines.portal;
+  const innerRight = innerLeft + portalSize;
+  const innerBottom = tunnelLines.portal.innerTop + portalSize;
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const bars = [];
+  const baselines = [];
+  const pattern = [0.22, 0.34, 0.48, 0.62, 0.78, 0.94, 0.82, 0.68, 0.54, 0.4, 0.28, 0.18];
+  const barCount = 24;
+  const startT = 0.08;
+  const endT = 0.94;
+  const seams = [
+    {
+      id: "left",
+      start: { x: 0, y: height },
+      end: { x: innerLeft, y: innerBottom },
+    },
+    {
+      id: "right",
+      start: { x: width, y: height },
+      end: { x: innerRight, y: innerBottom },
+    },
+  ];
+
+  seams.forEach((seam, seamIndex) => {
+    for (let index = 0; index < barCount; index += 1) {
+      const ratio = index / (barCount - 1);
+      const t = startT + ratio * (endT - startT);
+      const x = lerp(seam.start.x, seam.end.x, t);
+      const yBase = lerp(seam.start.y, seam.end.y, t);
+      const depthScale = 1.12 - t * 0.46;
+      const widthScale = 1.08 - t * 0.5;
+      const scale = pattern[(index + seamIndex * 2) % pattern.length];
+      const barHeight = Number((14 + scale * 88 * depthScale).toFixed(2));
+      const barWidth = Number((5 + 5.5 * widthScale).toFixed(2));
+
+      if (index === 0) {
+        baselines.push({
+          x1: Number(x.toFixed(2)),
+          y1: Number(yBase.toFixed(2)),
+          x2: Number(x.toFixed(2)),
+          y2: Number(yBase.toFixed(2)),
+        });
+      }
+
+      bars.push({
+        x: Number((x - barWidth / 2).toFixed(2)),
+        y: Number((yBase - barHeight).toFixed(2)),
+        width: barWidth,
+        height: barHeight,
+        major: index % 4 === 0 || scale >= 0.78,
+      });
+
+      baselines[seamIndex].x2 = Number(x.toFixed(2));
+      baselines[seamIndex].y2 = Number(yBase.toFixed(2));
+    }
+  });
+
+  return {
+    baselines,
+    bars,
+  };
+})();
+
 function TunnelSvg({ hover = false }) {
   const lineClassName = hover ? "auth-tunnel-line auth-tunnel-line--hover" : "auth-tunnel-line";
   const rectClassName = hover ? "auth-tunnel-portal auth-tunnel-portal--hover" : "auth-tunnel-portal";
+  const eqBarClassName = hover ? "auth-tunnel-eq-bar auth-tunnel-eq-bar--hover" : "auth-tunnel-eq-bar";
+  const eqLineClassName = hover ? "auth-tunnel-eq-line auth-tunnel-eq-line--hover" : "auth-tunnel-eq-line";
 
   return (
     <svg
@@ -92,6 +159,23 @@ function TunnelSvg({ hover = false }) {
         {tunnelLines.major.map((line, index) => (
           <line key={`major-${hover ? "h" : "b"}-${index}`} {...line} />
         ))}
+      </g>
+      {tunnelMusic.baselines.map((line, index) => (
+        <line key={`eq-line-${hover ? "h" : "b"}-${index}`} className={eqLineClassName} {...line} />
+      ))}
+      <g className={`${eqBarClassName} auth-tunnel-eq-bar--minor`}>
+        {tunnelMusic.bars
+          .filter((bar) => !bar.major)
+          .map((bar, index) => (
+            <rect key={`eq-minor-${hover ? "h" : "b"}-${index}`} rx="2" {...bar} />
+          ))}
+      </g>
+      <g className={`${eqBarClassName} auth-tunnel-eq-bar--major`}>
+        {tunnelMusic.bars
+          .filter((bar) => bar.major)
+          .map((bar, index) => (
+            <rect key={`eq-major-${hover ? "h" : "b"}-${index}`} rx="2" {...bar} />
+          ))}
       </g>
       <rect
         className={rectClassName}

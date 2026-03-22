@@ -117,6 +117,18 @@
         vector-effect: non-scaling-stroke;
       }
 
+      .boot-tunnel-eq-line {
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .boot-tunnel-eq-bar {
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+      }
+
       .boot-tunnel-line--minor {
         stroke: rgba(var(--boot-grid), 0.17);
         stroke-width: 0.8;
@@ -125,6 +137,24 @@
       .boot-tunnel-line--major {
         stroke: rgba(var(--boot-grid), 0.36);
         stroke-width: 1.18;
+      }
+
+      .boot-tunnel-eq-line {
+        stroke: rgba(var(--boot-grid), 0.3);
+        stroke-width: 1.2;
+        opacity: 0.88;
+      }
+
+      .boot-tunnel-eq-bar--minor {
+        fill: rgba(var(--boot-accent), 0.16);
+        stroke: rgba(var(--boot-grid), 0.28);
+        stroke-width: 0.8;
+      }
+
+      .boot-tunnel-eq-bar--major {
+        fill: rgba(var(--boot-accent), 0.28);
+        stroke: rgba(var(--boot-grid-strong), 0.44);
+        stroke-width: 1;
       }
 
       .boot-tunnel-portal {
@@ -394,6 +424,17 @@
           group.appendChild(line);
         }
 
+        function addRect(group, className, x, y, rectWidth, rectHeight) {
+          var rect = document.createElementNS(NS, "rect");
+          rect.setAttribute("class", className);
+          rect.setAttribute("x", x.toFixed(2));
+          rect.setAttribute("y", y.toFixed(2));
+          rect.setAttribute("width", rectWidth.toFixed(2));
+          rect.setAttribute("height", rectHeight.toFixed(2));
+          rect.setAttribute("rx", 2);
+          group.appendChild(rect);
+        }
+
         function createGroup() {
           return document.createElementNS(NS, "g");
         }
@@ -437,6 +478,60 @@
 
         svg.appendChild(minorGroup);
         svg.appendChild(majorGroup);
+
+        var eqGroupMinor = createGroup();
+        var eqGroupMajor = createGroup();
+        var pattern = [0.22, 0.34, 0.48, 0.62, 0.78, 0.94, 0.82, 0.68, 0.54, 0.4, 0.28, 0.18];
+        var barCount = 24;
+        var startT = 0.08;
+        var endT = 0.94;
+        var seams = [
+          {
+            start: { x: 0, y: height },
+            end: { x: innerLeft, y: innerBottom },
+          },
+          {
+            start: { x: width, y: height },
+            end: { x: innerRight, y: innerBottom },
+          },
+        ];
+
+        seams.forEach(function (seam, seamIndex) {
+          var baseLine = document.createElementNS(NS, "line");
+          baseLine.setAttribute("class", "boot-tunnel-eq-line");
+          var lastX = seam.start.x;
+          var lastY = seam.start.y;
+
+          for (var eqIndex = 0; eqIndex < barCount; eqIndex += 1) {
+            var ratio = eqIndex / (barCount - 1);
+            var t = startT + ratio * (endT - startT);
+            var x = lerp(seam.start.x, seam.end.x, t);
+            var yBase = lerp(seam.start.y, seam.end.y, t);
+            var depthScale = 1.12 - t * 0.46;
+            var widthScale = 1.08 - t * 0.5;
+            var scale = pattern[(eqIndex + seamIndex * 2) % pattern.length];
+            var barHeight = 14 + scale * 88 * depthScale;
+            var barWidth = 5 + 5.5 * widthScale;
+            var isMajor = eqIndex % 4 === 0 || scale >= 0.78;
+            var group = isMajor ? eqGroupMajor : eqGroupMinor;
+            var className = isMajor
+              ? "boot-tunnel-eq-bar boot-tunnel-eq-bar--major"
+              : "boot-tunnel-eq-bar boot-tunnel-eq-bar--minor";
+
+            addRect(group, className, x - barWidth / 2, yBase - barHeight, barWidth, barHeight);
+            lastX = x;
+            lastY = yBase;
+          }
+
+          baseLine.setAttribute("x1", lerp(seam.start.x, seam.end.x, startT).toFixed(2));
+          baseLine.setAttribute("y1", lerp(seam.start.y, seam.end.y, startT).toFixed(2));
+          baseLine.setAttribute("x2", lastX.toFixed(2));
+          baseLine.setAttribute("y2", lastY.toFixed(2));
+          svg.appendChild(baseLine);
+        });
+
+        svg.appendChild(eqGroupMinor);
+        svg.appendChild(eqGroupMajor);
 
         var rect = document.createElementNS(NS, "rect");
         rect.setAttribute("class", "boot-tunnel-portal");

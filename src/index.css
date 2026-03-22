@@ -1072,6 +1072,18 @@ body {
   vector-effect: non-scaling-stroke;
 }
 
+.auth-tunnel-eq-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.auth-tunnel-eq-bar {
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
 .auth-tunnel-line--minor {
   stroke: rgb(var(--auth-grid-rgb) / 0.17);
   stroke-width: 0.8;
@@ -1080,6 +1092,24 @@ body {
 .auth-tunnel-line--major {
   stroke: rgb(var(--auth-grid-rgb) / 0.36);
   stroke-width: 1.18;
+}
+
+.auth-tunnel-eq-line {
+  stroke: rgb(var(--auth-grid-rgb) / 0.3);
+  stroke-width: 1.2;
+  opacity: 0.88;
+}
+
+.auth-tunnel-eq-bar--minor {
+  fill: rgb(var(--auth-accent-rgb) / 0.16);
+  stroke: rgb(var(--auth-grid-rgb) / 0.28);
+  stroke-width: 0.8;
+}
+
+.auth-tunnel-eq-bar--major {
+  fill: rgb(var(--auth-accent-rgb) / 0.28);
+  stroke: rgb(var(--auth-grid-strong-rgb) / 0.44);
+  stroke-width: 1;
 }
 
 .auth-tunnel-portal {
@@ -1112,6 +1142,20 @@ body {
 
 .auth-shell-tunnel-layer--hover .auth-tunnel-line--major {
   stroke: rgb(var(--auth-grid-strong-rgb) / 0.9);
+}
+
+.auth-shell-tunnel-layer--hover .auth-tunnel-eq-line {
+  stroke: rgb(var(--auth-grid-strong-rgb) / 0.78);
+}
+
+.auth-shell-tunnel-layer--hover .auth-tunnel-eq-bar--minor {
+  fill: rgb(var(--auth-accent-rgb) / 0.24);
+  stroke: rgb(var(--auth-grid-strong-rgb) / 0.56);
+}
+
+.auth-shell-tunnel-layer--hover .auth-tunnel-eq-bar--major {
+  fill: rgb(var(--auth-accent-rgb) / 0.4);
+  stroke: rgb(var(--auth-grid-strong-rgb) / 0.98);
 }
 
 .auth-shell-tunnel-layer--hover .auth-tunnel-portal {
