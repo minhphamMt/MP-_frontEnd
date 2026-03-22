@@ -6,6 +6,105 @@ const shellThemes = {
   artist: "auth-shell-artist",
 };
 
+const TUNNEL_VIEWBOX = {
+  width: 1600,
+  height: 900,
+  portalSize: 280,
+};
+
+const tunnelLines = (() => {
+  const { width, height, portalSize } = TUNNEL_VIEWBOX;
+  const innerLeft = (width - portalSize) / 2;
+  const innerRight = innerLeft + portalSize;
+  const innerTop = (height - portalSize) / 2;
+  const innerBottom = innerTop + portalSize;
+  const major = [];
+  const minor = [];
+  const addLine = (x1, y1, x2, y2, isMajor = false) => {
+    const target = isMajor ? major : minor;
+    target.push({
+      x1: Number(x1.toFixed(2)),
+      y1: Number(y1.toFixed(2)),
+      x2: Number(x2.toFixed(2)),
+      y2: Number(y2.toFixed(2)),
+    });
+  };
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  for (let i = 0; i <= 40; i += 1) {
+    const t = i / 40;
+    const xOuter = lerp(0, width, t);
+    const xInner = lerp(innerLeft, innerRight, t);
+    addLine(xOuter, 0, xInner, innerTop, i % 4 === 0);
+    addLine(xOuter, height, xInner, innerBottom, i % 4 === 0);
+  }
+
+  for (let i = 0; i <= 18; i += 1) {
+    const t = i / 18;
+    addLine(lerp(0, innerLeft, t), lerp(0, innerTop, t), lerp(width, innerRight, t), lerp(0, innerTop, t), i % 3 === 0);
+    addLine(lerp(0, innerLeft, t), lerp(height, innerBottom, t), lerp(width, innerRight, t), lerp(height, innerBottom, t), i % 3 === 0);
+  }
+
+  for (let i = 0; i <= 30; i += 1) {
+    const t = i / 30;
+    addLine(0, lerp(0, height, t), innerLeft, lerp(innerTop, innerBottom, t), i % 3 === 0);
+    addLine(width, lerp(0, height, t), innerRight, lerp(innerTop, innerBottom, t), i % 3 === 0);
+  }
+
+  for (let i = 0; i <= 14; i += 1) {
+    const t = i / 14;
+    const xLeft = lerp(0, innerLeft, t);
+    const xRight = lerp(width, innerRight, t);
+    addLine(xLeft, lerp(0, innerTop, t), xLeft, lerp(height, innerBottom, t), i % 3 === 0);
+    addLine(xRight, lerp(0, innerTop, t), xRight, lerp(height, innerBottom, t), i % 3 === 0);
+  }
+
+  for (let i = 0; i <= 10; i += 1) {
+    const t = i / 10;
+    addLine(lerp(innerLeft, innerRight, t), innerTop, lerp(innerLeft, innerRight, t), innerBottom, i % 2 === 0);
+    addLine(innerLeft, lerp(innerTop, innerBottom, t), innerRight, lerp(innerTop, innerBottom, t), i % 2 === 0);
+  }
+
+  return {
+    major,
+    minor,
+    portal: { innerLeft, innerTop, portalSize },
+  };
+})();
+
+function TunnelSvg({ hover = false }) {
+  const lineClassName = hover ? "auth-tunnel-line auth-tunnel-line--hover" : "auth-tunnel-line";
+  const rectClassName = hover ? "auth-tunnel-portal auth-tunnel-portal--hover" : "auth-tunnel-portal";
+
+  return (
+    <svg
+      className="auth-shell-tunnel-svg"
+      viewBox={`0 0 ${TUNNEL_VIEWBOX.width} ${TUNNEL_VIEWBOX.height}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <g className={`${lineClassName} auth-tunnel-line--minor`}>
+        {tunnelLines.minor.map((line, index) => (
+          <line key={`minor-${hover ? "h" : "b"}-${index}`} {...line} />
+        ))}
+      </g>
+      <g className={`${lineClassName} auth-tunnel-line--major`}>
+        {tunnelLines.major.map((line, index) => (
+          <line key={`major-${hover ? "h" : "b"}-${index}`} {...line} />
+        ))}
+      </g>
+      <rect
+        className={rectClassName}
+        x={tunnelLines.portal.innerLeft}
+        y={tunnelLines.portal.innerTop}
+        width={tunnelLines.portal.portalSize}
+        height={tunnelLines.portal.portalSize}
+        rx="2"
+      />
+    </svg>
+  );
+}
+
 export default function AuthShell({
   theme = "listener",
   nav = null,
@@ -28,20 +127,16 @@ export default function AuthShell({
     const rect = event.currentTarget.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 100;
     const y = ((event.clientY - rect.top) / rect.height) * 100;
-    const topOpacity = 1 - clamp((y - 68) / 18, 0, 1);
-    const floorOpacity = clamp((y - 54) / 20, 0, 1);
 
     event.currentTarget.style.setProperty("--auth-hover-x", `${clamp(x, 0, 100)}%`);
     event.currentTarget.style.setProperty("--auth-hover-y", `${clamp(y, 0, 100)}%`);
-    event.currentTarget.style.setProperty("--auth-top-hover-opacity", (topOpacity * 0.9).toFixed(3));
-    event.currentTarget.style.setProperty("--auth-floor-hover-opacity", (floorOpacity * 0.82).toFixed(3));
+    event.currentTarget.style.setProperty("--auth-hover-opacity", "1");
     event.currentTarget.dataset.hover = "true";
   };
 
   const handlePointerLeave = (event) => {
     event.currentTarget.dataset.hover = "false";
-    event.currentTarget.style.setProperty("--auth-top-hover-opacity", "0");
-    event.currentTarget.style.setProperty("--auth-floor-hover-opacity", "0");
+    event.currentTarget.style.setProperty("--auth-hover-opacity", "0");
   };
 
   return (
@@ -54,21 +149,18 @@ export default function AuthShell({
       style={{
         "--auth-hover-x": "50%",
         "--auth-hover-y": "50%",
-        "--auth-top-hover-opacity": "0",
-        "--auth-floor-hover-opacity": "0",
+        "--auth-hover-opacity": "0",
       }}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
     >
       <div className="absolute inset-0 auth-shell-backdrop" />
-      <div className="pointer-events-none absolute inset-0 auth-shell-top-grid" />
-      <div className="pointer-events-none absolute inset-0 auth-shell-top-grid-hover" />
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[360px] w-[min(88vw,780px)] -translate-x-1/2 -translate-y-1/2 rounded-full auth-shell-focus-glow md:h-[440px]" />
-      <div className="pointer-events-none absolute inset-x-[-10%] bottom-[-34%] h-[54%] auth-shell-floor-grid" />
-      <div className="pointer-events-none absolute inset-x-[-10%] bottom-[-34%] h-[54%] auth-shell-floor-grid auth-shell-floor-grid--fine" />
-      <div className="pointer-events-none absolute inset-0 auth-shell-floor-hover-stage">
-        <div className="absolute inset-x-[-10%] bottom-[-34%] h-[54%] auth-shell-floor-grid auth-shell-floor-grid-hover" />
-        <div className="absolute inset-x-[-10%] bottom-[-34%] h-[54%] auth-shell-floor-grid auth-shell-floor-grid--fine auth-shell-floor-grid-hover auth-shell-floor-grid-hover--fine" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[58%] auth-shell-atmosphere" />
+      <div className="pointer-events-none absolute inset-0 auth-shell-tunnel-layer">
+        <TunnelSvg />
+      </div>
+      <div className="pointer-events-none absolute inset-0 auth-shell-tunnel-layer auth-shell-tunnel-layer--hover">
+        <TunnelSvg hover />
       </div>
       <div className="absolute inset-0 auth-shell-vignette" />
       <div className="absolute inset-0 opacity-[0.08] auth-shell-noise-map" />
@@ -83,7 +175,7 @@ export default function AuthShell({
       />
 
       {centerViewport ? (
-        <div className="pointer-events-none fixed inset-0 z-10 px-4 sm:px-6 lg:px-8">
+        <div className="pointer-events-none fixed inset-0 z-10 flex items-center justify-center px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
           <div className="mx-auto flex h-full w-full max-w-[1180px] items-center justify-center">
             <div className={clsx("pointer-events-auto mx-auto w-full", contentClassName)}>{children}</div>
           </div>

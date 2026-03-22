@@ -2,11 +2,7 @@
 import useAuthStore from "../store/auth.store";
 
 function RouteLoadingState() {
-  return (
-    <div className="flex min-h-[40vh] items-center justify-center text-sm font-medium text-white/55">
-      Đang tải khu vực...
-    </div>
-  );
+  return null;
 }
 
 export default function ProtectedRoute({ allowedRoles, allowGuests = false }) {

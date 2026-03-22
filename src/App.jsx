@@ -1,16 +1,14 @@
-﻿import { AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
-import AppIntro from "./components/common/AppIntro";
 import AppRoutes from "./routes/AppRoutes";
 import useAuthStore from "./store/auth.store";
 
-const INTRO_DURATION_MS = 1650;
-const INTRO_DURATION_REDUCED_MS = 520;
+const INTRO_DURATION_MS = 2200;
+const INTRO_DURATION_REDUCED_MS = 1600;
 
 export default function App() {
   const bootstrapAuth = useAuthStore((state) => state.bootstrapAuth);
   const isAuthReady = useAuthStore((state) => state.isAuthReady);
-  const [introElapsed, setIntroElapsed] = useState(false);
+  const [introMinElapsed, setIntroMinElapsed] = useState(false);
 
   useEffect(() => {
     bootstrapAuth();
@@ -23,19 +21,29 @@ export default function App() {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const timer = window.setTimeout(
-      () => setIntroElapsed(true),
+      () => setIntroMinElapsed(true),
       prefersReducedMotion ? INTRO_DURATION_REDUCED_MS : INTRO_DURATION_MS
     );
 
     return () => window.clearTimeout(timer);
   }, []);
 
-  const showIntro = !introElapsed || !isAuthReady;
+  const bootIntroVisible = !introMinElapsed || !isAuthReady;
 
-  return (
-    <>
-      <AppRoutes />
-      <AnimatePresence>{showIntro ? <AppIntro /> : null}</AnimatePresence>
-    </>
-  );
+  useEffect(() => {
+    if (typeof document === "undefined") return undefined;
+
+    const bootIntro = document.getElementById("app-boot-intro");
+    if (!bootIntro) return undefined;
+
+    if (bootIntroVisible) {
+      bootIntro.classList.remove("is-hidden");
+    } else {
+      bootIntro.classList.add("is-hidden");
+    }
+
+    return undefined;
+  }, [bootIntroVisible]);
+
+  return <AppRoutes />;
 }

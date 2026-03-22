@@ -36,9 +36,420 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
     <meta name="theme-color" content="#050705" />
+    <style>
+      :root {
+        --boot-accent: 96, 226, 165;
+        --boot-glow: 103, 205, 151;
+        --boot-grid: 122, 244, 187;
+        --boot-grid-strong: 219, 255, 235;
+        --boot-bg: #0b1611;
+        --boot-card: 19, 24, 34;
+        --boot-card-soft: 15, 20, 29;
+        --boot-border: 176, 230, 204;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      html[data-boot-theme="artist"] {
+        --boot-accent: 122, 194, 255;
+        --boot-glow: 117, 176, 255;
+        --boot-grid: 140, 206, 255;
+        --boot-grid-strong: 221, 239, 255;
+        --boot-bg: #0b1420;
+        --boot-card: 18, 24, 37;
+        --boot-card-soft: 13, 18, 31;
+        --boot-border: 179, 215, 245;
+      }
+
+      #app-boot-intro {
+        position: fixed;
+        inset: 0;
+        z-index: 4000;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 16%),
+          linear-gradient(180deg, rgba(var(--boot-glow), 0.14), transparent 36%),
+          linear-gradient(90deg, rgba(var(--boot-accent), 0.05), transparent 18%, transparent 82%, rgba(var(--boot-accent), 0.05)),
+          linear-gradient(180deg, rgb(11, 18, 28), rgb(8, 13, 20) 46%, rgb(6, 10, 16) 100%);
+        color: #fff;
+        opacity: 1;
+        visibility: visible;
+        font-family: "Segoe UI", "Noto Sans", "Tahoma", Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      #app-boot-intro,
+      #app-boot-intro * {
+        box-sizing: border-box;
+      }
+
+      #app-boot-intro.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      #app-boot-intro::before {
+        content: "";
+        position: absolute;
+        left: -10%;
+        right: -10%;
+        top: -12%;
+        bottom: auto;
+        height: 54%;
+        transform-origin: center top;
+        transform: perspective(1280px) rotateX(-70deg) scaleY(1.08);
+        background-image:
+          linear-gradient(to right, rgba(var(--boot-grid), 0.2) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(var(--boot-grid), 0.2) 1px, transparent 1px),
+          linear-gradient(to right, rgba(var(--boot-grid), 0.085) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(var(--boot-grid), 0.085) 1px, transparent 1px);
+        background-size: 24px 24px, 24px 24px, 12px 12px, 12px 12px;
+        background-position: center bottom;
+        opacity: 0.94;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 1) 0, rgba(0, 0, 0, 1) 78%, transparent 100%);
+      }
+
+      #app-boot-intro::after {
+        content: "";
+        position: absolute;
+        left: -10%;
+        right: -10%;
+        bottom: -14%;
+        height: 54%;
+        transform-origin: center bottom;
+        transform: perspective(1280px) rotateX(70deg) scaleY(1.08);
+        background-image:
+          linear-gradient(to right, rgba(var(--boot-grid), 0.24) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(var(--boot-grid), 0.24) 1px, transparent 1px),
+          linear-gradient(to right, rgba(var(--boot-grid), 0.1) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(var(--boot-grid), 0.1) 1px, transparent 1px);
+        background-size: 24px 24px, 24px 24px, 12px 12px, 12px 12px;
+        opacity: 0.9;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.94) 0, rgba(0, 0, 0, 1) 20%, transparent 100%);
+      }
+
+      .boot-intro__fine-grid {
+        position: absolute;
+        left: -10%;
+        right: -10%;
+        bottom: -14%;
+        height: 54%;
+        transform-origin: center bottom;
+        transform: perspective(1280px) rotateX(70deg) scaleY(1.08);
+        background-image:
+          linear-gradient(to right, rgba(var(--boot-grid), 0.1) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(var(--boot-grid), 0.1) 1px, transparent 1px);
+        background-size: 12px 12px;
+        opacity: 0.3;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.94) 0, rgba(0, 0, 0, 1) 20%, transparent 100%);
+      }
+
+      .boot-intro__tunnel-wall {
+        position: absolute;
+        top: 0;
+        bottom: 18%;
+        width: 38%;
+        background:
+          linear-gradient(to right, rgba(var(--boot-grid), 0.24) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(var(--boot-grid), 0.24) 1px, transparent 1px),
+          linear-gradient(to right, rgba(var(--boot-grid), 0.1) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(var(--boot-grid), 0.1) 1px, transparent 1px),
+          linear-gradient(180deg, rgba(var(--boot-accent), 0.08), transparent 58%);
+        background-size: 24px 24px, 24px 24px, 12px 12px, 12px 12px, auto;
+        opacity: 0.82;
+        filter: drop-shadow(0 0 20px rgba(var(--boot-accent), 0.06));
+        mask-image: linear-gradient(
+          180deg,
+          transparent 0,
+          rgba(0, 0, 0, 1) 6%,
+          rgba(0, 0, 0, 1) 94%,
+          transparent 100%
+        );
+      }
+
+      .boot-intro__tunnel-wall--left {
+        left: -8%;
+        clip-path: polygon(0 0, 100% 20%, 100% 80%, 0 100%);
+        transform-origin: left center;
+        transform: perspective(1320px) rotateY(64deg) scaleX(1.04);
+      }
+
+      .boot-intro__tunnel-wall--right {
+        right: -8%;
+        clip-path: polygon(0 20%, 100% 0, 100% 100%, 0 80%);
+        transform-origin: right center;
+        transform: perspective(1320px) rotateY(-64deg) scaleX(1.04);
+      }
+
+      .boot-intro__portal {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: min(42vw, 780px);
+        height: min(64vh, 680px);
+        transform: translate(-50%, -50%);
+        border: 1px solid rgba(var(--boot-grid-strong), 0.42);
+        background:
+          linear-gradient(to right, rgba(var(--boot-grid), 0.26) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(var(--boot-grid), 0.26) 1px, transparent 1px),
+          linear-gradient(to right, rgba(var(--boot-grid), 0.12) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(var(--boot-grid), 0.12) 1px, transparent 1px),
+          linear-gradient(180deg, rgba(var(--boot-bg), 0.08), rgba(var(--boot-bg), 0.01));
+        background-size: 24px 24px, 24px 24px, 12px 12px, 12px 12px, auto;
+        box-shadow:
+          inset 0 0 0 1px rgba(var(--boot-grid-strong), 0.06),
+          0 0 46px rgba(var(--boot-accent), 0.06);
+        opacity: 0.72;
+      }
+
+      .boot-intro__atmosphere {
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 56%;
+        background:
+          linear-gradient(180deg, rgba(var(--boot-grid-strong), 0.05), transparent 22%),
+          linear-gradient(90deg, transparent 0, rgba(var(--boot-accent), 0.045) 50%, transparent 100%);
+        opacity: 0.42;
+      }
+
+      .boot-intro__noise {
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.42) 0.6px, transparent 0.6px);
+        background-size: 17px 17px;
+        mix-blend-mode: soft-light;
+        opacity: 0.08;
+      }
+
+      .boot-intro__vignette {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(0, 0, 0, 0.03), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.1)),
+          radial-gradient(circle at center, transparent 58%, rgba(0, 0, 0, 0.16) 100%);
+      }
+
+      .boot-intro__stage {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 24px;
+      }
+
+      .boot-intro__card {
+        width: min(100%, 430px);
+        border-radius: 32px;
+        border: 1px solid rgba(var(--boot-border), 0.14);
+        background: linear-gradient(180deg, rgba(var(--boot-card), 0.96), rgba(var(--boot-card-soft), 0.98));
+        box-shadow:
+          0 26px 80px rgba(0, 0, 0, 0.36),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        padding: 28px 26px;
+        text-align: center;
+      }
+
+      .boot-intro__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(var(--boot-accent), 0.18);
+        background: rgba(var(--boot-accent), 0.1);
+      }
+
+      .boot-intro__logo-frame {
+        position: relative;
+        width: 108px;
+        height: 108px;
+        margin: 20px auto 0;
+        padding: 12px;
+        border-radius: 30px;
+        border: 1px solid rgba(var(--boot-border), 0.08);
+        background: linear-gradient(180deg, rgba(var(--boot-accent), 0.05), rgba(5, 7, 10, 0.96));
+        box-shadow:
+          0 18px 40px rgba(0, 0, 0, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      }
+
+      .boot-intro__logo-frame::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 30px;
+        background: radial-gradient(circle at top, rgba(var(--boot-accent), 0.16), transparent 50%);
+      }
+
+      .boot-intro__logo {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 22px;
+      }
+
+      .boot-intro__title {
+        margin: 20px 0 0;
+        font-size: clamp(32px, 4vw, 38px);
+        font-weight: 900;
+        letter-spacing: -0.06em;
+        line-height: 0.96;
+      }
+
+      .boot-intro__desc {
+        margin: 12px auto 0;
+        max-width: 300px;
+        font-size: 14px;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .boot-intro__bars {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 24px;
+      }
+
+      .boot-intro__bars span {
+        width: 6px;
+        height: 32px;
+        border-radius: 999px;
+        background: linear-gradient(to top, rgba(var(--boot-accent), 0.35), rgba(var(--boot-grid-strong), 0.92));
+        animation: bootIntroPulse 1.05s ease-in-out infinite;
+      }
+
+      .boot-intro__bars span:nth-child(2) { animation-delay: 0.09s; }
+      .boot-intro__bars span:nth-child(3) { animation-delay: 0.18s; }
+      .boot-intro__bars span:nth-child(4) { animation-delay: 0.27s; }
+
+      .boot-intro__helper {
+        margin-top: 20px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .boot-intro__progress {
+        width: min(100%, 260px);
+        height: 4px;
+        margin: 24px auto 0;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .boot-intro__progress::before {
+        content: "";
+        display: block;
+        width: 100%;
+        height: 100%;
+        transform-origin: left center;
+        background: linear-gradient(to right, rgba(var(--boot-grid-strong), 0.85), rgba(var(--boot-accent), 0.95));
+        animation: bootIntroProgress 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+
+      @keyframes bootIntroPulse {
+        0%, 100% { transform: scaleY(0.58); opacity: 0.4; }
+        35% { transform: scaleY(1); opacity: 1; }
+        65% { transform: scaleY(0.7); opacity: 0.56; }
+      }
+
+      @keyframes bootIntroProgress {
+        0% { transform: translateX(-18%) scaleX(0.16); }
+        70% { transform: translateX(0) scaleX(0.88); }
+        100% { transform: translateX(0) scaleX(0.98); }
+      }
+
+      @media (max-width: 767px) {
+        .boot-intro__card {
+          padding: 24px 20px;
+          border-radius: 28px;
+        }
+
+        .boot-intro__logo-frame {
+          width: 94px;
+          height: 94px;
+          border-radius: 26px;
+        }
+
+        .boot-intro__tunnel-wall {
+          opacity: 0.22;
+        }
+
+        .boot-intro__logo-frame::before {
+          border-radius: 26px;
+        }
+
+        #app-boot-intro::before {
+          background-size: 20px 20px, 20px 20px, 10px 10px, 10px 10px;
+        }
+
+        #app-boot-intro::after {
+          background-size: 20px 20px, 20px 20px, 10px 10px, 10px 10px;
+        }
+
+        .boot-intro__fine-grid {
+          background-size: 10px 10px;
+        }
+      }
+    </style>
+    <script>
+      (function () {
+        var path = window.location.pathname || "/";
+        var params = new URLSearchParams(window.location.search || "");
+        var isArtistRoute =
+          path === "/artist-auth" ||
+          path === "/artist-request" ||
+          path.indexOf("/artist/") === 0 ||
+          (path === "/verify-email" && params.get("intent") === "artist");
+        document.documentElement.setAttribute("data-boot-theme", isArtistRoute ? "artist" : "listener");
+      })();
+    </script>
   </head>
 
   <body>
+    <div id="app-boot-intro" aria-hidden="true">
+      <div class="boot-intro__atmosphere"></div>
+      <div class="boot-intro__tunnel-wall boot-intro__tunnel-wall--left"></div>
+      <div class="boot-intro__tunnel-wall boot-intro__tunnel-wall--right"></div>
+      <div class="boot-intro__portal"></div>
+      <div class="boot-intro__fine-grid"></div>
+      <div class="boot-intro__noise"></div>
+      <div class="boot-intro__vignette"></div>
+      <div class="boot-intro__stage">
+        <div class="boot-intro__card">
+          <div class="boot-intro__badge">Khoaluan Music</div>
+          <div class="boot-intro__logo-frame">
+            <img class="boot-intro__logo" src="/logo-brand.png" alt="Khoaluan Music" />
+          </div>
+          <h1 class="boot-intro__title">Khoaluan Music</h1>
+          <p class="boot-intro__desc">Đang mở không gian âm nhạc và chuẩn bị trải nghiệm cho bạn.</p>
+          <div class="boot-intro__bars" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p class="boot-intro__helper">Vui lòng chờ trong giây lát...</p>
+          <div class="boot-intro__progress"></div>
+        </div>
+      </div>
+    </div>
     <div id="root"></div>
     <script src="https://unpkg.com/animejs@4.2.2/lib/anime.min.js"></script>
     <script type="module" src="/src/main.jsx"></script>

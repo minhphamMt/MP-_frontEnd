@@ -61,11 +61,7 @@ const AdminArtistRequests = lazy(() =>
 const AdminUserForm = lazy(() => import("../pages/admin/AdminUserForm"));
 const Trash = lazy(() => import("../pages/Trash"));
 
-const fallback = (
-  <div className="flex min-h-[40vh] items-center justify-center text-white/70">
-    Đang tải...
-  </div>
-);
+const fallback = null;
 
 function HomeEntryRoute() {
   const role = useAuthStore((state) => state.role);

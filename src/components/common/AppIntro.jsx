@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { motion, useReducedMotion } from "framer-motion";
 import { useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useSearchParams } from "react-router-dom";
 import useAuthStore from "../../store/auth.store";
 
@@ -35,9 +36,8 @@ function getIntroCopy({ isAuthReady, isAuthenticated, role }) {
     return {
       badge: "Sync Session",
       title: "Khoaluan Music",
-      description:
-        "Đang đồng bộ phiên làm việc và chuẩn bị đúng không gian phù hợp cho bạn.",
-      helper: "Vui lòng đợi trong giây lát...",
+      description: "Đang đồng bộ phiên làm việc cho bạn.",
+      helper: "Vui lòng chờ trong giây lát...",
     };
   }
 
@@ -45,9 +45,8 @@ function getIntroCopy({ isAuthReady, isAuthenticated, role }) {
     return {
       badge: "Guest Session",
       title: "Chào mừng đến với Khoaluan Music",
-      description:
-        "Đang mở không gian khám phá, bảng xếp hạng, album và những giai điệu mới để bạn bắt đầu thật nhẹ nhàng.",
-      helper: "Khám phá nhạc mới, tìm kiếm và đăng nhập bất cứ lúc nào.",
+      description: "Đang mở không gian nghe nhạc và khám phá cho bạn.",
+      helper: "Mọi thứ sẽ sẵn sàng ngay.",
     };
   }
 
@@ -55,9 +54,8 @@ function getIntroCopy({ isAuthReady, isAuthenticated, role }) {
     return {
       badge: "Admin Console",
       title: "Khu vực quản trị đã sẵn sàng",
-      description:
-        "Đang mở dashboard, kiểm duyệt nội dung và các công cụ quản lý hệ thống cho phiên làm việc của bạn.",
-      helper: "Theo dõi dữ liệu, xử lý yêu cầu và quản trị nền tảng.",
+      description: "Đang mở dashboard và công cụ quản trị hệ thống.",
+      helper: "Chuẩn bị dữ liệu cho phiên làm việc của bạn.",
     };
   }
 
@@ -65,18 +63,16 @@ function getIntroCopy({ isAuthReady, isAuthenticated, role }) {
     return {
       badge: "Artist Workspace",
       title: "Studio của bạn đang mở ra",
-      description:
-        "Đang chuẩn bị workspace nghệ sĩ, danh sách bài hát, album và các chỉ số để bạn tiếp tục sáng tạo.",
-      helper: "Quản lý phát hành, cập nhật hồ sơ và theo dõi hiệu suất âm nhạc.",
+      description: "Đang chuẩn bị workspace nghệ sĩ cho bạn.",
+      helper: "Bài hát, album và hồ sơ sẽ sẵn sàng ngay.",
     };
   }
 
   return {
     badge: "Listener Mode",
     title: "Chào mừng bạn quay lại",
-    description:
-      "Đang làm mới thư viện cá nhân, lịch sử nghe gần đây và không gian phát nhạc để bạn tiếp tục đúng nhịp.",
-    helper: "Playlist, bài hát yêu thích và hành trình nghe nhạc của bạn đang chờ sẵn.",
+    description: "Đang làm mới thư viện và không gian phát nhạc của bạn.",
+    helper: "Playlist và lịch sử nghe sẽ hiện ngay sau đó.",
   };
 }
 
@@ -89,14 +85,14 @@ function getIntroTone({ role, pathname, intent }) {
     (pathname === "/verify-email" && intent === "artist");
 
   if (isArtistRoute) {
-    return {
-      shellClassName: "auth-shell-artist",
-      badgeClassName: "border-sky-300/18 bg-sky-400/10 text-sky-100/85",
-      panelClassName:
-        "border-sky-300/[0.08] bg-[#0b1016]/96 shadow-[0_28px_90px_rgba(0,0,0,0.52),inset_0_1px_0_rgba(191,219,254,0.03)]",
-      pulseBarClassName: "bg-gradient-to-t from-sky-500/35 via-sky-300/90 to-cyan-200/90",
-      logoAuraClassName: "bg-[radial-gradient(circle_at_top,rgba(125,211,252,0.16),transparent_50%)]",
-      progressClassName:
+      return {
+        shellClassName: "auth-shell-artist",
+        badgeClassName: "border-sky-300/18 bg-sky-400/10 text-sky-100/85",
+        panelClassName:
+          "border-sky-300/[0.06] bg-[#0a121d]/96 shadow-[0_28px_90px_rgba(0,0,0,0.52),inset_0_1px_0_rgba(191,219,254,0.025)]",
+        pulseBarClassName: "bg-gradient-to-t from-sky-500/35 via-sky-300/90 to-cyan-200/90",
+        logoAuraClassName: "bg-[radial-gradient(circle_at_top,rgba(125,211,252,0.16),transparent_50%)]",
+        progressClassName:
         "bg-gradient-to-r from-sky-300 via-blue-400 to-cyan-300 shadow-[0_0_22px_rgba(96,165,250,0.42)]",
     };
   }
@@ -105,7 +101,7 @@ function getIntroTone({ role, pathname, intent }) {
     shellClassName: "auth-shell-listener",
     badgeClassName: "border-emerald-300/18 bg-emerald-400/10 text-emerald-100/85",
     panelClassName:
-      "border-emerald-300/[0.07] bg-[#0b1016]/96 shadow-[0_28px_90px_rgba(0,0,0,0.52),inset_0_1px_0_rgba(167,243,208,0.03)]",
+      "border-emerald-300/[0.06] bg-[#0a1512]/96 shadow-[0_28px_90px_rgba(0,0,0,0.52),inset_0_1px_0_rgba(167,243,208,0.025)]",
     pulseBarClassName: "bg-gradient-to-t from-emerald-500/28 via-emerald-300/82 to-lime-200/88",
     logoAuraClassName: "bg-[radial-gradient(circle_at_top,rgba(118,204,152,0.14),transparent_50%)]",
     progressClassName:
@@ -136,9 +132,9 @@ export default function AppIntro() {
     [intent, location.pathname, role]
   );
 
-  return (
+  const introMarkup = (
     <MotionDiv
-      className={clsx("auth-intro-shell fixed inset-0 z-[120] overflow-hidden text-white", introTone.shellClassName)}
+      className={clsx("auth-intro-shell fixed inset-0 z-[2400] overflow-hidden text-white", introTone.shellClassName)}
       initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{
@@ -150,10 +146,12 @@ export default function AppIntro() {
       }}
     >
       <div className="absolute inset-0 auth-shell-backdrop" />
+      <div className="pointer-events-none absolute inset-0 auth-shell-wave auth-shell-wave--left" />
+      <div className="pointer-events-none absolute inset-0 auth-shell-wave auth-shell-wave--right" />
       <div className="absolute inset-0 auth-shell-top-grid" />
-      <div className="pointer-events-none absolute left-1/2 top-[42%] h-[360px] w-[min(84vw,760px)] -translate-x-1/2 -translate-y-1/2 rounded-full auth-shell-focus-glow md:h-[420px]" />
-      <div className="absolute inset-x-[-10%] bottom-[-34%] h-[54%] auth-shell-floor-grid" />
-      <div className="absolute inset-x-[-10%] bottom-[-34%] h-[54%] auth-shell-floor-grid auth-shell-floor-grid--fine" />
+      <div className="pointer-events-none absolute left-1/2 top-[40%] h-[380px] w-[min(84vw,780px)] -translate-x-1/2 -translate-y-1/2 rounded-full auth-shell-focus-glow md:h-[440px]" />
+      <div className="absolute inset-x-[-12%] bottom-[-22%] h-[62%] auth-shell-floor-grid" />
+      <div className="absolute inset-x-[-12%] bottom-[-22%] h-[62%] auth-shell-floor-grid auth-shell-floor-grid--fine" />
       <div className="absolute inset-0 auth-shell-vignette" />
       <div className="absolute inset-0 opacity-[0.08] auth-shell-noise-map" />
       <img
@@ -163,11 +161,11 @@ export default function AppIntro() {
         draggable="false"
       />
 
-      <div className="pointer-events-none absolute inset-0 z-10 px-5 sm:px-8">
+      <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-5 sm:px-8">
         <div className="mx-auto flex h-full w-full max-w-[1180px] items-center justify-center">
           <MotionDiv
             className={clsx(
-              "pointer-events-auto w-full max-w-[560px] rounded-[32px] border px-6 py-8 text-center backdrop-blur-xl sm:px-8 sm:py-10",
+              "pointer-events-auto auth-main-card w-full max-w-[430px] rounded-[32px] px-6 py-7 text-center sm:px-7 sm:py-8",
               introTone.panelClassName
             )}
             initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 18, scale: 0.985 }}
@@ -184,8 +182,8 @@ export default function AppIntro() {
             {introCopy.badge}
           </div>
 
-          <div className="mt-6 flex justify-center">
-            <div className="relative h-[108px] w-[108px] rounded-[30px] border border-white/10 bg-[#050706] p-3 shadow-[0_18px_40px_rgba(0,0,0,0.35)]">
+          <div className="mt-5 flex justify-center">
+            <div className="auth-brand-frame relative h-[108px] w-[108px] rounded-[30px] p-3">
               <div className={clsx("absolute inset-0 rounded-[30px]", introTone.logoAuraClassName)} />
               <img
                 src="/logo-brand.png"
@@ -197,7 +195,7 @@ export default function AppIntro() {
           </div>
 
           <MotionDiv
-            className="mt-6 text-3xl font-black tracking-[-0.06em] text-white sm:text-4xl"
+            className="mt-5 text-[2rem] font-black tracking-[-0.06em] text-white sm:text-[2.35rem]"
             initial={reduceMotion ? undefined : { opacity: 0, y: 10 }}
             animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             transition={reduceMotion ? undefined : { delay: 0.08, duration: 0.38 }}
@@ -205,7 +203,7 @@ export default function AppIntro() {
             {introCopy.title}
           </MotionDiv>
           <MotionDiv
-            className="mx-auto mt-3 max-w-md text-sm leading-7 text-white/62 sm:text-[15px]"
+            className="mx-auto mt-3 max-w-[300px] text-sm leading-6 text-white/62 sm:text-[14px]"
             initial={reduceMotion ? undefined : { opacity: 0, y: 10 }}
             animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             transition={reduceMotion ? undefined : { delay: 0.16, duration: 0.38 }}
@@ -245,4 +243,10 @@ export default function AppIntro() {
       </div>
     </MotionDiv>
   );
+
+  if (typeof document === "undefined") {
+    return introMarkup;
+  }
+
+  return createPortal(introMarkup, document.body);
 }

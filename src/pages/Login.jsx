@@ -14,14 +14,19 @@ import {
 } from "../components/auth/AuthPrimitives";
 import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
+import { showBootIntro } from "../utils/bootIntro";
 import { signInWithGoogle, signOutFirebaseSession } from "../utils/firebase";
 
 const MotionDiv = motion.div;
-const formTransition = {
+const cardLayoutTransition = {
   type: "spring",
-  stiffness: 360,
-  damping: 30,
-  mass: 0.85,
+  stiffness: 220,
+  damping: 28,
+  mass: 0.92,
+};
+const formSwapTransition = {
+  duration: 0.3,
+  ease: [0.22, 1, 0.36, 1],
 };
 
 const DISPLAY_NAME_REGEX = /^[\p{L}\p{N}\s._'-]+$/u;
@@ -119,10 +124,6 @@ export default function Login({ initialMode = "login" }) {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
-  const [isWideRegisterLayout, setIsWideRegisterLayout] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.innerWidth >= 768;
-  });
 
   useEffect(() => {
     if (!errorPopup) return undefined;
@@ -170,25 +171,6 @@ export default function Login({ initialMode = "login" }) {
     setMode(initialMode);
   }, [initialMode]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-
-    const mediaQuery = window.matchMedia("(min-width: 768px)");
-    const updateLayout = (event) => {
-      setIsWideRegisterLayout(event.matches);
-    };
-
-    setIsWideRegisterLayout(mediaQuery.matches);
-
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", updateLayout);
-      return () => mediaQuery.removeEventListener("change", updateLayout);
-    }
-
-    mediaQuery.addListener(updateLayout);
-    return () => mediaQuery.removeListener(updateLayout);
-  }, []);
-
   usePageMetadata({
     title: mode === "login" ? "Đăng nhập" : "Đăng ký",
     description:
@@ -209,13 +191,18 @@ export default function Login({ initialMode = "login" }) {
     navigate(nextMode === "login" ? "/login" : "/register");
   };
 
+  const navigateWithIntro = (to) => {
+    showBootIntro({ pathname: to });
+    navigate(to, { replace: true });
+  };
+
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
       const user = await login({ email: loginEmail, password: loginPassword });
-      if (user.role === "ADMIN") return navigate("/admin", { replace: true });
-      if (user.role === "ARTIST") return navigate("/artist/dashboard", { replace: true });
-      return navigate("/", { replace: true });
+      if (user.role === "ADMIN") return navigateWithIntro("/admin");
+      if (user.role === "ARTIST") return navigateWithIntro("/artist/dashboard");
+      return navigateWithIntro("/");
     } catch (err) {
       showError(err?.response?.data?.message || err?.message || "Đăng nhập thất bại, thử lại nhé.");
     }
@@ -226,9 +213,9 @@ export default function Login({ initialMode = "login" }) {
     try {
       const { idToken } = await signInWithGoogle();
       const user = await firebaseLogin({ idToken });
-      if (user.role === "ADMIN") return navigate("/admin", { replace: true });
-      if (user.role === "ARTIST") return navigate("/artist/dashboard", { replace: true });
-      return navigate("/", { replace: true });
+      if (user.role === "ADMIN") return navigateWithIntro("/admin");
+      if (user.role === "ARTIST") return navigateWithIntro("/artist/dashboard");
+      return navigateWithIntro("/");
     } catch (err) {
       await signOutFirebaseSession();
       showError(extractFirebaseErrorMessage(err));
@@ -268,9 +255,9 @@ export default function Login({ initialMode = "login" }) {
         return;
       }
 
-      if (result.role === "ADMIN") return navigate("/admin", { replace: true });
-      if (result.role === "ARTIST") return navigate("/artist/dashboard", { replace: true });
-      return navigate("/", { replace: true });
+      if (result.role === "ADMIN") return navigateWithIntro("/admin");
+      if (result.role === "ARTIST") return navigateWithIntro("/artist/dashboard");
+      return navigateWithIntro("/");
     } catch (err) {
       showError(err?.response?.data?.message || err?.message || "Đăng ký thất bại, thử lại nhé.");
     }
@@ -313,9 +300,9 @@ export default function Login({ initialMode = "login" }) {
         authContext: "default",
       });
 
-      if (user.role === "ADMIN") return navigate("/admin", { replace: true });
-      if (user.role === "ARTIST") return navigate("/artist/dashboard", { replace: true });
-      return navigate("/", { replace: true });
+      if (user.role === "ADMIN") return navigateWithIntro("/admin");
+      if (user.role === "ARTIST") return navigateWithIntro("/artist/dashboard");
+      return navigateWithIntro("/");
     } catch (err) {
       showError(
         err?.response?.data?.message ||
@@ -391,28 +378,19 @@ export default function Login({ initialMode = "login" }) {
     setForgotOpen(true);
   };
 
-  const hasRegisterFeedback =
-    Boolean(registerNotice) || Object.values(registerFieldErrors).some(Boolean);
   const isLoginMode = mode === "login";
   const isRegisterMode = mode === "register";
-  const activeFormHeight =
-    isLoginMode
-      ? loginNotice
-        ? 248
-        : 200
-      : isWideRegisterLayout
-        ? hasRegisterFeedback
-          ? 284
-          : 236
-        : hasRegisterFeedback
-          ? 382
-          : 336;
 
   const formSection = (
-    <div className="auth-form-wrap relative mx-auto w-full max-w-[448px]">
+    <MotionDiv
+      layout
+      initial={false}
+      transition={cardLayoutTransition}
+      className="auth-form-wrap relative mx-auto w-full max-w-[448px]"
+    >
       <AuthCard variant="main" className="auth-fit-card p-5 sm:p-6">
         <form onSubmit={mode === "login" ? handleLogin : handleRegister}>
-          <div className="flex flex-col items-center text-center">
+          <MotionDiv layout="position" transition={cardLayoutTransition} className="flex flex-col items-center text-center">
             <button
               type="button"
               onClick={() => navigate("/")}
@@ -432,23 +410,23 @@ export default function Login({ initialMode = "login" }) {
             <p className="auth-fit-subtitle mt-1 text-[13px] text-white/48">
               {mode === "login" ? "Tiếp tục tài khoản của bạn" : "Tạo tài khoản mới thật nhanh"}
             </p>
-          </div>
+          </MotionDiv>
 
           <MotionDiv
+            layout
             initial={false}
-            animate={{ height: activeFormHeight }}
-            transition={formTransition}
-            className="auth-form-stage relative mt-5 overflow-hidden"
+            transition={cardLayoutTransition}
+            className="auth-form-stage relative mt-4 overflow-hidden"
           >
               <MotionDiv
                 initial={false}
                 animate={
                   mode === "login"
-                    ? { opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }
-                    : { opacity: 0, x: -18, scale: 0.985, filter: "blur(4px)" }
+                    ? { opacity: 1, x: 0, y: 0, scale: 1 }
+                    : { opacity: 0, x: -14, y: 4, scale: 0.994 }
                 }
-                transition={formTransition}
-                className={`space-y-3.5 ${mode === "login" ? "relative" : "pointer-events-none absolute inset-0"}`}
+                transition={formSwapTransition}
+                className={`space-y-3 will-change-transform ${mode === "login" ? "relative" : "pointer-events-none absolute inset-0"}`}
               >
                 <AuthField
                   label="Email"
@@ -485,11 +463,11 @@ export default function Login({ initialMode = "login" }) {
                 initial={false}
                 animate={
                   mode === "register"
-                    ? { opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }
-                    : { opacity: 0, x: 18, scale: 0.985, filter: "blur(4px)" }
+                    ? { opacity: 1, x: 0, y: 0, scale: 1 }
+                    : { opacity: 0, x: 14, y: 4, scale: 0.994 }
                 }
-                transition={formTransition}
-                className={`space-y-3.5 ${mode === "register" ? "relative" : "pointer-events-none absolute inset-0"}`}
+                transition={formSwapTransition}
+                className={`space-y-3 pb-1 will-change-transform ${mode === "register" ? "relative" : "pointer-events-none absolute inset-0"}`}
               >
                 <div className="grid gap-3">
                   <AuthField
@@ -562,7 +540,11 @@ export default function Login({ initialMode = "login" }) {
               </MotionDiv>
           </MotionDiv>
 
-          <div className="auth-actions mt-4 space-y-3">
+          <MotionDiv
+            layout="position"
+            transition={cardLayoutTransition}
+            className="auth-actions mt-3.5 space-y-2.5"
+          >
             <button disabled={loading} type="submit" className="auth-ui-primary">
               {loading
                 ? mode === "login"
@@ -603,13 +585,13 @@ export default function Login({ initialMode = "login" }) {
                 </button>
               </p>
             </div>
-          </div>
+          </MotionDiv>
         </form>
       </AuthCard>
       <p className="pointer-events-none absolute left-1/2 top-full mt-4 -translate-x-1/2 whitespace-nowrap text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/34">
         KLTN MINH PHẠM CS64
       </p>
-    </div>
+    </MotionDiv>
   );
 
   return (

@@ -12,13 +12,18 @@ import {
 } from "../components/auth/AuthPrimitives";
 import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
+import { showBootIntro } from "../utils/bootIntro";
 
 const MotionDiv = motion.div;
-const formTransition = {
+const cardLayoutTransition = {
   type: "spring",
-  stiffness: 360,
-  damping: 30,
-  mass: 0.85,
+  stiffness: 220,
+  damping: 28,
+  mass: 0.92,
+};
+const formSwapTransition = {
+  duration: 0.3,
+  ease: [0.22, 1, 0.36, 1],
 };
 
 const rejectNonArtistLogin = (role) => role === "ADMIN" || !role;
@@ -106,10 +111,12 @@ export default function ArtistAuth() {
     if (!isAuthenticated) return;
     if (role === "ARTIST") {
       setAuthContext("default");
+      showBootIntro({ pathname: "/artist/dashboard" });
       navigate("/artist/dashboard", { replace: true });
       return;
     }
     if (authContext === "artist_request") {
+      showBootIntro({ pathname: "/artist-request" });
       navigate("/artist-request", { replace: true });
     }
   }, [isAuthenticated, role, authContext, navigate, setAuthContext]);
@@ -126,6 +133,11 @@ export default function ArtistAuth() {
 
   const handleNavigate = (nextMode) => {
     setMode(nextMode);
+  };
+
+  const navigateWithIntro = (to) => {
+    showBootIntro({ pathname: to });
+    navigate(to, { replace: true });
   };
 
   const handleLogin = async (event) => {
@@ -152,9 +164,9 @@ export default function ArtistAuth() {
 
       if (user.role === "ARTIST") {
         setAuthContext("default");
-        return navigate("/artist/dashboard", { replace: true });
+        return navigateWithIntro("/artist/dashboard");
       }
-      return navigate("/artist-request", { replace: true });
+      return navigateWithIntro("/artist-request");
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || "Đăng nhập thất bại, thử lại nhé.";
       setLoginError(msg);
@@ -205,9 +217,9 @@ export default function ArtistAuth() {
 
       if (result.role === "ARTIST") {
         setAuthContext("default");
-        return navigate("/artist/dashboard", { replace: true });
+        return navigateWithIntro("/artist/dashboard");
       }
-      return navigate("/artist-request", { replace: true });
+      return navigateWithIntro("/artist-request");
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || "Đăng ký thất bại, thử lại nhé.";
       setRegisterError(msg);
@@ -282,24 +294,19 @@ export default function ArtistAuth() {
     setForgotOpen(true);
   };
 
-  const hasRegisterFeedback =
-    Boolean(registerNotice || registerError) || Object.values(registerFieldErrors).some(Boolean);
   const isLoginMode = mode === "login";
   const isRegisterMode = mode === "register";
-  const activeFormHeight =
-    isLoginMode
-      ? loginError
-        ? 248
-        : 200
-      : hasRegisterFeedback
-        ? 392
-        : 340;
 
   const formSection = (
-    <div className="auth-form-wrap relative mx-auto w-full max-w-[448px]">
+    <MotionDiv
+      layout
+      initial={false}
+      transition={cardLayoutTransition}
+      className="auth-form-wrap relative mx-auto w-full max-w-[448px]"
+    >
       <AuthCard variant="main" className="auth-fit-card p-5 sm:p-6">
         <form onSubmit={mode === "login" ? handleLogin : handleRegister}>
-          <div className="flex flex-col items-center text-center">
+          <MotionDiv layout="position" transition={cardLayoutTransition} className="flex flex-col items-center text-center">
             <button
               type="button"
               onClick={() => navigate("/")}
@@ -319,23 +326,23 @@ export default function ArtistAuth() {
             <p className="auth-fit-subtitle mt-1 text-[13px] text-white/48">
               {mode === "login" ? "Truy cập tài khoản nghệ sĩ" : "Tạo tài khoản để gửi hồ sơ"}
             </p>
-          </div>
+          </MotionDiv>
 
           <MotionDiv
+            layout
             initial={false}
-            animate={{ height: activeFormHeight }}
-            transition={formTransition}
-            className="auth-form-stage relative mt-5 overflow-hidden"
+            transition={cardLayoutTransition}
+            className="auth-form-stage relative mt-4 overflow-hidden"
           >
               <MotionDiv
                 initial={false}
                 animate={
                   mode === "login"
-                    ? { opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }
-                    : { opacity: 0, x: -18, scale: 0.985, filter: "blur(4px)" }
+                    ? { opacity: 1, x: 0, y: 0, scale: 1 }
+                    : { opacity: 0, x: -14, y: 4, scale: 0.994 }
                 }
-                transition={formTransition}
-                className={`space-y-3.5 ${mode === "login" ? "relative" : "pointer-events-none absolute inset-0"}`}
+                transition={formSwapTransition}
+                className={`space-y-3 will-change-transform ${mode === "login" ? "relative" : "pointer-events-none absolute inset-0"}`}
               >
                 <AuthField
                   label="Email"
@@ -372,11 +379,11 @@ export default function ArtistAuth() {
                 initial={false}
                 animate={
                   mode === "register"
-                    ? { opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }
-                    : { opacity: 0, x: 18, scale: 0.985, filter: "blur(4px)" }
+                    ? { opacity: 1, x: 0, y: 0, scale: 1 }
+                    : { opacity: 0, x: 14, y: 4, scale: 0.994 }
                 }
-                transition={formTransition}
-                className={`space-y-3.5 pb-3 ${mode === "register" ? "relative" : "pointer-events-none absolute inset-0"}`}
+                transition={formSwapTransition}
+                className={`space-y-3 pb-1 will-change-transform ${mode === "register" ? "relative" : "pointer-events-none absolute inset-0"}`}
               >
                 <AuthField
                   label="Tên hiển thị"
@@ -443,7 +450,11 @@ export default function ArtistAuth() {
               </MotionDiv>
           </MotionDiv>
 
-          <div className="auth-actions mt-4 space-y-3">
+          <MotionDiv
+            layout="position"
+            transition={cardLayoutTransition}
+            className="auth-actions mt-3.5 space-y-2.5"
+          >
             {mode === "login" ? (
               <button disabled={loading} type="submit" className="auth-ui-primary">
                 {loading ? "Đang đăng nhập..." : "Vào cổng nghệ sĩ"}
@@ -472,13 +483,13 @@ export default function ArtistAuth() {
                 </button>
               </p>
             </div>
-          </div>
+          </MotionDiv>
         </form>
       </AuthCard>
       <p className="pointer-events-none absolute left-1/2 top-full mt-4 -translate-x-1/2 whitespace-nowrap text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/34">
         KLTN MINH PHẠM CS64
       </p>
-    </div>
+    </MotionDiv>
   );
 
   return (
