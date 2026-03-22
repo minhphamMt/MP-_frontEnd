@@ -129,7 +129,7 @@ export default function ArtistAlbums() {
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70">
               Tổng: {stats.total}
             </span>
-            <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-emerald-100">
+            <span className="rounded-full border border-sky-300/30 bg-sky-400/12 px-3 py-1 text-sky-100">
               Đã duyệt: {stats.approved}
             </span>
             <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-amber-100">

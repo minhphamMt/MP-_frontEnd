@@ -1,27 +1,31 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
+import { FiMail, FiMusic } from "react-icons/fi";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import AuthShell from "../components/auth/AuthShell";
+import {
+  AuthCard,
+  AuthDivider,
+  AuthField,
+  AuthMessage,
+  AuthModal,
+  AuthPasswordField,
+} from "../components/auth/AuthPrimitives";
 import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
 import { signInWithGoogle, signOutFirebaseSession } from "../utils/firebase";
 
-const formVariants = {
-  initial: { opacity: 0, y: 14 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -14 },
+const MotionDiv = motion.div;
+const formTransition = {
+  type: "spring",
+  stiffness: 360,
+  damping: 30,
+  mass: 0.85,
 };
 
-const glowVariants = {
-  initial: { opacity: 0.4, scale: 0.95 },
-  animate: { opacity: 1, scale: 1 },
-};
-
-const modes = [
-  { key: "login", label: "Đăng nhập" },
-  { key: "register", label: "Đăng ký" },
-];
+const DISPLAY_NAME_REGEX = /^[\p{L}\p{N}\s._'-]+$/u;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const extractFirebaseErrorMessage = (err) => {
   const status = err?.response?.status;
@@ -38,12 +42,6 @@ const extractFirebaseErrorMessage = (err) => {
 
   return message || "Đăng nhập Google thất bại, thử lại nhé.";
 };
-
-const modalBackdrop =
-  "fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm";
-
-const DISPLAY_NAME_REGEX = /^[\p{L}\p{N}\s._'-]+$/u;
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const validateRegisterFields = ({ displayName, email, password, confirmPassword }) => {
   const errors = {};
@@ -121,6 +119,10 @@ export default function Login({ initialMode = "login" }) {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [isWideRegisterLayout, setIsWideRegisterLayout] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth >= 768;
+  });
 
   useEffect(() => {
     if (!errorPopup) return undefined;
@@ -168,22 +170,31 @@ export default function Login({ initialMode = "login" }) {
     setMode(initialMode);
   }, [initialMode]);
 
-  const helpText = useMemo(
-    () =>
-      mode === "login"
-        ? "Đăng nhập để tiếp tục khám phá kho nhạc cá nhân hoá."
-        : "Tạo tài khoản miễn phí và bắt đầu hành trình âm nhạc của bạn.",
-    [mode]
-  );
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
 
-  const authMetaDescription =
-    mode === "login"
-      ? "Đăng nhập Khoaluan Music để tiếp tục nghe nhạc, lưu lịch sử và quản lý thư viện cá nhân."
-      : "Tạo tài khoản Khoaluan Music để lưu playlist, theo dõi nghệ sĩ và cá nhân hóa trải nghiệm nghe nhạc.";
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const updateLayout = (event) => {
+      setIsWideRegisterLayout(event.matches);
+    };
+
+    setIsWideRegisterLayout(mediaQuery.matches);
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", updateLayout);
+      return () => mediaQuery.removeEventListener("change", updateLayout);
+    }
+
+    mediaQuery.addListener(updateLayout);
+    return () => mediaQuery.removeListener(updateLayout);
+  }, []);
 
   usePageMetadata({
     title: mode === "login" ? "Đăng nhập" : "Đăng ký",
-    description: authMetaDescription,
+    description:
+      mode === "login"
+        ? "Đăng nhập Khoaluan Music để tiếp tục nghe nhạc."
+        : "Tạo tài khoản Khoaluan Music để bắt đầu nghe nhạc.",
     url: mode === "login" ? "/login" : "/register",
     robots: "noindex, nofollow",
   });
@@ -206,9 +217,7 @@ export default function Login({ initialMode = "login" }) {
       if (user.role === "ARTIST") return navigate("/artist/dashboard", { replace: true });
       return navigate("/", { replace: true });
     } catch (err) {
-      showError(
-        err?.response?.data?.message || err?.message || "Đăng nhập thất bại, thử lại nhé."
-      );
+      showError(err?.response?.data?.message || err?.message || "Đăng nhập thất bại, thử lại nhé.");
     }
   };
 
@@ -254,7 +263,7 @@ export default function Login({ initialMode = "login" }) {
         setVerificationCode("");
         setRegisterNotice(
           result.message ||
-            "Vui lòng nhập mã xác thực 6 số đã gửi về email để hoàn tất đăng ký."
+            "Nhập mã xác thực 6 số đã gửi về email để hoàn tất đăng ký."
         );
         return;
       }
@@ -263,9 +272,7 @@ export default function Login({ initialMode = "login" }) {
       if (result.role === "ARTIST") return navigate("/artist/dashboard", { replace: true });
       return navigate("/", { replace: true });
     } catch (err) {
-      showError(
-        err?.response?.data?.message || err?.message || "Đăng ký thất bại, thử lại nhé."
-      );
+      showError(err?.response?.data?.message || err?.message || "Đăng ký thất bại, thử lại nhé.");
     }
   };
 
@@ -384,502 +391,347 @@ export default function Login({ initialMode = "login" }) {
     setForgotOpen(true);
   };
 
-  const handleArtistPortal = () => {
-    navigate("/artist-auth");
-  };
+  const hasRegisterFeedback =
+    Boolean(registerNotice) || Object.values(registerFieldErrors).some(Boolean);
+  const isLoginMode = mode === "login";
+  const isRegisterMode = mode === "register";
+  const activeFormHeight =
+    isLoginMode
+      ? loginNotice
+        ? 248
+        : 200
+      : isWideRegisterLayout
+        ? hasRegisterFeedback
+          ? 284
+          : 236
+        : hasRegisterFeedback
+          ? 382
+          : 336;
 
-  const renderPasswordInput = ({
-    label,
-    value,
-    onChange,
-    autoComplete,
-    showPassword,
-    toggleShowPassword,
-    inputClassName,
-  }) => (
-    <label className="block space-y-2 text-sm">
-      <span className="text-white/70">{label}</span>
-      <div className="relative">
-        <input
-          className={`${inputClassName} pr-12`}
-          value={value}
-          onChange={onChange}
-          type={showPassword ? "text" : "password"}
-          autoComplete={autoComplete}
-          required
-        />
-        <button
-          type="button"
-          onClick={toggleShowPassword}
-          className="absolute inset-y-0 right-3 inline-flex items-center text-white/60 transition md:hover:text-white"
-          aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-        >
-          {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-        </button>
-      </div>
-    </label>
+  const formSection = (
+    <div className="auth-form-wrap relative mx-auto w-full max-w-[448px]">
+      <AuthCard variant="main" className="auth-fit-card p-5 sm:p-6">
+        <form onSubmit={mode === "login" ? handleLogin : handleRegister}>
+          <div className="flex flex-col items-center text-center">
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="flex h-14 w-14 items-center justify-center rounded-[18px] border border-white/10 bg-white/[0.04] p-1.5 shadow-[0_12px_28px_rgba(0,0,0,0.26)] transition duration-200 hover:-translate-y-0.5 hover:border-white/16"
+              aria-label="Về trang chủ"
+            >
+              <img
+                src="/logo-brand.png"
+                alt="Khoaluan Music"
+                className="h-full w-full rounded-[14px] object-cover"
+                draggable="false"
+              />
+            </button>
+            <h1 className="auth-fit-title mt-4 text-[1.7rem] font-semibold tracking-[-0.04em] text-white">
+              {mode === "login" ? "Đăng nhập" : "Đăng ký"}
+            </h1>
+            <p className="auth-fit-subtitle mt-1 text-[13px] text-white/48">
+              {mode === "login" ? "Tiếp tục tài khoản của bạn" : "Tạo tài khoản mới thật nhanh"}
+            </p>
+          </div>
+
+          <MotionDiv
+            initial={false}
+            animate={{ height: activeFormHeight }}
+            transition={formTransition}
+            className="auth-form-stage relative mt-5 overflow-hidden"
+          >
+              <MotionDiv
+                initial={false}
+                animate={
+                  mode === "login"
+                    ? { opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }
+                    : { opacity: 0, x: -18, scale: 0.985, filter: "blur(4px)" }
+                }
+                transition={formTransition}
+                className={`space-y-3.5 ${mode === "login" ? "relative" : "pointer-events-none absolute inset-0"}`}
+              >
+                <AuthField
+                  label="Email"
+                  value={loginEmail}
+                  onChange={(event) => setLoginEmail(event.target.value)}
+                  placeholder="email@example.com"
+                  type="email"
+                  autoComplete="email"
+                  required={isLoginMode}
+                  disabled={!isLoginMode}
+                />
+
+                <AuthPasswordField
+                  label="Mật khẩu"
+                  value={loginPassword}
+                  onChange={(event) => setLoginPassword(event.target.value)}
+                  autoComplete="current-password"
+                  showPassword={showLoginPassword}
+                  toggleShowPassword={() => setShowLoginPassword((prev) => !prev)}
+                  required={isLoginMode}
+                  disabled={!isLoginMode}
+                />
+
+                <div className="flex items-center justify-end">
+                  <button type="button" onClick={openForgotModal} className="text-xs font-medium auth-ui-link">
+                    Quên mật khẩu?
+                  </button>
+                </div>
+
+                {loginNotice ? <AuthMessage tone="success">{loginNotice}</AuthMessage> : null}
+              </MotionDiv>
+
+              <MotionDiv
+                initial={false}
+                animate={
+                  mode === "register"
+                    ? { opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }
+                    : { opacity: 0, x: 18, scale: 0.985, filter: "blur(4px)" }
+                }
+                transition={formTransition}
+                className={`space-y-3.5 ${mode === "register" ? "relative" : "pointer-events-none absolute inset-0"}`}
+              >
+                <div className="grid gap-3">
+                  <AuthField
+                    label="Tên hiển thị"
+                    value={displayName}
+                    onChange={(event) => {
+                      setDisplayName(event.target.value);
+                      setRegisterFieldErrors((prev) => ({ ...prev, displayName: "" }));
+                    }}
+                    placeholder="Tên hiển thị"
+                    type="text"
+                  autoComplete="name"
+                  required={isRegisterMode}
+                  disabled={!isRegisterMode}
+                  error={registerFieldErrors.displayName}
+                  />
+
+                  <AuthField
+                    label="Email"
+                    value={registerEmail}
+                    onChange={(event) => {
+                      setRegisterEmail(event.target.value);
+                      setRegisterFieldErrors((prev) => ({ ...prev, email: "" }));
+                    }}
+                    placeholder="email@example.com"
+                    type="email"
+                  autoComplete="email"
+                  required={isRegisterMode}
+                  disabled={!isRegisterMode}
+                  error={registerFieldErrors.email}
+                  />
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <AuthPasswordField
+                    label="Mật khẩu"
+                    value={registerPassword}
+                    onChange={(event) => {
+                      setRegisterPassword(event.target.value);
+                      setRegisterFieldErrors((prev) => ({ ...prev, password: "" }));
+                    }}
+                    autoComplete="new-password"
+                    showPassword={showRegisterPassword}
+                    toggleShowPassword={() => setShowRegisterPassword((prev) => !prev)}
+                    required={isRegisterMode}
+                    disabled={!isRegisterMode}
+                    error={registerFieldErrors.password}
+                  />
+
+                  <AuthPasswordField
+                    label="Nhập lại mật khẩu"
+                    value={confirmPassword}
+                    onChange={(event) => {
+                      setConfirmPassword(event.target.value);
+                      setRegisterFieldErrors((prev) => ({
+                        ...prev,
+                        confirmPassword: "",
+                      }));
+                    }}
+                    autoComplete="new-password"
+                    showPassword={showConfirmPassword}
+                    toggleShowPassword={() => setShowConfirmPassword((prev) => !prev)}
+                    required={isRegisterMode}
+                    disabled={!isRegisterMode}
+                    error={registerFieldErrors.confirmPassword}
+                  />
+                </div>
+
+                {registerNotice ? <AuthMessage tone="success">{registerNotice}</AuthMessage> : null}
+              </MotionDiv>
+          </MotionDiv>
+
+          <div className="auth-actions mt-4 space-y-3">
+            <button disabled={loading} type="submit" className="auth-ui-primary">
+              {loading
+                ? mode === "login"
+                  ? "Đang đăng nhập..."
+                  : "Đang đăng ký..."
+                : mode === "login"
+                  ? "Đăng nhập"
+                  : "Tạo tài khoản"}
+            </button>
+
+            <AuthDivider>hoặc</AuthDivider>
+
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="auth-ui-secondary"
+            >
+              <FcGoogle className="text-lg" />
+              Tiếp tục với Google
+            </button>
+
+            <div className="space-y-1 pt-1 text-center text-[12px] text-white/48">
+              <p>
+                {mode === "login" ? "Chưa có tài khoản?" : "Đã có tài khoản?"}{" "}
+                <button
+                  type="button"
+                  onClick={() => handleNavigate(mode === "login" ? "register" : "login")}
+                  className="font-medium auth-ui-link"
+                >
+                  {mode === "login" ? "Đăng ký" : "Đăng nhập"}
+                </button>
+              </p>
+              <p>
+                Nghệ sĩ?{" "}
+                <button type="button" onClick={() => navigate("/artist-auth")} className="font-medium auth-ui-link">
+                  Artist Portal
+                </button>
+              </p>
+            </div>
+          </div>
+        </form>
+      </AuthCard>
+      <p className="pointer-events-none absolute left-1/2 top-full mt-4 -translate-x-1/2 whitespace-nowrap text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/34">
+        KLTN MINH PHẠM CS64
+      </p>
+    </div>
   );
 
   return (
-    <div className="auth-scroll-shell flex items-start justify-center bg-[#0b0b12] px-4 py-4 text-white sm:py-6 lg:items-center">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-center">
-        <motion.div
-          className="relative w-full overflow-visible rounded-[28px] border border-white/10 bg-white/[0.03] shadow-[0_30px_100px_rgba(0,0,0,0.6)] lg:max-h-[calc(100dvh-2rem)] lg:overflow-hidden"
-          initial="initial"
-          animate="animate"
-          variants={glowVariants}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
-          <div className="pointer-events-none absolute -left-32 top-8 h-64 w-64 rounded-full bg-green-400/20 blur-[120px]" />
-          <div className="pointer-events-none absolute -bottom-24 right-6 h-72 w-72 rounded-full bg-emerald-400/25 blur-[120px]" />
-
-          <div className="grid gap-5 p-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_390px] lg:items-center lg:gap-6 lg:p-7">
-            <div className="relative z-10 space-y-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-500 text-lg font-semibold text-[#0c0914] shadow-lg shadow-green-400/30">
-                  ♪
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.32em] text-white/60">Music Platform</p>
-                  <h1 className="text-2xl font-semibold lg:text-3xl">Chào mừng bạn đến với MP</h1>
-                </div>
-              </div>
-
-              <p className="max-w-md text-sm leading-relaxed text-white/70">{helpText}</p>
-
-              <div className="inline-flex w-full flex-wrap rounded-2xl border border-white/10 bg-white/5 p-1 sm:w-auto sm:rounded-full">
-                {modes.map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => handleNavigate(item.key)}
-                    className="relative flex-1 px-4 py-2 text-sm font-medium sm:flex-none sm:px-5"
-                  >
-                    {mode === item.key && (
-                      <motion.span
-                        layoutId="auth-pill"
-                        className="absolute inset-0 rounded-full bg-white/15"
-                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      />
-                    )}
-                    <span className={mode === item.key ? "relative text-white" : "relative text-white/60"}>
-                      {item.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-4">
-                <h2 className="text-base font-semibold">Quyền lợi thành viên</h2>
-                <ul className="space-y-2 text-sm text-white/70">
-                  <li>• Gợi ý playlist thông minh theo thói quen nghe.</li>
-                  <li>• Lưu lịch sử, đồng bộ thiết bị và nghe liên tục.</li>
-                  <li>• Theo dõi nghệ sĩ, album và xu hướng hot nhất.</li>
-                </ul>
-              </div>
-            </div>
-
-            <motion.div className="relative z-10 lg:w-[390px]" layout transition={{ type: "spring", stiffness: 260, damping: 28 }}>
-              <AnimatePresence mode="wait" initial={false}>
-                {mode === "login" ? (
-                  <motion.form
-                    key="login"
-                    className="w-full space-y-4 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
-                    onSubmit={handleLogin}
-                    variants={formVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                  >
-                    <div>
-                      <h2 className="text-2xl font-semibold">Đăng nhập</h2>
-                      <p className="mt-1 text-sm text-white/60">Nhập thông tin để tiếp tục nghe nhạc.</p>
-                    </div>
-
-                    <label className="block space-y-2 text-sm">
-                      <span className="text-white/70">Email</span>
-                      <input
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/40"
-                        value={loginEmail}
-                        onChange={(event) => setLoginEmail(event.target.value)}
-                        placeholder="email@example.com"
-                        type="email"
-                        autoComplete="email"
-                        required
-                      />
-                    </label>
-
-                    {renderPasswordInput({
-                      label: "Mật khẩu",
-                      value: loginPassword,
-                      onChange: (event) => setLoginPassword(event.target.value),
-                      autoComplete: "current-password",
-                      showPassword: showLoginPassword,
-                      toggleShowPassword: () => setShowLoginPassword((prev) => !prev),
-                      inputClassName:
-                        "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500/40",
-                    })}
-
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={openForgotModal}
-                        className="text-xs text-green-300 transition md:hover:text-green-200"
-                      >
-                        Quên mật khẩu?
-                      </button>
-                    </div>
-
-                    {loginNotice && (
-                      <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-100">
-                        {loginNotice}
-                      </div>
-                    )}
-
-                    <button
-                      disabled={loading}
-                      type="submit"
-                      className="w-full rounded-xl bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-green-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-green-500/40 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleGoogleLogin}
-                      disabled={loading}
-                      className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition md:hover:border-white/30 md:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <FcGoogle className="text-lg" />
-                      Đăng nhập với Google
-                    </button>
-
-                    <p className="text-center text-xs text-white/50">
-                      Chưa có tài khoản?{' '}
-                      <button
-                        type="button"
-                        onClick={() => handleNavigate("register")}
-                        className="text-green-300 transition md:hover:text-green-200"
-                      >
-                        Đăng ký ngay
-                      </button>
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={handleArtistPortal}
-                      className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white/85 transition md:hover:border-white/30 md:hover:bg-white/10"
-                    >
-                      Đăng ký trở thành nghệ sĩ
-                    </button>
-                  </motion.form>
-                ) : (
-                  <motion.form
-                    key="register"
-                    className="w-full space-y-3 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
-                    onSubmit={handleRegister}
-                    variants={formVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                  >
-                    <div>
-                      <h2 className="text-xl font-semibold sm:text-2xl">Tạo tài khoản</h2>
-                      <p className="mt-1 text-xs text-white/60 sm:text-sm">Đăng ký để lưu playlist và theo dõi nghệ sĩ.</p>
-                    </div>
-
-                    <label className="block space-y-1.5 text-sm">
-                      <span className="text-white/70">Tên hiển thị</span>
-                      <input
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                        value={displayName}
-                        onChange={(event) => {
-                          setDisplayName(event.target.value);
-                          setRegisterFieldErrors((prev) => ({ ...prev, displayName: "" }));
-                        }}
-                        placeholder="Tên hiển thị"
-                        type="text"
-                        autoComplete="name"
-                        required
-                      />
-                      {registerFieldErrors.displayName && (
-                        <p className="text-xs text-rose-300">{registerFieldErrors.displayName}</p>
-                      )}
-                    </label>
-
-                    <label className="block space-y-1.5 text-sm">
-                      <span className="text-white/70">Email</span>
-                      <input
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                        value={registerEmail}
-                        onChange={(event) => {
-                          setRegisterEmail(event.target.value);
-                          setRegisterFieldErrors((prev) => ({ ...prev, email: "" }));
-                        }}
-                        placeholder="email@example.com"
-                        type="email"
-                        autoComplete="email"
-                        required
-                      />
-                      {registerFieldErrors.email && (
-                        <p className="text-xs text-rose-300">{registerFieldErrors.email}</p>
-                      )}
-                    </label>
-
-                    {renderPasswordInput({
-                      label: "Mật khẩu",
-                      value: registerPassword,
-                      onChange: (event) => {
-                        setRegisterPassword(event.target.value);
-                        setRegisterFieldErrors((prev) => ({ ...prev, password: "" }));
-                      },
-                      autoComplete: "new-password",
-                      showPassword: showRegisterPassword,
-                      toggleShowPassword: () => setShowRegisterPassword((prev) => !prev),
-                      inputClassName:
-                        "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40",
-                    })}
-
-                    {renderPasswordInput({
-                      label: "Nhập lại mật khẩu",
-                      value: confirmPassword,
-                      onChange: (event) => {
-                        setConfirmPassword(event.target.value);
-                        setRegisterFieldErrors((prev) => ({ ...prev, confirmPassword: "" }));
-                      },
-                      autoComplete: "new-password",
-                      showPassword: showConfirmPassword,
-                      toggleShowPassword: () => setShowConfirmPassword((prev) => !prev),
-                      inputClassName:
-                        "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40",
-                    })}
-
-                    {(registerFieldErrors.password || registerFieldErrors.confirmPassword) && (
-                      <div className="space-y-1 text-xs text-rose-300">
-                        {registerFieldErrors.password && <p>{registerFieldErrors.password}</p>}
-                        {registerFieldErrors.confirmPassword && (
-                          <p>{registerFieldErrors.confirmPassword}</p>
-                        )}
-                      </div>
-                    )}
-
-                    {registerNotice && (
-                      <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-100">
-                        {registerNotice}
-                      </div>
-                    )}
-
-                    <button
-                      disabled={loading}
-                      type="submit"
-                      className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {loading ? "Đang đăng ký..." : "Đăng ký"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleGoogleLogin}
-                      disabled={loading}
-                      className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition md:hover:border-white/30 md:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <FcGoogle className="text-lg" />
-                      Đăng nhập với Google
-                    </button>
-
-                    <p className="text-center text-xs text-white/50">
-                      Đã có tài khoản?{' '}
-                      <button
-                        type="button"
-                        onClick={() => handleNavigate("login")}
-                        className="text-green-300 transition md:hover:text-green-200"
-                      >
-                        Quay lại đăng nhập
-                      </button>
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={handleArtistPortal}
-                      className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/85 transition md:hover:border-white/30 md:hover:bg-white/10"
-                    >
-                      Đăng ký trở thành nghệ sĩ
-                    </button>
-                  </motion.form>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </div>
-        </motion.div>
-      </div>
+    <>
+      <AuthShell theme="listener" showHeader={false} centerViewport contentClassName="max-w-[430px]">
+        {formSection}
+      </AuthShell>
 
       <AnimatePresence>
-        {errorPopup && (
-          <motion.div
+        {errorPopup ? (
+          <MotionDiv
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
-            className="fixed right-4 top-4 z-[70] w-[min(92vw,380px)] rounded-xl border border-red-500/60 bg-red-600/95 px-4 py-3 text-sm text-white shadow-xl"
+            className="fixed right-4 top-4 z-[70] w-[min(92vw,360px)] rounded-xl border border-rose-500/60 bg-rose-600/95 px-4 py-3 text-sm text-white shadow-xl"
           >
             {errorPopup}
-          </motion.div>
-        )}
+          </MotionDiv>
+        ) : null}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {awaitingVerification && (
-          <motion.div className={modalBackdrop} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div
-              initial={{ opacity: 0, y: 14, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 14, scale: 0.98 }}
-              className="w-full max-w-md rounded-3xl border border-emerald-300/30 bg-[#10151f] p-6 shadow-2xl"
+      <AuthModal
+        open={awaitingVerification}
+        onClose={() => setAwaitingVerification(false)}
+        icon={<FiMail size={18} />}
+        title="Xác thực email"
+        description="Nhập mã 6 số để hoàn tất đăng ký."
+      >
+        <AuthField
+          label="Mã xác thực"
+          value={verificationCode}
+          onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+          placeholder="123456"
+          inputMode="numeric"
+          inputClassName="text-center text-base tracking-[0.35em]"
+        />
+
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          <button type="button" onClick={handleVerifyCode} disabled={loading} className="auth-ui-primary">
+            {loading ? "Đang xác thực..." : "Xác thực"}
+          </button>
+          <button
+            type="button"
+            onClick={handleResendVerification}
+            disabled={loading}
+            className="auth-ui-secondary"
+          >
+            Gửi lại mã
+          </button>
+        </div>
+      </AuthModal>
+
+      <AuthModal
+        open={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+        icon={<FiMusic size={18} />}
+        title="Khôi phục mật khẩu"
+        description={isResetStep ? "Nhập mã và mật khẩu mới." : "Nhập email để nhận mã xác thực."}
+      >
+        <AuthField
+          label="Email"
+          value={forgotEmail}
+          onChange={(event) => setForgotEmail(event.target.value)}
+          placeholder="email@example.com"
+          type="email"
+          autoComplete="email"
+        />
+
+        {isResetStep ? (
+          <>
+            <AuthField
+              label="Mã xác thực 6 số"
+              value={forgotCode}
+              onChange={(event) => setForgotCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="123456"
+              inputMode="numeric"
+              inputClassName="text-center tracking-[0.35em]"
+            />
+
+            <AuthPasswordField
+              label="Mật khẩu mới"
+              value={forgotNewPassword}
+              onChange={(event) => setForgotNewPassword(event.target.value)}
+              autoComplete="new-password"
+              showPassword={showResetPassword}
+              toggleShowPassword={() => setShowResetPassword((prev) => !prev)}
+            />
+          </>
+        ) : null}
+
+        {forgotMessage ? <AuthMessage tone="success">{forgotMessage}</AuthMessage> : null}
+
+        {!isResetStep ? (
+          <button
+            type="button"
+            onClick={handleForgotPasswordRequest}
+            disabled={loading}
+            className="auth-ui-primary"
+          >
+            Gửi mã xác thực
+          </button>
+        ) : (
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={handleConfirmResetPassword}
+              disabled={loading}
+              className="auth-ui-primary"
             >
-              <div className="mb-4 flex items-start justify-between">
-                <div>
-                  <h3 className="text-xl font-semibold">Xác thực email</h3>
-                  <p className="mt-1 text-sm text-white/65">Nhập mã 6 số đã gửi về email để hoàn tất đăng ký.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setAwaitingVerification(false)}
-                  className="rounded-lg p-2 text-white/65 transition md:hover:bg-white/10 md:hover:text-white"
-                  aria-label="Đóng"
-                >
-                  <FiX />
-                </button>
-              </div>
-
-              <label className="block space-y-1.5 text-sm">
-                <span className="text-white/70">Mã xác thực</span>
-                <input
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-base tracking-[0.35em] text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                  value={verificationCode}
-                  onChange={(event) =>
-                    setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))
-                  }
-                  placeholder="123456"
-                  inputMode="numeric"
-                />
-              </label>
-
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={handleVerifyCode}
-                  disabled={loading}
-                  className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {loading ? "Đang xác thực..." : "Xác thực mã"}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleResendVerification}
-                  disabled={loading}
-                  className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/85 transition md:hover:border-white/35 md:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Gửi lại mã
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {forgotOpen && (
-          <motion.div className={modalBackdrop} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div
-              initial={{ opacity: 0, y: 14, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 14, scale: 0.98 }}
-              className="w-full max-w-md rounded-3xl border border-white/10 bg-[#111523] p-6 shadow-2xl"
+              Xác nhận mật khẩu mới
+            </button>
+            <button
+              type="button"
+              onClick={handleForgotPasswordRequest}
+              disabled={loading}
+              className="auth-ui-secondary"
             >
-              <div className="mb-4 flex items-start justify-between">
-                <div>
-                  <h3 className="text-xl font-semibold">Khôi phục mật khẩu</h3>
-                  <p className="mt-1 text-sm text-white/65">{isResetStep ? "Nhập mã xác thực và mật khẩu mới." : "Nhập email để nhận mã xác thực."}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setForgotOpen(false)}
-                  className="rounded-lg p-2 text-white/65 transition md:hover:bg-white/10 md:hover:text-white"
-                  aria-label="Đóng"
-                >
-                  <FiX />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <label className="block space-y-1.5 text-sm">
-                  <span className="text-white/70">Email</span>
-                  <input
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                    value={forgotEmail}
-                    onChange={(event) => setForgotEmail(event.target.value)}
-                    placeholder="email@example.com"
-                    type="email"
-                  />
-                </label>
-
-                {isResetStep && (
-                  <>
-                    <label className="block space-y-1.5 text-sm">
-                      <span className="text-white/70">Mã xác thực 6 số</span>
-                      <input
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm tracking-[0.35em] text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                        value={forgotCode}
-                        onChange={(event) =>
-                          setForgotCode(event.target.value.replace(/\D/g, "").slice(0, 6))
-                        }
-                        placeholder="123456"
-                        inputMode="numeric"
-                      />
-                    </label>
-
-                    {renderPasswordInput({
-                      label: "Mật khẩu mới",
-                      value: forgotNewPassword,
-                      onChange: (event) => setForgotNewPassword(event.target.value),
-                      autoComplete: "new-password",
-                      showPassword: showResetPassword,
-                      toggleShowPassword: () => setShowResetPassword((prev) => !prev),
-                      inputClassName:
-                        "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40",
-                    })}
-                  </>
-                )}
-
-                {forgotMessage && (
-                  <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-                    {forgotMessage}
-                  </div>
-                )}
-
-                {!isResetStep ? (
-                  <button
-                    type="button"
-                    onClick={handleForgotPasswordRequest}
-                    disabled={loading}
-                    className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Gửi mã xác thực
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleConfirmResetPassword}
-                    disabled={loading}
-                    className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-2.5 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Xác nhận đặt lại mật khẩu
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
+              Gửi lại mã
+            </button>
+          </div>
         )}
-      </AnimatePresence>
-    </div>
+      </AuthModal>
+    </>
   );
 }

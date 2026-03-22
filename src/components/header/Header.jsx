@@ -4,17 +4,25 @@ import SearchBox from "./SearchBox";
 import UserMenu from "./UserMenu";
 import useAuthStore from "../../store/auth.store";
 
-export default function Header({ onMenuClick }) {
+export default function Header({ onMenuClick, isArtistWorkspace = false }) {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const showSearch = user?.role !== "ARTIST";
+  const headerClassName = isArtistWorkspace
+    ? "border-sky-200/[0.08] bg-[#0c1321]/94 shadow-[0_18px_36px_rgba(2,6,18,0.22)]"
+    : "border-white/10 bg-[#0b0b0b]/95";
+  const navButtonClassName = isArtistWorkspace
+    ? "border-sky-200/[0.12] bg-[#141e31] text-slate-100/88 md:hover:border-sky-200/[0.26] md:hover:bg-[#1b2942] md:hover:text-white"
+    : "border-white/10 bg-[#1a1a1a] text-white/85 md:hover:border-white/20 md:hover:bg-[#242424] md:hover:text-white";
 
   return (
-    <header className="relative z-40 flex h-[72px] items-center gap-3 border-b border-white/10 bg-[#0b0b0b]/95 px-4 backdrop-blur-md sm:gap-4 sm:px-6">
+    <header
+      className={`relative z-40 flex h-[72px] items-center gap-3 border-b px-4 backdrop-blur-md sm:gap-4 sm:px-6 ${headerClassName}`}
+    >
       <div className="relative flex items-center gap-2">
         <button
           onClick={onMenuClick}
-          className="group flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a] text-white/85 transition-all duration-200 lg:hidden md:hover:border-white/20 md:hover:bg-[#242424] md:hover:text-white active:scale-95"
+          className={`group flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-200 active:scale-95 lg:hidden ${navButtonClassName}`}
           title="Mở menu"
           aria-label="Mở menu"
         >
@@ -22,7 +30,7 @@ export default function Header({ onMenuClick }) {
         </button>
         <button
           onClick={() => navigate(-1)}
-          className="group hidden h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a] text-white/85 transition-all duration-200 sm:flex md:hover:border-white/20 md:hover:bg-[#242424] md:hover:text-white active:scale-95"
+          className={`group hidden h-10 w-10 items-center justify-center rounded-full border transition-all duration-200 active:scale-95 sm:flex ${navButtonClassName}`}
           title="Quay lại"
         >
           <FiChevronLeft className="transition-transform md:group-hover:-translate-x-0.5" />
@@ -30,7 +38,7 @@ export default function Header({ onMenuClick }) {
 
         <button
           onClick={() => navigate(1)}
-          className="group hidden h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a] text-white/85 transition-all duration-200 sm:flex md:hover:border-white/20 md:hover:bg-[#242424] md:hover:text-white active:scale-95"
+          className={`group hidden h-10 w-10 items-center justify-center rounded-full border transition-all duration-200 active:scale-95 sm:flex ${navButtonClassName}`}
           title="Tiến tới"
         >
           <FiChevronRight className="transition-transform md:group-hover:translate-x-0.5" />
@@ -44,7 +52,7 @@ export default function Header({ onMenuClick }) {
       )}
 
       <div className="relative ml-auto">
-        <UserMenu />
+        <UserMenu isArtistWorkspace={isArtistWorkspace} />
       </div>
     </header>
   );

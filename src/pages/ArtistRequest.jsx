@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { FiArrowLeft, FiCheckCircle, FiClock, FiFileText } from "react-icons/fi";
+import AuthShell from "../components/auth/AuthShell";
+import {
+  AuthCard,
+  AuthField,
+  AuthMessage,
+  AuthPill,
+} from "../components/auth/AuthPrimitives";
+import usePageMetadata from "../hooks/usePageMetadata";
 import {
   createArtistRequest,
   getMyArtistRequest,
@@ -7,10 +16,25 @@ import {
 } from "../api/artist-request.api";
 import useAuthStore from "../store/auth.store";
 
-const statusStyles = {
-  pending: "border-amber-400/40 bg-amber-500/10 text-amber-100",
-  rejected: "border-rose-500/40 bg-rose-500/10 text-rose-100",
-  approved: "border-emerald-500/40 bg-emerald-500/10 text-emerald-100",
+const statusMeta = {
+  pending: {
+    label: "Đang chờ duyệt",
+    tone: "warning",
+    icon: FiClock,
+    description: "Hồ sơ đã được gửi. Vui lòng chờ đội ngũ quản trị kiểm tra.",
+  },
+  rejected: {
+    label: "Cần cập nhật",
+    tone: "error",
+    icon: FiFileText,
+    description: "Bạn có thể chỉnh lại thông tin và gửi lại hồ sơ.",
+  },
+  approved: {
+    label: "Đã duyệt",
+    tone: "success",
+    icon: FiCheckCircle,
+    description: "Hồ sơ đã đạt yêu cầu. Đăng nhập lại để vào workspace nghệ sĩ.",
+  },
 };
 
 export default function ArtistRequest() {
@@ -29,8 +53,16 @@ export default function ArtistRequest() {
 
   const isAllowed = useMemo(
     () => authContext === "artist_request" || role === "ARTIST",
-    [authContext, role],
+    [authContext, role]
   );
+
+  usePageMetadata({
+    title: "Đăng ký làm nghệ sĩ",
+    description:
+      "Hoàn thiện hồ sơ đăng ký nghệ sĩ trên Khoaluan Music để mở quyền truy cập workspace phát hành.",
+    url: "/artist-request",
+    robots: "noindex, nofollow",
+  });
 
   useEffect(() => {
     const loadRequest = async () => {
@@ -38,8 +70,7 @@ export default function ArtistRequest() {
         setLoading(true);
         const res = await getMyArtistRequest();
         const payload = res?.data?.data ?? res?.data ?? null;
-        const normalized =
-          payload && (payload.id || payload.artist_name) ? payload : null;
+        const normalized = payload && (payload.id || payload.artist_name) ? payload : null;
         setRequest(normalized);
         if (normalized) {
           setForm({
@@ -51,7 +82,7 @@ export default function ArtistRequest() {
         }
       } catch (error) {
         console.error("Load artist request failed", error);
-        setErrorMessage("Không thể tải yêu cầu nghệ sĩ.");
+        setErrorMessage("Không thể tải hồ sơ đăng ký nghệ sĩ.");
       } finally {
         setLoading(false);
       }
@@ -86,9 +117,7 @@ export default function ArtistRequest() {
     try {
       setSubmitting(true);
       const isResubmitting = request?.status === "rejected";
-      const res = isResubmitting
-        ? await updateMyArtistRequest(form)
-        : await createArtistRequest(form);
+      const res = isResubmitting ? await updateMyArtistRequest(form) : await createArtistRequest(form);
       const payload = res?.data?.data ?? res?.data ?? null;
       setRequest(payload);
     } catch (error) {
@@ -105,166 +134,181 @@ export default function ArtistRequest() {
 
   const status = request?.status;
   const canSubmitRequest = !request || status === "rejected";
+  const currentStatusMeta = statusMeta[status] || null;
+  const StatusIcon = currentStatusMeta?.icon || FiFileText;
 
   const handleLogout = () => {
     logout();
     setAuthContext("default");
-    navigate("/login", { replace: true });
+    navigate("/artist-auth", { replace: true });
   };
 
-  return (
-    <div className="min-h-screen bg-[#0b0b12] px-4 py-10 text-white">
-      <div className="mx-auto w-full max-w-4xl space-y-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
-            <p className="text-xs uppercase tracking-[0.35em] text-white/50">
-              Artist Request
-            </p>
-            <h1 className="text-3xl font-semibold">
-              Gửi yêu cầu trở thành nghệ sĩ
-            </h1>
-            <p className="text-sm text-white/70">
-              Vui lòng cung cấp đầy đủ thông tin để đội ngũ MP xác thực hồ sơ
-              của bạn.
-            </p>
-          </div>
+  const topActions = (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        onClick={() => navigate("/artist-auth")}
+        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/72 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+      >
+        <FiArrowLeft size={14} />
+        Artist Login
+      </button>
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="inline-flex items-center rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#06101a] transition hover:brightness-105"
+        style={{ backgroundColor: "rgb(var(--auth-accent-rgb))" }}
+      >
+        Đăng xuất
+      </button>
+    </div>
+  );
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10 md:hover:text-white"
-          >
-            Đăng xuất
-          </button>
+  const renderStatusSummary = () => (
+    <div className="space-y-4">
+      {currentStatusMeta ? <AuthMessage tone={currentStatusMeta.tone}>{currentStatusMeta.description}</AuthMessage> : null}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="auth-soft-card rounded-[18px] px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/42">Tên nghệ sĩ</p>
+          <p className="mt-2 text-sm text-white/88">{request?.artist_name || "--"}</p>
         </div>
+        <div className="auth-soft-card rounded-[18px] px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/42">Email</p>
+          <p className="mt-2 text-sm text-white/88 break-all">{request?.email || "--"}</p>
+        </div>
+        <div className="auth-soft-card rounded-[18px] px-4 py-3 sm:col-span-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/42">Link xác minh</p>
+          <p className="mt-2 text-sm text-white/88 break-all">{request?.proof_link || "--"}</p>
+        </div>
+      </div>
 
-        {errorMessage && (
-          <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-            {errorMessage}
-          </div>
-        )}
+      {request?.reject_reason ? (
+        <AuthMessage tone="error">Lý do từ chối: {request.reject_reason}</AuthMessage>
+      ) : null}
 
-        {loading ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-6 py-6 text-sm text-white/70">
-            Đang tải thông tin yêu cầu...
-          </div>
-        ) : !canSubmitRequest ? (
-          <div className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
-            <div>
-              <h2 className="text-xl font-semibold">
-                Trạng thái yêu cầu:{" "}
-                <span className="capitalize">{status || "pending"}</span>
-              </h2>
-              <p className="mt-2 text-sm text-white/70">
-                {status === "pending" &&
-                  "Yêu cầu của bạn đang chờ admin xét duyệt. Vui lòng chờ trong 24-48h."}
-                {status === "rejected" &&
-                  "Yêu cầu đã bị từ chối. Bạn có thể cập nhật thông tin và gửi lại yêu cầu ngay bên dưới."}
-                {status === "approved" &&
-                  "Yêu cầu đã được duyệt. Đăng nhập lại để vào khu vực nghệ sĩ."}
-              </p>
-            </div>
-            <div
-              className={`rounded-2xl border px-4 py-3 text-sm ${
-                statusStyles[status] ||
-                "border-white/10 bg-white/5 text-white/70"
-              }`}
-            >
-              <div className="grid gap-2 text-sm">
-                <div>
-                  <span className="text-white/60">Tên nghệ sĩ:</span>{" "}
-                  {request.artist_name || "--"}
-                </div>
-                <div>
-                  <span className="text-white/60">Email:</span>{" "}
-                  {request.email || "--"}
-                </div>
-                {request.reject_reason && (
-                  <div>
-                    <span className="text-white/60">Lý do từ chối:</span>{" "}
-                    {request.reject_reason}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        {status === "approved" ? (
+          <button type="button" onClick={() => navigate("/artist-auth")} className="auth-ui-primary">
+            Về đăng nhập nghệ sĩ
+          </button>
         ) : (
-          <div className="space-y-4">
-            {status === "rejected" && (
-              <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-                <p className="font-semibold">Yêu cầu trước đó đã bị từ chối.</p>
-                <p className="mt-1 text-rose-100/90">
-                  Lý do:{" "}
-                  {request?.reject_reason || "Chưa có lý do cụ thể từ admin."}
-                </p>
-                <p className="mt-1 text-rose-100/80">
-                  Vui lòng chỉnh sửa thông tin và gửi lại để admin duyệt lại.
-                </p>
-              </div>
-            )}
-
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-6"
-            >
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="block space-y-2 text-sm">
-                  <span className="text-white/70">Tên nghệ sĩ *</span>
-                  <input
-                    value={form.artist_name}
-                    onChange={handleChange("artist_name")}
-                    placeholder="Tên nghệ sĩ"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                    required
-                  />
-                </label>
-                <label className="block space-y-2 text-sm">
-                  <span className="text-white/70">Link ảnh đại diện</span>
-                  <input
-                    value={form.avatar_url}
-                    onChange={handleChange("avatar_url")}
-                    placeholder="https://"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                  />
-                </label>
-              </div>
-
-              <label className="block space-y-2 text-sm">
-                <span className="text-white/70">Bio</span>
-                <textarea
-                  value={form.bio}
-                  onChange={handleChange("bio")}
-                  placeholder="Giới thiệu ngắn về nghệ sĩ"
-                  rows={4}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                />
-              </label>
-
-              <label className="block space-y-2 text-sm">
-                <span className="text-white/70">Liên kết xác thực</span>
-                <input
-                  value={form.proof_link}
-                  onChange={handleChange("proof_link")}
-                  placeholder="Link MXH, portfolio, fanpage..."
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-                />
-              </label>
-
-              <button
-                disabled={submitting}
-                type="submit"
-                className="w-full rounded-xl bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 py-3 text-sm font-semibold text-[#0c0914] shadow-lg shadow-emerald-500/25 transition md:hover:-translate-y-[1px] md:hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {submitting
-                  ? "Đang gửi yêu cầu..."
-                  : status === "rejected"
-                    ? "Gửi lại yêu cầu"
-                    : "Gửi yêu cầu"}
-              </button>
-            </form>
-          </div>
+          <button type="button" disabled className="auth-ui-secondary">
+            Hồ sơ đang được xử lý
+          </button>
         )}
+        <button type="button" onClick={handleLogout} className="auth-ui-secondary">
+          Đăng xuất
+        </button>
       </div>
     </div>
+  );
+
+  const renderForm = () => (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {status === "rejected" ? (
+        <AuthMessage tone="error">
+          {request?.reject_reason
+            ? `Hồ sơ trước đó bị từ chối: ${request.reject_reason}`
+            : "Hồ sơ trước đó bị từ chối. Bạn có thể chỉnh sửa và gửi lại."}
+        </AuthMessage>
+      ) : null}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <AuthField
+          label="Tên nghệ sĩ *"
+          value={form.artist_name}
+          onChange={handleChange("artist_name")}
+          placeholder="Tên nghệ sĩ"
+          required
+        />
+        <AuthField
+          label="Ảnh đại diện"
+          value={form.avatar_url}
+          onChange={handleChange("avatar_url")}
+          placeholder="https://"
+        />
+      </div>
+
+      <AuthField
+        label="Liên kết xác minh"
+        value={form.proof_link}
+        onChange={handleChange("proof_link")}
+        placeholder="Link MXH, fanpage, portfolio..."
+        helper="Chọn một link công khai để đội ngũ dễ xác minh hơn."
+      />
+
+      <AuthField
+        as="textarea"
+        label="Bio"
+        value={form.bio}
+        onChange={handleChange("bio")}
+        placeholder="Giới thiệu ngắn về nghệ sĩ"
+        rows={3}
+      />
+
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        <button disabled={submitting} type="submit" className="auth-ui-primary">
+          {submitting
+            ? "Đang gửi yêu cầu..."
+            : status === "rejected"
+              ? "Gửi lại yêu cầu"
+              : "Gửi yêu cầu"}
+        </button>
+        <button type="button" onClick={handleLogout} className="auth-ui-secondary">
+          Đăng xuất
+        </button>
+      </div>
+    </form>
+  );
+
+  return (
+    <AuthShell theme="artist" showHeader={false} watermarkSide="left" contentClassName="max-w-[760px]">
+      <div className="mx-auto w-full max-w-[760px]">
+        <AuthCard variant="main" className="p-5 sm:p-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-[16px] border border-white/10 bg-white/[0.04] text-sky-300 shadow-[0_12px_28px_rgba(0,0,0,0.26)]">
+                  <StatusIcon size={18} />
+                </div>
+                <div>
+                  <h1 className="text-[1.55rem] font-semibold tracking-[-0.04em] text-white">
+                    Đăng ký làm nghệ sĩ
+                  </h1>
+                  <p className="mt-1 text-[13px] text-white/48">
+                    Gọn, rõ và vừa màn hình laptop.
+                  </p>
+                </div>
+              </div>
+              {topActions}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <AuthPill muted={!currentStatusMeta}>
+                {currentStatusMeta?.label || "Chưa gửi hồ sơ"}
+              </AuthPill>
+              <span className="text-[12px] text-white/44">
+                {canSubmitRequest
+                  ? "Điền đủ thông tin rồi gửi một lần."
+                  : "Theo dõi trạng thái hồ sơ tại đây."}
+              </span>
+            </div>
+
+            {errorMessage ? <AuthMessage tone="error">{errorMessage}</AuthMessage> : null}
+
+            {loading ? (
+              <div className="auth-soft-card rounded-[18px] p-4 text-sm text-white/68">
+                Đang tải hồ sơ đăng ký nghệ sĩ...
+              </div>
+            ) : canSubmitRequest ? (
+              renderForm()
+            ) : (
+              renderStatusSummary()
+            )}
+          </div>
+        </AuthCard>
+      </div>
+    </AuthShell>
   );
 }

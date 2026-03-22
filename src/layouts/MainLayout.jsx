@@ -28,6 +28,7 @@ export default function MainLayout() {
     );
   const isUserRoute = !isAdminRoute && !isArtistWorkspaceRoute;
   const shouldShowPlayer = role !== "ARTIST" && role !== "ADMIN";
+  const isArtistChrome = role === "ARTIST";
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -65,17 +66,27 @@ export default function MainLayout() {
     }
 
     window.scrollTo({ top: 0, behavior: "auto" });
-    setIsSidebarOpen(false);
-  }, [location.pathname]);
+    if (!isSidebarOpen) return undefined;
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsSidebarOpen(false);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isSidebarOpen, location.pathname]);
 
   return (
     <div className="flex h-screen flex-col bg-[#000000] text-white">
-      <Header onMenuClick={() => setIsSidebarOpen(true)} />
+      <Header
+        onMenuClick={() => setIsSidebarOpen(true)}
+        isArtistWorkspace={isArtistChrome}
+      />
 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
+          isArtistWorkspace={isArtistChrome}
         />
 
         <main
@@ -84,7 +95,7 @@ export default function MainLayout() {
             isAdminRoute
               ? "admin-main-surface bg-[#0a0a0a]"
               : isArtistWorkspaceRoute
-                ? "artist-main-surface bg-[#0a0a0a]"
+                ? "artist-main-surface bg-[#090d18]"
                 : "user-main-surface bg-[#0a0a0a]"
           }`}
         >

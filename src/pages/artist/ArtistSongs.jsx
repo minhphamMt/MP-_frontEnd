@@ -17,7 +17,7 @@ const statusLabelMap = {
 };
 
 const statusClassMap = {
-  approved: "border-emerald-400/30 bg-emerald-500/10 text-emerald-100",
+  approved: "border-sky-300/30 bg-sky-400/12 text-sky-100",
   pending: "border-amber-400/30 bg-amber-500/10 text-amber-100",
   draft: "border-slate-300/30 bg-slate-500/10 text-slate-100",
   rejected: "border-rose-400/30 bg-rose-500/10 text-rose-100",
@@ -197,7 +197,7 @@ export default function ArtistSongs() {
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70">
               Tổng: {stats.total}
             </span>
-            <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-emerald-100">
+            <span className="rounded-full border border-sky-300/30 bg-sky-400/12 px-3 py-1 text-sky-100">
               Công khai: {stats.approved}
             </span>
             <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-amber-100">

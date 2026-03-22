@@ -523,23 +523,27 @@ const renderPageBody = ({
         .join("")}</div>`
     : "";
 
-  return `<main id="seo-prerender">${breadcrumbMarkup}<section class="seo-hero${
-    image ? " with-cover" : ""
-  }">${
-    image
-      ? `<img class="seo-cover" src="${escapeHtml(image)}" alt="${escapeHtml(
-          title
-        )}" />`
+  const hasHeroContent = Boolean(eyebrow || title || description || image || stats.length);
+
+  return `<main id="seo-prerender">${breadcrumbMarkup}${
+    hasHeroContent
+      ? `<section class="seo-hero${image ? " with-cover" : ""}">${
+          image
+            ? `<img class="seo-cover" src="${escapeHtml(image)}" alt="${escapeHtml(
+                title
+              )}" />`
+            : ""
+        }<div>${
+          eyebrow ? `<span class="seo-eyebrow">${escapeHtml(eyebrow)}</span>` : ""
+        }${
+          title ? `<h1 class="seo-title">${escapeHtml(title)}</h1>` : ""
+        }${
+          description
+            ? `<p class="seo-description">${escapeHtml(description)}</p>`
+            : ""
+        }${statsMarkup}</div></section>`
       : ""
-  }<div><span class="seo-eyebrow">${escapeHtml(
-    eyebrow
-  )}</span><h1 class="seo-title">${escapeHtml(
-    title
-  )}</h1><p class="seo-description">${escapeHtml(
-    description
-  )}</p>${statsMarkup}</div></section>${sections.filter(Boolean).join(
-    ""
-  )}</main>`;
+  }${sections.filter(Boolean).join("")}</main>`;
 };
 
 const buildBreadcrumbSchema = (siteUrl, items = []) =>
@@ -947,9 +951,6 @@ const main = async () => {
     image: DEFAULT_IMAGE,
     keywords: "nghe nhac, bai hat, album, nghe si, zing chart, top 50",
     body: renderPageBody({
-      eyebrow: SITE_NAME,
-      title: "Nghe nhac truc tuyen tren Khoaluan Music",
-      description: DEFAULT_DESCRIPTION,
       sections: [
         renderSection({
           title: "Bai hat moi va duoc nghe nhieu",

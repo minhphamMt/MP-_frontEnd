@@ -314,7 +314,7 @@ export default function ArtistProfile() {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center bg-gradient-to-br from-emerald-700/25 to-black text-3xl text-white/50">
+                <div className="flex h-full items-center justify-center bg-[linear-gradient(135deg,rgba(56,189,248,0.22),rgba(59,130,246,0.14),rgba(5,10,18,0.96))] text-3xl text-white/50">
                   <FiUser />
                 </div>
               )}

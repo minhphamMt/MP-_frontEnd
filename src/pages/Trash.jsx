@@ -30,6 +30,40 @@ export default function Trash() {
   const [deletedItems, setDeletedItems] = useState(emptyState);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const heroClassName = isArtistView
+    ? "artist-page-shell artist-glass"
+    : "admin-page-shell admin-glass rounded-3xl border border-white/10";
+  const surfaceClassName = isArtistView
+    ? "artist-page-shell artist-glass bg-[rgba(12,19,32,0.94)] shadow-[0_25px_80px_rgba(2,6,18,0.42)]"
+    : "bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]";
+  const headingMetaClassName = isArtistView
+    ? "text-[11px] uppercase tracking-[0.35em] text-slate-300/48"
+    : "text-[11px] uppercase tracking-[0.35em] text-white/50";
+  const sectionMetaClassName = isArtistView
+    ? "text-xs text-slate-300/52"
+    : "text-xs text-white/50";
+  const tableHeaderClassName = isArtistView
+    ? "text-[11px] uppercase tracking-[0.3em] text-slate-300/42"
+    : "text-[11px] uppercase tracking-[0.3em] text-white/40";
+  const mobileLabelClassName = isArtistView
+    ? "text-[10px] uppercase tracking-[0.2em] text-slate-300/40 sm:hidden"
+    : "text-[10px] uppercase tracking-[0.2em] text-white/40 sm:hidden";
+  const rowClassName = isArtistView
+    ? "text-sm text-slate-100/82"
+    : "text-sm text-white/80";
+  const restoreButtonClassName = isArtistView
+    ? "inline-flex items-center gap-1 rounded-full border border-sky-300/30 bg-sky-400/12 px-3 py-1 text-xs text-sky-100 transition md:hover:bg-sky-400/20"
+    : "inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-200 transition md:hover:bg-emerald-400/20";
+  const emptyTextClassName = isArtistView
+    ? "text-sm text-slate-200/62"
+    : "text-sm text-white/60";
+  const detailTitleClassName = isArtistView ? "text-slate-50" : "text-white";
+  const detailSubtleClassName = isArtistView
+    ? "text-xs text-slate-300/56"
+    : "text-xs text-white/50";
+  const valueSubtleClassName = isArtistView
+    ? "text-xs text-slate-300/62"
+    : "text-xs text-white/60";
 
   const sections = useMemo(
     () => [
@@ -40,15 +74,15 @@ export default function Trash() {
         columns: ["Bài hát", "Nghệ sĩ", "Ngày xóa", "Hành động"],
         renderCells: (song) => [
           <>
-            <p className="text-white">{song.title}</p>
-            <p className="text-xs text-white/50">
+            <p className={detailTitleClassName}>{song.title}</p>
+            <p className={detailSubtleClassName}>
               {getArtistLabel(song, song.artist_name || "Chưa có nghệ sĩ")}
             </p>
           </>,
-          <span className="text-xs text-white/60">
+          <span className={valueSubtleClassName}>
             {getArtistLabel(song, song.artist_name || "") || "-"}
           </span>,
-          <span className="text-xs text-white/60">{formatDateTime(song.deleted_at)}</span>,
+          <span className={valueSubtleClassName}>{formatDateTime(song.deleted_at)}</span>,
         ],
       },
       {
@@ -58,15 +92,15 @@ export default function Trash() {
         columns: ["Album", "Nghệ sĩ", "Ngày xóa", "Hành động"],
         renderCells: (album) => [
           <>
-            <p className="text-white">{album.title}</p>
-            <p className="text-xs text-white/50">
+            <p className={detailTitleClassName}>{album.title}</p>
+            <p className={detailSubtleClassName}>
               {getArtistLabel(album, album.artist_name || "Chưa có nghệ sĩ")}
             </p>
           </>,
-          <span className="text-xs text-white/60">
+          <span className={valueSubtleClassName}>
             {getArtistLabel(album, album.artist_name || "") || "-"}
           </span>,
-          <span className="text-xs text-white/60">{formatDateTime(album.deleted_at)}</span>,
+          <span className={valueSubtleClassName}>{formatDateTime(album.deleted_at)}</span>,
         ],
       },
       {
@@ -76,11 +110,11 @@ export default function Trash() {
         columns: ["Nghệ sĩ", "Bí danh", "Ngày xóa", "Hành động"],
         renderCells: (artist) => [
           <>
-            <p className="text-white">{artist.name}</p>
-            <p className="text-xs text-white/50">{artist.alias || artist.realname || "Chưa cập nhật"}</p>
+            <p className={detailTitleClassName}>{artist.name}</p>
+            <p className={detailSubtleClassName}>{artist.alias || artist.realname || "Chưa cập nhật"}</p>
           </>,
-          <span className="text-xs text-white/60">{artist.alias || artist.realname || "-"}</span>,
-          <span className="text-xs text-white/60">{formatDateTime(artist.deleted_at)}</span>,
+          <span className={valueSubtleClassName}>{artist.alias || artist.realname || "-"}</span>,
+          <span className={valueSubtleClassName}>{formatDateTime(artist.deleted_at)}</span>,
         ],
       },
       {
@@ -89,12 +123,12 @@ export default function Trash() {
         description: "Chỉ quản trị viên mới nhìn thấy thể loại đã xóa.",
         columns: ["Thể loại", "Ngày xóa", "Hành động"],
         renderCells: (genre) => [
-          <span className="text-white">{genre.name}</span>,
-          <span className="text-xs text-white/60">{formatDateTime(genre.deleted_at)}</span>,
+          <span className={detailTitleClassName}>{genre.name}</span>,
+          <span className={valueSubtleClassName}>{formatDateTime(genre.deleted_at)}</span>,
         ],
       },
     ],
-    []
+    [detailSubtleClassName, detailTitleClassName, valueSubtleClassName]
   );
 
   const loadDeletedItems = async () => {
@@ -183,16 +217,10 @@ export default function Trash() {
 
   return (
     <div className="space-y-6">
-      <section
-        className={`p-6 sm:p-8 ${
-          isArtistView
-            ? "artist-page-shell artist-glass"
-            : "admin-page-shell admin-glass rounded-3xl border border-white/10"
-        }`}
-      >
+      <section className={`p-6 sm:p-8 ${heroClassName}`}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+            <p className={headingMetaClassName}>
               {role === "ADMIN" ? "Quản trị" : "Nghệ sĩ"}
             </p>
             <h1 className="mt-2 text-3xl font-black text-white">Thùng rác</h1>
@@ -232,20 +260,18 @@ export default function Trash() {
         return (
           <section
             key={section.key}
-            className={`overflow-hidden rounded-3xl border border-white/10 shadow-[0_25px_80px_rgba(0,0,0,0.45)] ${
-              isArtistView ? "bg-[#131a18]" : "bg-[#181818]"
-            }`}
+            className={`overflow-hidden rounded-3xl border border-white/10 ${surfaceClassName}`}
           >
             <div className="flex flex-col gap-2 border-b border-white/10 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-white">{section.title}</h2>
-                <p className="text-xs text-white/50">{section.description}</p>
+                <p className={sectionMetaClassName}>{section.description}</p>
               </div>
-              <div className="text-xs text-white/50">{items.length} bản ghi</div>
+              <div className={sectionMetaClassName}>{items.length} bản ghi</div>
             </div>
 
             <div
-              className={`hidden grid-cols-1 gap-3 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/40 sm:grid ${gridClass}`}
+              className={`hidden grid-cols-1 gap-3 px-4 py-3 sm:grid ${tableHeaderClassName} ${gridClass}`}
             >
               {section.columns.map((column, index) => (
                 <span
@@ -258,32 +284,32 @@ export default function Trash() {
             </div>
 
             <div className="divide-y divide-white/5">
-              {loading && <div className="px-4 py-6 text-sm text-white/60">Đang tải dữ liệu...</div>}
+              {loading && <div className={`px-4 py-6 ${emptyTextClassName}`}>Đang tải dữ liệu...</div>}
               {!loading && items.length === 0 && (
-                <div className="px-4 py-6 text-sm text-white/60">Chưa có bản ghi nào.</div>
+                <div className={`px-4 py-6 ${emptyTextClassName}`}>Chưa có bản ghi nào.</div>
               )}
               {!loading &&
                 items.map((item) => (
                   <div
                     key={item.id}
-                    className={`flex flex-col gap-4 px-4 py-4 text-sm text-white/80 sm:grid sm:items-center ${gridClass}`}
+                    className={`flex flex-col gap-4 px-4 py-4 ${rowClassName} sm:grid sm:items-center ${gridClass}`}
                   >
                     {section.renderCells(item).map((cell, index) => (
                       <div key={`${item.id}-${index}`} className="flex flex-col gap-1">
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 sm:hidden">
+                        <span className={mobileLabelClassName}>
                           {section.columns[index]}
                         </span>
                         {cell}
                       </div>
                     ))}
                     <div className="flex flex-col gap-2 sm:items-end">
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 sm:hidden">
+                      <span className={mobileLabelClassName}>
                         {section.columns[section.columns.length - 1]}
                       </span>
                       <div className="flex flex-wrap gap-2 sm:justify-end">
                         <button
                           onClick={() => handleRestore(section.key, item)}
-                          className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-200 transition md:hover:bg-emerald-400/20"
+                          className={restoreButtonClassName}
                         >
                           <FiRotateCcw /> Khôi phục
                         </button>

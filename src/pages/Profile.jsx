@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
   FiCamera,
@@ -6,6 +7,7 @@ import {
   FiEyeOff,
   FiKey,
   FiMail,
+  FiX,
   FiUser,
 } from "react-icons/fi";
 import Toast from "../components/common/Toast";
@@ -28,6 +30,8 @@ const emptyProfile = {
 export default function Profile() {
   const authUser = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
+  const forgotPassword = useAuthStore((state) => state.forgotPassword);
+  const resetPassword = useAuthStore((state) => state.resetPassword);
   const [profile, setProfile] = useState(emptyProfile);
   const [passwords, setPasswords] = useState({
     oldPassword: "",
@@ -39,8 +43,16 @@ export default function Profile() {
     newPassword: false,
     confirmPassword: false,
   });
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotCode, setForgotCode] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotMessage, setForgotMessage] = useState("");
+  const [isResetStep, setIsResetStep] = useState(false);
+  const [showForgotResetPassword, setShowForgotResetPassword] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [loadingPassword, setLoadingPassword] = useState(false);
+  const [loadingForgot, setLoadingForgot] = useState(false);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [toast, setToast] = useState({ title: "", message: "" });
   const isGoogleAccount = useMemo(() => {
@@ -87,18 +99,11 @@ export default function Profile() {
 
   const hasProfileChanges = useMemo(() => {
     if (!authUser) return false;
-    if (isGoogleAccount) {
-      return (
-        profile.display_name !== (authUser.display_name || "") ||
-        profile.avatar_url !== (authUser.avatar_url || "")
-      );
-    }
     return (
       profile.display_name !== (authUser.display_name || "") ||
-      profile.email !== (authUser.email || "") ||
       profile.avatar_url !== (authUser.avatar_url || "")
     );
-  }, [authUser, profile]);
+  }, [authUser, profile.avatar_url, profile.display_name]);
 
   const handleProfileChange = (field) => (event) => {
     setProfile((prev) => ({ ...prev, [field]: event.target.value }));
@@ -174,7 +179,6 @@ export default function Profile() {
       const payload = {
         display_name: profile.display_name,
         avatar_url: profile.avatar_url,
-      ...(isGoogleAccount ? {} : { email: profile.email }),
       };
       const res = await updateUserProfile(payload);
       const updated = res.data?.data || res.data;
@@ -235,6 +239,92 @@ export default function Profile() {
       });
     } finally {
       setLoadingPassword(false);
+    }
+  };
+
+  const openForgotModal = () => {
+    setForgotEmail(profile.email || authUser?.email || "");
+    setForgotCode("");
+    setForgotNewPassword("");
+    setForgotMessage("");
+    setIsResetStep(false);
+    setShowForgotResetPassword(false);
+    setForgotOpen(true);
+  };
+
+  const handleForgotPasswordRequest = async () => {
+    if (!forgotEmail.trim()) {
+      setToast({
+        title: "Thiếu email",
+        message: "Vui lòng nhập email để nhận mã xác thực.",
+      });
+      return;
+    }
+
+    setLoadingForgot(true);
+    try {
+      const message = await forgotPassword({ email: forgotEmail.trim() });
+      setForgotMessage(message || "Nếu email hợp lệ, hệ thống đã gửi mã đặt lại mật khẩu.");
+      setIsResetStep(true);
+    } catch (error) {
+      setToast({
+        title: "Gửi mã thất bại",
+        message: error?.response?.data?.message || error?.message || "Có lỗi xảy ra",
+      });
+    } finally {
+      setLoadingForgot(false);
+    }
+  };
+
+  const handleForgotPasswordReset = async () => {
+    if (!forgotEmail.trim() || !forgotCode.trim() || !forgotNewPassword) {
+      setToast({
+        title: "Thiếu thông tin",
+        message: "Vui lòng nhập đầy đủ email, mã xác thực và mật khẩu mới.",
+      });
+      return;
+    }
+
+    if (!/^\d{6}$/.test(forgotCode.trim())) {
+      setToast({
+        title: "Mã chưa hợp lệ",
+        message: "Mã xác thực phải gồm đúng 6 chữ số.",
+      });
+      return;
+    }
+
+    if (forgotNewPassword.length < 6) {
+      setToast({
+        title: "Mật khẩu quá ngắn",
+        message: "Mật khẩu mới phải có ít nhất 6 ký tự.",
+      });
+      return;
+    }
+
+    setLoadingForgot(true);
+    try {
+      const message = await resetPassword({
+        email: forgotEmail.trim(),
+        verification_code: forgotCode.trim(),
+        new_password: forgotNewPassword,
+      });
+
+      setForgotOpen(false);
+      setForgotCode("");
+      setForgotNewPassword("");
+      setIsResetStep(false);
+      setPasswords({ oldPassword: "", newPassword: "", confirmPassword: "" });
+      setToast({
+        title: "Đặt lại mật khẩu",
+        message: message || "Mật khẩu đã được cập nhật thành công.",
+      });
+    } catch (error) {
+      setToast({
+        title: "Đặt lại thất bại",
+        message: error?.response?.data?.message || error?.message || "Có lỗi xảy ra",
+      });
+    } finally {
+      setLoadingForgot(false);
     }
   };
 
@@ -314,32 +404,21 @@ export default function Profile() {
                 />
               </label>
 
-              {!isGoogleAccount ? (
-                <label className="space-y-2 text-sm text-white/70">
-                  <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                    <FiMail className="text-white/70" /> Email
-                  </span>
-                  <input
-                    value={profile.email}
-                    onChange={handleProfileChange("email")}
-                    type="email"
-                    placeholder="you@email.com"
-                    className="w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none transition focus:border-white/40"
-                  />
-                </label>
-              ) : (
-                <div className="space-y-2 text-sm text-white/70">
-                  <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                    <FiMail className="text-white/70" /> Email
-                  </span>
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60">
-                    {profile.email || "Chưa có email"}
-                  </div>
-                  <p className="text-xs text-white/45">
-                    Tài khoản Google không thể thay đổi email.
-                  </p>
-                </div>
-              )}
+              <div className="space-y-2 text-sm text-white/70">
+                <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
+                  <FiMail className="text-white/70" /> Email
+                </span>
+                <input
+                  value={profile.email}
+                  type="email"
+                  readOnly
+                  aria-readonly="true"
+                  className="w-full cursor-not-allowed rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/65 outline-none"
+                />
+                <p className="text-xs text-white/45">
+                  Email dùng để đăng nhập và xác nhận tài khoản nên không thể đổi tại đây.
+                </p>
+              </div>
             </div>
 
             {/* <label className="space-y-2 text-sm text-white/70">
@@ -483,6 +562,15 @@ export default function Profile() {
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white/60">
                 Gợi ý: Hãy dùng mật khẩu mạnh kết hợp chữ hoa, chữ thường và ký tự đặc biệt.
               </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={openForgotModal}
+                  className="text-xs font-medium text-emerald-200 transition md:hover:text-emerald-100"
+                >
+                  Quên mật khẩu?
+                </button>
+              </div>
               <button
                 type="submit"
                 disabled={loadingPassword}
@@ -494,6 +582,133 @@ export default function Profile() {
           </form>
         )}
       </div>
+
+      <AnimatePresence>
+        {forgotOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 14, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 14, scale: 0.98 }}
+              className="w-full max-w-md rounded-[30px] border border-white/14 bg-[#0d1319]/98 p-6 shadow-[0_26px_90px_rgba(0,0,0,0.58)]"
+            >
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-xl font-semibold text-white">Quên mật khẩu</h3>
+                  <p className="mt-1 text-sm text-white/65">
+                    {isResetStep
+                      ? "Nhập mã xác thực và mật khẩu mới."
+                      : "Mã xác thực sẽ được gửi tới email tài khoản của bạn."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setForgotOpen(false)}
+                  className="rounded-[14px] border border-white/10 p-2 text-white/65 transition md:hover:bg-white/10 md:hover:text-white"
+                  aria-label="Đóng"
+                >
+                  <FiX />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block space-y-1.5 text-sm">
+                  <span className="text-white/70">Email</span>
+                  <input
+                    className="w-full cursor-not-allowed rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white/70 outline-none"
+                    value={forgotEmail}
+                    type="email"
+                    autoComplete="email"
+                    readOnly
+                    aria-readonly="true"
+                  />
+                </label>
+
+                {isResetStep && (
+                  <>
+                    <label className="block space-y-1.5 text-sm">
+                      <span className="text-white/70">Mã xác thực 6 số</span>
+                      <input
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm tracking-[0.35em] text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                        value={forgotCode}
+                        onChange={(event) =>
+                          setForgotCode(event.target.value.replace(/\D/g, "").slice(0, 6))
+                        }
+                        placeholder="123456"
+                        inputMode="numeric"
+                      />
+                    </label>
+
+                    <label className="block space-y-1.5 text-sm">
+                      <span className="text-white/70">Mật khẩu mới</span>
+                      <div className="relative">
+                        <input
+                          type={showForgotResetPassword ? "text" : "password"}
+                          value={forgotNewPassword}
+                          onChange={(event) => setForgotNewPassword(event.target.value)}
+                          placeholder="Tối thiểu 6 ký tự"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 pr-12 text-sm text-white placeholder:text-white/40 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotResetPassword((prev) => !prev)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition md:hover:bg-white/10 md:hover:text-white"
+                          aria-label={
+                            showForgotResetPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
+                          }
+                        >
+                          {showForgotResetPassword ? <FiEyeOff /> : <FiEye />}
+                        </button>
+                      </div>
+                    </label>
+                  </>
+                )}
+
+                {forgotMessage && (
+                  <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                    {forgotMessage}
+                  </div>
+                )}
+
+                {!isResetStep ? (
+                  <button
+                    type="button"
+                    onClick={handleForgotPasswordRequest}
+                    disabled={loadingForgot}
+                    className="user-btn-primary w-full px-6 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loadingForgot ? "Đang xử lý..." : "Gửi mã xác thực"}
+                  </button>
+                ) : (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={handleForgotPasswordReset}
+                      disabled={loadingForgot}
+                      className="user-btn-primary w-full px-6 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {loadingForgot ? "Đang xử lý..." : "Xác nhận mật khẩu mới"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleForgotPasswordRequest}
+                      disabled={loadingForgot}
+                      className="user-btn-secondary w-full px-6 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Gửi lại mã
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

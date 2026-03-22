@@ -30,7 +30,7 @@ const statusLabelMap = {
 };
 
 const statusClassMap = {
-  approved: "border-emerald-400/30 bg-emerald-500/10 text-emerald-100",
+  approved: "border-sky-300/30 bg-sky-400/12 text-sky-100",
   pending: "border-amber-400/30 bg-amber-500/10 text-amber-100",
   draft: "border-slate-400/30 bg-slate-500/10 text-slate-100",
   rejected: "border-rose-400/30 bg-rose-500/10 text-rose-100",
@@ -43,11 +43,13 @@ const resolveArtistId = (artist) =>
 const getSongCover = (song, albumCover) =>
   song?.cover_url || song?.cover || song?.thumbnail || song?.image || albumCover || "";
 
-function MetricCard({ icon: Icon, label, value }) {
+function MetricCard({ icon, label, value }) {
+  const IconComponent = icon;
+
   return (
     <article className="artist-kpi p-4">
       <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-white/55">
-        <Icon className="text-white/70" />
+        {IconComponent ? <IconComponent className="text-white/70" /> : null}
         <span>{label}</span>
       </div>
       <p className="mt-3 text-xl font-bold text-white">{value}</p>
@@ -323,7 +325,7 @@ export default function ArtistAlbumDetail() {
                 className="aspect-square h-full w-full object-cover"
               />
             ) : (
-              <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-emerald-900/45 via-teal-900/35 to-black text-white/45">
+              <div className="flex aspect-square items-center justify-center bg-[linear-gradient(135deg,rgba(56,189,248,0.22),rgba(59,130,246,0.14),rgba(5,10,18,0.96))] text-white/45">
                 <FiDisc className="text-5xl" />
               </div>
             )}

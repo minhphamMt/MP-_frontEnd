@@ -20,9 +20,13 @@ export default function ArtistAlbumTile({ album, onEdit, onDelete, onView }) {
   const songCount = album?.song_count ?? album?.track_count ?? album?.songs?.length ?? 0;
   const coverUrl = resolveAssetUrl(album?.cover_url || album?.cover);
   const statusLabel = statusLabelMap[album?.status] || album?.status || "";
+  const statusClassName =
+    album?.status === "approved"
+      ? "rounded-full border border-sky-300/30 bg-sky-400/12 px-3 py-1 text-sky-100"
+      : "rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70";
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-white/10 bg-[#121917]/85 shadow-[0_20px_60px_rgba(0,0,0,0.38)] transition md:hover:-translate-y-1 md:hover:border-emerald-300/30 md:hover:bg-[#18221f]">
+    <article className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-sky-200/[0.1] bg-[#0f1727]/88 shadow-[0_20px_60px_rgba(2,6,18,0.38)] transition md:hover:-translate-y-1 md:hover:border-sky-300/28 md:hover:bg-[#142038]">
       <div className="relative">
         {coverUrl ? (
           <OptimizedImage
@@ -32,7 +36,7 @@ export default function ArtistAlbumTile({ album, onEdit, onDelete, onView }) {
             loading="lazy"
           />
         ) : (
-          <div className="flex h-44 w-full items-center justify-center bg-gradient-to-br from-emerald-900/45 via-teal-900/35 to-black sm:h-52">
+          <div className="flex h-44 w-full items-center justify-center bg-[linear-gradient(135deg,rgba(56,189,248,0.22),rgba(59,130,246,0.14),rgba(5,10,18,0.96))] sm:h-52">
             <FiMusic className="text-3xl text-white/50" />
           </div>
         )}
@@ -60,11 +64,7 @@ export default function ArtistAlbumTile({ album, onEdit, onDelete, onView }) {
               Zing ID: {album.zing_album_id}
             </span>
           )}
-          {statusLabel && (
-            <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-emerald-100">
-              {statusLabel}
-            </span>
-          )}
+          {statusLabel && <span className={statusClassName}>{statusLabel}</span>}
         </div>
 
         <div className="flex flex-wrap gap-2">

@@ -1,14 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { FiChevronLeft, FiChevronRight, FiClock, FiPlay, FiRefreshCw } from "react-icons/fi";
+import {
+  FiChevronLeft,
+  FiChevronRight,
+  FiClock,
+  FiDisc,
+  FiPlay,
+  FiRefreshCw,
+  FiUsers,
+} from "react-icons/fi";
 import { getAlbums } from "../api/album.api";
 import { getMyHistory } from "../api/history.api";
 import { getArtistCollections } from "../api/artist.api";
 import { getWeeklyTopSongs } from "../api/chart.api";
 import { getRecommendations, getColdStartRecommendations } from "../api/recommendation.api";
 import { getSongById } from "../api/song.api";
-import AlbumCard from "../components/album/AlbumCard";
-import ArtistAlbumCard from "../components/album/ArtistAlbumCard";
 import ArtistNames from "../components/artist/ArtistNames";
 import Section from "../components/section/Section";
 import SongCard from "../components/song/SongCard";
@@ -17,6 +23,7 @@ import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import useRecommendationSessionStore from "../store/recommendation-session.store";
+import { getAlbumPath, getArtistPath } from "../utils/entityPath";
 import {
   filterPlayableSongs,
   fetchPlayableSong,
@@ -61,6 +68,22 @@ const formatContinueMeta = (song) =>
   [formatRelativeTime(song?.listened_at), song?.duration ? formatDuration(song.duration) : null]
     .filter(Boolean)
     .join(" • ");
+
+const formatReleaseDate = (value) => {
+  if (!value) return "Mới phát hành";
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "Mới phát hành";
+
+  return parsed.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
+
+const getArtistSongCount = (artist) =>
+  artist?.song_count ?? artist?.track_count ?? artist?.songs_count ?? artist?.songs?.length ?? 0;
 
 const dedupeSongIds = (items = []) => {
   const seen = new Set();
@@ -401,28 +424,50 @@ export default function Home() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const scrollForwardWithLoop = useCallback((ref, distance) => {
+  const getScrollStep = useCallback((ref) => {
     const node = ref.current;
-    if (!node) return;
-    const maxScroll = node.scrollWidth - node.clientWidth;
-    if (maxScroll <= 0) return;
-    const atEnd = Math.abs(node.scrollLeft - maxScroll) < 2;
-    node.scrollTo({
-      left: atEnd ? 0 : Math.min(node.scrollLeft + distance, maxScroll),
-      behavior: "smooth",
-    });
+    if (!node) return 0;
+
+    const firstItem = node.querySelector("[data-carousel-item]");
+    if (!firstItem) return node.clientWidth * 0.72;
+
+    const styles = window.getComputedStyle(node);
+    const gap = Number.parseFloat(styles.columnGap || styles.gap || "0");
+    return firstItem.getBoundingClientRect().width + gap;
   }, []);
 
-  const scrollByAmount = (ref, direction = 1) => {
-    const node = ref.current;
-    if (!node) return;
-    const amount = node.clientWidth * 0.7;
-    const maxScroll = node.scrollWidth - node.clientWidth;
-    node.scrollTo({
-      left: direction > 0 ? Math.min(node.scrollLeft + amount, maxScroll) : Math.max(node.scrollLeft - amount, 0),
-      behavior: "smooth",
-    });
-  };
+  const scrollForwardWithLoop = useCallback(
+    (ref) => {
+      const node = ref.current;
+      if (!node) return;
+      const maxScroll = node.scrollWidth - node.clientWidth;
+      if (maxScroll <= 0) return;
+      const distance = getScrollStep(ref) || node.clientWidth * 0.72;
+      const atEnd = Math.abs(node.scrollLeft - maxScroll) < 2;
+      node.scrollTo({
+        left: atEnd ? 0 : Math.min(node.scrollLeft + distance, maxScroll),
+        behavior: "smooth",
+      });
+    },
+    [getScrollStep]
+  );
+
+  const scrollByAmount = useCallback(
+    (ref, direction = 1) => {
+      const node = ref.current;
+      if (!node) return;
+      const amount = getScrollStep(ref) || node.clientWidth * 0.72;
+      const maxScroll = node.scrollWidth - node.clientWidth;
+      node.scrollTo({
+        left:
+          direction > 0
+            ? Math.min(node.scrollLeft + amount, maxScroll)
+            : Math.max(node.scrollLeft - amount, 0),
+        behavior: "smooth",
+      });
+    },
+    [getScrollStep]
+  );
 
   const clearResumeTimeout = (resumeRef) => {
     if (resumeRef.current) {
@@ -435,11 +480,15 @@ export default function Home() {
     (ref, timerRef, itemCount) => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (!ref.current || itemCount < 2) return;
+      if (
+        typeof window !== "undefined" &&
+        window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+      ) {
+        return;
+      }
       timerRef.current = setInterval(() => {
-        const node = ref.current;
-        if (!node) return;
-        scrollForwardWithLoop(ref, node.clientWidth * 0.65);
-      }, 3500);
+        scrollForwardWithLoop(ref);
+      }, 3800);
     },
     [scrollForwardWithLoop]
   );
@@ -483,6 +532,34 @@ export default function Home() {
     resolveAssetUrl(newAlbums?.[0]?.cover_url) ||
     resolveAssetUrl(artistAlbums?.[0]?.cover_url) ||
     "";
+  const featuredReleaseLabel =
+    featuredSong?.album_title ||
+    featuredSong?.album?.title ||
+    newAlbums?.[0]?.title ||
+    "Khoaluan Selection";
+  const featuredReleaseDateLabel = formatReleaseDate(
+    featuredSong?.release_date ||
+      featuredSong?.released_at ||
+      newAlbums?.[0]?.release_date ||
+      newAlbums?.[0]?.released_at
+  );
+  const heroSummary = featuredSong
+    ? `${featuredArtistLabel || "Khoaluan Music"} mở đầu hôm nay với một lựa chọn đáng nghe.`
+    : "Mở nhanh bài hát nổi bật, MChart và album mới trong một không gian gọn gàng.";
+  const homeSectionShellClassName =
+    "border-transparent bg-transparent px-0 py-0 shadow-none sm:px-0 sm:py-0";
+  const homeSectionSurfaceClassName =
+    "home-section-surface border-transparent bg-[#171819] shadow-[0_24px_58px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.04)]";
+  const homeRaisedCardClassName =
+    "home-raised-card bg-[#18191a] shadow-[0_20px_48px_rgba(0,0,0,0.26),inset_0_1px_0_rgba(255,255,255,0.035)]";
+  const homeRaisedCardHoverClassName = "transition-colors duration-200 md:hover:bg-[#1c1d1f]";
+  const homeInsetTileClassName =
+    "home-inset-tile bg-white/[0.045] shadow-[inset_0_1px_0_rgba(255,255,255,0.045)]";
+  const homeFeatureSectionHeaderClassName = "items-end gap-4 px-1";
+  const homeFeatureSectionSubtitleClassName =
+    "home-feature-section-subtitle mb-2 inline-flex rounded-full bg-white/[0.045] px-3 py-1.5 text-[11px] font-semibold tracking-[0.2em] text-white/62 shadow-[inset_0_1px_0_rgba(255,255,255,0.045)]";
+  const homeFeatureSectionTitleClassName =
+    "home-feature-section-title text-[2rem] font-black tracking-[-0.05em] text-white sm:text-[2.3rem]";
   const homeMetaDescription = useMemo(() => {
     const highlights = [];
 
@@ -514,27 +591,6 @@ export default function Home() {
     ],
     [featuredCover, homeMetaDescription]
   );
-
-  const reasonById = useMemo(() => {
-    const map = new Map();
-    const currentArtist = getArtistLabel(currentSong, "").toLowerCase();
-
-    songs.forEach((song, index) => {
-      const id = normalizeSongId(song);
-      if (id === null) return;
-
-      const artist = getArtistLabel(song, "").toLowerCase();
-      let reason = "Khớp với gu nghe gần đây";
-
-      if (currentArtist && artist && currentArtist === artist) reason = "Cùng nghệ sĩ với bài vừa nghe";
-      else if (index <= 2) reason = "Đang nổi bật trong tuần";
-      else if (song?.album_title) reason = `Từ album ${song.album_title}`;
-
-      map.set(id, reason);
-    });
-
-    return map;
-  }, [currentSong, songs]);
 
   const continueQueue = useMemo(() => continueSongs.map((song) => ({ ...song })), [continueSongs]);
   const primaryContinueSong = continueSongs[0] || null;
@@ -579,57 +635,193 @@ export default function Home() {
     [continueQueue, playSong]
   );
 
+const artistRailAction = (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          scrollByAmount(artistRailRef, -1);
+          pauseAndResumeAutoScroll(artistRailRef, artistTimerRef, artistResumeRef, artistAlbums.length);
+        }}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.04] text-white/72 transition-colors duration-200 md:hover:bg-white/[0.08] md:hover:text-white"
+        aria-label="Xem nghệ sĩ trước"
+      >
+        <FiChevronLeft size={16} />
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          scrollByAmount(artistRailRef, 1);
+          pauseAndResumeAutoScroll(artistRailRef, artistTimerRef, artistResumeRef, artistAlbums.length);
+        }}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.04] text-white/72 transition-colors duration-200 md:hover:bg-white/[0.08] md:hover:text-white"
+        aria-label="Xem nghệ sĩ tiếp theo"
+      >
+        <FiChevronRight size={16} />
+      </button>
+    </>
+  );
+
+const albumRailAction = (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          scrollByAmount(newAlbumRailRef, -1);
+          pauseAndResumeAutoScroll(newAlbumRailRef, newAlbumTimerRef, newAlbumResumeRef, newAlbums.length);
+        }}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.04] text-white/72 transition-colors duration-200 md:hover:bg-white/[0.08] md:hover:text-white"
+        aria-label="Xem album trước"
+      >
+        <FiChevronLeft size={16} />
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          scrollByAmount(newAlbumRailRef, 1);
+          pauseAndResumeAutoScroll(newAlbumRailRef, newAlbumTimerRef, newAlbumResumeRef, newAlbums.length);
+        }}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.04] text-white/72 transition-colors duration-200 md:hover:bg-white/[0.08] md:hover:text-white"
+        aria-label="Xem album tiếp theo"
+      >
+        <FiChevronRight size={16} />
+      </button>
+    </>
+  );
+
   return (
-    <div className="user-page-shell min-h-screen space-y-8 px-4 py-6 sm:space-y-12 sm:px-8">
-      <section className="user-surface relative overflow-hidden p-6 sm:p-8">
+    <div className="home-page-view user-page-shell min-h-screen space-y-8 px-4 py-6 sm:space-y-12 sm:px-8">
+      <section className="home-hero-shell user-surface relative overflow-hidden border-transparent bg-[#161718] p-4 shadow-[0_28px_70px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.045)] sm:p-5 lg:p-6">
         {featuredCover ? (
           <div
-            className="absolute inset-0 bg-cover bg-center opacity-30"
-            style={{ backgroundImage: `url(${featuredCover})` }}
+            className="pointer-events-none absolute inset-0 opacity-[0.42]"
+            style={{
+              backgroundImage: `url(${featuredCover})`,
+              backgroundPosition: "center",
+              backgroundSize: "cover",
+            }}
             aria-hidden
           />
         ) : null}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0b0b0b] via-[#0b0b0bcc] to-[#0b0b0b99]" aria-hidden />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(16,17,17,0.86)_0%,rgba(16,17,17,0.76)_34%,rgba(16,17,17,0.5)_72%,rgba(16,17,17,0.4)_100%)]" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-40 bg-emerald-400/[0.05] blur-3xl" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]" />
 
-        <div className="relative z-10 max-w-2xl space-y-4">
-          {loadingHome && !featuredSong ? (
-            <div className="space-y-3">
-              <div className="ui-skeleton-line h-3 w-32" />
-              <div className="ui-skeleton-line h-9 w-[70%] rounded-lg" />
+        <div className="relative grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
+          <div className="min-w-0 space-y-4">
+            {loadingHome && !featuredSong ? (
+              <div className="space-y-4">
+                <div className="ui-skeleton-line h-3 w-28" />
+                <div className="ui-skeleton-line h-9 w-[70%] rounded-lg" />
+                <div className="ui-skeleton-line h-4 w-[48%]" />
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-emerald-400/8 px-3 py-1.5 text-[11px] font-semibold text-emerald-100/92">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                    Nổi bật hôm nay
+                  </span>
+                  {featuredArtistLabel ? (
+                    <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/38">
+                      {featuredArtistLabel}
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="space-y-2.5">
+                  {featuredSong ? (
+                    <SongDetailLink
+                      song={featuredSong}
+                      className="home-hero-title max-w-3xl text-2xl font-black leading-tight text-white transition md:hover:text-emerald-200 sm:text-[2rem] xl:text-[2.35rem]"
+                    >
+                      {featuredSong.title}
+                    </SongDetailLink>
+                  ) : (
+                    <h1 className="home-hero-title max-w-3xl text-2xl font-black leading-tight text-white sm:text-[2rem] xl:text-[2.35rem]">
+                      Khoaluan Music
+                    </h1>
+                  )}
+                  <p className="home-hero-summary max-w-xl text-sm leading-7 text-white/68 sm:text-[15px]">
+                    {heroSummary}
+                  </p>
+                </div>
+
+              </>
+            )}
+
+            <div className="home-hero-actions flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                disabled={!featuredSong}
+                onClick={() => featuredSong && playSong(featuredSong, songs)}
+                className="user-btn-primary inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold disabled:opacity-60"
+              >
+                <FiPlay />
+                <span>Nghe ngay</span>
+              </button>
+
+              <Link
+                to="/zing-chart"
+                className="user-btn-secondary inline-flex items-center gap-2 border-transparent bg-white/[0.05] px-4 py-2.5 text-sm font-semibold md:hover:border-transparent md:hover:bg-white/[0.08]"
+              >
+                MChart
+                <FiChevronRight size={16} />
+              </Link>
             </div>
-          ) : (
-            <>
-              <p className="user-heading-label">BÀI NHẠC NỔI BẬT</p>
-              <h1 className="text-3xl font-extrabold text-white sm:text-5xl">
-                {featuredSong?.title || "Khám phá âm nhạc mỗi ngày"}
-              </h1>
-              <p className="text-sm text-white/70 sm:text-base">
-                {featuredArtistLabel
-                  ? `Từ ${featuredArtistLabel}. Cập nhật nhanh những bài hát phù hợp gu nghe của bạn.`
-                  : "Luồng gợi ý được làm mới theo lịch sử nghe để bạn khám phá nhạc nhanh hơn."}
-              </p>
-            </>
-          )}
+          </div>
 
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <button
-              type="button"
-              disabled={!featuredSong}
-              onClick={() => featuredSong && playSong(featuredSong, songs)}
-              className="user-btn-primary inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold disabled:opacity-60"
-            >
-              <FiPlay />
-              <span>Nghe ngay</span>
-            </button>
-            <button
-              type="button"
-              onClick={refreshRecommendations}
-              disabled={recommendationLoading}
-              className="user-btn-secondary inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
-            >
-              <FiRefreshCw className={recommendationLoading ? "animate-spin" : ""} />
-              {recommendationLoading ? "Đang làm mới..." : "Làm mới gợi ý"}
-            </button>
+          <div className="home-hero-sidecard rounded-[26px] bg-[#16181a]/96 p-4 shadow-[0_24px_62px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.045)]">
+            <div className="flex items-center gap-4">
+              <div className="home-hero-cover h-[74px] w-[74px] shrink-0 overflow-hidden rounded-[20px] bg-white/5 shadow-[0_12px_28px_rgba(0,0,0,0.24)]">
+                <img
+                  src={resolveAssetUrl(featuredSong?.cover_url) || featuredCover || "/logo-brand.png"}
+                  alt={featuredSong?.title || "Khoaluan Music"}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/42">
+                  Bài mở đầu
+                </p>
+                {featuredSong ? (
+                  <SongDetailLink
+                    song={featuredSong}
+                    className="block truncate text-[1.05rem] font-black text-white transition md:hover:text-emerald-200"
+                  >
+                    {featuredSong.title}
+                  </SongDetailLink>
+                ) : (
+                  <p className="truncate text-[1.05rem] font-black text-white">Khoaluan Music</p>
+                )}
+                <p className="truncate text-xs text-white/56">
+                  {featuredSong
+                    ? getArtistLabel(featuredSong, featuredSong.artist_name || "") || "Đang cập nhật"
+                    : "Danh sách phát được cập nhật liên tục"}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className={`rounded-[18px] px-3 py-2.5 ${homeInsetTileClassName}`}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
+                  Từ album
+                </p>
+                <p className="mt-1 truncate text-sm font-semibold text-white/88">
+                  {featuredReleaseLabel}
+                </p>
+              </div>
+              <div className={`rounded-[18px] px-3 py-2.5 ${homeInsetTileClassName}`}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
+                  Phát hành
+                </p>
+                <p className="mt-1 text-sm font-semibold text-white/88">
+                  {featuredReleaseDateLabel}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -637,16 +829,21 @@ export default function Home() {
       <Section
         title="Tiếp tục nghe"
         subtitle="Theo hoạt động của bạn"
+        shellClassName={homeSectionShellClassName}
+        surfaceClassName={homeSectionSurfaceClassName}
         action={
           isAuthenticated ? (
-            <Link to="/history" className="user-btn-secondary px-3 py-1.5 text-[12px] font-semibold">
+            <Link
+              to="/history"
+              className="user-btn-secondary border-transparent bg-white/[0.05] px-3 py-1.5 text-[12px] font-semibold md:hover:border-transparent md:hover:bg-white/[0.08]"
+            >
               Xem lịch sử
             </Link>
           ) : null
         }
       >
         {!isAuthenticated ? (
-          <div className="rounded-[24px] border border-emerald-400/15 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.14),transparent_36%),linear-gradient(135deg,#141414,#0d0d0d)] p-4 sm:p-5">
+          <div className={`rounded-[24px] p-4 sm:p-5 ${homeRaisedCardClassName}`}>
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="max-w-2xl space-y-1.5">
                 <p className="user-heading-label">CÁ NHÂN HÓA</p>
@@ -674,7 +871,7 @@ export default function Home() {
               {Array.from({ length: CONTINUE_SONGS_LIMIT - 1 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="rounded-[20px] border border-white/10 bg-[#151515] p-3"
+                  className={`rounded-[20px] p-3 ${homeRaisedCardClassName}`}
                 >
                   <div className="flex items-center gap-3">
                     <div className="ui-skeleton h-12 w-12 rounded-2xl" />
@@ -688,7 +885,7 @@ export default function Home() {
             </div>
           </div>
         ) : !continueSongs.length ? (
-          <div className="rounded-[24px] border border-dashed border-white/12 bg-[linear-gradient(135deg,#151515,#101010)] p-4 sm:p-5">
+          <div className={`rounded-[24px] p-4 sm:p-5 ${homeRaisedCardClassName}`}>
             <p className="user-heading-label">CHƯA CÓ DỮ LIỆU</p>
             <h3 className="mt-2 text-lg font-extrabold text-white sm:text-xl">
               Chưa có bài nào để tiếp tục nghe
@@ -702,10 +899,10 @@ export default function Home() {
           <div className="space-y-3">
             {primaryContinueSong ? (
               <article
-                className="overflow-hidden rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_32%),linear-gradient(135deg,#151515,#101010)] p-3.5 transition-colors duration-200 md:hover:border-emerald-300/15 md:hover:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.14),transparent_34%),linear-gradient(135deg,#171717,#111111)] sm:p-4"
+                className={`home-primary-continue-card overflow-hidden rounded-[24px] p-3.5 sm:p-4 ${homeRaisedCardClassName} ${homeRaisedCardHoverClassName}`}
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-[18px] border border-white/10 bg-white/5 shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
+                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-[18px] bg-white/5 shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
                     <img
                       src={resolveAssetUrl(primaryContinueSong.cover_url) || "/logo-brand.png"}
                       alt={primaryContinueSong.title}
@@ -727,7 +924,7 @@ export default function Home() {
 
                     <SongDetailLink
                       song={primaryContinueSong}
-                      className="mt-2 block truncate text-lg font-extrabold text-white transition md:hover:text-emerald-200 md:hover:underline sm:text-[1.35rem]"
+                      className="home-primary-title mt-2 block truncate text-lg font-extrabold text-white transition md:hover:text-emerald-200 md:hover:underline sm:text-[1.35rem]"
                     >
                       {primaryContinueSong.title}
                     </SongDetailLink>
@@ -753,7 +950,7 @@ export default function Home() {
                     </button>
                     <SongDetailLink
                       song={primaryContinueSong}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/12 bg-white/[0.06] text-white/82 transition md:hover:border-white/20 md:hover:bg-white/[0.1] md:hover:text-white"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-white/82 transition md:hover:bg-white/[0.1] md:hover:text-white"
                       aria-label={`Mở chi tiết ${primaryContinueSong.title}`}
                     >
                       <FiChevronRight size={16} />
@@ -768,10 +965,10 @@ export default function Home() {
                 {secondaryContinueSongs.map((song) => (
                   <article
                     key={song.continueKey || `${song.id}-${song.listened_at || song.title}`}
-                    className="rounded-[20px] border border-white/10 bg-[linear-gradient(135deg,#151515,#101010)] p-3 transition-colors duration-200 md:hover:border-white/16 md:hover:bg-[#171717]"
+                    className={`rounded-[20px] p-3 ${homeRaisedCardClassName} ${homeRaisedCardHoverClassName}`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-white/8 bg-white/5">
+                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-white/5">
                         <img
                           src={resolveAssetUrl(song.cover_url) || "/logo-brand.png"}
                           alt={song.title}
@@ -818,11 +1015,13 @@ export default function Home() {
       <Section
         title="Dành cho bạn"
         subtitle="Gợi ý bài hát"
+        shellClassName={homeSectionShellClassName}
+        surfaceClassName={homeSectionSurfaceClassName}
         action={
           <button
             onClick={refreshRecommendations}
             disabled={recommendationLoading}
-            className="user-btn-secondary inline-flex items-center gap-2 px-3 py-1.5 text-[12px] font-semibold disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:text-[13px]"
+            className="user-btn-secondary inline-flex items-center gap-2 border-transparent bg-white/[0.05] px-3 py-1.5 text-[12px] font-semibold disabled:cursor-not-allowed disabled:opacity-60 md:hover:border-transparent md:hover:bg-white/[0.08] sm:px-4 sm:text-[13px]"
           >
             <FiRefreshCw className={recommendationLoading ? "animate-spin" : ""} />
             {recommendationLoading ? "Đang làm mới..." : "Làm mới"}
@@ -832,11 +1031,11 @@ export default function Home() {
         {recommendationLoading && !songs.length ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
             {Array.from({ length: recommendationLimit }).map((_, idx) => (
-              <div key={idx} className="ui-skeleton h-28 rounded-2xl border border-white/10" />
+              <div key={idx} className="ui-skeleton h-28 rounded-2xl" />
             ))}
           </div>
         ) : !songs.length ? (
-          <div className="rounded-2xl border border-white/10 bg-[#151515] p-4 text-sm text-white/70">
+          <div className={`rounded-2xl p-4 text-sm text-white/70 ${homeRaisedCardClassName}`}>
             Chưa có bài hát phù hợp, hãy làm mới gợi ý.
           </div>
         ) : (
@@ -856,8 +1055,13 @@ export default function Home() {
       <Section
         title="Top tuần"
         subtitle="Xu hướng nổi bật"
+        shellClassName={homeSectionShellClassName}
+        surfaceClassName={homeSectionSurfaceClassName}
         action={
-          <Link to="/zing-chart" className="user-btn-secondary px-3 py-1.5 text-[12px] font-semibold">
+          <Link
+            to="/zing-chart"
+            className="user-btn-secondary border-transparent bg-white/[0.05] px-3 py-1.5 text-[12px] font-semibold md:hover:border-transparent md:hover:bg-white/[0.08]"
+          >
             Mở MChart
           </Link>
         }
@@ -865,11 +1069,11 @@ export default function Home() {
         {chartLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, idx) => (
-              <div key={idx} className="ui-skeleton h-14 rounded-xl border border-white/10" />
+              <div key={idx} className="ui-skeleton h-14 rounded-xl" />
             ))}
           </div>
         ) : !weeklyTop.length ? (
-          <div className="rounded-2xl border border-white/10 bg-[#151515] p-4 text-sm text-white/70">
+          <div className={`rounded-2xl p-4 text-sm text-white/70 ${homeRaisedCardClassName}`}>
             Chưa có dữ liệu top tuần.
           </div>
         ) : (
@@ -879,7 +1083,7 @@ export default function Home() {
               return (
                 <article
                   key={song.id}
-                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#151515] p-3 transition md:hover:border-white/20 md:hover:bg-[#1a1a1a]"
+                  className={`group relative overflow-hidden rounded-2xl p-3 ${homeRaisedCardClassName} transition md:hover:bg-[#1d1f20]`}
                   style={{ boxShadow: `inset 2px 0 0 ${accentColor}` }}
                 >
                   <div className="absolute bottom-0 left-0 h-[2px] w-full bg-white/10" />
@@ -894,7 +1098,7 @@ export default function Home() {
                     <span className="w-7 text-center text-lg font-black" style={{ color: accentColor }}>
                       {song.rank}
                     </span>
-                    <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-white/15">
+                    <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg">
                       <img
                         src={resolveAssetUrl(song.cover_url)}
                         alt={song.title}
@@ -940,90 +1144,199 @@ export default function Home() {
         )}
       </Section>
 
-      <Section title="Nghệ sĩ nổi bật" subtitle="Tuyển tập nổi bật">
+      <Section
+        title="Nghệ sĩ nổi bật"
+        subtitle="Tuyển tập nổi bật"
+        shellClassName={homeSectionShellClassName}
+        surfaceClassName={homeSectionSurfaceClassName}
+        headerClassName={homeFeatureSectionHeaderClassName}
+        subtitleClassName={homeFeatureSectionSubtitleClassName}
+        titleClassName={homeFeatureSectionTitleClassName}
+      >
         <div className="relative">
+          <div className="mb-3 flex flex-wrap items-center justify-end gap-3 px-1">
+            <p className="hidden">
+              Rail spotlight giữ nhịp chuyển nhẹ để phần nghệ sĩ nổi bật bớt giống một hàng card lặp lại.
+            </p>
+            <div className="flex items-center gap-2">{artistRailAction}</div>
+          </div>
+
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 top-12 z-10 hidden w-10 bg-gradient-to-r from-[#101010] to-transparent lg:block"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 top-12 z-10 hidden w-12 bg-gradient-to-l from-[#101010] to-transparent lg:block"
+          />
           <div
             ref={artistRailRef}
             onMouseEnter={() => pauseAutoScroll(artistTimerRef)}
             onMouseLeave={() => startAutoScroll(artistRailRef, artistTimerRef, artistAlbums.length)}
-            className="flex gap-4 overflow-x-auto pb-2 pr-10 scroll-smooth scrollbar-hidden"
+            onTouchStart={() => pauseAutoScroll(artistTimerRef)}
+            onTouchEnd={() =>
+              pauseAndResumeAutoScroll(artistRailRef, artistTimerRef, artistResumeRef, artistAlbums.length)
+            }
+            className="home-feature-rail flex gap-4 overflow-x-auto pb-1 pr-6 scroll-smooth scrollbar-hidden sm:pr-8 lg:snap-x lg:snap-mandatory"
           >
             {loadingHome && !artistAlbums.length
               ? Array.from({ length: 4 }).map((_, idx) => (
                   <div
                     key={idx}
-                    className="ui-skeleton h-60 w-44 shrink-0 rounded-2xl border border-white/10 sm:w-60 lg:w-64"
+                    data-carousel-item
+                    className="home-artist-skeleton ui-skeleton h-[320px] w-[76vw] max-w-[300px] shrink-0 rounded-[26px] sm:w-[280px] lg:w-[292px] xl:w-[304px]"
                   />
                 ))
-              : artistAlbums.map((artist) => (
-                  <div key={artist.artist_id} className="w-44 shrink-0 sm:w-60 lg:w-64">
-                    <ArtistAlbumCard artist={artist} />
-                  </div>
-                ))}
-          </div>
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1">
-            <button
-              onClick={() => {
-                scrollByAmount(artistRailRef, -1);
-                pauseAndResumeAutoScroll(artistRailRef, artistTimerRef, artistResumeRef, artistAlbums.length);
-              }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#121212] text-white/80 shadow-lg transition md:hover:border-white/30 md:hover:text-white sm:flex"
-            >
-              <FiChevronLeft />
-            </button>
-          </div>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1">
-            <button
-              onClick={() => {
-                scrollByAmount(artistRailRef, 1);
-                pauseAndResumeAutoScroll(artistRailRef, artistTimerRef, artistResumeRef, artistAlbums.length);
-              }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#121212] text-white/80 shadow-lg transition md:hover:border-white/30 md:hover:text-white sm:flex"
-            >
-              <FiChevronRight />
-            </button>
+              : artistAlbums.map((artist) => {
+                  const artistPath = getArtistPath(artist) || "/";
+                  const artistSongCount = getArtistSongCount(artist);
+
+                  return (
+                    <Link
+                      key={artist.artist_id || artist.id || artist.artist_name}
+                      to={artistPath}
+                      data-carousel-item
+                      className="home-artist-card group relative w-[76vw] max-w-[300px] shrink-0 overflow-hidden rounded-[26px] bg-[#18191a] p-3 shadow-[0_22px_52px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors duration-300 lg:w-[292px] lg:snap-start xl:w-[304px] md:hover:bg-[#1d1f20]"
+                    >
+                      <div className="relative aspect-[0.9] overflow-hidden rounded-[20px] bg-white/5">
+                        <img
+                          src={resolveAssetUrl(artist.cover_url) || "/logo-brand.png"}
+                          alt={artist.artist_name}
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 md:group-hover:scale-[1.04]"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,4,4,0.05),rgba(4,4,4,0.56)_48%,rgba(4,4,4,0.92))]" />
+
+                        <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-black/30 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/72 backdrop-blur">
+                            <FiUsers size={11} className="text-emerald-300" />
+                            Spotlight
+                          </span>
+                          <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-100">
+                            {artistSongCount ? `${artistSongCount} bài` : "Nổi bật"}
+                          </span>
+                        </div>
+
+                        <div className="absolute inset-x-3 bottom-3 space-y-2">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">
+                            Nghệ sĩ được chú ý
+                          </p>
+                          <h3 className="truncate text-xl font-black text-white sm:text-[1.35rem]">
+                            {artist.artist_name}
+                          </h3>
+                          <p className="text-sm leading-5 text-white/68">
+                            Khám phá tuyển tập nổi bật và ca khúc đáng nghe nhất của {artist.artist_name}.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <p className="truncate text-xs font-medium text-white/45">
+                          Cập nhật nghệ sĩ và tuyển chọn mới
+                        </p>
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/[0.04] px-3 py-1.5 text-[11px] font-semibold text-white/72 transition-colors duration-300 md:group-hover:bg-white/[0.08]">
+                          Xem trang
+                          <FiChevronRight size={13} />
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
           </div>
         </div>
       </Section>
 
-      <Section title="Album mới phát hành" subtitle="Ra mắt gần đây">
+      <Section
+        title="Album mới phát hành"
+        subtitle="Ra mắt gần đây"
+        shellClassName={homeSectionShellClassName}
+        surfaceClassName={homeSectionSurfaceClassName}
+        headerClassName={homeFeatureSectionHeaderClassName}
+        subtitleClassName={homeFeatureSectionSubtitleClassName}
+        titleClassName={homeFeatureSectionTitleClassName}
+      >
         <div className="relative">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-100">
+                Cập nhật liên tục
+              </span>
+              <span className="hidden">
+                Rail tự chuyển theo từng album để giữ nhịp khám phá nhẹ hơn.
+              </span>
+            </div>
+            <div className="flex items-center gap-2">{albumRailAction}</div>
+          </div>
+
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 top-12 z-10 hidden w-8 bg-gradient-to-r from-[#101010] to-transparent lg:block"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 top-12 z-10 hidden w-10 bg-gradient-to-l from-[#101010] to-transparent lg:block"
+          />
           <div
             ref={newAlbumRailRef}
             onMouseEnter={() => pauseAutoScroll(newAlbumTimerRef)}
             onMouseLeave={() => startAutoScroll(newAlbumRailRef, newAlbumTimerRef, newAlbums.length)}
-            className="flex gap-4 overflow-x-auto pb-2 pr-10 scroll-smooth scrollbar-hidden"
+            onTouchStart={() => pauseAutoScroll(newAlbumTimerRef)}
+            onTouchEnd={() =>
+              pauseAndResumeAutoScroll(newAlbumRailRef, newAlbumTimerRef, newAlbumResumeRef, newAlbums.length)
+            }
+            className="home-feature-rail flex gap-4 overflow-x-auto pb-1 pr-6 scroll-smooth scrollbar-hidden sm:pr-8 lg:snap-x lg:snap-mandatory"
           >
             {loadingHome && !newAlbums.length
-              ? Array.from({ length: 4 }).map((_, idx) => (
+              ? Array.from({ length: 5 }).map((_, idx) => (
                   <div
                     key={idx}
-                    className="ui-skeleton h-60 w-44 shrink-0 rounded-2xl border border-white/10 sm:w-60 lg:w-64"
+                    data-carousel-item
+                    className="home-album-skeleton ui-skeleton h-[285px] w-[62vw] max-w-[216px] shrink-0 rounded-[22px] sm:w-[196px] lg:w-[208px] xl:w-[220px]"
                   />
                 ))
-              : newAlbums.map((album) => <AlbumCard key={album.id} album={album} />)}
-          </div>
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1">
-            <button
-              onClick={() => {
-                scrollByAmount(newAlbumRailRef, -1);
-                pauseAndResumeAutoScroll(newAlbumRailRef, newAlbumTimerRef, newAlbumResumeRef, newAlbums.length);
-              }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#121212] text-white/80 shadow-lg transition md:hover:border-white/30 md:hover:text-white sm:flex"
-            >
-              <FiChevronLeft />
-            </button>
-          </div>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1">
-            <button
-              onClick={() => {
-                scrollByAmount(newAlbumRailRef, 1);
-                pauseAndResumeAutoScroll(newAlbumRailRef, newAlbumTimerRef, newAlbumResumeRef, newAlbums.length);
-              }}
-              className="pointer-events-auto hidden h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#121212] text-white/80 shadow-lg transition md:hover:border-white/30 md:hover:text-white sm:flex"
-            >
-              <FiChevronRight />
-            </button>
+              : newAlbums.map((album) => (
+                  <Link
+                    key={album.id}
+                    to={getAlbumPath(album) || "/albums"}
+                    data-carousel-item
+                    className="home-album-card group w-[62vw] max-w-[216px] shrink-0 rounded-[22px] bg-[#18191a] p-3 shadow-[0_18px_42px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(255,255,255,0.035)] transition-colors duration-300 sm:w-[196px] lg:w-[208px] lg:snap-start xl:w-[220px] md:hover:bg-[#1d1f20]"
+                  >
+                    <div className="relative aspect-square overflow-hidden rounded-[18px] bg-white/5">
+                      <img
+                        src={resolveAssetUrl(album.cover_url) || "/logo-brand.png"}
+                        alt={album.title}
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 md:group-hover:scale-[1.04]"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.06),rgba(0,0,0,0.6))]" />
+                      <div className="absolute left-3 top-3">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80 backdrop-blur">
+                          <FiDisc size={11} className="text-emerald-300" />
+                          Mới
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate rounded-full bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/55">
+                          {formatReleaseDate(album.release_date)}
+                        </span>
+                        <span className="text-[11px] font-semibold text-emerald-200/80 transition-transform duration-300 md:group-hover:translate-x-0.5">
+                          Nghe
+                        </span>
+                      </div>
+
+                      <h3 className="truncate text-sm font-bold text-white sm:text-[15px]">
+                        {album.title}
+                      </h3>
+
+                      <p className="truncate text-[12px] text-white/58">
+                        {getArtistLabel(album, album.artist_name || album.artist?.name || "")}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
           </div>
         </div>
       </Section>

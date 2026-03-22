@@ -1,14 +1,19 @@
-﻿import { motion, useReducedMotion } from "framer-motion";
+import clsx from "clsx";
+import { motion, useReducedMotion } from "framer-motion";
 import { useMemo } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import useAuthStore from "../../store/auth.store";
 
-function IntroPulse() {
+const MotionDiv = motion.div;
+const MotionSpan = motion.span;
+
+function IntroPulse({ barClassName }) {
   return (
     <div className="mt-6 flex items-center justify-center gap-2" aria-hidden="true">
       {[0, 1, 2, 3].map((index) => (
-        <motion.span
+        <MotionSpan
           key={index}
-          className="block h-8 w-1.5 rounded-full bg-gradient-to-t from-emerald-500/35 via-emerald-300/90 to-cyan-300/90"
+          className={clsx("block h-8 w-1.5 rounded-full", barClassName)}
           animate={{
             scaleY: [0.58, 1, 0.7, 0.92],
             opacity: [0.4, 1, 0.55, 0.9],
@@ -75,20 +80,65 @@ function getIntroCopy({ isAuthReady, isAuthenticated, role }) {
   };
 }
 
+function getIntroTone({ role, pathname, intent }) {
+  const isArtistRoute =
+    role === "ARTIST" ||
+    pathname === "/artist-auth" ||
+    pathname === "/artist-request" ||
+    pathname.startsWith("/artist/") ||
+    (pathname === "/verify-email" && intent === "artist");
+
+  if (isArtistRoute) {
+    return {
+      shellClassName: "auth-shell-artist",
+      badgeClassName: "border-sky-300/18 bg-sky-400/10 text-sky-100/85",
+      panelClassName:
+        "border-sky-300/[0.08] bg-[#0b1016]/96 shadow-[0_28px_90px_rgba(0,0,0,0.52),inset_0_1px_0_rgba(191,219,254,0.03)]",
+      pulseBarClassName: "bg-gradient-to-t from-sky-500/35 via-sky-300/90 to-cyan-200/90",
+      logoAuraClassName: "bg-[radial-gradient(circle_at_top,rgba(125,211,252,0.16),transparent_50%)]",
+      progressClassName:
+        "bg-gradient-to-r from-sky-300 via-blue-400 to-cyan-300 shadow-[0_0_22px_rgba(96,165,250,0.42)]",
+    };
+  }
+
+  return {
+    shellClassName: "auth-shell-listener",
+    badgeClassName: "border-emerald-300/18 bg-emerald-400/10 text-emerald-100/85",
+    panelClassName:
+      "border-emerald-300/[0.07] bg-[#0b1016]/96 shadow-[0_28px_90px_rgba(0,0,0,0.52),inset_0_1px_0_rgba(167,243,208,0.03)]",
+    pulseBarClassName: "bg-gradient-to-t from-emerald-500/28 via-emerald-300/82 to-lime-200/88",
+    logoAuraClassName: "bg-[radial-gradient(circle_at_top,rgba(118,204,152,0.14),transparent_50%)]",
+    progressClassName:
+      "bg-gradient-to-r from-emerald-300 via-emerald-400 to-lime-300 shadow-[0_0_22px_rgba(88,168,121,0.34)]",
+  };
+}
+
 export default function AppIntro() {
   const reduceMotion = useReducedMotion();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isAuthReady = useAuthStore((state) => state.isAuthReady);
   const role = useAuthStore((state) => state.role);
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const intent = searchParams.get("intent") || "user";
 
   const introCopy = useMemo(
     () => getIntroCopy({ isAuthReady, isAuthenticated, role }),
     [isAuthReady, isAuthenticated, role]
   );
+  const introTone = useMemo(
+    () =>
+      getIntroTone({
+        role,
+        pathname: location.pathname,
+        intent,
+      }),
+    [intent, location.pathname, role]
+  );
 
   return (
-    <motion.div
-      className="fixed inset-0 z-[120] overflow-hidden bg-[#030504]"
+    <MotionDiv
+      className={clsx("auth-intro-shell fixed inset-0 z-[120] overflow-hidden text-white", introTone.shellClassName)}
       initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{
@@ -99,39 +149,44 @@ export default function AppIntro() {
         },
       }}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.22),transparent_30%),radial-gradient(circle_at_78%_18%,rgba(45,212,191,0.14),transparent_20%),radial-gradient(circle_at_bottom_right,rgba(29,185,84,0.12),transparent_34%)]" />
-      <motion.div
-        className="absolute inset-0 opacity-60"
-        animate={
-          reduceMotion
-            ? undefined
-            : { scale: [1, 1.04, 1], opacity: [0.42, 0.66, 0.42] }
-        }
-        transition={
-          reduceMotion
-            ? undefined
-            : { duration: 5.5, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }
-        }
-      >
-        <div className="absolute left-[-8%] top-[16%] h-56 w-56 rounded-full bg-emerald-400/10 blur-3xl sm:h-72 sm:w-72" />
-        <div className="absolute bottom-[10%] right-[-6%] h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl sm:h-80 sm:w-80" />
-      </motion.div>
+      <div className="absolute inset-0 auth-shell-backdrop" />
+      <div className="absolute inset-0 auth-shell-top-grid" />
+      <div className="pointer-events-none absolute left-1/2 top-[42%] h-[360px] w-[min(84vw,760px)] -translate-x-1/2 -translate-y-1/2 rounded-full auth-shell-focus-glow md:h-[420px]" />
+      <div className="absolute inset-x-[-10%] bottom-[-34%] h-[54%] auth-shell-floor-grid" />
+      <div className="absolute inset-x-[-10%] bottom-[-34%] h-[54%] auth-shell-floor-grid auth-shell-floor-grid--fine" />
+      <div className="absolute inset-0 auth-shell-vignette" />
+      <div className="absolute inset-0 opacity-[0.08] auth-shell-noise-map" />
+      <img
+        src="/logo-brand.png"
+        alt=""
+        className="pointer-events-none absolute bottom-4 right-4 h-28 w-28 select-none opacity-[0.035] grayscale sm:h-32 sm:w-32 lg:h-40 lg:w-40"
+        draggable="false"
+      />
 
-      <div className="relative flex min-h-screen items-center justify-center px-5 py-10 sm:px-8">
-        <motion.div
-          className="w-full max-w-[560px] rounded-[32px] border border-white/10 bg-[linear-gradient(150deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] px-6 py-8 text-center shadow-[0_28px_90px_rgba(0,0,0,0.52)] backdrop-blur-xl sm:px-8 sm:py-10"
-          initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 18, scale: 0.985 }}
-          animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-          exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -12, scale: 0.985 }}
-          transition={{ duration: reduceMotion ? 0.18 : 0.52, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <div className="mx-auto inline-flex rounded-full border border-emerald-300/18 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-200/85">
+      <div className="pointer-events-none absolute inset-0 z-10 px-5 sm:px-8">
+        <div className="mx-auto flex h-full w-full max-w-[1180px] items-center justify-center">
+          <MotionDiv
+            className={clsx(
+              "pointer-events-auto w-full max-w-[560px] rounded-[32px] border px-6 py-8 text-center backdrop-blur-xl sm:px-8 sm:py-10",
+              introTone.panelClassName
+            )}
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 18, scale: 0.985 }}
+            animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -12, scale: 0.985 }}
+            transition={{ duration: reduceMotion ? 0.18 : 0.52, ease: [0.22, 1, 0.36, 1] }}
+          >
+          <div
+            className={clsx(
+              "mx-auto inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.32em]",
+              introTone.badgeClassName
+            )}
+          >
             {introCopy.badge}
           </div>
 
           <div className="mt-6 flex justify-center">
             <div className="relative h-[108px] w-[108px] rounded-[30px] border border-white/10 bg-[#050706] p-3 shadow-[0_18px_40px_rgba(0,0,0,0.35)]">
-              <div className="absolute inset-0 rounded-[30px] bg-[radial-gradient(circle_at_top,rgba(110,231,183,0.12),transparent_50%)]" />
+              <div className={clsx("absolute inset-0 rounded-[30px]", introTone.logoAuraClassName)} />
               <img
                 src="/logo-brand.png"
                 alt="Khoaluan Music"
@@ -141,37 +196,37 @@ export default function AppIntro() {
             </div>
           </div>
 
-          <motion.h1
+          <MotionDiv
             className="mt-6 text-3xl font-black tracking-[-0.06em] text-white sm:text-4xl"
             initial={reduceMotion ? undefined : { opacity: 0, y: 10 }}
             animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             transition={reduceMotion ? undefined : { delay: 0.08, duration: 0.38 }}
           >
             {introCopy.title}
-          </motion.h1>
-          <motion.p
+          </MotionDiv>
+          <MotionDiv
             className="mx-auto mt-3 max-w-md text-sm leading-7 text-white/62 sm:text-[15px]"
             initial={reduceMotion ? undefined : { opacity: 0, y: 10 }}
             animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             transition={reduceMotion ? undefined : { delay: 0.16, duration: 0.38 }}
           >
             {introCopy.description}
-          </motion.p>
+          </MotionDiv>
 
-          {reduceMotion ? null : <IntroPulse />}
+          {reduceMotion ? null : <IntroPulse barClassName={introTone.pulseBarClassName} />}
 
-          <motion.p
+          <MotionDiv
             className="mt-5 text-xs font-medium tracking-[0.06em] text-white/42 sm:text-[13px]"
             initial={reduceMotion ? undefined : { opacity: 0 }}
             animate={reduceMotion ? undefined : { opacity: 1 }}
             transition={reduceMotion ? undefined : { delay: 0.22, duration: 0.35 }}
           >
             {introCopy.helper}
-          </motion.p>
+          </MotionDiv>
 
           <div className="mx-auto mt-6 h-[4px] w-full max-w-[260px] overflow-hidden rounded-full bg-white/8">
-            <motion.span
-              className="block h-full w-full origin-left rounded-full bg-gradient-to-r from-emerald-300 via-emerald-400 to-cyan-300 shadow-[0_0_22px_rgba(52,211,153,0.45)]"
+            <MotionSpan
+              className={clsx("block h-full w-full origin-left rounded-full", introTone.progressClassName)}
               initial={{ scaleX: 0.12, x: "-18%" }}
               animate={
                 reduceMotion
@@ -185,8 +240,9 @@ export default function AppIntro() {
               }
             />
           </div>
-        </motion.div>
+          </MotionDiv>
+        </div>
       </div>
-    </motion.div>
+    </MotionDiv>
   );
 }

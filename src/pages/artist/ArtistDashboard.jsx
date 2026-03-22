@@ -31,7 +31,7 @@ echarts.use([
 ]);
 
 const STATUS_STYLE = {
-  approved: { label: "Đã duyệt", color: "#34d399" },
+  approved: { label: "Đã duyệt", color: "#7dd3fc" },
   pending: { label: "Chờ duyệt", color: "#fbbf24" },
   rejected: { label: "Từ chối", color: "#fb7185" },
   draft: { label: "Nháp", color: "#94a3b8" },
@@ -42,12 +42,6 @@ const STATUS_STYLE = {
 const safeNumber = (value) => {
   const num = Number(value);
   return Number.isFinite(num) ? num : 0;
-};
-
-const parseDate = (value) => {
-  if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
 };
 
 const normalizeStatus = (value) => `${value ?? ""}`.trim().toLowerCase();
@@ -274,7 +268,7 @@ export default function ArtistDashboard() {
     const unpublished = Math.max(0, albums.length - published);
 
     return [
-      { name: "Đã phát hành", value: published, color: "#34d399" },
+      { name: "Đã phát hành", value: published, color: "#7dd3fc" },
       { name: "Chưa phát hành", value: unpublished, color: "#fbbf24" },
     ].filter((item) => item.value > 0);
   }, [albums]);
@@ -303,7 +297,7 @@ export default function ArtistDashboard() {
 
     return [
       { name: "Single", value: single, color: "#67e8f9" },
-      { name: "Trong album", value: inAlbum, color: "#34d399" },
+      { name: "Trong album", value: inAlbum, color: "#60a5fa" },
     ];
   }, [songs]);
 
@@ -515,7 +509,7 @@ export default function ArtistDashboard() {
           <p className="text-xs uppercase tracking-[0.24em] text-white/55">Tổng album</p>
           <div className="mt-3 flex items-center justify-between">
             <h3 className="text-3xl font-bold text-white">{stats.totalAlbums}</h3>
-            <span className="rounded-xl bg-emerald-400/20 p-3 text-emerald-100">
+            <span className="rounded-xl bg-sky-400/18 p-3 text-sky-100">
               <FiDisc className="text-lg" />
             </span>
           </div>
@@ -524,7 +518,7 @@ export default function ArtistDashboard() {
           <p className="text-xs uppercase tracking-[0.24em] text-white/55">Tổng bài hát</p>
           <div className="mt-3 flex items-center justify-between">
             <h3 className="text-3xl font-bold text-white">{stats.totalSongs}</h3>
-            <span className="rounded-xl bg-cyan-400/20 p-3 text-cyan-100">
+            <span className="rounded-xl bg-blue-400/18 p-3 text-blue-100">
               <FiHeadphones className="text-lg" />
             </span>
           </div>
@@ -554,7 +548,7 @@ export default function ArtistDashboard() {
       <section className="grid gap-4 md:grid-cols-2">
         <ChartCard title="Trạng thái bài hát">
           {loading ? (
-            <ChartLoadingState height="clamp(180px, 28vw, 220px)" bars={4} compact />
+            <ChartLoadingState height="clamp(180px, 28vw, 220px)" bars={4} compact tone="artist" />
           ) : (
             <MiniChart option={songStatusOption} />
           )}
@@ -562,7 +556,7 @@ export default function ArtistDashboard() {
 
         <ChartCard title="Trạng thái album">
           {loading ? (
-            <ChartLoadingState height="clamp(180px, 28vw, 220px)" bars={4} compact />
+            <ChartLoadingState height="clamp(180px, 28vw, 220px)" bars={4} compact tone="artist" />
           ) : (
             <MiniChart option={albumStatusOption} />
           )}
@@ -570,7 +564,7 @@ export default function ArtistDashboard() {
 
         <ChartCard title="Bài hát mới theo tháng">
           {loading ? (
-            <ChartLoadingState height="clamp(180px, 28vw, 220px)" bars={5} />
+            <ChartLoadingState height="clamp(180px, 28vw, 220px)" bars={5} tone="artist" />
           ) : (
             <MiniChart option={songTimelineOption} />
           )}
@@ -578,7 +572,7 @@ export default function ArtistDashboard() {
 
         <ChartCard title="Single và bài trong album">
           {loading ? (
-            <ChartLoadingState height="clamp(180px, 28vw, 220px)" bars={4} compact />
+            <ChartLoadingState height="clamp(180px, 28vw, 220px)" bars={4} compact tone="artist" />
           ) : (
             <MiniChart option={releaseTypeOption} />
           )}
