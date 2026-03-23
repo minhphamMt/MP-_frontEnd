@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FiChevronRight, FiLogOut, FiUser } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
 import { resolveAssetUrl } from "../../utils/asset";
+import { getPreferredAuthPath } from "../../utils/routeContext";
 import OptimizedImage from "../common/OptimizedImage";
 
 export default function UserMenu({ isArtistWorkspace = false }) {
+  const location = useLocation();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const role = useAuthStore((state) => state.role);
@@ -16,9 +18,13 @@ export default function UserMenu({ isArtistWorkspace = false }) {
   const menuRef = useRef(null);
   const displayName = user?.display_name || user?.email || "User";
   const profilePath = "/me";
-  const isArtistSession =
-    isArtistWorkspace || role === "ARTIST" || authContext === "artist_request";
-  const authPath = isArtistSession ? "/artist-auth" : "/login";
+  const authPath = getPreferredAuthPath({
+    pathname: location.pathname,
+    search: location.search,
+    role,
+    authContext,
+    fallback: isArtistWorkspace ? "/artist-auth" : "/login",
+  });
   const triggerClassName = isArtistWorkspace
     ? "flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-sky-200/[0.14] bg-[#182337] text-sm font-semibold text-slate-100/90 transition md:hover:border-sky-200/[0.3] md:hover:bg-[#22324d]"
     : "flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-[#1a1a1a] text-sm font-semibold text-white/85 transition md:hover:border-white/30 md:hover:bg-[#242424]";
@@ -51,13 +57,9 @@ export default function UserMenu({ isArtistWorkspace = false }) {
     navigate(profilePath);
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     setIsOpen(false);
-    await logout();
-    if (typeof window !== "undefined" && authPath === "/artist-auth") {
-      window.location.replace(authPath);
-      return;
-    }
+    void logout({ preferredAuthPath: authPath });
     navigate(authPath, { replace: true });
   };
 

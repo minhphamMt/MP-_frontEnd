@@ -9,6 +9,7 @@ import Sidebar from "../components/sidebar/Sidebar";
 import useAuthStore from "../store/auth.store";
 import { AUTH_REQUIRED_EVENT, getAuthRequiredMessage } from "../utils/authPrompt";
 import { APP_TOAST_EVENT } from "../utils/appToast";
+import { shouldUseArtistTheme } from "../utils/routeContext";
 
 export default function MainLayout() {
   const mainRef = useRef(null);
@@ -22,14 +23,18 @@ export default function MainLayout() {
     duration: 2600,
   });
   const role = useAuthStore((state) => state.role);
+  const authContext = useAuthStore((state) => state.authContext);
   const isAdminRoute = location.pathname.startsWith("/admin");
-  const isArtistWorkspaceRoute =
-    /^\/artist\/(dashboard|profile|albums|songs|trash)(\/|$)/.test(
-      location.pathname
-    );
-  const isUserRoute = !isAdminRoute && !isArtistWorkspaceRoute;
+  const usesArtistExperience =
+    !isAdminRoute &&
+    shouldUseArtistTheme({
+      pathname: location.pathname,
+      search: location.search,
+      role,
+      authContext,
+    });
+  const isUserRoute = !isAdminRoute && !usesArtistExperience;
   const shouldShowPlayer = role !== "ARTIST" && role !== "ADMIN";
-  const isArtistChrome = role === "ARTIST";
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -118,17 +123,17 @@ export default function MainLayout() {
   }, [isSidebarOpen]);
 
   return (
-    <div className="flex h-screen flex-col bg-[#000000] text-white">
+    <div className="app-shell flex flex-col bg-[#000000] text-white">
       <Header
         onMenuClick={() => setIsSidebarOpen(true)}
-        isArtistWorkspace={isArtistChrome}
+        isArtistWorkspace={usesArtistExperience}
       />
 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
-          isArtistWorkspace={isArtistChrome}
+          isArtistWorkspace={usesArtistExperience}
         />
 
         <main
@@ -136,7 +141,7 @@ export default function MainLayout() {
           className={`scrollbar-page relative min-w-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 ${
             isAdminRoute
               ? "admin-main-surface bg-[#0a0a0a]"
-              : isArtistWorkspaceRoute
+              : usesArtistExperience
                 ? "artist-main-surface bg-[#0c1623]"
                 : "user-main-surface bg-[#0a0a0a]"
           }`}
@@ -145,7 +150,7 @@ export default function MainLayout() {
             className={`relative z-10 w-full min-w-0 ${
               isAdminRoute
                 ? "admin-content"
-                : isArtistWorkspaceRoute
+                : usesArtistExperience
                   ? "artist-content"
                   : isUserRoute
                     ? "user-content"

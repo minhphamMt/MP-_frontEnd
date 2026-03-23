@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FiMail, FiMusic } from "react-icons/fi";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import AuthShell from "../components/auth/AuthShell";
 import {
   AuthCard,
@@ -31,6 +31,31 @@ const formSwapTransition = {
 
 const DISPLAY_NAME_REGEX = /^[\p{L}\p{N}\s._'-]+$/u;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const getModeFromSearch = (search = "") =>
+  new URLSearchParams(search).get("mode")?.toLowerCase() === "register" ? "register" : "login";
+
+const replaceAuthBrowserUrl = ({ mode, clearVerificationFlags = false } = {}) => {
+  if (typeof window === "undefined") return;
+
+  const nextUrl = new URL(window.location.href);
+
+  if (mode === "register") {
+    nextUrl.searchParams.set("mode", "register");
+  } else if (mode === "login") {
+    nextUrl.searchParams.delete("mode");
+  }
+
+  if (clearVerificationFlags) {
+    ["verified", "success", "status"].forEach((key) => nextUrl.searchParams.delete(key));
+  }
+
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`
+  );
+};
 
 const extractFirebaseErrorMessage = (err) => {
   const status = err?.response?.status;
@@ -81,10 +106,9 @@ const validateRegisterFields = ({ displayName, email, password, confirmPassword 
   return errors;
 };
 
-export default function Login({ initialMode = "login" }) {
+export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
   const {
     login,
     register,
@@ -96,7 +120,12 @@ export default function Login({ initialMode = "login" }) {
     loading,
   } = useAuthStore();
 
-  const [mode, setMode] = useState(initialMode);
+  const [mode, setMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      return getModeFromSearch(window.location.search || location.search);
+    }
+    return getModeFromSearch(location.search);
+  });
   const [errorPopup, setErrorPopup] = useState("");
 
   const [loginEmail, setLoginEmail] = useState("");
@@ -134,9 +163,10 @@ export default function Login({ initialMode = "login" }) {
   useEffect(() => {
     if (mode !== "login") return;
 
-    const verifiedFlag = (searchParams.get("verified") || "").toLowerCase();
-    const successFlag = (searchParams.get("success") || "").toLowerCase();
-    const status = (searchParams.get("status") || "").toLowerCase();
+    const currentSearchParams = new URLSearchParams(location.search);
+    const verifiedFlag = (currentSearchParams.get("verified") || "").toLowerCase();
+    const successFlag = (currentSearchParams.get("success") || "").toLowerCase();
+    const status = (currentSearchParams.get("status") || "").toLowerCase();
     const isVerifiedFromQuery =
       verifiedFlag === "1" ||
       verifiedFlag === "true" ||
@@ -154,9 +184,7 @@ export default function Login({ initialMode = "login" }) {
       localStorage.setItem("email_verification_completed_at", `${Date.now()}`);
 
       if (isVerifiedFromQuery) {
-        const nextSearch = new URLSearchParams(searchParams);
-        ["verified", "success", "status"].forEach((key) => nextSearch.delete(key));
-        setSearchParams(nextSearch, { replace: true });
+        replaceAuthBrowserUrl({ mode: "login", clearVerificationFlags: true });
       }
       return;
     }
@@ -165,11 +193,7 @@ export default function Login({ initialMode = "login" }) {
       setLoginNotice("Xác nhận email thành công. Bạn có thể đăng nhập ngay.");
       navigate(location.pathname, { replace: true, state: null });
     }
-  }, [location.pathname, location.state, mode, navigate, searchParams, setSearchParams]);
-
-  useEffect(() => {
-    setMode(initialMode);
-  }, [initialMode]);
+  }, [location.pathname, location.search, location.state, mode, navigate]);
 
   usePageMetadata({
     title: mode === "login" ? "Đăng nhập" : "Đăng ký",
@@ -177,7 +201,7 @@ export default function Login({ initialMode = "login" }) {
       mode === "login"
         ? "Đăng nhập Khoaluan Music để tiếp tục nghe nhạc."
         : "Tạo tài khoản Khoaluan Music để bắt đầu nghe nhạc.",
-    url: mode === "login" ? "/login" : "/register",
+    url: mode === "login" ? "/login" : "/login?mode=register",
     robots: "noindex, nofollow",
   });
 
@@ -186,9 +210,10 @@ export default function Login({ initialMode = "login" }) {
   };
 
   const handleNavigate = (nextMode) => {
+    if (nextMode === mode) return;
     setMode(nextMode);
     setRegisterNotice("");
-    navigate(nextMode === "login" ? "/login" : "/register");
+    replaceAuthBrowserUrl({ mode: nextMode });
   };
 
   const navigateWithIntro = (to) => {
@@ -249,8 +274,7 @@ export default function Login({ initialMode = "login" }) {
         setAwaitingVerification(true);
         setVerificationCode("");
         setRegisterNotice(
-          result.message ||
-            "Nhập mã xác thực 6 số đã gửi về email để hoàn tất đăng ký."
+          result.message || "Nhập mã xác thực 6 số đã gửi về email để hoàn tất đăng ký."
         );
         return;
       }
@@ -305,9 +329,7 @@ export default function Login({ initialMode = "login" }) {
       return navigateWithIntro("/");
     } catch (err) {
       showError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Không thể xác thực mã, vui lòng thử lại."
+        err?.response?.data?.message || err?.message || "Không thể xác thực mã, vui lòng thử lại."
       );
     }
   };
@@ -369,7 +391,7 @@ export default function Login({ initialMode = "login" }) {
   };
 
   const openForgotModal = () => {
-    setForgotEmail(loginEmail);
+    setForgotEmail(loginEmail || registerEmail);
     setForgotMessage("");
     setForgotCode("");
     setForgotNewPassword("");
@@ -390,7 +412,11 @@ export default function Login({ initialMode = "login" }) {
     >
       <AuthCard variant="main" className="auth-fit-card p-5 sm:p-6">
         <form onSubmit={mode === "login" ? handleLogin : handleRegister}>
-          <MotionDiv layout="position" transition={cardLayoutTransition} className="flex flex-col items-center text-center">
+          <MotionDiv
+            layout="position"
+            transition={cardLayoutTransition}
+            className="flex flex-col items-center text-center"
+          >
             <button
               type="button"
               onClick={() => navigate("/")}
@@ -418,126 +444,121 @@ export default function Login({ initialMode = "login" }) {
             transition={cardLayoutTransition}
             className="auth-form-stage relative mt-4 overflow-hidden"
           >
-              <MotionDiv
-                initial={false}
-                animate={
-                  mode === "login"
-                    ? { opacity: 1, x: 0, y: 0, scale: 1 }
-                    : { opacity: 0, x: -14, y: 4, scale: 0.994 }
-                }
-                transition={formSwapTransition}
-                className={`space-y-3 will-change-transform ${mode === "login" ? "relative" : "pointer-events-none absolute inset-0"}`}
-              >
-                <AuthField
-                  label="Email"
-                  value={loginEmail}
-                  onChange={(event) => setLoginEmail(event.target.value)}
-                  placeholder="email@example.com"
-                  type="email"
-                  autoComplete="email"
-                  required={isLoginMode}
-                  disabled={!isLoginMode}
+            <MotionDiv
+              initial={false}
+              animate={
+                mode === "login"
+                  ? { opacity: 1, x: 0, y: 0, scale: 1 }
+                  : { opacity: 0, x: -14, y: 4, scale: 0.994 }
+              }
+              transition={formSwapTransition}
+              className={`space-y-3 will-change-transform ${mode === "login" ? "relative" : "pointer-events-none absolute inset-0"}`}
+            >
+              <AuthField
+                label="Email"
+                value={loginEmail}
+                onChange={(event) => setLoginEmail(event.target.value)}
+                placeholder="email@example.com"
+                type="email"
+                autoComplete="email"
+                required={isLoginMode}
+                disabled={!isLoginMode}
+              />
+
+              <AuthPasswordField
+                label="Mật khẩu"
+                value={loginPassword}
+                onChange={(event) => setLoginPassword(event.target.value)}
+                autoComplete="current-password"
+                showPassword={showLoginPassword}
+                toggleShowPassword={() => setShowLoginPassword((prev) => !prev)}
+                required={isLoginMode}
+                disabled={!isLoginMode}
+              />
+
+              <div className="flex items-center justify-end">
+                <button type="button" onClick={openForgotModal} className="text-xs font-medium auth-ui-link">
+                  Quên mật khẩu?
+                </button>
+              </div>
+
+              {loginNotice ? <AuthMessage tone="success">{loginNotice}</AuthMessage> : null}
+            </MotionDiv>
+
+            <MotionDiv
+              initial={false}
+              animate={
+                mode === "register"
+                  ? { opacity: 1, x: 0, y: 0, scale: 1 }
+                  : { opacity: 0, x: 14, y: 4, scale: 0.994 }
+              }
+              transition={formSwapTransition}
+              className={`space-y-3 pb-1 will-change-transform ${mode === "register" ? "relative" : "pointer-events-none absolute inset-0"}`}
+            >
+              <AuthField
+                label="Tên hiển thị"
+                value={displayName}
+                onChange={(event) => {
+                  setDisplayName(event.target.value);
+                  setRegisterFieldErrors((prev) => ({ ...prev, displayName: "" }));
+                }}
+                placeholder="Tên hiển thị"
+                type="text"
+                autoComplete="name"
+                required={isRegisterMode}
+                disabled={!isRegisterMode}
+                error={registerFieldErrors.displayName}
+              />
+
+              <AuthField
+                label="Email"
+                value={registerEmail}
+                onChange={(event) => {
+                  setRegisterEmail(event.target.value);
+                  setRegisterFieldErrors((prev) => ({ ...prev, email: "" }));
+                }}
+                placeholder="email@example.com"
+                type="email"
+                autoComplete="email"
+                required={isRegisterMode}
+                disabled={!isRegisterMode}
+                error={registerFieldErrors.email}
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <AuthPasswordField
+                  label="Mật khẩu"
+                  value={registerPassword}
+                  onChange={(event) => {
+                    setRegisterPassword(event.target.value);
+                    setRegisterFieldErrors((prev) => ({ ...prev, password: "" }));
+                  }}
+                  autoComplete="new-password"
+                  showPassword={showRegisterPassword}
+                  toggleShowPassword={() => setShowRegisterPassword((prev) => !prev)}
+                  required={isRegisterMode}
+                  disabled={!isRegisterMode}
+                  error={registerFieldErrors.password}
                 />
 
                 <AuthPasswordField
-                  label="Mật khẩu"
-                  value={loginPassword}
-                  onChange={(event) => setLoginPassword(event.target.value)}
-                  autoComplete="current-password"
-                  showPassword={showLoginPassword}
-                  toggleShowPassword={() => setShowLoginPassword((prev) => !prev)}
-                  required={isLoginMode}
-                  disabled={!isLoginMode}
+                  label="Nhập lại mật khẩu"
+                  value={confirmPassword}
+                  onChange={(event) => {
+                    setConfirmPassword(event.target.value);
+                    setRegisterFieldErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                  }}
+                  autoComplete="new-password"
+                  showPassword={showConfirmPassword}
+                  toggleShowPassword={() => setShowConfirmPassword((prev) => !prev)}
+                  required={isRegisterMode}
+                  disabled={!isRegisterMode}
+                  error={registerFieldErrors.confirmPassword}
                 />
+              </div>
 
-                <div className="flex items-center justify-end">
-                  <button type="button" onClick={openForgotModal} className="text-xs font-medium auth-ui-link">
-                    Quên mật khẩu?
-                  </button>
-                </div>
-
-                {loginNotice ? <AuthMessage tone="success">{loginNotice}</AuthMessage> : null}
-              </MotionDiv>
-
-              <MotionDiv
-                initial={false}
-                animate={
-                  mode === "register"
-                    ? { opacity: 1, x: 0, y: 0, scale: 1 }
-                    : { opacity: 0, x: 14, y: 4, scale: 0.994 }
-                }
-                transition={formSwapTransition}
-                className={`space-y-3 pb-1 will-change-transform ${mode === "register" ? "relative" : "pointer-events-none absolute inset-0"}`}
-              >
-                <div className="grid gap-3">
-                  <AuthField
-                    label="Tên hiển thị"
-                    value={displayName}
-                    onChange={(event) => {
-                      setDisplayName(event.target.value);
-                      setRegisterFieldErrors((prev) => ({ ...prev, displayName: "" }));
-                    }}
-                    placeholder="Tên hiển thị"
-                    type="text"
-                  autoComplete="name"
-                  required={isRegisterMode}
-                  disabled={!isRegisterMode}
-                  error={registerFieldErrors.displayName}
-                  />
-
-                  <AuthField
-                    label="Email"
-                    value={registerEmail}
-                    onChange={(event) => {
-                      setRegisterEmail(event.target.value);
-                      setRegisterFieldErrors((prev) => ({ ...prev, email: "" }));
-                    }}
-                    placeholder="email@example.com"
-                    type="email"
-                  autoComplete="email"
-                  required={isRegisterMode}
-                  disabled={!isRegisterMode}
-                  error={registerFieldErrors.email}
-                  />
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <AuthPasswordField
-                    label="Mật khẩu"
-                    value={registerPassword}
-                    onChange={(event) => {
-                      setRegisterPassword(event.target.value);
-                      setRegisterFieldErrors((prev) => ({ ...prev, password: "" }));
-                    }}
-                    autoComplete="new-password"
-                    showPassword={showRegisterPassword}
-                    toggleShowPassword={() => setShowRegisterPassword((prev) => !prev)}
-                    required={isRegisterMode}
-                    disabled={!isRegisterMode}
-                    error={registerFieldErrors.password}
-                  />
-
-                  <AuthPasswordField
-                    label="Nhập lại mật khẩu"
-                    value={confirmPassword}
-                    onChange={(event) => {
-                      setConfirmPassword(event.target.value);
-                      setRegisterFieldErrors((prev) => ({
-                        ...prev,
-                        confirmPassword: "",
-                      }));
-                    }}
-                    autoComplete="new-password"
-                    showPassword={showConfirmPassword}
-                    toggleShowPassword={() => setShowConfirmPassword((prev) => !prev)}
-                    required={isRegisterMode}
-                    disabled={!isRegisterMode}
-                    error={registerFieldErrors.confirmPassword}
-                  />
-                </div>
-
-                {registerNotice ? <AuthMessage tone="success">{registerNotice}</AuthMessage> : null}
-              </MotionDiv>
+              {registerNotice ? <AuthMessage tone="success">{registerNotice}</AuthMessage> : null}
+            </MotionDiv>
           </MotionDiv>
 
           <MotionDiv
@@ -589,7 +610,7 @@ export default function Login({ initialMode = "login" }) {
         </form>
       </AuthCard>
       <p className="pointer-events-none absolute left-1/2 top-full mt-4 -translate-x-1/2 whitespace-nowrap text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/34">
-        KLTN MINH PHẠM CS64-NEU
+        KLTN Pham Dinh Minh CS64-NEU
       </p>
     </MotionDiv>
   );

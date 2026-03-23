@@ -81,6 +81,13 @@
         font-family: "Segoe UI", "Noto Sans", "Tahoma", Arial, sans-serif;
         font-size: 14px;
         line-height: 1.4;
+        contain: layout paint style;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        will-change: opacity, transform;
+        transition: opacity 220ms ease, visibility 0s linear 220ms;
       }
 
       #app-boot-intro,
@@ -197,8 +204,14 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        min-height: 100svh;
+        min-height: 100dvh;
         min-height: 100vh;
         padding: 24px;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
       }
 
       .boot-intro__card {
@@ -211,9 +224,14 @@
         box-shadow:
           0 26px 80px rgba(0, 0, 0, 0.36),
           inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        -webkit-backdrop-filter: blur(20px);
         backdrop-filter: blur(20px);
         padding: 28px 26px;
         text-align: center;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
       }
 
       .boot-intro__badge {
@@ -283,14 +301,25 @@
         justify-content: center;
         gap: 8px;
         margin-top: 24px;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        will-change: transform;
       }
 
       .boot-intro__bars span {
+        display: block;
         width: 6px;
         height: 32px;
         border-radius: 999px;
         background: linear-gradient(to top, rgba(var(--boot-accent), 0.35), rgba(var(--boot-grid-strong), 0.92));
+        transform-origin: center bottom;
+        transform: translateZ(0) scaleY(0.58);
+        -webkit-transform: translateZ(0) scaleY(0.58);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        will-change: transform, opacity;
         animation: bootIntroPulse 1.05s ease-in-out infinite;
+        -webkit-animation: bootIntroPulse 1.05s ease-in-out infinite;
       }
 
       .boot-intro__bars span:nth-child(2) { animation-delay: 0.09s; }
@@ -320,6 +349,7 @@
         transform-origin: left center;
         background: linear-gradient(to right, rgba(var(--boot-grid-strong), 0.85), rgba(var(--boot-accent), 0.95));
         animation: bootIntroProgress 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        will-change: transform;
       }
 
       @keyframes bootIntroPulse {
@@ -328,16 +358,34 @@
         65% { transform: scaleY(0.7); opacity: 0.56; }
       }
 
+      @-webkit-keyframes bootIntroPulse {
+        0%, 100% { -webkit-transform: scaleY(0.58); opacity: 0.4; }
+        35% { -webkit-transform: scaleY(1); opacity: 1; }
+        65% { -webkit-transform: scaleY(0.7); opacity: 0.56; }
+      }
+
       @keyframes bootIntroProgress {
         0% { transform: translateX(-18%) scaleX(0.16); }
         70% { transform: translateX(0) scaleX(0.88); }
         100% { transform: translateX(0) scaleX(0.98); }
       }
 
+      @-webkit-keyframes bootIntroProgress {
+        0% { -webkit-transform: translateX(-18%) scaleX(0.16); }
+        70% { -webkit-transform: translateX(0) scaleX(0.88); }
+        100% { -webkit-transform: translateX(0) scaleX(0.98); }
+      }
+
       @media (max-width: 767px) {
+        #app-boot-intro {
+          transition-duration: 260ms;
+        }
+
         .boot-intro__card {
           padding: 24px 20px;
           border-radius: 28px;
+          -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px);
         }
 
         .boot-intro__logo-frame {
@@ -350,6 +398,25 @@
           opacity: 0.22;
         }
 
+        .boot-intro__tunnel-layer {
+          opacity: 0.86;
+        }
+
+        .boot-intro__noise {
+          opacity: 0.045;
+        }
+
+        .boot-intro__bars {
+          gap: 10px;
+        }
+
+        .boot-intro__bars span {
+          width: 7px;
+          height: 30px;
+          animation-duration: 0.96s;
+          -webkit-animation-duration: 0.96s;
+        }
+
         .boot-intro__logo-frame::before {
           border-radius: 26px;
         }
@@ -359,11 +426,45 @@
       (function () {
         var path = window.location.pathname || "/";
         var params = new URLSearchParams(window.location.search || "");
+        var normalizedPath =
+          path !== "/" ? path.replace(/\/+$/, "") || "/" : "/";
+        var segments = normalizedPath.split("/").filter(Boolean);
+        var artistWorkspaceSections = {
+          dashboard: true,
+          profile: true,
+          albums: true,
+          songs: true,
+          trash: true,
+        };
+        var isArtistWorkspace =
+          normalizedPath === "/artist" ||
+          (segments[0] === "artist" &&
+            artistWorkspaceSections[segments[1]] === true);
+        var role = null;
+        var authContext = "default";
+
+        if (normalizedPath === "/me") {
+          try {
+            var rawAuthState = window.localStorage.getItem("auth-state");
+            if (rawAuthState) {
+              var parsedAuthState = JSON.parse(rawAuthState) || {};
+              role =
+                (parsedAuthState.user && parsedAuthState.user.role) ||
+                parsedAuthState.role ||
+                null;
+              authContext = parsedAuthState.authContext || "default";
+            }
+          } catch (error) {}
+        }
+
         var isArtistRoute =
-          path === "/artist-auth" ||
-          path === "/artist-request" ||
-          path.indexOf("/artist/") === 0 ||
-          (path === "/verify-email" && params.get("intent") === "artist");
+          normalizedPath === "/artist-auth" ||
+          normalizedPath === "/artist-request" ||
+          isArtistWorkspace ||
+          (normalizedPath === "/verify-email" &&
+            params.get("intent") === "artist") ||
+          (normalizedPath === "/me" &&
+            (role === "ARTIST" || authContext === "artist_request"));
         document.documentElement.setAttribute("data-boot-theme", isArtistRoute ? "artist" : "listener");
       })();
     </script>

@@ -58,6 +58,33 @@ body {
   /* zoom: 0.92; */
 }
 
+#root {
+  min-height: 100svh;
+  min-height: 100dvh;
+  background: inherit;
+  isolation: isolate;
+}
+
+.app-shell {
+  height: 100svh;
+  height: 100dvh;
+  min-height: 100svh;
+  min-height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.app-shell .scrollbar-page {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
 .ui-skeleton {
   position: relative;
   overflow: hidden;
@@ -1772,6 +1799,16 @@ body {
 
 .auth-form-stage {
   width: 100%;
+  isolation: isolate;
+  will-change: height;
+}
+
+.auth-form-panel {
+  width: 100%;
+  transform: translateZ(0);
+  transform-origin: top center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .auth-actions {

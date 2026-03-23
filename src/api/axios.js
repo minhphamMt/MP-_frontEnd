@@ -9,110 +9,167 @@ const api = axios.create({
   },
 });
 
-// ========== REQUEST: attach access token ==========
+const createAuthStateChangedError = () =>
+  new axios.CanceledError("Auth state changed");
+
+const setApiDefaultAuthorization = (token) => {
+  if (token) {
+    api.defaults.headers.common.Authorization = `Bearer ${token}`;
+    return;
+  }
+
+  delete api.defaults.headers.common.Authorization;
+};
+
+const getAuthStateSignature = () => {
+  const { user, role, authContext, accessToken, refreshToken, isAuthenticated } =
+    useAuthStore.getState();
+  const identity = user?.id ?? user?._id ?? user?.email ?? "anonymous";
+
+  return [
+    identity,
+    role || "USER",
+    authContext || "default",
+    accessToken || "",
+    refreshToken || "",
+    isAuthenticated ? "1" : "0",
+  ].join("|");
+};
+
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((request) =>
+    error ? request.reject(error) : request.resolve(token)
+  );
+  failedQueue = [];
+};
+
+export const syncApiAuthRuntime = ({
+  accessToken = null,
+  resetPending = false,
+} = {}) => {
+  setApiDefaultAuthorization(accessToken);
+
+  if (!resetPending) return;
+
+  isRefreshing = false;
+  processQueue(createAuthStateChangedError(), null);
+};
+
 api.interceptors.request.use(
   (config) => {
+    config.headers = config.headers || {};
+
     if (config.data instanceof FormData) {
-      config.headers = config.headers || {};
       delete config.headers["Content-Type"];
     }
+
     const token = useAuthStore.getState().accessToken;
     if (token) {
-      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      delete config.headers.Authorization;
     }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// ========== RESPONSE: refresh token on 401 ==========
-let isRefreshing = false;
-let failedQueue = [];
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)));
-  failedQueue = [];
-};
-
 api.interceptors.response.use(
-  (res) => res,
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // Không có response => lỗi mạng/CORS...
-    if (!error.response) return Promise.reject(error);
+    if (!error.response || !originalRequest) {
+      return Promise.reject(error);
+    }
 
     const status = error.response.status;
+    if (status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
+    }
 
-    // Chỉ xử lý 401, và không retry vô hạn
-    if (status === 401 && !originalRequest._retry) {
-      // Không refresh cho chính endpoint refresh (tránh loop)
-      if (originalRequest.url?.includes("/auth/refresh")) {
+    const authStateSignature = getAuthStateSignature();
+
+    if (originalRequest.url?.includes("/auth/refresh")) {
+      useAuthStore.getState().logout();
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      }).then((token) => {
+        if (!token) {
+          throw createAuthStateChangedError();
+        }
+
+        originalRequest.headers = originalRequest.headers || {};
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return api(originalRequest);
+      });
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+      const refreshToken = useAuthStore.getState().refreshToken;
+      if (!refreshToken) {
         useAuthStore.getState().logout();
+        processQueue(new Error("Missing refresh token"), null);
         return Promise.reject(error);
       }
 
-      // Nếu đang refresh, queue request lại
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then((token) => {
-          originalRequest.headers = originalRequest.headers || {};
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        });
+      const refreshResponse = await api.post("/auth/refresh", { refreshToken });
+
+      if (authStateSignature !== getAuthStateSignature()) {
+        const canceledError = createAuthStateChangedError();
+        processQueue(canceledError, null);
+        return Promise.reject(canceledError);
       }
 
-      originalRequest._retry = true;
-      isRefreshing = true;
+      const newToken =
+        refreshResponse.data?.accessToken ||
+        refreshResponse.data?.data?.accessToken ||
+        null;
+      const newRefreshToken =
+        refreshResponse.data?.refreshToken ||
+        refreshResponse.data?.data?.refreshToken ||
+        refreshToken;
 
-      try {
-        const refreshToken = useAuthStore.getState().refreshToken;
-        if (!refreshToken) {
-          useAuthStore.getState().logout();
-          processQueue(new Error("Missing refresh token"), null);
-          return Promise.reject(error);
-        }
-
-        const refreshRes = await api.post("/auth/refresh", { refreshToken });
-
-        // Backend thường trả: { accessToken, ... }
-        const newToken =
-          refreshRes.data?.accessToken ||
-          refreshRes.data?.data?.accessToken ||
-          null;
-        const newRefreshToken =
-          refreshRes.data?.refreshToken ||
-          refreshRes.data?.data?.refreshToken ||
-          refreshToken;
-
-        if (!newToken) {
-          useAuthStore.getState().logout();
-          processQueue(new Error("Refresh did not return accessToken"), null);
-          return Promise.reject(error);
-        }
-
-        useAuthStore.getState().setTokens({
-          accessToken: newToken,
-          refreshToken: newRefreshToken,
-        });
-        processQueue(null, newToken);
-
-        // Retry request cũ
-        originalRequest.headers = originalRequest.headers || {};
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return api(originalRequest);
-      } catch (err) {
-        processQueue(err, null);
+      if (!newToken) {
         useAuthStore.getState().logout();
-        return Promise.reject(err);
-      } finally {
-        isRefreshing = false;
+        processQueue(new Error("Refresh did not return accessToken"), null);
+        return Promise.reject(error);
       }
-    }
 
-    return Promise.reject(error);
+      useAuthStore.getState().setTokens({
+        accessToken: newToken,
+        refreshToken: newRefreshToken,
+      });
+      setApiDefaultAuthorization(newToken);
+      processQueue(null, newToken);
+
+      originalRequest.headers = originalRequest.headers || {};
+      originalRequest.headers.Authorization = `Bearer ${newToken}`;
+      return api(originalRequest);
+    } catch (refreshError) {
+      if (authStateSignature !== getAuthStateSignature()) {
+        const canceledError = createAuthStateChangedError();
+        processQueue(canceledError, null);
+        return Promise.reject(canceledError);
+      }
+
+      processQueue(refreshError, null);
+      useAuthStore.getState().logout();
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
   }
 );
 

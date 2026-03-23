@@ -1,5 +1,6 @@
-﻿import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import useAuthStore from "../store/auth.store";
+import { getPreferredAuthPath } from "../utils/routeContext";
 
 function RouteLoadingState() {
   return null;
@@ -7,8 +8,21 @@ function RouteLoadingState() {
 
 export default function ProtectedRoute({ allowedRoles, allowGuests = false }) {
   const location = useLocation();
-  const { isAuthenticated, role, loading, isAuthReady, authContext } =
-    useAuthStore();
+  const {
+    isAuthenticated,
+    role,
+    loading,
+    isAuthReady,
+    authContext,
+    preferredAuthPath,
+  } = useAuthStore();
+  const authPath = getPreferredAuthPath({
+    pathname: location.pathname,
+    search: location.search,
+    role,
+    authContext,
+    fallback: preferredAuthPath,
+  });
 
   if (loading || !isAuthReady) {
     return <RouteLoadingState />;
@@ -26,7 +40,7 @@ export default function ProtectedRoute({ allowedRoles, allowGuests = false }) {
     return allowGuests ? (
       <Outlet />
     ) : (
-      <Navigate to="/login" replace state={{ from: location }} />
+      <Navigate to={authPath} replace state={{ from: location }} />
     );
   }
 

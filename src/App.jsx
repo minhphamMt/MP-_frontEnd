@@ -1,14 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
 import useAuthStore from "./store/auth.store";
+import { syncBootIntroTheme } from "./utils/bootIntro";
 
 const INTRO_DURATION_MS = 2200;
 const INTRO_DURATION_REDUCED_MS = 1600;
 
 export default function App() {
+  const location = useLocation();
   const bootstrapAuth = useAuthStore((state) => state.bootstrapAuth);
   const isAuthReady = useAuthStore((state) => state.isAuthReady);
+  const role = useAuthStore((state) => state.role);
+  const authContext = useAuthStore((state) => state.authContext);
   const [introMinElapsed, setIntroMinElapsed] = useState(false);
+  const hideIntroFrameRef = useRef(0);
+  const hideIntroCommitRef = useRef(0);
 
   useEffect(() => {
     bootstrapAuth();
@@ -30,19 +37,39 @@ export default function App() {
 
   const bootIntroVisible = !introMinElapsed || !isAuthReady;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    syncBootIntroTheme({
+      pathname: location.pathname,
+      search: location.search,
+      role,
+      authContext,
+    });
+  }, [authContext, location.pathname, location.search, role]);
+
+  useLayoutEffect(() => {
     if (typeof document === "undefined") return undefined;
+    if (typeof window === "undefined") return undefined;
 
     const bootIntro = document.getElementById("app-boot-intro");
     if (!bootIntro) return undefined;
 
+    window.cancelAnimationFrame(hideIntroFrameRef.current);
+    window.cancelAnimationFrame(hideIntroCommitRef.current);
+
     if (bootIntroVisible) {
       bootIntro.classList.remove("is-hidden");
     } else {
-      bootIntro.classList.add("is-hidden");
+      hideIntroFrameRef.current = window.requestAnimationFrame(() => {
+        hideIntroCommitRef.current = window.requestAnimationFrame(() => {
+          bootIntro.classList.add("is-hidden");
+        });
+      });
     }
 
-    return undefined;
+    return () => {
+      window.cancelAnimationFrame(hideIntroFrameRef.current);
+      window.cancelAnimationFrame(hideIntroCommitRef.current);
+    };
   }, [bootIntroVisible]);
 
   return <AppRoutes />;

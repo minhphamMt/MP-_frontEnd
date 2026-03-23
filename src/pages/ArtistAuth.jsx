@@ -499,7 +499,7 @@ export default function ArtistAuth() {
         </form>
       </AuthCard>
       <p className="pointer-events-none absolute left-1/2 top-full mt-4 -translate-x-1/2 whitespace-nowrap text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/34">
-        KLTN MINH PHẠM CS64-NEU
+        KLTN Pham Dinh Minh CS64-NEU
       </p>
     </MotionDiv>
   );

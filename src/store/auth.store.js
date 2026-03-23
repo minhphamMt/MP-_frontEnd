@@ -1,17 +1,19 @@
 import { create } from "zustand";
 import {
-  loginApi,
-  registerApi,
-  getMeApi,
-  firebaseLoginApi,
   artistLoginApi,
   artistRegisterApi,
-  verifyEmailApi,
-  resendVerificationApi,
+  firebaseLoginApi,
   forgotPasswordApi,
-  resetPasswordApi,
+  getMeApi,
+  loginApi,
   logoutApi,
+  registerApi,
+  resendVerificationApi,
+  resetPasswordApi,
+  verifyEmailApi,
 } from "../api/auth.api";
+import { getPreferredAuthPath } from "../utils/routeContext";
+
 const STORAGE_KEY = "auth-state";
 
 const resetSessionStores = async () => {
@@ -30,7 +32,9 @@ const resetSessionStores = async () => {
   }
 
   try {
-    const { default: useArtistFollowStore } = await import("./artist-follow.store");
+    const { default: useArtistFollowStore } = await import(
+      "./artist-follow.store"
+    );
     useArtistFollowStore.getState().clearFollowedArtists?.();
   } catch (error) {
     console.warn("Failed to reset artist follow store", error);
@@ -69,6 +73,9 @@ const loadStoredAuth = () => {
   const refreshToken = parsed.refreshToken || null;
   const role = user?.role || parsed.role || null;
   const authContext = parsed.authContext || "default";
+  const preferredAuthPath =
+    parsed.preferredAuthPath ||
+    getPreferredAuthPath({ role, authContext });
 
   return {
     user,
@@ -76,6 +83,7 @@ const loadStoredAuth = () => {
     refreshToken,
     role,
     authContext,
+    preferredAuthPath,
     isAuthenticated: Boolean(user && (accessToken || refreshToken)),
   };
 };
@@ -90,6 +98,7 @@ const persistAuthState = (state) => {
       role: state.role,
       authContext: state.authContext,
       refreshToken: state.refreshToken,
+      preferredAuthPath: state.preferredAuthPath,
     };
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -103,40 +112,60 @@ const clearStoredAuth = () => {
   localStorage.removeItem(STORAGE_KEY);
 };
 
-/**
- * Auth store
- * - login / register / loadUser / logout
- * - role-based: USER | ARTIST | ADMIN
- * - accessToken kept in memory
- */
 const {
   user: storedUser,
   accessToken: storedToken,
   refreshToken: storedRefreshToken,
   role: storedRole,
   authContext: storedAuthContext,
+  preferredAuthPath: storedPreferredAuthPath,
   isAuthenticated: storedIsAuthenticated,
 } = loadStoredAuth();
+
 const hasStoredTokens = Boolean(storedToken || storedRefreshToken);
 
+const buildPreferredAuthPath = ({ role = null, authContext = "default" } = {}) =>
+  getPreferredAuthPath({ role, authContext });
+
+const syncApiAuthRuntime = ({ accessToken = null, resetPending = false } = {}) => {
+  import("../api/axios")
+    .then(({ syncApiAuthRuntime: syncRuntime }) => {
+      syncRuntime({ accessToken, resetPending });
+    })
+    .catch((error) => {
+      console.warn("Failed to sync api auth runtime", error);
+    });
+};
+
+const beginAuthRequest = (set, get) => {
+  const nextVersion = (get().authRequestVersion || 0) + 1;
+  set({
+    loading: true,
+    isAuthReady: false,
+    authRequestVersion: nextVersion,
+  });
+  return nextVersion;
+};
+
+const isAuthRequestCurrent = (get, requestVersion) =>
+  (get().authRequestVersion || 0) === requestVersion;
+
 const useAuthStore = create((set, get) => ({
-  /* =====================
-     STATE
-     ===================== */
   user: storedUser || null,
   accessToken: storedToken || null,
   refreshToken: storedRefreshToken || null,
   role: storedRole || null,
   authContext: storedAuthContext || "default",
+  preferredAuthPath:
+    storedPreferredAuthPath ||
+    buildPreferredAuthPath({
+      role: storedRole || null,
+      authContext: storedAuthContext || "default",
+    }),
   isAuthenticated: storedIsAuthenticated || false,
   loading: false,
-
-  // 🔴 QUAN TRỌNG: auth đã sẵn sàng hay chưa
   isAuthReady: !hasStoredTokens,
-
-  /* =====================
-     ACTIONS
-     ===================== */
+  authRequestVersion: 0,
 
   setTokens: ({ accessToken, refreshToken }) => {
     const currentState = get();
@@ -157,23 +186,41 @@ const useAuthStore = create((set, get) => ({
       isAuthenticated: nextState.isAuthenticated,
     });
     persistAuthState(nextState);
+    syncApiAuthRuntime({ accessToken: nextState.accessToken });
   },
+
   setAuthContext: (authContext) => {
     const currentState = get();
     const nextState = {
       ...currentState,
       authContext,
+      preferredAuthPath: buildPreferredAuthPath({
+        role: currentState.role || null,
+        authContext,
+      }),
     };
-    set({ authContext });
+
+    set({
+      authContext,
+      preferredAuthPath: nextState.preferredAuthPath,
+    });
     persistAuthState(nextState);
   },
+
   updateUser: (user) => {
     const currentState = get();
+    const nextRole = user?.role || currentState.role || null;
     const nextState = {
       ...currentState,
       user,
-      role: user?.role || currentState.role || null,
-      isAuthenticated: Boolean(user && (currentState.accessToken || currentState.refreshToken)),
+      role: nextRole,
+      preferredAuthPath: buildPreferredAuthPath({
+        role: nextRole,
+        authContext: currentState.authContext || "default",
+      }),
+      isAuthenticated: Boolean(
+        user && (currentState.accessToken || currentState.refreshToken)
+      ),
     };
 
     set(nextState);
@@ -192,54 +239,20 @@ const useAuthStore = create((set, get) => ({
     return get().loadUser();
   },
 
-  /* ===== LOGIN ===== */
   login: async ({ email, password }) => {
-    set({ loading: true, isAuthReady: false });
+    const requestVersion = beginAuthRequest(set, get);
     try {
       const res = await loginApi({ email, password });
-
       const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
-      const refreshToken = res.data?.refreshToken || res.data?.data?.refreshToken;
+      const refreshToken =
+        res.data?.refreshToken || res.data?.data?.refreshToken;
       const user = res.data?.user || res.data?.data?.user;
 
       if (!accessToken || !refreshToken || !user) {
         throw new Error("Login response missing token(s) or user");
       }
 
-      const nextState = {
-        user,
-        accessToken,
-        role: user.role,
-        refreshToken,
-        authContext: "default",
-        isAuthenticated: true,
-        loading: false,
-        isAuthReady: true, // ✅ AUTH SẴN SÀNG
-      };
-
-      set(nextState);
-      persistAuthState(nextState);
-
-      return user;
-    } catch (err) {
-      set({ loading: false, isAuthReady: true });
-      throw err;
-    }
-  },
-
-   /* ===== FIREBASE LOGIN ===== */
-  firebaseLogin: async ({ idToken }) => {
-    set({ loading: true, isAuthReady: false });
-    try {
-      const res = await firebaseLoginApi({ idToken });
-
-      const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
-      const refreshToken = res.data?.refreshToken || res.data?.data?.refreshToken;
-      const user = res.data?.user || res.data?.data?.user;
-
-      if (!accessToken || !refreshToken || !user) {
-        throw new Error("Firebase login response missing token(s) or user");
-      }
+      if (!isAuthRequestCurrent(get, requestVersion)) return null;
 
       const nextState = {
         user,
@@ -247,6 +260,10 @@ const useAuthStore = create((set, get) => ({
         role: user.role,
         refreshToken,
         authContext: "default",
+        preferredAuthPath: buildPreferredAuthPath({
+          role: user.role,
+          authContext: "default",
+        }),
         isAuthenticated: true,
         loading: false,
         isAuthReady: true,
@@ -254,16 +271,60 @@ const useAuthStore = create((set, get) => ({
 
       set(nextState);
       persistAuthState(nextState);
-
+      syncApiAuthRuntime({ accessToken });
       return user;
-    } catch (err) {
-      set({ loading: false, isAuthReady: true });
-      throw err;
+    } catch (error) {
+      if (isAuthRequestCurrent(get, requestVersion)) {
+        set({ loading: false, isAuthReady: true });
+      }
+      throw error;
     }
   },
-  /* ===== REGISTER ===== */
+
+  firebaseLogin: async ({ idToken }) => {
+    const requestVersion = beginAuthRequest(set, get);
+    try {
+      const res = await firebaseLoginApi({ idToken });
+      const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
+      const refreshToken =
+        res.data?.refreshToken || res.data?.data?.refreshToken;
+      const user = res.data?.user || res.data?.data?.user;
+
+      if (!accessToken || !refreshToken || !user) {
+        throw new Error("Firebase login response missing token(s) or user");
+      }
+
+      if (!isAuthRequestCurrent(get, requestVersion)) return null;
+
+      const nextState = {
+        user,
+        accessToken,
+        role: user.role,
+        refreshToken,
+        authContext: "default",
+        preferredAuthPath: buildPreferredAuthPath({
+          role: user.role,
+          authContext: "default",
+        }),
+        isAuthenticated: true,
+        loading: false,
+        isAuthReady: true,
+      };
+
+      set(nextState);
+      persistAuthState(nextState);
+      syncApiAuthRuntime({ accessToken });
+      return user;
+    } catch (error) {
+      if (isAuthRequestCurrent(get, requestVersion)) {
+        set({ loading: false, isAuthReady: true });
+      }
+      throw error;
+    }
+  },
+
   register: async ({ email, password, display_name }) => {
-    set({ loading: true, isAuthReady: false });
+    const requestVersion = beginAuthRequest(set, get);
     try {
       const res = await registerApi({
         email,
@@ -272,13 +333,16 @@ const useAuthStore = create((set, get) => ({
       });
 
       const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
-      const refreshToken = res.data?.refreshToken || res.data?.data?.refreshToken;
+      const refreshToken =
+        res.data?.refreshToken || res.data?.data?.refreshToken;
       const user = res.data?.user || res.data?.data?.user;
       const requiresEmailVerification =
         res.data?.requires_email_verification ||
         res.data?.data?.requires_email_verification;
 
       if (requiresEmailVerification) {
+        if (!isAuthRequestCurrent(get, requestVersion)) return null;
+
         set({ loading: false, isAuthReady: true });
         return {
           requires_email_verification: true,
@@ -290,88 +354,18 @@ const useAuthStore = create((set, get) => ({
         throw new Error("Register response missing token(s) or user");
       }
 
+      if (!isAuthRequestCurrent(get, requestVersion)) return null;
+
       const nextState = {
         user,
         accessToken,
         role: user.role,
         refreshToken,
         authContext: "default",
-        isAuthenticated: true,
-        loading: false,
-        isAuthReady: true, // ✅
-      };
-
-      set(nextState);
-      persistAuthState(nextState);
-
-      return user;
-    } catch (err) {
-      set({ loading: false, isAuthReady: true });
-      throw err;
-    }
-  },
-
-  /* ===== LOAD USER (REFRESH LOGIN) ===== */
-  loadUser: async () => {
-    const { accessToken, refreshToken } = get();
-    if (!accessToken && !refreshToken) {
-      set({ loading: false, isAuthReady: true, isAuthenticated: false });
-      return null;
-    }
-
-    set({ loading: true, isAuthReady: false });
-
-    try {
-      const res = await getMeApi();
-
-      const user = res.data?.data || res.data;
-
-      if (!user?.role) {
-        throw new Error("Invalid /users/me response");
-      }
-
-      const nextState = {
-        user,
-        role: user.role,
-        isAuthenticated: true,
-        loading: false,
-        isAuthReady: true, // ✅ CHỈ ĐÁNH TRUE KHI ME OK
-        accessToken: get().accessToken, // giữ token đang có
-        refreshToken: get().refreshToken,
-        authContext: get().authContext || "default",
-      };
-
-      set(nextState);
-      persistAuthState(nextState);
-
-      return user;
-    } catch (err) {
-      console.error("Load user error", err);
-      get().logout();
-      return null;
-    }
-  },
-
-  /* ===== ARTIST LOGIN ===== */
-  loginArtist: async ({ email, password }) => {
-    set({ loading: true, isAuthReady: false });
-    try {
-      const res = await artistLoginApi({ email, password });
-
-      const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
-      const refreshToken = res.data?.refreshToken || res.data?.data?.refreshToken;
-      const user = res.data?.user || res.data?.data?.user;
-
-      if (!accessToken || !refreshToken || !user) {
-        throw new Error("Login response missing token(s) or user");
-      }
-
-      const nextState = {
-        user,
-        accessToken,
-        role: user.role,
-        refreshToken,
-        authContext: "artist_request",
+        preferredAuthPath: buildPreferredAuthPath({
+          role: user.role,
+          authContext: "default",
+        }),
         isAuthenticated: true,
         loading: false,
         isAuthReady: true,
@@ -379,17 +373,110 @@ const useAuthStore = create((set, get) => ({
 
       set(nextState);
       persistAuthState(nextState);
-
+      syncApiAuthRuntime({ accessToken });
       return user;
-    } catch (err) {
-      set({ loading: false, isAuthReady: true });
-      throw err;
+    } catch (error) {
+      if (isAuthRequestCurrent(get, requestVersion)) {
+        set({ loading: false, isAuthReady: true });
+      }
+      throw error;
     }
   },
 
-  /* ===== ARTIST REGISTER ===== */
+  loadUser: async () => {
+    const { accessToken, refreshToken } = get();
+    if (!accessToken && !refreshToken) {
+      set({ loading: false, isAuthReady: true, isAuthenticated: false });
+      return null;
+    }
+
+    const requestVersion = beginAuthRequest(set, get);
+
+    try {
+      const res = await getMeApi();
+      const user = res.data?.data || res.data;
+
+      if (!user?.role) {
+        throw new Error("Invalid /users/me response");
+      }
+
+      if (!isAuthRequestCurrent(get, requestVersion)) return null;
+
+      const authContext = get().authContext || "default";
+      const nextState = {
+        user,
+        role: user.role,
+        isAuthenticated: true,
+        loading: false,
+        isAuthReady: true,
+        accessToken: get().accessToken,
+        refreshToken: get().refreshToken,
+        authContext,
+        preferredAuthPath: buildPreferredAuthPath({
+          role: user.role,
+          authContext,
+        }),
+      };
+
+      set(nextState);
+      persistAuthState(nextState);
+      syncApiAuthRuntime({ accessToken: nextState.accessToken });
+      return user;
+    } catch (error) {
+      if (!isAuthRequestCurrent(get, requestVersion)) {
+        return null;
+      }
+
+      console.error("Load user error", error);
+      get().logout();
+      return null;
+    }
+  },
+
+  loginArtist: async ({ email, password }) => {
+    const requestVersion = beginAuthRequest(set, get);
+    try {
+      const res = await artistLoginApi({ email, password });
+      const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
+      const refreshToken =
+        res.data?.refreshToken || res.data?.data?.refreshToken;
+      const user = res.data?.user || res.data?.data?.user;
+
+      if (!accessToken || !refreshToken || !user) {
+        throw new Error("Login response missing token(s) or user");
+      }
+
+      if (!isAuthRequestCurrent(get, requestVersion)) return null;
+
+      const nextState = {
+        user,
+        accessToken,
+        role: user.role,
+        refreshToken,
+        authContext: "artist_request",
+        preferredAuthPath: buildPreferredAuthPath({
+          role: user.role,
+          authContext: "artist_request",
+        }),
+        isAuthenticated: true,
+        loading: false,
+        isAuthReady: true,
+      };
+
+      set(nextState);
+      persistAuthState(nextState);
+      syncApiAuthRuntime({ accessToken });
+      return user;
+    } catch (error) {
+      if (isAuthRequestCurrent(get, requestVersion)) {
+        set({ loading: false, isAuthReady: true });
+      }
+      throw error;
+    }
+  },
+
   registerArtist: async ({ email, password, display_name }) => {
-    set({ loading: true, isAuthReady: false });
+    const requestVersion = beginAuthRequest(set, get);
     try {
       const res = await artistRegisterApi({
         email,
@@ -398,13 +485,16 @@ const useAuthStore = create((set, get) => ({
       });
 
       const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
-      const refreshToken = res.data?.refreshToken || res.data?.data?.refreshToken;
+      const refreshToken =
+        res.data?.refreshToken || res.data?.data?.refreshToken;
       const user = res.data?.user || res.data?.data?.user;
       const requiresEmailVerification =
         res.data?.requires_email_verification ||
         res.data?.data?.requires_email_verification;
 
       if (requiresEmailVerification) {
+        if (!isAuthRequestCurrent(get, requestVersion)) return null;
+
         set({ loading: false, isAuthReady: true });
         return {
           requires_email_verification: true,
@@ -416,12 +506,18 @@ const useAuthStore = create((set, get) => ({
         throw new Error("Register response missing token(s) or user");
       }
 
+      if (!isAuthRequestCurrent(get, requestVersion)) return null;
+
       const nextState = {
         user,
         accessToken,
         role: user.role,
         refreshToken,
         authContext: "artist_request",
+        preferredAuthPath: buildPreferredAuthPath({
+          role: user.role,
+          authContext: "artist_request",
+        }),
         isAuthenticated: true,
         loading: false,
         isAuthReady: true,
@@ -429,25 +525,34 @@ const useAuthStore = create((set, get) => ({
 
       set(nextState);
       persistAuthState(nextState);
-
+      syncApiAuthRuntime({ accessToken });
       return user;
-    } catch (err) {
-      set({ loading: false, isAuthReady: true });
-      throw err;
+    } catch (error) {
+      if (isAuthRequestCurrent(get, requestVersion)) {
+        set({ loading: false, isAuthReady: true });
+      }
+      throw error;
     }
   },
 
-  verifyEmailRegistration: async ({ email, verification_code, authContext = "default" }) => {
-    set({ loading: true, isAuthReady: false });
+  verifyEmailRegistration: async ({
+    email,
+    verification_code,
+    authContext = "default",
+  }) => {
+    const requestVersion = beginAuthRequest(set, get);
     try {
       const res = await verifyEmailApi({ email, verification_code });
       const accessToken = res.data?.accessToken || res.data?.data?.accessToken;
-      const refreshToken = res.data?.refreshToken || res.data?.data?.refreshToken;
+      const refreshToken =
+        res.data?.refreshToken || res.data?.data?.refreshToken;
       const user = res.data?.user || res.data?.data?.user;
 
       if (!accessToken || !refreshToken || !user) {
         throw new Error("Verify email response missing token(s) or user");
       }
+
+      if (!isAuthRequestCurrent(get, requestVersion)) return null;
 
       const nextState = {
         user,
@@ -455,6 +560,10 @@ const useAuthStore = create((set, get) => ({
         refreshToken,
         role: user.role,
         authContext,
+        preferredAuthPath: buildPreferredAuthPath({
+          role: user.role,
+          authContext,
+        }),
         isAuthenticated: true,
         loading: false,
         isAuthReady: true,
@@ -462,11 +571,13 @@ const useAuthStore = create((set, get) => ({
 
       set(nextState);
       persistAuthState(nextState);
-
+      syncApiAuthRuntime({ accessToken });
       return user;
-    } catch (err) {
-      set({ loading: false, isAuthReady: true });
-      throw err;
+    } catch (error) {
+      if (isAuthRequestCurrent(get, requestVersion)) {
+        set({ loading: false, isAuthReady: true });
+      }
+      throw error;
     }
   },
 
@@ -489,9 +600,20 @@ const useAuthStore = create((set, get) => ({
     return res.data?.message || res.data?.data?.message;
   },
 
-  /* ===== LOGOUT ===== */
-  logout: async () => {
-    const refreshToken = get().refreshToken;
+  logout: async ({ preferredAuthPath } = {}) => {
+    const currentState = get();
+    const refreshToken = currentState.refreshToken;
+    const nextAuthRequestVersion = (currentState.authRequestVersion || 0) + 1;
+    const nextPreferredAuthPath =
+      preferredAuthPath ||
+      getPreferredAuthPath({
+        pathname:
+          typeof window !== "undefined" ? window.location.pathname : "/",
+        search: typeof window !== "undefined" ? window.location.search : "",
+        role: currentState.role,
+        authContext: currentState.authContext,
+        fallback: currentState.preferredAuthPath,
+      });
 
     set({
       user: null,
@@ -499,11 +621,18 @@ const useAuthStore = create((set, get) => ({
       refreshToken: null,
       role: null,
       authContext: "default",
+      preferredAuthPath: nextPreferredAuthPath,
       isAuthenticated: false,
       loading: false,
       isAuthReady: true,
+      authRequestVersion: nextAuthRequestVersion,
     });
+
     clearStoredAuth();
+    syncApiAuthRuntime({
+      accessToken: null,
+      resetPending: true,
+    });
     await resetSessionStores();
 
     if (refreshToken) {

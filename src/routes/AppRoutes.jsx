@@ -80,7 +80,7 @@ export default function AppRoutes() {
     <Suspense fallback={fallback}>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Login initialMode="register" />} />
+        <Route path="/register" element={<Navigate to="/login?mode=register" replace />} />
         <Route path="/artist-auth" element={<ArtistAuth />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
 

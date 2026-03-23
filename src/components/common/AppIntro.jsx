@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useSearchParams } from "react-router-dom";
 import useAuthStore from "../../store/auth.store";
+import { shouldUseArtistTheme } from "../../utils/routeContext";
 
 const MotionDiv = motion.div;
 const MotionSpan = motion.span;
@@ -76,13 +77,13 @@ function getIntroCopy({ isAuthReady, isAuthenticated, role }) {
   };
 }
 
-function getIntroTone({ role, pathname, intent }) {
-  const isArtistRoute =
-    role === "ARTIST" ||
-    pathname === "/artist-auth" ||
-    pathname === "/artist-request" ||
-    pathname.startsWith("/artist/") ||
-    (pathname === "/verify-email" && intent === "artist");
+function getIntroTone({ role, authContext, pathname, intent }) {
+  const isArtistRoute = shouldUseArtistTheme({
+    pathname,
+    search: intent ? `intent=${intent}` : "",
+    role,
+    authContext,
+  });
 
   if (isArtistRoute) {
       return {
@@ -114,6 +115,7 @@ export default function AppIntro() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isAuthReady = useAuthStore((state) => state.isAuthReady);
   const role = useAuthStore((state) => state.role);
+  const authContext = useAuthStore((state) => state.authContext);
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const intent = searchParams.get("intent") || "user";
@@ -126,10 +128,11 @@ export default function AppIntro() {
     () =>
       getIntroTone({
         role,
+        authContext,
         pathname: location.pathname,
         intent,
       }),
-    [intent, location.pathname, role]
+    [authContext, intent, location.pathname, role]
   );
 
   const introMarkup = (

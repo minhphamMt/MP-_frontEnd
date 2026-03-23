@@ -7,6 +7,7 @@ import { getSongById, getSongLyrics, recordSongPlay } from "../api/song.api";
 import { fetchPlayableSong, toPlayableSong } from "../utils/song";
 import { getArtistLabel } from "../utils/artist";
 import useAuthStore from "./auth.store";
+import usePlaybackSessionStore from "./playback-session.store";
 import { emitAuthRequired } from "../utils/authPrompt";
 
 /* =====================
@@ -60,6 +61,8 @@ let rememberedDockTab = "queue";
 let lastMediaMetadataKey = "";
 let lastMediaPositionStateKey = "";
 let shouldResumePlayback = false;
+let pendingRestoreTime = null;
+let lastPersistedPlaybackKey = "";
 const UPCOMING_QUEUE_HYDRATION_LIMIT = 2;
 const PLAYBACK_RATE_DEFAULT = 1;
 const PLAYBACK_RATE_MIN = 0.75;
@@ -76,6 +79,75 @@ const getAutoOpenDockTab = () => null;
 const rememberDockTab = (tab) => {
   if (!PLAYER_DOCK_TABS.has(tab)) return;
   rememberedDockTab = tab;
+};
+
+const getPlaybackSessionOwner = () => {
+  const { isAuthenticated, user, role, authContext } = useAuthStore.getState();
+  if (!isAuthenticated) return null;
+
+  const identity = user?.id ?? user?._id ?? user?.email ?? null;
+  if (!identity) return null;
+
+  return [identity, role || "USER", authContext || "default"].join("|");
+};
+
+const clearPersistedPlayback = () => {
+  pendingRestoreTime = null;
+  lastPersistedPlaybackKey = "";
+  usePlaybackSessionStore.getState().clear();
+};
+
+const persistPlaybackSnapshot = ({
+  song,
+  currentTime = 0,
+  force = false,
+  isPlaying,
+} = {}) => {
+  const ownerKey = getPlaybackSessionOwner();
+  const songId = normalizeSongId(song);
+
+  if (!ownerKey || !songId || !song) {
+    clearPersistedPlayback();
+    return;
+  }
+
+  const normalizedTime = Math.max(0, Math.floor(Number(currentTime) || 0));
+  const nextIsPlaying =
+    typeof isPlaying === "boolean"
+      ? isPlaying
+      : Boolean(usePlayerStore.getState()?.isPlaying);
+  const nextKey = `${ownerKey}|${songId}|${normalizedTime}|${nextIsPlaying ? 1 : 0}`;
+
+  if (!force && lastPersistedPlaybackKey === nextKey) return;
+
+  lastPersistedPlaybackKey = nextKey;
+  usePlaybackSessionStore.getState().setSnapshot({
+    ownerKey,
+    song: toPlayableSong(song),
+    currentTime: normalizedTime,
+    isPlaying: nextIsPlaying,
+  });
+};
+
+const tryApplyPendingRestoreTime = () => {
+  if (!(Number.isFinite(pendingRestoreTime) && pendingRestoreTime > 0)) {
+    return false;
+  }
+
+  const boundedTime =
+    Number.isFinite(audio.duration) && audio.duration > 0
+      ? Math.min(Math.max(pendingRestoreTime, 0), audio.duration)
+      : Math.max(pendingRestoreTime, 0);
+
+  try {
+    if (Math.abs((audio.currentTime || 0) - boundedTime) > 0.25) {
+      audio.currentTime = boundedTime;
+    }
+    pendingRestoreTime = null;
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const attachAudioToDom = () => {
@@ -130,10 +202,14 @@ const attemptPlayback = async () => {
 const primeAudioSource = (
   src,
   playbackRate,
-  { autoplay = false, resetTime = true } = {}
+  { autoplay = false, resetTime = true, startTime = null } = {}
 ) => {
   shouldResumePlayback = autoplay;
   audio.playbackRate = playbackRate;
+  pendingRestoreTime =
+    Number.isFinite(startTime) && Number(startTime) > 0
+      ? Math.max(Number(startTime), 0)
+      : null;
 
   const nextSource = src || "";
   const currentSource = audio.currentSrc || audio.src || "";
@@ -144,7 +220,9 @@ const primeAudioSource = (
     audio.src = nextSource;
   }
 
-  if (resetTime) {
+  if (pendingRestoreTime !== null) {
+    tryApplyPendingRestoreTime();
+  } else if (resetTime) {
     try {
       audio.currentTime = 0;
     } catch {
@@ -161,6 +239,8 @@ const primeAudioSource = (
 };
 
 const retryPendingPlayback = () => {
+  tryApplyPendingRestoreTime();
+
   if (!shouldResumePlayback || !audio.src) {
     syncPlaybackState();
     return;
@@ -444,6 +524,12 @@ const usePlayerStore = create((set, get) => ({
       lastPlayedLoading: false,
       lastPlayedLoaded: true,
     });
+    persistPlaybackSnapshot({
+      song: playable,
+      currentTime: 0,
+      force: true,
+      isPlaying: true,
+    });
 
     const autoOpenDockTab = getAutoOpenDockTab();
     if (
@@ -471,6 +557,12 @@ const usePlayerStore = create((set, get) => ({
     shouldResumePlayback = false;
     audio.pause();
     set({ isPlaying: false });
+    persistPlaybackSnapshot({
+      song: get().currentSong,
+      currentTime: audio.currentTime || get().currentTime || 0,
+      force: true,
+      isPlaying: false,
+    });
   },
 
   resume: () => {
@@ -498,6 +590,12 @@ const usePlayerStore = create((set, get) => ({
   seek: (time) => {
     audio.currentTime = time;
     set({ currentTime: time });
+    persistPlaybackSnapshot({
+      song: get().currentSong,
+      currentTime: time,
+      force: true,
+      isPlaying: get().isPlaying,
+    });
   },
 
   /* =====================
@@ -812,6 +910,7 @@ const usePlayerStore = create((set, get) => ({
     if (!nextQueue.length) {
       audio.pause();
       audio.currentTime = 0;
+      clearPersistedPlayback();
       set({
         queue: [],
         currentSong: null,
@@ -838,6 +937,7 @@ const usePlayerStore = create((set, get) => ({
   clearQueue: () =>
     {
       get().clearSleepTimer();
+      clearPersistedPlayback();
       set({
         queue: [],
         currentSong: null,
@@ -905,6 +1005,7 @@ const usePlayerStore = create((set, get) => ({
       sleepTimerId = null;
     }
     shouldResumePlayback = false;
+    clearPersistedPlayback();
     audio.pause();
     audio.currentTime = 0;
     audio.src = "";
@@ -936,6 +1037,59 @@ const usePlayerStore = create((set, get) => ({
     });
   },
 
+  restorePersistedPlayback: async () => {
+    const ownerKey = getPlaybackSessionOwner();
+    if (!ownerKey) {
+      clearPersistedPlayback();
+      return null;
+    }
+
+    const snapshot = usePlaybackSessionStore.getState().getSnapshot(ownerKey);
+    if (!snapshot?.song) return null;
+
+    let playable = toPlayableSong(snapshot.song);
+    if (!playable?.audio_url) {
+      const fetched = await fetchPlayableSong(playable, getSongById);
+      if (fetched) playable = fetched;
+    }
+
+    if (!playable?.audio_url) {
+      clearPersistedPlayback();
+      return null;
+    }
+
+    const restoredTime = Math.max(0, Number(snapshot.currentTime) || 0);
+    const shouldAutoplay = Boolean(snapshot.isPlaying);
+    const { playbackRate } = get();
+
+    primeAudioSource(playable.audio_url, playbackRate, {
+      autoplay: shouldAutoplay,
+      startTime: restoredTime,
+    });
+
+    set({
+      currentSong: playable,
+      queue: [playable],
+      currentIndex: 0,
+      isPlaying: false,
+      currentTime: restoredTime,
+      duration: 0,
+      hasRecordedPlay: false,
+      lastPlayedLoading: false,
+      lastPlayedLoaded: true,
+    });
+
+    persistPlaybackSnapshot({
+      song: playable,
+      currentTime: restoredTime,
+      force: true,
+      isPlaying: shouldAutoplay,
+    });
+    get().preloadLyricsForSong(playable);
+    void hydrateUpcomingQueueSongs(0);
+    return playable;
+  },
+
   /* =====================
      HISTORY
   ===================== */
@@ -962,6 +1116,7 @@ const usePlayerStore = create((set, get) => ({
     const { currentSong, lastPlayedLoading, lastPlayedLoaded } = get();
 
     if (!isAuthenticated) {
+      clearPersistedPlayback();
       set({
         lastPlayedLoading: false,
         lastPlayedLoaded: false,
@@ -979,6 +1134,11 @@ const usePlayerStore = create((set, get) => ({
 
     if (lastPlayedLoading) return currentSong;
     if (lastPlayedLoaded && !force) return currentSong;
+
+    if (!force) {
+      const restoredSong = await get().restorePersistedPlayback();
+      if (restoredSong) return restoredSong;
+    }
 
     set({ lastPlayedLoading: true });
 
@@ -1126,25 +1286,49 @@ const usePlayerStore = create((set, get) => ({
    AUDIO EVENTS
 ===================== */
 audio.addEventListener("loadedmetadata", () => {
+  tryApplyPendingRestoreTime();
   usePlayerStore.setState({ duration: audio.duration || 0 });
   retryPendingPlayback();
   syncMediaSession();
 });
 
-audio.addEventListener("loadeddata", retryPendingPlayback);
-audio.addEventListener("canplay", retryPendingPlayback);
-audio.addEventListener("canplaythrough", retryPendingPlayback);
+audio.addEventListener("loadeddata", () => {
+  tryApplyPendingRestoreTime();
+  retryPendingPlayback();
+});
+audio.addEventListener("canplay", () => {
+  tryApplyPendingRestoreTime();
+  retryPendingPlayback();
+});
+audio.addEventListener("canplaythrough", () => {
+  tryApplyPendingRestoreTime();
+  retryPendingPlayback();
+});
 
 audio.addEventListener("playing", () => {
   // Re-apply handlers once playback is active so iOS lock screen picks track controls.
   shouldResumePlayback = false;
   syncPlaybackState();
+  const state = usePlayerStore.getState();
+  persistPlaybackSnapshot({
+    song: state.currentSong,
+    currentTime: audio.currentTime || state.currentTime || 0,
+    force: true,
+    isPlaying: true,
+  });
   setupMediaSession();
   syncMediaSession();
 });
 
 audio.addEventListener("pause", () => {
   syncPlaybackState();
+  const state = usePlayerStore.getState();
+  persistPlaybackSnapshot({
+    song: state.currentSong,
+    currentTime: audio.currentTime || state.currentTime || 0,
+    force: true,
+    isPlaying: false,
+  });
   syncMediaSession();
 });
 
@@ -1156,6 +1340,11 @@ audio.addEventListener("timeupdate", () => {
     state.recordListeningProgress(time);
   }
   usePlayerStore.setState({ currentTime: time });
+  persistPlaybackSnapshot({
+    song: state.currentSong,
+    currentTime: time,
+    isPlaying: state.isPlaying,
+  });
   syncMediaSession();
 });
 
