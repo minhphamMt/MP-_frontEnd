@@ -743,7 +743,13 @@ const writeRoutePage = async (template, siteUrl, route, page) => {
 };
 
 const createRobotsTxt = (siteUrl) => {
-  const lines = ["User-agent: *", "Allow: /"];
+  const lines = [
+    "User-agent: *",
+    "Allow: /",
+    "Allow: /registerSW.js",
+    "Allow: /sw.js",
+    "Allow: /workbox-*.js",
+  ];
   for (const route of DISALLOWED_ROUTES) lines.push(`Disallow: ${route}`);
   if (siteUrl) lines.push("", `Sitemap: ${siteUrl}/sitemap.xml`);
   return `${lines.join("\n")}\n`;
