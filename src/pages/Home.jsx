@@ -12,7 +12,7 @@ import {
 import { getAlbums } from "../api/album.api";
 import { getMyHistory } from "../api/history.api";
 import { getArtistCollections } from "../api/artist.api";
-import { getWeeklyTopSongs } from "../api/chart.api";
+import { getNewReleaseChart, getWeeklyTopSongs } from "../api/chart.api";
 import { getRecommendations, getColdStartRecommendations } from "../api/recommendation.api";
 import { getSongById } from "../api/song.api";
 import ArtistNames from "../components/artist/ArtistNames";
@@ -42,6 +42,7 @@ const HOME_HISTORY_LIMIT = 60;
 const CONTINUE_SONGS_LIMIT = 5;
 const RECOMMENDATION_DESKTOP_LIMIT = 9;
 const RECOMMENDATION_TABLET_LIMIT = 8;
+const RECOMMENDATION_NEW_RELEASE_SEED_LIMIT = 40;
 const SM_BREAKPOINT = 640;
 const XL_BREAKPOINT = 1280;
 const TOP_WEEK_COLORS = ["#fbbf24", "#60a5fa", "#a78bfa", "#fb7185", "#f97316"];
@@ -156,6 +157,22 @@ const extractSeedSongIds = (items = []) => {
   }, []);
 };
 
+const extractNewReleaseSongs = (response) => {
+  const rawSongs =
+    response?.data?.data?.songs ||
+    response?.data?.data ||
+    response?.data?.items ||
+    response?.data ||
+    [];
+
+  return filterPlayableSongs(Array.isArray(rawSongs) ? rawSongs : []);
+};
+
+const pickRandomSongId = (songIds = []) => {
+  if (!songIds.length) return null;
+  return songIds[Math.floor(Math.random() * songIds.length)] ?? null;
+};
+
 export default function Home() {
   const [artistAlbums, setArtistAlbums] = useState([]);
   const [newAlbums, setNewAlbums] = useState([]);
@@ -178,6 +195,7 @@ export default function Home() {
   const artistResumeRef = useRef(null);
   const newAlbumResumeRef = useRef(null);
   const historyCacheRef = useRef([]);
+  const recommendationSeedPoolRef = useRef([]);
 
   const currentSong = usePlayerStore((state) => state.currentSong);
   const playSong = usePlayerStore((state) => state.playSong);
@@ -220,18 +238,31 @@ export default function Home() {
 
   const fetchRecommendedSongs = useCallback(
     async (seedSongId) => {
+      const excludedIds = new Set(
+        [seedSongId].map((id) => normalizeSongId(id)).filter((id) => id !== null).map(String)
+      );
       const recRes = seedSongId ? await getRecommendations(seedSongId) : await getColdStartRecommendations(30);
-      const selectedIds = normalizeRecommendedIds(recRes?.data?.data || recRes?.data || []);
+      const selectedIds = normalizeRecommendedIds(recRes?.data?.data || recRes?.data || []).filter(
+        (id) => !excludedIds.has(String(id))
+      );
 
       if (selectedIds.length < RECOMMENDATION_DESKTOP_LIMIT) {
         const fallbackRes = await getColdStartRecommendations(50);
         for (const id of normalizeRecommendedIds(fallbackRes?.data?.data || fallbackRes?.data || [])) {
+          if (excludedIds.has(String(id))) continue;
           if (!selectedIds.includes(id)) selectedIds.push(id);
           if (selectedIds.length >= 30) break;
         }
       }
 
-      return fetchSongsByIds(selectedIds, RECOMMENDATION_DESKTOP_LIMIT);
+      const fetchedSongs = await fetchSongsByIds(
+        selectedIds,
+        RECOMMENDATION_DESKTOP_LIMIT + excludedIds.size
+      );
+
+      return fetchedSongs
+        .filter((song) => !excludedIds.has(String(normalizeSongId(song))))
+        .slice(0, RECOMMENDATION_DESKTOP_LIMIT);
     },
     [fetchSongsByIds]
   );
@@ -259,6 +290,26 @@ export default function Home() {
     },
     [isAuthenticated]
   );
+
+  const loadRecommendationSeedPool = useCallback(async ({ force = false } = {}) => {
+    if (recommendationSeedPoolRef.current.length && !force) {
+      return recommendationSeedPoolRef.current;
+    }
+
+    try {
+      const response = await getNewReleaseChart({
+        page: 1,
+        limit: RECOMMENDATION_NEW_RELEASE_SEED_LIMIT,
+      });
+      const items = dedupeSongIds(extractNewReleaseSongs(response));
+      recommendationSeedPoolRef.current = items;
+      return items;
+    } catch (error) {
+      console.error("Load new release seed pool error:", error);
+      recommendationSeedPoolRef.current = [];
+      return [];
+    }
+  }, []);
 
   const loadRecommendations = useCallback(
     async (seedSongId, { silent = false } = {}) => {
@@ -294,8 +345,9 @@ export default function Home() {
   );
 
   const selectRecommendationSeed = useCallback(
-    (historyItems = []) => {
+    (historyItems = [], fallbackSeedSongs = []) => {
       const historySeedIds = extractSeedSongIds(historyItems);
+      const fallbackSeedIds = extractSeedSongIds(fallbackSeedSongs);
       const currentSeedId = normalizeSongId(currentSong);
       const usedSeedIds = recommendationSessionUserId
         ? getUsedRecommendationSeedIds(recommendationSessionUserId)
@@ -307,15 +359,12 @@ export default function Home() {
 
       if (unusedHistorySeedIds.length) {
         return {
-          seedSongId:
-            unusedHistorySeedIds[
-              Math.floor(Math.random() * unusedHistorySeedIds.length)
-            ],
+          seedSongId: pickRandomSongId(unusedHistorySeedIds),
           resetUsedSeeds: false,
         };
       }
 
-      if (currentSeedId && !usedSeedIds.includes(currentSeedId)) {
+      if (historySeedIds.length && currentSeedId && !usedSeedIds.includes(currentSeedId)) {
         return {
           seedSongId: currentSeedId,
           resetUsedSeeds: false,
@@ -324,8 +373,25 @@ export default function Home() {
 
       if (historySeedIds.length) {
         return {
-          seedSongId:
-            historySeedIds[Math.floor(Math.random() * historySeedIds.length)],
+          seedSongId: pickRandomSongId(historySeedIds),
+          resetUsedSeeds: true,
+        };
+      }
+
+      const unusedFallbackSeedIds = fallbackSeedIds.filter(
+        (songId) => !usedSeedIds.includes(songId)
+      );
+
+      if (unusedFallbackSeedIds.length) {
+        return {
+          seedSongId: pickRandomSongId(unusedFallbackSeedIds),
+          resetUsedSeeds: false,
+        };
+      }
+
+      if (fallbackSeedIds.length) {
+        return {
+          seedSongId: pickRandomSongId(fallbackSeedIds),
           resetUsedSeeds: true,
         };
       }
@@ -346,11 +412,12 @@ export default function Home() {
         setContinueLoading(true);
       }
 
-      const [artistRes, albumRes, topRes, historyItems] = await Promise.all([
+      const [artistRes, albumRes, topRes, historyItems, recommendationSeedPool] = await Promise.all([
         getArtistCollections({ limit: 20 }),
         getAlbums({ limit: 20, sort: "release_date", order: "desc" }),
         getWeeklyTopSongs(),
         isAuthenticated ? loadUserHistory({ force: true }) : Promise.resolve([]),
+        loadRecommendationSeedPool({ force: true }),
       ]);
 
       setArtistAlbums(toList(artistRes?.data?.data || artistRes?.data));
@@ -383,17 +450,15 @@ export default function Home() {
       );
       setChartLoading(false);
 
-      const firstHistorySongId = normalizeSongId(
-        historyItems?.[0]?.song || historyItems?.[0]
+      const { seedSongId, resetUsedSeeds } = selectRecommendationSeed(
+        historyItems,
+        recommendationSeedPool
       );
-      const seed = isAuthenticated
-        ? firstHistorySongId || normalizeSongId(currentSong)
-        : null;
-      const hasLoadedRecommendations = await loadRecommendations(seed, {
+      const hasLoadedRecommendations = await loadRecommendations(seedSongId, {
         silent: true,
       });
-      if (hasLoadedRecommendations && seed) {
-        rememberRecommendationSeed(seed);
+      if (hasLoadedRecommendations && seedSongId) {
+        rememberRecommendationSeed(seedSongId, { resetUsedSeeds });
       }
     } catch (error) {
       console.error("Load home error:", error);
@@ -406,8 +471,10 @@ export default function Home() {
       currentSong,
       isAuthenticated,
       loadRecommendations,
+      loadRecommendationSeedPool,
       loadUserHistory,
       rememberRecommendationSeed,
+      selectRecommendationSeed,
     ]);
 
   useEffect(() => {
@@ -620,8 +687,14 @@ export default function Home() {
   });
 
   const refreshRecommendations = async () => {
-    const historyItems = await loadUserHistory({ force: true });
-    const { seedSongId, resetUsedSeeds } = selectRecommendationSeed(historyItems);
+    const [historyItems, recommendationSeedPool] = await Promise.all([
+      loadUserHistory({ force: true }),
+      loadRecommendationSeedPool(),
+    ]);
+    const { seedSongId, resetUsedSeeds } = selectRecommendationSeed(
+      historyItems,
+      recommendationSeedPool
+    );
     const hasLoadedRecommendations = await loadRecommendations(seedSongId);
 
     if (hasLoadedRecommendations && seedSongId) {
