@@ -197,7 +197,6 @@ export default function Home() {
   const historyCacheRef = useRef([]);
   const recommendationSeedPoolRef = useRef([]);
 
-  const currentSong = usePlayerStore((state) => state.currentSong);
   const playSong = usePlayerStore((state) => state.playSong);
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -210,7 +209,7 @@ export default function Home() {
   const clearRecommendationSeedSession = useRecommendationSessionStore(
     (state) => state.clearUserSeedSongIds
   );
-  const recommendationSessionUserId = user?.id ? String(user.id) : null;
+  const recommendationSessionUserId = user?.id ? String(user.id) : "guest";
 
   const fetchSongsByIds = useCallback(
     async (ids = [], limit = RECOMMENDATION_DESKTOP_LIMIT) => {
@@ -348,25 +347,20 @@ export default function Home() {
     (historyItems = [], fallbackSeedSongs = []) => {
       const historySeedIds = extractSeedSongIds(historyItems);
       const fallbackSeedIds = extractSeedSongIds(fallbackSeedSongs);
-      const currentSeedId = normalizeSongId(currentSong);
-      const usedSeedIds = recommendationSessionUserId
-        ? getUsedRecommendationSeedIds(recommendationSessionUserId)
-        : [];
+      const usedSeedIds = new Set(
+        (recommendationSessionUserId
+          ? getUsedRecommendationSeedIds(recommendationSessionUserId)
+          : []
+        ).map(String)
+      );
 
       const unusedHistorySeedIds = historySeedIds.filter(
-        (songId) => !usedSeedIds.includes(songId)
+        (songId) => !usedSeedIds.has(String(songId))
       );
 
       if (unusedHistorySeedIds.length) {
         return {
           seedSongId: pickRandomSongId(unusedHistorySeedIds),
-          resetUsedSeeds: false,
-        };
-      }
-
-      if (historySeedIds.length && currentSeedId && !usedSeedIds.includes(currentSeedId)) {
-        return {
-          seedSongId: currentSeedId,
           resetUsedSeeds: false,
         };
       }
@@ -379,7 +373,7 @@ export default function Home() {
       }
 
       const unusedFallbackSeedIds = fallbackSeedIds.filter(
-        (songId) => !usedSeedIds.includes(songId)
+        (songId) => !usedSeedIds.has(String(songId))
       );
 
       if (unusedFallbackSeedIds.length) {
@@ -397,11 +391,11 @@ export default function Home() {
       }
 
       return {
-        seedSongId: currentSeedId,
-        resetUsedSeeds: Boolean(currentSeedId && usedSeedIds.includes(currentSeedId)),
+        seedSongId: null,
+        resetUsedSeeds: false,
       };
     },
-    [currentSong, getUsedRecommendationSeedIds, recommendationSessionUserId]
+    [getUsedRecommendationSeedIds, recommendationSessionUserId]
   );
 
   const loadHome = useCallback(async () => {
@@ -450,10 +444,13 @@ export default function Home() {
       );
       setChartLoading(false);
 
-      const { seedSongId, resetUsedSeeds } = selectRecommendationSeed(
-        historyItems,
-        recommendationSeedPool
-      );
+      const mostRecentHistorySeedId = extractSeedSongIds(historyItems)[0] ?? null;
+      const { seedSongId, resetUsedSeeds } = mostRecentHistorySeedId
+        ? {
+            seedSongId: mostRecentHistorySeedId,
+            resetUsedSeeds: false,
+          }
+        : selectRecommendationSeed([], recommendationSeedPool);
       const hasLoadedRecommendations = await loadRecommendations(seedSongId, {
         silent: true,
       });
@@ -468,7 +465,6 @@ export default function Home() {
       setChartLoading(false);
     }
   }, [
-      currentSong,
       isAuthenticated,
       loadRecommendations,
       loadRecommendationSeedPool,
@@ -691,10 +687,10 @@ export default function Home() {
       loadUserHistory({ force: true }),
       loadRecommendationSeedPool(),
     ]);
-    const { seedSongId, resetUsedSeeds } = selectRecommendationSeed(
-      historyItems,
-      recommendationSeedPool
-    );
+    const hasHistorySeeds = extractSeedSongIds(historyItems).length > 0;
+    const { seedSongId, resetUsedSeeds } = hasHistorySeeds
+      ? selectRecommendationSeed(historyItems, [])
+      : selectRecommendationSeed([], recommendationSeedPool);
     const hasLoadedRecommendations = await loadRecommendations(seedSongId);
 
     if (hasLoadedRecommendations && seedSongId) {
