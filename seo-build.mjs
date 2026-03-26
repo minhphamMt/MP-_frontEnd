@@ -84,6 +84,20 @@ const PREVIEW_STYLE = `
   }
 </style>`;
 
+const injectStaticVerificationMeta = (template = "", googleSiteVerification = "") => {
+  const cleanTemplate = String(template || "").replace(
+    /<meta[^>]+name=["']google-site-verification["'][^>]*>\s*/gi,
+    ""
+  );
+
+  if (!googleSiteVerification) return cleanTemplate;
+
+  return cleanTemplate.replace(
+    "</head>",
+    `  <meta name="google-site-verification" content="${escapeHtml(googleSiteVerification)}" />\n</head>`
+  );
+};
+
 const parseEnvContent = (content = "") =>
   content.split(/\r?\n/).reduce((acc, rawLine) => {
     const line = rawLine.trim();
@@ -575,6 +589,16 @@ const buildWebsiteSchema = (siteUrl) =>
       : undefined,
   });
 
+const buildOrganizationSchema = (siteUrl) =>
+  removeEmpty({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    description: DEFAULT_DESCRIPTION,
+    url: siteUrl || undefined,
+    logo: toAbsoluteUrl(siteUrl, DEFAULT_IMAGE),
+  });
+
 const buildCollectionSchema = (siteUrl, page) =>
   removeEmpty({
     "@context": "https://schema.org",
@@ -792,8 +816,16 @@ const main = async () => {
       envValues.VITE_SITE_URL ||
       envValues.SITE_URL
   );
+  const googleSiteVerification = String(
+    process.env.VITE_GOOGLE_SITE_VERIFICATION ||
+      process.env.GOOGLE_SITE_VERIFICATION ||
+      envValues.VITE_GOOGLE_SITE_VERIFICATION ||
+      envValues.GOOGLE_SITE_VERIFICATION ||
+      ""
+  ).trim();
   const apiUrl = normalizeSiteUrl(process.env.VITE_API_URL || envValues.VITE_API_URL);
-  const template = await fs.readFile(templatePath, "utf8");
+  const rawTemplate = await fs.readFile(templatePath, "utf8");
+  const template = injectStaticVerificationMeta(rawTemplate, googleSiteVerification);
   const indexableRoutes = [];
 
   const settled = await Promise.allSettled([
@@ -974,7 +1006,7 @@ const main = async () => {
         }),
       ],
     }),
-    jsonLd: [buildWebsiteSchema(siteUrl)],
+    jsonLd: [buildWebsiteSchema(siteUrl), buildOrganizationSchema(siteUrl)],
   };
 
   await writeRoutePage(template, siteUrl, "/", homePage);

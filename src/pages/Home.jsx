@@ -34,6 +34,7 @@ import { resolveAssetUrl } from "../utils/asset";
 import { getArtistLabel } from "../utils/artist";
 import {
   buildCollectionPageJsonLd,
+  buildOrganizationJsonLd,
   buildWebSiteJsonLd,
 } from "../utils/seo";
 
@@ -582,6 +583,7 @@ export default function Home() {
   const homeJsonLd = useMemo(
     () => [
       buildWebSiteJsonLd(),
+      buildOrganizationJsonLd(),
       buildCollectionPageJsonLd({
         name: "Trang chủ Khoaluan Music",
         description: homeMetaDescription,

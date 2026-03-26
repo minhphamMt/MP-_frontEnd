@@ -106,6 +106,21 @@ export const buildWebSiteJsonLd = ({
     },
   });
 
+export const buildOrganizationJsonLd = ({
+  name = SITE_NAME,
+  url = "/",
+  logo = DEFAULT_SOCIAL_IMAGE,
+  description = DEFAULT_SITE_DESCRIPTION,
+} = {}) =>
+  removeEmpty({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name,
+    url: toAbsoluteSiteUrl(url),
+    logo: logo ? toAbsoluteSiteUrl(logo) : undefined,
+    description,
+  });
+
 export const buildCollectionPageJsonLd = ({
   name,
   description,
@@ -242,4 +257,3 @@ export const buildMusicRecordingJsonLd = ({
           }
         : undefined,
   });
-
