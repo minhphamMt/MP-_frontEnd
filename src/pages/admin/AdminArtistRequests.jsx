@@ -10,6 +10,7 @@ import {
 import {
   approveArtistRequest,
   listArtistRequests,
+  listUsers,
   rejectArtistRequest,
 } from "../../api/admin.api";
 import { promptAdminInput } from "../../utils/adminDialog";
@@ -47,6 +48,14 @@ const formatStatusText = (status) => {
   }
 };
 
+const getRequestIdentity = (request) => ({
+  userId:
+    request?.user_id === null || request?.user_id === undefined
+      ? ""
+      : `${request.user_id}`.trim(),
+  email: typeof request?.email === "string" ? request.email.trim() : "",
+});
+
 const DetailItem = ({ label, children }) => (
   <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
     <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">{label}</p>
@@ -56,10 +65,13 @@ const DetailItem = ({ label, children }) => (
 
 export default function AdminArtistRequests() {
   const [requests, setRequests] = useState([]);
+  const [userAccounts, setUserAccounts] = useState([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(true);
+  const [accountsLoading, setAccountsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [accountErrorMessage, setAccountErrorMessage] = useState("");
   const [expandedRequestId, setExpandedRequestId] = useState(null);
 
   const loadRequests = async () => {
@@ -87,9 +99,34 @@ export default function AdminArtistRequests() {
     }
   };
 
+  const loadUsers = async () => {
+    try {
+      setAccountsLoading(true);
+      const res = await listUsers({ page: 1, limit: 500 });
+      const payload = res?.data?.data ?? res?.data ?? [];
+      const list = Array.isArray(payload)
+        ? payload
+        : payload.items || payload.users || [];
+      setUserAccounts(list);
+      setAccountErrorMessage("");
+    } catch (error) {
+      console.error("Load user accounts failed", error);
+      setUserAccounts([]);
+      setAccountErrorMessage(
+        "Không thể đối chiếu tài khoản người dùng cho yêu cầu nghệ sĩ."
+      );
+    } finally {
+      setAccountsLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadRequests();
   }, [statusFilter, keyword]);
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
 
   const handleApprove = async (request) => {
     try {
@@ -101,7 +138,7 @@ export default function AdminArtistRequests() {
     }
   };
 
-    const handleReject = async (request) => {
+  const handleReject = async (request) => {
     const reason = await promptAdminInput({
       title: "Từ chối yêu cầu nghệ sĩ",
       message: "Nhập lý do từ chối yêu cầu",
@@ -120,20 +157,43 @@ export default function AdminArtistRequests() {
     }
   };
 
+  const activeUserIds = useMemo(
+    () =>
+      new Set(
+        userAccounts
+          .map((user) =>
+            user?.id === null || user?.id === undefined ? "" : `${user.id}`.trim()
+          )
+          .filter(Boolean)
+      ),
+    [userAccounts]
+  );
+
   const visibleRequests = useMemo(() => {
     const normalized = keyword.trim().toLowerCase();
-    if (!normalized) return requests;
-    return requests.filter((request) =>
-      [
-        request.artist_name,
-        request.email,
-        request.display_name,
-        `${request.id}`,
-      ]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(normalized))
-    );
-  }, [keyword, requests]);
+    return requests
+      .filter((request) => {
+        const { userId, email } = getRequestIdentity(request);
+        return Boolean(userId && email && activeUserIds.has(userId));
+      })
+      .filter((request) => {
+        if (!normalized) return true;
+        return [
+          request.artist_name,
+          request.email,
+          request.display_name,
+          `${request.id}`,
+        ]
+          .filter(Boolean)
+          .some((value) => value.toLowerCase().includes(normalized));
+      });
+  }, [activeUserIds, keyword, requests]);
+
+  const isPageLoading = loading || accountsLoading;
+
+  const handleRefresh = async () => {
+    await Promise.all([loadRequests(), loadUsers()]);
+  };
 
   return (
     <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-6 lg:px-8">
@@ -169,7 +229,7 @@ export default function AdminArtistRequests() {
             ))}
           </select>
           <button
-            onClick={loadRequests}
+            onClick={handleRefresh}
             className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
           >
             <FiRefreshCw /> Làm mới
@@ -183,24 +243,30 @@ export default function AdminArtistRequests() {
         </div>
       )}
 
+      {accountErrorMessage && (
+        <div className="admin-alert rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          {accountErrorMessage}
+        </div>
+      )}
+
       <div className="overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
         <div className="border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50">
           Danh sách yêu cầu
         </div>
 
         <div className="divide-y divide-white/5">
-          {loading && (
+          {isPageLoading && (
             <div className="px-4 py-6 text-sm text-white/60">
               Đang tải dữ liệu...
             </div>
           )}
-          {!loading && visibleRequests.length === 0 && (
+          {!isPageLoading && visibleRequests.length === 0 && (
             <div className="px-4 py-6 text-sm text-white/60">
-              Không có yêu cầu phù hợp.
+              Không có yêu cầu hợp lệ gắn với tài khoản người dùng hiện còn tồn tại.
             </div>
           )}
 
-          {!loading &&
+          {!isPageLoading &&
             visibleRequests.map((request) => {
               const isExpanded = expandedRequestId === request.id;
 

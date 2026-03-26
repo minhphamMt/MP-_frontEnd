@@ -16,17 +16,40 @@ const statusLabelMap = {
   rejected: "Từ chối",
 };
 
-export default function ArtistAlbumTile({ album, onEdit, onDelete, onView }) {
+export default function ArtistAlbumTile({
+  album,
+  onEdit,
+  onDelete,
+  onView,
+  theme = "artist",
+}) {
   const songCount = album?.song_count ?? album?.track_count ?? album?.songs?.length ?? 0;
   const coverUrl = resolveAssetUrl(album?.cover_url || album?.cover);
   const statusLabel = statusLabelMap[album?.status] || album?.status || "";
+  const isAdminTheme = theme === "admin";
+  const cardClassName = isAdminTheme
+    ? "border-emerald-200/[0.12] bg-[#111815]/88 md:hover:border-emerald-300/30 md:hover:bg-[#16261d]"
+    : "border-sky-200/[0.1] bg-[#0f1727]/88 md:hover:border-sky-300/28 md:hover:bg-[#142038]";
+  const fallbackCoverClassName = isAdminTheme
+    ? "bg-[linear-gradient(135deg,rgba(52,211,153,0.22),rgba(16,185,129,0.14),rgba(5,10,18,0.96))]"
+    : "bg-[linear-gradient(135deg,rgba(56,189,248,0.22),rgba(59,130,246,0.14),rgba(5,10,18,0.96))]";
+  const metaBadgeClassName = isAdminTheme
+    ? "rounded-full border border-emerald-200/[0.16] bg-emerald-400/[0.08] px-3 py-1 text-emerald-50/80"
+    : "rounded-full border border-sky-200/[0.12] bg-sky-400/[0.07] px-3 py-1 text-slate-100/72";
   const statusClassName =
     album?.status === "approved"
-      ? "rounded-full border border-sky-300/30 bg-sky-400/12 px-3 py-1 text-sky-100"
-      : "rounded-full border border-sky-200/[0.14] bg-sky-400/[0.08] px-3 py-1 text-slate-100/72";
+      ? isAdminTheme
+        ? "rounded-full border border-emerald-300/30 bg-emerald-400/12 px-3 py-1 text-emerald-100"
+        : "rounded-full border border-sky-300/30 bg-sky-400/12 px-3 py-1 text-sky-100"
+      : metaBadgeClassName;
+  const secondaryActionClassName = isAdminTheme
+    ? "inline-flex items-center gap-2 rounded-full border border-emerald-400/24 bg-emerald-500/[0.08] px-4 py-2 text-sm text-emerald-50 transition md:hover:border-emerald-300/50 md:hover:bg-emerald-400/16"
+    : "artist-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm";
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-sky-200/[0.1] bg-[#0f1727]/88 shadow-[0_20px_60px_rgba(2,6,18,0.38)] transition md:hover:-translate-y-1 md:hover:border-sky-300/28 md:hover:bg-[#142038]">
+    <article
+      className={`group flex h-full flex-col overflow-hidden rounded-[22px] border shadow-[0_20px_60px_rgba(2,6,18,0.38)] transition md:hover:-translate-y-1 ${cardClassName}`}
+    >
       <div className="relative">
         {coverUrl ? (
           <OptimizedImage
@@ -36,7 +59,7 @@ export default function ArtistAlbumTile({ album, onEdit, onDelete, onView }) {
             loading="lazy"
           />
         ) : (
-          <div className="flex h-44 w-full items-center justify-center bg-[linear-gradient(135deg,rgba(56,189,248,0.22),rgba(59,130,246,0.14),rgba(5,10,18,0.96))] sm:h-52">
+          <div className={`flex h-44 w-full items-center justify-center sm:h-52 ${fallbackCoverClassName}`}>
             <FiMusic className="text-3xl text-white/50" />
           </div>
         )}
@@ -60,7 +83,7 @@ export default function ArtistAlbumTile({ album, onEdit, onDelete, onView }) {
 
         <div className="mt-auto flex flex-wrap items-center gap-2 text-xs">
           {album?.zing_album_id && (
-            <span className="rounded-full border border-sky-200/[0.12] bg-sky-400/[0.07] px-3 py-1 text-slate-100/72">
+            <span className={metaBadgeClassName}>
               Zing ID: {album.zing_album_id}
             </span>
           )}
@@ -71,7 +94,7 @@ export default function ArtistAlbumTile({ album, onEdit, onDelete, onView }) {
           <button
             type="button"
             onClick={onView}
-            className="artist-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm"
+            className={secondaryActionClassName}
           >
             <FiEye />
             Xem chi tiết
@@ -79,7 +102,7 @@ export default function ArtistAlbumTile({ album, onEdit, onDelete, onView }) {
           <button
             type="button"
             onClick={onEdit}
-            className="artist-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm"
+            className={secondaryActionClassName}
           >
             <FiEdit2 />
             Chỉnh sửa

@@ -304,8 +304,8 @@ export default function AdminSongForm() {
             <div className="text-xs text-white/60 sm:text-sm">Đang tải dữ liệu...</div>
           ) : (
             <div className="h-full overflow-y-auto pr-1">
-              <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+              <div className="grid items-start gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-5">
                   <p className="text-xs font-semibold text-white sm:text-sm">Ảnh đại diện</p>
                   <div className="mt-4 flex flex-col gap-4">
                     {coverPreview ? (
@@ -339,7 +339,7 @@ export default function AdminSongForm() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid self-start content-start gap-4 sm:grid-cols-2">
                   <label className="block text-xs text-white/70 sm:col-span-2 sm:text-sm">
                     Tên bài hát
                     <input

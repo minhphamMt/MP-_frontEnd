@@ -153,6 +153,7 @@ export default function AdminAlbums() {
             <ArtistAlbumTile
               key={album.id}
               album={album}
+              theme="admin"
               onView={() => navigate(`/admin/albums/${album.id}`)}
               onEdit={() => navigate(`/admin/albums/${album.id}/edit`)}
               onDelete={() => handleDelete(album.id)}

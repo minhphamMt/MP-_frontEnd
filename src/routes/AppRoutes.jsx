@@ -92,8 +92,13 @@ export default function AppRoutes() {
           <Route path="/403" element={<Forbidden />} />
           <Route path="/404" element={<NotFound />} />
 
-          <Route element={<ProtectedRoute allowGuests allowedRoles={["USER"]} />}>
+          <Route
+            element={<ProtectedRoute allowGuests allowedRoles={["USER", "ARTIST", "ADMIN"]} />}
+          >
             <Route path="/" element={<HomeEntryRoute />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowGuests allowedRoles={["USER"]} />}>
             <Route path="/zing-chart" element={<ZingChart />} />
             <Route path="/zing-chart/region/:region" element={<RegionChart />} />
             <Route path="/new-release" element={<NewRelease />} />
