@@ -16,6 +16,13 @@ export default defineConfig(() => {
         ? VitePWA({
             registerType: "autoUpdate",
             injectRegister: "auto",
+            includeAssets: [
+              "favicon-brand-96x96.png",
+              "favicon.svg",
+              "apple-touch-icon-brand.png",
+              "favicon.ico",
+              "site.webmanifest",
+            ],
 
             manifest: {
               name: "Khoaluan Music Platform",
@@ -45,6 +52,12 @@ export default defineConfig(() => {
 
             workbox: {
               globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+              navigateFallbackDenylist: [
+                /\/[^/?]+\.[^/]+(?:\?.*)?$/,
+                /^\/registerSW\.js$/,
+                /^\/sw\.js$/,
+                /^\/workbox-.*\.js$/,
+              ],
             },
           })
         : null,
