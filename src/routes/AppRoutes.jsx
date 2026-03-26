@@ -44,7 +44,7 @@ const AdminSongManagement = lazy(() => import("../pages/admin/AdminSongManagemen
 const AdminSongForm = lazy(() => import("../pages/admin/AdminSongForm"));
 const AdminSongReviewDetail = lazy(() =>
   import("../pages/admin/AdminSongReviewDetail")
-);
+);x
 const AdminUserDetail = lazy(() => import("../pages/admin/AdminUserDetail"));
 const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
 const AdminSongs = lazy(() => import("../pages/admin/AdminSongs"));

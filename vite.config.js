@@ -15,7 +15,7 @@ export default defineConfig(() => {
       enablePWA
         ? VitePWA({
             registerType: "autoUpdate",
-            injectRegister: "auto",
+            injectRegister: false,
             includeAssets: [
               "favicon-brand.ico",
               "favicon-brand-96x96.png",
