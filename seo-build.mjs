@@ -967,12 +967,12 @@ const main = async () => {
   const songsByArtistId = new Map();
   const albumsByArtistId = new Map();
 
-  for (const song of prerenderSongs) {
+  for (const song of finalSongs) {
     pushGrouped(songsByAlbumId, song.albumId, song);
     pushGrouped(songsByArtistId, song.artistId, song);
   }
 
-  for (const album of prerenderAlbums) {
+  for (const album of finalAlbums) {
     pushGrouped(albumsByArtistId, album.artistId, album);
   }
 
@@ -1257,7 +1257,91 @@ const main = async () => {
     }
   }
 
-  for (const artist of prerenderArtists) {
+  for (const album of finalAlbums) {
+    const canonical = buildAlbumPath(album);
+    if (!canonical) continue;
+
+    const artist = album.artistId ? artistMap.get(String(album.artistId)) : null;
+    const albumSongs = ensureArray(songsByAlbumId.get(String(album.id))).slice(0, 25);
+    const relatedAlbums = ensureArray(albumsByArtistId.get(String(album.artistId)))
+      .filter((item) => String(item.id) !== String(album.id))
+      .slice(0, 12);
+
+    await writeRoutePage(template, siteUrl, canonical, {
+      title: `${album.title} | ${album.artistName || artist?.name || SITE_NAME}`,
+      description: truncateText(
+        `${album.title} - ${album.artistName || artist?.name || "Nghe si"}. Kham pha album va danh sach bai hat tren ${SITE_NAME}.`
+      ),
+      canonical,
+      image: album.coverUrl || artist?.coverUrl || artist?.avatarUrl || DEFAULT_IMAGE,
+      keywords: `${album.title}, ${album.artistName || artist?.name || "album"}, nghe album`,
+      body: renderPageBody({
+        eyebrow: "Music Album",
+        title: album.title || "Album",
+        description:
+          album.artistName || artist?.name
+            ? `${album.artistName || artist?.name} tren ${SITE_NAME}.`
+            : `Kham pha album tren ${SITE_NAME}.`,
+        image: album.coverUrl || artist?.coverUrl || artist?.avatarUrl || DEFAULT_IMAGE,
+        breadcrumbs: [
+          { name: "Trang chu", url: "/" },
+          { name: album.title || "Album", url: canonical },
+        ],
+        stats: [
+          artist?.name ? { label: "Nghe si", value: artist.name } : null,
+          album.songCount || albumSongs.length
+            ? { label: "So bai hat", value: String(album.songCount || albumSongs.length) }
+            : null,
+          album.releaseDate ? { label: "Phat hanh", value: formatDate(album.releaseDate) } : null,
+        ].filter(Boolean),
+        sections: [
+          artist
+            ? renderSection({
+                title: "Nghe si",
+                description: "Lien ket den trang nghe si chinh cua album.",
+                items: [renderArtistItem(artist)],
+              })
+            : "",
+          renderSection({
+            title: "Danh sach bai hat",
+            description: "Cac bai hat thuoc album nay duoc dat san trong HTML de bot doc duoc ngay.",
+            items: albumSongs.map((song, index) => renderSongItem(song, index + 1)),
+          }),
+          relatedAlbums.length
+            ? renderSection({
+                title: "Album cung nghe si",
+                description: "Goi y them album lien quan de tang lien ket noi bo.",
+                items: relatedAlbums.map(renderAlbumItem),
+              })
+            : "",
+        ],
+      }),
+      jsonLd: [
+        buildMusicAlbumSchema(siteUrl, album, artist, albumSongs),
+        buildBreadcrumbSchema(siteUrl, [
+          { name: "Trang chu", url: "/" },
+          { name: album.title || "Album", url: canonical },
+        ]),
+      ],
+    });
+    indexableRoutes.push(canonical);
+
+    const legacyRoute = `/album/${album.id}`;
+    if (legacyRoute !== canonical) {
+      await writeRoutePage(
+        template,
+        siteUrl,
+        legacyRoute,
+        buildRedirectPage(
+          `${album.title} | URL chuan`,
+          "Trang album da duoc chuyen sang URL co slug de toi uu SEO.",
+          canonical
+        )
+      );
+    }
+  }
+
+  for (const artist of finalArtists) {
     const canonical = buildArtistPath(artist);
     if (!canonical) continue;
     const artistSongs = ensureArray(songsByArtistId.get(String(artist.id))).slice(0, 20);
