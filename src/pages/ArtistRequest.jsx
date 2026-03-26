@@ -302,8 +302,26 @@ export default function ArtistRequest() {
             {errorMessage ? <AuthMessage tone="error">{errorMessage}</AuthMessage> : null}
 
             {loading ? (
-              <div className="auth-soft-card rounded-[18px] p-4 text-sm text-white/68">
-                Đang tải hồ sơ đăng ký nghệ sĩ...
+              <div className="auth-soft-card rounded-[18px] p-4">
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="ui-skeleton h-7 w-28 rounded-full bg-white/8" />
+                    <div className="ui-skeleton h-4 w-44 rounded-full bg-white/8" />
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div key={`artist-request-loading-${index}`} className="space-y-2">
+                        <div className="ui-skeleton h-3 w-20 rounded-full bg-white/8" />
+                        <div className="ui-skeleton h-11 w-full rounded-[16px] bg-white/8" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="ui-skeleton h-28 w-full rounded-[20px] bg-white/8" />
+                  <div className="flex gap-2">
+                    <div className="ui-skeleton h-10 w-28 rounded-full bg-white/8" />
+                    <div className="ui-skeleton h-10 w-24 rounded-full bg-white/8" />
+                  </div>
+                </div>
               </div>
             ) : canSubmitRequest ? (
               renderForm()

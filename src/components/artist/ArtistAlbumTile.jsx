@@ -28,27 +28,27 @@ export default function ArtistAlbumTile({
   const statusLabel = statusLabelMap[album?.status] || album?.status || "";
   const isAdminTheme = theme === "admin";
   const cardClassName = isAdminTheme
-    ? "border-emerald-200/[0.12] bg-[#111815]/88 md:hover:border-emerald-300/30 md:hover:bg-[#16261d]"
+    ? "border-white/[0.04] bg-[#151617] md:hover:border-white/[0.08] md:hover:bg-[#18191a]"
     : "border-sky-200/[0.1] bg-[#0f1727]/88 md:hover:border-sky-300/28 md:hover:bg-[#142038]";
   const fallbackCoverClassName = isAdminTheme
-    ? "bg-[linear-gradient(135deg,rgba(52,211,153,0.22),rgba(16,185,129,0.14),rgba(5,10,18,0.96))]"
+    ? "bg-[#202325]"
     : "bg-[linear-gradient(135deg,rgba(56,189,248,0.22),rgba(59,130,246,0.14),rgba(5,10,18,0.96))]";
   const metaBadgeClassName = isAdminTheme
-    ? "rounded-full border border-emerald-200/[0.16] bg-emerald-400/[0.08] px-3 py-1 text-emerald-50/80"
+    ? "rounded-full border border-white/[0.06] bg-[#1a1b1c] px-3 py-1 text-white/66"
     : "rounded-full border border-sky-200/[0.12] bg-sky-400/[0.07] px-3 py-1 text-slate-100/72";
   const statusClassName =
     album?.status === "approved"
       ? isAdminTheme
-        ? "rounded-full border border-emerald-300/30 bg-emerald-400/12 px-3 py-1 text-emerald-100"
+        ? "rounded-full border border-emerald-400/16 bg-[#18211c] px-3 py-1 text-emerald-100"
         : "rounded-full border border-sky-300/30 bg-sky-400/12 px-3 py-1 text-sky-100"
       : metaBadgeClassName;
   const secondaryActionClassName = isAdminTheme
-    ? "inline-flex items-center gap-2 rounded-full border border-emerald-400/24 bg-emerald-500/[0.08] px-4 py-2 text-sm text-emerald-50 transition md:hover:border-emerald-300/50 md:hover:bg-emerald-400/16"
+    ? "inline-flex items-center gap-2 rounded-full border border-white/[0.06] bg-[#1a1b1c] px-4 py-2 text-sm text-white/80 transition md:hover:border-white/[0.1] md:hover:bg-[#1d1e1f]"
     : "artist-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm";
 
   return (
     <article
-      className={`group flex h-full flex-col overflow-hidden rounded-[22px] border shadow-[0_20px_60px_rgba(2,6,18,0.38)] transition md:hover:-translate-y-1 ${cardClassName}`}
+      className={`group flex h-full flex-col overflow-hidden rounded-[22px] border shadow-[0_20px_50px_rgba(0,0,0,0.26)] transition md:hover:-translate-y-1 ${cardClassName}`}
     >
       <div className="relative">
         {coverUrl ? (
@@ -63,7 +63,11 @@ export default function ArtistAlbumTile({
             <FiMusic className="text-3xl text-white/50" />
           </div>
         )}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+        <div
+          className={`pointer-events-none absolute inset-0 ${
+            isAdminTheme ? "bg-black/20" : "bg-gradient-to-t from-black/75 via-black/25 to-transparent"
+          }`}
+        />
         <div className="absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-3 py-1 text-xs text-white/85">
           <FiMusic />
           <span>{songCount} bài hát</span>
@@ -110,7 +114,7 @@ export default function ArtistAlbumTile({
           <button
             type="button"
             onClick={onDelete}
-            className="artist-btn-danger inline-flex items-center gap-2 rounded-full border border-rose-400/35 bg-rose-500/12 px-4 py-2 text-sm text-rose-100 transition md:hover:border-rose-300/60 md:hover:bg-rose-500/22"
+            className="inline-flex items-center gap-2 rounded-full border border-rose-400/18 bg-[#211719] px-4 py-2 text-sm text-rose-100 transition md:hover:border-rose-300/30 md:hover:bg-[#281b1e]"
           >
             <FiTrash2 />
             Xóa mềm

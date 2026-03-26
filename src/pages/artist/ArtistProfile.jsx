@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiSave, FiUser } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
 import { getMyArtistProfile, updateArtist, uploadArtistAvatar } from "../../api/artist.api";
+import { ArtistProfileLoading } from "../../components/artist/ArtistLoadingState";
 import { resolveAssetUrl } from "../../utils/asset";
 import OptimizedImage from "../../components/common/OptimizedImage";
 
@@ -159,11 +160,7 @@ export default function ArtistProfile() {
   }, [formValues.cover_url, formValues.avatar_url]);
 
   if (loading) {
-    return (
-      <div className="artist-soft-card p-5 text-sm text-white/70">
-        Đang tải hồ sơ nghệ sĩ...
-      </div>
-    );
+    return <ArtistProfileLoading />;
   }
 
   return (

@@ -1,5 +1,5 @@
-﻿import { useEffect, useState } from "react";
-import { FiChevronLeft, FiTrash2 } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { FiChevronLeft, FiEdit2, FiTrash2 } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
 import { deleteAlbum, getAlbumById } from "../../api/album.api";
 import { resolveAssetUrl } from "../../utils/asset";
@@ -73,25 +73,25 @@ export default function AdminAlbumDetail() {
   };
 
   return (
-    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
+    <div className="admin-page-shell admin-list-page min-h-screen space-y-6 px-4 py-6 sm:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={() => navigate("/admin/albums")}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
+          className="admin-button admin-button-ghost"
         >
           <FiChevronLeft /> Quay lại danh sách album
         </button>
         {album?.id && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="admin-toolbar-actions">
             <button
               onClick={() => navigate(`/admin/albums/${album.id}/edit`)}
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/80 transition md:hover:bg-white/10 sm:text-sm"
+              className="admin-button admin-button-ghost"
             >
-              Chỉnh sửa
+              <FiEdit2 /> Chỉnh sửa
             </button>
             <button
               onClick={handleDelete}
-              className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-rose-500/10 px-4 py-2 text-xs text-rose-200 transition md:hover:bg-rose-500/20 sm:text-sm"
+              className="admin-button admin-button-danger"
             >
               <FiTrash2 /> Xóa mềm
             </button>
@@ -100,9 +100,7 @@ export default function AdminAlbumDetail() {
       </div>
 
       {loading && (
-        <div className="rounded-2xl border border-white/10 bg-[#181818] px-4 py-6 text-sm text-white/60">
-          Đang tải dữ liệu...
-        </div>
+        <div className="admin-loading-state admin-detail-panel">Đang tải dữ liệu...</div>
       )}
 
       {!loading && errorMessage && (
@@ -112,60 +110,86 @@ export default function AdminAlbumDetail() {
       )}
 
       {!loading && album && (
-        <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-6 text-xs text-white shadow-[0_30px_90px_rgba(0,0,0,0.6)] sm:text-sm">
-          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-              <p className="text-xs font-semibold text-white sm:text-sm">Ảnh album</p>
-              <div className="mt-4">
-                {album.cover_url || album.cover ? (
-                  <OptimizedImage
-                    src={resolveAssetUrl(album.cover_url || album.cover)}
-                    alt={album.title}
-                    className="h-60 w-full rounded-2xl bg-black/40 object-contain shadow-lg"
-                  />
-                ) : (
-                  <div className="flex h-60 items-center justify-center rounded-2xl bg-white/10 text-xs text-white/60 sm:text-sm">
-                    Chưa có ảnh album
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-5 text-xs text-white/70 sm:text-sm">
-              <p className="text-xs font-semibold text-white sm:text-sm">Thông tin</p>
-              <div className="mt-4 space-y-3">
-                <p>
-                  <span className="text-white/60">Tên album:</span>{" "}
-                  <span className="text-white">{album.title || "-"}</span>
-                </p>
-                <p>
-                  <span className="text-white/60">Nghệ sĩ:</span>{" "}
-                  <span className="text-white">
-                    {getArtistLabel(album, album.artist?.name || album.artist_name || "") || "-"}
-                  </span>
-                </p>
-                <p>
-                  <span className="text-white/60">Ngày phát hành:</span>{" "}
-                  <span className="text-white">{formatDateDisplay(album.release_date)}</span>
-                </p>
-                <p>
-                  <span className="text-white/60">ID:</span>{" "}
-                  <span className="text-white">{album.id}</span>
-                </p>
-              </div>
+        <div className="admin-detail-shell">
+          <div className="admin-detail-header">
+            <div className="admin-detail-heading">
+              <p className="admin-list-kicker">Chi tiết album</p>
+              <h1 className="admin-list-title">{album.title || "Album chưa đặt tên"}</h1>
+              <p className="admin-list-summary">
+                Trang chi tiết giúp bạn rà nhanh cover, nghệ sĩ, ngày phát hành và các
+                bài hát thuộc album này.
+              </p>
             </div>
           </div>
 
-          {album.songs?.length > 0 && (
-            <div className="mt-6">
-              <p className="text-xs font-semibold text-white sm:text-sm">Danh sách bài hát</p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="admin-detail-grid is-two-column">
+            <section className="admin-detail-panel">
+              <p className="admin-detail-panel-title">Ảnh album</p>
+              <div className="mt-4">
+                {album.cover_url || album.cover ? (
+                  <div className="admin-detail-media is-square">
+                    <OptimizedImage
+                      src={resolveAssetUrl(album.cover_url || album.cover)}
+                      alt={album.title}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="admin-detail-placeholder">Chưa có ảnh album</div>
+                )}
+              </div>
+            </section>
+
+            <section className="admin-detail-panel">
+              <p className="admin-detail-panel-title">Thông tin chính</p>
+              <p className="admin-detail-panel-note">
+                Các trường quan trọng được gom lại để bạn quét nhanh mà không cần mở
+                form chỉnh sửa.
+              </p>
+              <div className="mt-4 admin-detail-meta-grid">
+                <div className="admin-detail-meta-card">
+                  <p className="admin-detail-meta-label">Tên album</p>
+                  <p className="admin-detail-meta-value">{album.title || "-"}</p>
+                </div>
+                <div className="admin-detail-meta-card">
+                  <p className="admin-detail-meta-label">Nghệ sĩ</p>
+                  <p className="admin-detail-meta-value">
+                    {getArtistLabel(album, album.artist?.name || album.artist_name || "") || "-"}
+                  </p>
+                </div>
+                <div className="admin-detail-meta-card">
+                  <p className="admin-detail-meta-label">Ngày phát hành</p>
+                  <p className="admin-detail-meta-value">
+                    {formatDateDisplay(album.release_date)}
+                  </p>
+                </div>
+                <div className="admin-detail-meta-card">
+                  <p className="admin-detail-meta-label">Album ID</p>
+                  <p className="admin-detail-meta-value">{album.id}</p>
+                </div>
+                <div className="admin-detail-meta-card">
+                  <p className="admin-detail-meta-label">Zing ID</p>
+                  <p className="admin-detail-meta-value">{album.zing_album_id || "-"}</p>
+                </div>
+                <div className="admin-detail-meta-card">
+                  <p className="admin-detail-meta-label">Số bài hát</p>
+                  <p className="admin-detail-meta-value">{album.songs?.length || 0}</p>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <section className="admin-detail-panel">
+            <p className="admin-detail-panel-title">Danh sách bài hát</p>
+            <p className="admin-detail-panel-note">
+              Những bài hát đang thuộc album để bạn đối chiếu nhanh với phần dữ liệu
+              đang hiển thị.
+            </p>
+            {album.songs?.length > 0 ? (
+              <div className="mt-4 admin-detail-list">
                 {album.songs.map((song) => (
-                  <div
-                    key={song.id}
-                    className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-xs text-white/80 sm:text-sm"
-                  >
-                    <div className="h-12 w-12 overflow-hidden rounded-xl bg-black/40">
+                  <div key={song.id} className="admin-detail-list-card">
+                    <div className="admin-detail-list-thumb">
                       {getSongCover(song) || album.cover_url ? (
                         <OptimizedImage
                           src={resolveAssetUrl(
@@ -180,20 +204,23 @@ export default function AdminAlbumDetail() {
                         </div>
                       )}
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold text-white">{song.title}</p>
-                      <p className="truncate text-xs text-white/50">
+                      <p className="truncate text-sm text-white/58">
                         {getArtistLabel(song, album.artist?.name || album.artist_name || "") || "-"}
                       </p>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="admin-empty-state mt-4 rounded-2xl border border-dashed border-white/10 bg-[#151617]">
+                Album này chưa có bài hát nào.
+              </div>
+            )}
+          </section>
         </div>
       )}
     </div>
   );
 }
-

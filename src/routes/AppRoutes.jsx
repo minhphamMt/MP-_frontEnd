@@ -46,6 +46,12 @@ const AdminSongReviewDetail = lazy(() =>
   import("../pages/admin/AdminSongReviewDetail")
 );
 const AdminUserDetail = lazy(() => import("../pages/admin/AdminUserDetail"));
+const AdminUserListeningHistory = lazy(() =>
+  import("../pages/admin/AdminUserListeningHistory")
+);
+const AdminUserSearchHistory = lazy(() =>
+  import("../pages/admin/AdminUserSearchHistory")
+);
 const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
 const AdminSongs = lazy(() => import("../pages/admin/AdminSongs"));
 const AdminGenres = lazy(() => import("../pages/admin/AdminGenres"));
@@ -157,6 +163,14 @@ export default function AppRoutes() {
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/users/new" element={<AdminUserForm />} />
             <Route path="/admin/users/:id" element={<AdminUserDetail />} />
+            <Route
+              path="/admin/users/:id/listening-history"
+              element={<AdminUserListeningHistory />}
+            />
+            <Route
+              path="/admin/users/:id/search-history"
+              element={<AdminUserSearchHistory />}
+            />
             <Route path="/admin/users/:id/edit" element={<AdminUserForm />} />
             <Route path="/admin/artists" element={<AdminArtistList />} />
             <Route path="/admin/artists/new" element={<AdminArtistForm />} />

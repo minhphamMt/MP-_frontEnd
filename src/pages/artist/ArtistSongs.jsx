@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiEdit2, FiPlus, FiSearch, FiTrash2 } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
 import { getAlbums } from "../../api/album.api";
+import { ArtistSongListLoading } from "../../components/artist/ArtistLoadingState";
 import { deleteSong, getArtistSongs } from "../../api/song.api";
 import { getMyArtistProfile } from "../../api/artist.api";
 import { resolveAssetUrl } from "../../utils/asset";
@@ -207,9 +208,7 @@ export default function ArtistSongs() {
         </div>
       </section>
 
-      {loading && (
-        <div className="artist-soft-card p-5 text-sm text-white/70">Đang tải danh sách bài hát...</div>
-      )}
+      {loading && <ArtistSongListLoading rows={5} />}
 
       {!loading && !filteredSongs.length && (
         <div className="artist-soft-card p-5 text-sm text-white/70">

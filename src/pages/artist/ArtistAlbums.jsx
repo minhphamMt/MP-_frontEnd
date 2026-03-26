@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiPlus, FiSearch } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
 import { deleteAlbum, getAlbums } from "../../api/album.api";
+import { ArtistAlbumGridLoading } from "../../components/artist/ArtistLoadingState";
 import ArtistAlbumTile from "../../components/artist/ArtistAlbumTile";
 import { getMyArtistProfile } from "../../api/artist.api";
 import { confirmAdminAction } from "../../utils/adminDialog";
@@ -139,9 +140,7 @@ export default function ArtistAlbums() {
         </div>
       </section>
 
-      {loading && (
-        <div className="artist-soft-card p-5 text-sm text-white/70">Đang tải danh sách album...</div>
-      )}
+      {loading && <ArtistAlbumGridLoading cards={6} />}
 
       {!loading && !filteredAlbums.length && (
         <div className="artist-soft-card p-5 text-sm text-white/70">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FilterToolbar from "../components/common/FilterToolbar";
+import { UserCardGridLoading } from "../components/common/UserLoadingState";
 import ArtistFollowSection from "../components/playlists/ArtistFollowSection";
 import useAuthStore from "../store/auth.store";
 import useArtistFollowStore from "../store/artist-follow.store";
@@ -100,9 +101,7 @@ export default function FollowedArtists() {
 
       <section className="space-y-4">
         {loading ? (
-          <div className="user-surface p-6 text-sm text-white/60">
-            Đang tải nghệ sĩ theo dõi...
-          </div>
+          <UserCardGridLoading cards={5} roundCover />
         ) : filteredArtists.length ? (
           <ArtistFollowSection
             artists={filteredArtists}

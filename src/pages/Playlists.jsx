@@ -21,6 +21,7 @@ import AlbumCard from "../components/album/AlbumCard";
 import FilterToolbar from "../components/common/FilterToolbar";
 import OptimizedImage from "../components/common/OptimizedImage";
 import Toast from "../components/common/Toast";
+import { UserSurfaceRowsLoading } from "../components/common/UserLoadingState";
 import ArtistFollowSection from "../components/playlists/ArtistFollowSection";
 import LikedSongsSection from "../components/playlists/LikedSongsSection";
 import PlaylistGrid from "../components/playlists/PlaylistGrid";
@@ -756,9 +757,7 @@ export default function Playlists() {
       {visibleSection("songs") ? (
         <section className="user-surface p-5 sm:p-6">
           {loadingLikedSongs ? (
-            <div className="rounded-[24px] border border-white/10 bg-[#121212] px-5 py-10 text-sm text-white/60">
-              Đang tải bài hát đã thích...
-            </div>
+            <UserSurfaceRowsLoading rows={4} />
           ) : (
             <LikedSongsSection
               songs={filteredLikedSongs}

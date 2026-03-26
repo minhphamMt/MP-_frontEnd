@@ -119,7 +119,7 @@ export default function NewRelease() {
   }, [loadMore]);
 
   const statusText = useMemo(() => {
-    if (loading) return "Đang tải dữ liệu...";
+    if (loading) return "";
     if (loadingMore) return "Đang tải thêm bài hát...";
     if (!hasMore && songs.length) return "Đã tải toàn bộ bài hát mới.";
     return "Kéo xuống để tải thêm bài hát.";
@@ -173,12 +173,14 @@ export default function NewRelease() {
         onRefresh={loadChart}
       />
 
-      <div
-        ref={sentinelRef}
-        className="user-surface mt-4 flex min-h-16 items-center justify-center px-4 text-xs text-white/60"
-      >
-        {statusText}
-      </div>
+      {statusText ? (
+        <div
+          ref={sentinelRef}
+          className="user-surface mt-4 flex min-h-16 items-center justify-center px-4 text-xs text-white/60"
+        >
+          {statusText}
+        </div>
+      ) : null}
     </div>
   );
 }

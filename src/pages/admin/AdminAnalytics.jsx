@@ -67,7 +67,7 @@ function ChartPanel({ title, subtitle, icon: Icon, children, right, className = 
   return (
     <section
       data-card
-      className={`admin-glass w-full min-w-0 rounded-3xl border border-white/10 bg-[#181818] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.45)] ${className}`}
+      className={`admin-glass flex h-full w-full min-w-0 flex-col rounded-3xl border border-white/10 bg-[#181818] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.45)] ${className}`}
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
@@ -81,12 +81,12 @@ function ChartPanel({ title, subtitle, icon: Icon, children, right, className = 
           </span>
         </div>
       </div>
-      {children}
+      <div className="flex-1 min-h-0">{children}</div>
     </section>
   );
 }
 
-function SongStatusBreakdown({ segments, total }) {
+function SongStatusBreakdown({ segments, total, height }) {
   const normalizedSegments = useMemo(
     () =>
       segments.map((item) => {
@@ -111,9 +111,12 @@ function SongStatusBreakdown({ segments, total }) {
   }, [normalizedSegments]);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5">
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <div className="rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,_rgba(52,211,153,0.18),_rgba(20,20,20,0.92)_62%)] p-5">
+    <div
+      className="flex h-full rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5"
+      style={{ minHeight: height }}
+    >
+      <div className="grid h-full flex-1 gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <div className="flex h-full flex-col rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,_rgba(52,211,153,0.18),_rgba(20,20,20,0.92)_62%)] p-5">
           <p className="text-xs uppercase tracking-[0.24em] text-white/45">Tổng bài hát</p>
           <p className="mt-3 text-4xl font-black text-white sm:text-5xl">{formatCount(total)}</p>
           <p className="mt-2 text-sm text-white/55">
@@ -137,7 +140,7 @@ function SongStatusBreakdown({ segments, total }) {
           </div>
 
           {dominantSegment && (
-            <div className="mt-6 rounded-3xl border border-white/10 bg-black/20 p-4">
+            <div className="mt-auto rounded-3xl border border-white/10 bg-black/20 p-4">
               <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">
                 Trạng thái nhiều nhất
               </p>
@@ -157,11 +160,11 @@ function SongStatusBreakdown({ segments, total }) {
           )}
         </div>
 
-        <div className="space-y-3">
+        <div className="grid h-full auto-rows-fr gap-3">
           {normalizedSegments.map((segment) => (
             <article
               key={segment.label}
-              className="rounded-3xl border border-white/10 bg-white/[0.03] p-4"
+              className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/[0.03] p-4"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -177,14 +180,16 @@ function SongStatusBreakdown({ segments, total }) {
                 <p className="text-lg font-black text-white">{segment.percentLabel}%</p>
               </div>
 
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/8">
-                <div
-                  className="h-full rounded-full transition-[width] duration-500 ease-out"
-                  style={{
-                    width: `${Math.max(segment.percentValue, segment.value > 0 ? 2.5 : 0)}%`,
-                    backgroundColor: segment.color,
-                  }}
-                />
+              <div className="mt-auto pt-4">
+                <div className="h-2 overflow-hidden rounded-full bg-white/8">
+                  <div
+                    className="h-full rounded-full transition-[width] duration-500 ease-out"
+                    style={{
+                      width: `${Math.max(segment.percentValue, segment.value > 0 ? 2.5 : 0)}%`,
+                      backgroundColor: segment.color,
+                    }}
+                  />
+                </div>
               </div>
             </article>
           ))}
@@ -889,6 +894,7 @@ export default function AdminAnalytics() {
             <SongStatusBreakdown
               segments={songStatusSummary.segments}
               total={songStatusSummary.total}
+              height={SONG_STATUS_HEIGHT}
             />
           )}
         </ChartPanel>

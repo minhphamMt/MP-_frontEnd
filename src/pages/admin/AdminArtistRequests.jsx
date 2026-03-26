@@ -13,7 +13,14 @@ import {
   listUsers,
   rejectArtistRequest,
 } from "../../api/admin.api";
+import AdminListLoadingState from "../../components/admin/AdminListLoadingState";
+import AdminListNotice from "../../components/admin/AdminListNotice";
 import { promptAdminInput } from "../../utils/adminDialog";
+import {
+  getAdminListFallbackMessage,
+  isAdminListTimeoutError,
+  withAdminListTimeout,
+} from "../../utils/adminListRequest";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "Tất cả" },
@@ -78,12 +85,16 @@ export default function AdminArtistRequests() {
     try {
       setLoading(true);
       const trimmedKeyword = keyword.trim();
-      const res = await listArtistRequests({
-        page: 1,
-        limit: 50,
-        ...(statusFilter !== "all" ? { status: statusFilter } : {}),
-        ...(trimmedKeyword ? { keyword: trimmedKeyword, q: trimmedKeyword } : {}),
-      });
+      const res = await withAdminListTimeout(() =>
+        listArtistRequests({
+          page: 1,
+          limit: 50,
+          ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+          ...(trimmedKeyword
+            ? { keyword: trimmedKeyword, q: trimmedKeyword }
+            : {}),
+        })
+      );
       const payload = res?.data?.data ?? res?.data ?? [];
       const list = Array.isArray(payload)
         ? payload
@@ -91,8 +102,14 @@ export default function AdminArtistRequests() {
       setRequests(list);
       setErrorMessage("");
     } catch (error) {
-      console.error("Load artist requests failed", error);
-      setErrorMessage("Không thể tải danh sách yêu cầu nghệ sĩ.");
+      if (isAdminListTimeoutError(error)) {
+        console.warn("Load artist requests timed out");
+      } else {
+        console.error("Load artist requests failed", error);
+      }
+      setErrorMessage(
+        getAdminListFallbackMessage("yêu cầu nghệ sĩ", keyword.trim())
+      );
       setRequests([]);
     } finally {
       setLoading(false);
@@ -102,7 +119,9 @@ export default function AdminArtistRequests() {
   const loadUsers = async () => {
     try {
       setAccountsLoading(true);
-      const res = await listUsers({ page: 1, limit: 500 });
+      const res = await withAdminListTimeout(() =>
+        listUsers({ page: 1, limit: 500 })
+      );
       const payload = res?.data?.data ?? res?.data ?? [];
       const list = Array.isArray(payload)
         ? payload
@@ -110,10 +129,14 @@ export default function AdminArtistRequests() {
       setUserAccounts(list);
       setAccountErrorMessage("");
     } catch (error) {
-      console.error("Load user accounts failed", error);
+      if (isAdminListTimeoutError(error)) {
+        console.warn("Load user accounts timed out");
+      } else {
+        console.error("Load user accounts failed", error);
+      }
       setUserAccounts([]);
       setAccountErrorMessage(
-        "Không thể đối chiếu tài khoản người dùng cho yêu cầu nghệ sĩ."
+        "Chưa đối chiếu được tài khoản người dùng. Bạn vẫn có thể xem trạng thái trống."
       );
     } finally {
       setAccountsLoading(false);
@@ -190,39 +213,45 @@ export default function AdminArtistRequests() {
   }, [activeUserIds, keyword, requests]);
 
   const isPageLoading = loading || accountsLoading;
+  const pendingRequestsCount = visibleRequests.filter((request) => request?.status === "pending").length;
+  const approvedRequestsCount = visibleRequests.filter((request) => request?.status === "approved").length;
+  const linkedRequestsCount = visibleRequests.filter((request) => activeUserIds.has(`${request?.user_id}`.trim())).length;
 
   const handleRefresh = async () => {
     await Promise.all([loadRequests(), loadUsers()]);
   };
 
   return (
-    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="admin-page-shell admin-list-page min-h-screen space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="admin-list-header">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+          <p className="admin-list-kicker">
             Quản trị
           </p>
-          <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
+          <h1 className="admin-list-title">
             Duyệt yêu cầu nghệ sĩ
           </h1>
+          <p className="admin-list-summary">
+            Gom các yêu cầu vào một review queue dễ đọc hơn, ưu tiên hành động và
+            phần thông tin đối chiếu tài khoản.
+          </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="admin-toolbar-actions">
           <input
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
             placeholder="Tìm theo nghệ sĩ, email..."
-            className="ui-search-field w-full rounded-full px-4 py-2 text-xs font-semibold text-white/80 focus:border-white/30 focus:outline-none sm:w-72"
+            className="admin-field sm:w-72"
           />
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="ui-select rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white"
+            className="admin-select-field"
           >
             {STATUS_OPTIONS.map((option) => (
               <option
                 key={option.value}
                 value={option.value}
-                className="text-black"
               >
                 {option.label}
               </option>
@@ -230,44 +259,55 @@ export default function AdminArtistRequests() {
           </select>
           <button
             onClick={handleRefresh}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
+            className="admin-button"
           >
             <FiRefreshCw /> Làm mới
           </button>
         </div>
       </div>
 
-      {errorMessage && (
-        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-          {errorMessage}
+      <div className="admin-stat-grid">
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Yêu cầu</p>
+          <p className="admin-stat-value">{visibleRequests.length}</p>
+          <p className="admin-stat-note">Đang hiển thị trong hàng chờ</p>
         </div>
-      )}
-
-      {accountErrorMessage && (
-        <div className="admin-alert rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          {accountErrorMessage}
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Chờ duyệt</p>
+          <p className="admin-stat-value">{pendingRequestsCount}</p>
+          <p className="admin-stat-note">Cần xử lý ngay</p>
         </div>
-      )}
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Đã duyệt</p>
+          <p className="admin-stat-value">{approvedRequestsCount}</p>
+          <p className="admin-stat-note">Đã hoàn tất duyệt</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Liên kết user</p>
+          <p className="admin-stat-value">{linkedRequestsCount}</p>
+          <p className="admin-stat-note">Có tài khoản người dùng hợp lệ</p>
+        </div>
+      </div>
 
-      <div className="overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50">
+      <AdminListNotice message={errorMessage} />
+
+      <AdminListNotice message={accountErrorMessage} />
+
+      <div className="admin-data-panel">
+        <div className="admin-data-head px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50">
           Danh sách yêu cầu
         </div>
 
-        <div className="divide-y divide-white/5">
-          {isPageLoading && (
-            <div className="px-4 py-6 text-sm text-white/60">
-              Đang tải dữ liệu...
-            </div>
-          )}
-          {!isPageLoading && visibleRequests.length === 0 && (
-            <div className="px-4 py-6 text-sm text-white/60">
+        {isPageLoading ? (
+          <AdminListLoadingState variant="artist-requests" />
+        ) : (
+          <div className="divide-y divide-white/5">
+            {visibleRequests.length === 0 ? (
+            <div className="admin-empty-state">
               Không có yêu cầu hợp lệ gắn với tài khoản người dùng hiện còn tồn tại.
             </div>
-          )}
-
-          {!isPageLoading &&
-            visibleRequests.map((request) => {
+            ) : (
+              visibleRequests.map((request) => {
               const isExpanded = expandedRequestId === request.id;
 
               return (
@@ -288,7 +328,7 @@ export default function AdminArtistRequests() {
                         );
                       }
                     }}
-                    className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 transition md:hover:border-white/25 sm:px-4"
+                    className="admin-row-card flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#171819] px-3 py-3 transition md:hover:border-white/18 sm:px-4"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2">
@@ -320,13 +360,13 @@ export default function AdminArtistRequests() {
                         <>
                           <button
                             onClick={() => handleApprove(request)}
-                            className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition md:hover:bg-emerald-500/20"
+                            className="admin-button admin-button-success"
                           >
                             <FiCheckCircle /> Duyệt
                           </button>
                           <button
                             onClick={() => handleReject(request)}
-                            className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-100 transition md:hover:bg-rose-500/20"
+                            className="admin-button admin-button-danger"
                           >
                             <FiSlash /> Từ chối
                           </button>
@@ -378,8 +418,10 @@ export default function AdminArtistRequests() {
                   </div>
                 </div>
               );
-            })}
-        </div>
+              })
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

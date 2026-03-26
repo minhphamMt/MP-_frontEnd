@@ -1,1 +1,0 @@
-import{j as i}from"./vendor-CVuIgE3V.js";const m="lazy",r="async";function e({loading:t=m,decoding:s=r,fetchPriority:n,...o}){return i.jsx("img",{loading:t,decoding:s,fetchPriority:n,...o})}export{e as O};

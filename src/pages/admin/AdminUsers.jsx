@@ -9,10 +9,17 @@ import {
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { deleteUser, listUsers, searchAdmin } from "../../api/admin.api";
+import AdminListLoadingState from "../../components/admin/AdminListLoadingState";
+import AdminListNotice from "../../components/admin/AdminListNotice";
 import Toast from "../../components/common/Toast";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import { resolveAssetUrl } from "../../utils/asset";
 import { confirmAdminAction } from "../../utils/adminDialog";
+import {
+  getAdminListFallbackMessage,
+  isAdminListTimeoutError,
+  withAdminListTimeout,
+} from "../../utils/adminListRequest";
 import {
   extractAdminSearchItems,
   filterAdminSearchItemsByType,
@@ -30,11 +37,9 @@ const getUserAvatar = (user) =>
   user?.profile_photo;
 
 const getRoleTone = (role) => {
-  if (role === "ADMIN") return "border-sky-400/30 bg-sky-400/10 text-sky-200";
-  if (role === "ARTIST") {
-    return "border-fuchsia-400/30 bg-fuchsia-400/10 text-fuchsia-200";
-  }
-  return "border-white/10 bg-white/5 text-white/70";
+  if (role === "ADMIN") return "admin-chip admin-chip-info";
+  if (role === "ARTIST") return "admin-chip admin-chip-warning";
+  return "admin-chip";
 };
 
 export default function AdminUsers() {
@@ -46,36 +51,43 @@ export default function AdminUsers() {
   const [errorMessage, setErrorMessage] = useState("");
   const [toast, setToast] = useState({ title: "", message: "" });
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 320);
+  const activeUsersCount = users.filter((item) => item?.is_active).length;
+  const adminUsersCount = users.filter((item) => item?.role === "ADMIN").length;
+  const artistUsersCount = users.filter((item) => item?.role === "ARTIST").length;
 
   const loadUsers = useCallback(async (searchTerm = "") => {
     try {
       setLoading(true);
-      let list = [];
+      const list = await withAdminListTimeout(async () => {
+        if (searchTerm) {
+          const res = await searchAdmin({
+            q: searchTerm,
+            keyword: searchTerm,
+            page: 1,
+            limit: 100,
+          });
+          const payload = res?.data?.data ?? res?.data ?? [];
+          return filterAdminSearchItemsByType(
+            extractAdminSearchItems(payload),
+            "user"
+          );
+        }
 
-      if (searchTerm) {
-        const res = await searchAdmin({
-          q: searchTerm,
-          keyword: searchTerm,
-          page: 1,
-          limit: 100,
-        });
-        const payload = res?.data?.data ?? res?.data ?? [];
-        list = filterAdminSearchItemsByType(
-          extractAdminSearchItems(payload),
-          "user"
-        );
-      } else {
         const res = await listUsers({ page: 1, limit: 200 });
         const payload = res?.data?.data ?? res?.data ?? [];
-        list = Array.isArray(payload)
+        return Array.isArray(payload)
           ? payload
           : payload.items || payload.users || [];
-      }
+      });
       setUsers(list);
       setErrorMessage("");
     } catch (error) {
-      console.error("Load users failed", error);
-      setErrorMessage("Không thể tải danh sách người dùng.");
+      if (isAdminListTimeoutError(error)) {
+        console.warn("Load users timed out");
+      } else {
+        console.error("Load users failed", error);
+      }
+      setErrorMessage(getAdminListFallbackMessage("người dùng", searchTerm));
       setUsers([]);
     } finally {
       setLoading(false);
@@ -122,73 +134,93 @@ export default function AdminUsers() {
   };
 
   return (
-    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="admin-page-shell admin-list-page min-h-screen space-y-6 px-4 py-6 sm:px-8">
+      <div className="admin-list-header">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+          <p className="admin-list-kicker">
             Quản trị
           </p>
-          <h1 className="text-3xl font-extrabold text-white">
+          <h1 className="admin-list-title">
             Quản lý người dùng
           </h1>
+          <p className="admin-list-summary">
+            Theo dõi tài khoản, vai trò và trạng thái hoạt động trong một bố cục
+            gọn, rõ và dễ quét dữ liệu hơn.
+          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="admin-toolbar-actions">
           <button
             onClick={() => loadUsers(keyword.trim())}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
+            className="admin-button"
           >
             <FiRefreshCw /> Làm mới
           </button>
           <button
             onClick={() => navigate("/admin/users/new")}
-            className="inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300"
+            className="admin-button admin-button-primary"
           >
             <FiPlus /> Thêm người dùng
           </button>
         </div>
       </div>
 
-      <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <input
+      <div className="admin-stat-grid">
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Người dùng</p>
+          <p className="admin-stat-value">{users.length}</p>
+          <p className="admin-stat-note">Tổng hồ sơ đang hiển thị</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Đang hoạt động</p>
+          <p className="admin-stat-value">{activeUsersCount}</p>
+          <p className="admin-stat-note">Có thể truy cập hệ thống</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Admin</p>
+          <p className="admin-stat-value">{adminUsersCount}</p>
+          <p className="admin-stat-note">Tài khoản quản trị</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Nghệ sĩ</p>
+          <p className="admin-stat-value">{artistUsersCount}</p>
+          <p className="admin-stat-note">Tài khoản nghệ sĩ</p>
+        </div>
+      </div>
+
+      <div className="admin-toolbar-panel">
+        <div className="admin-toolbar-group">
+          <input
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
           placeholder="Tìm kiếm người dùng theo tên, email, ID..."
-          className="ui-search-field w-full rounded-2xl px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+          className="admin-field"
         />
+        </div>
       </div>
 
-      {errorMessage && (
-        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-          {errorMessage}
-        </div>
-      )}
+      <AdminListNotice message={errorMessage} />
 
-      <div className="overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.2fr_1fr_0.7fr_0.8fr]">
+      <div className="admin-data-panel">
+        <div className="admin-data-head grid grid-cols-[1fr_auto] px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.2fr_1fr_0.7fr_0.8fr]">
           <span>Người dùng</span>
           <span className="hidden lg:block">Thông tin</span>
           <span className="hidden lg:block">Trạng thái</span>
           <span className="text-right">Hành động</span>
         </div>
 
-        <div className="divide-y divide-white/5">
-          {loading && (
-            <div className="px-4 py-6 text-sm text-white/60">
-              Đang tải dữ liệu...
-            </div>
-          )}
-
-          {!loading && users.length === 0 && (
-            <div className="px-4 py-6 text-sm text-white/60">
+        {loading ? (
+          <AdminListLoadingState variant="users" />
+        ) : (
+          <div className="divide-y divide-white/5">
+            {users.length === 0 ? (
+            <div className="admin-empty-state">
               Không có người dùng phù hợp.
             </div>
-          )}
-
-          {!loading &&
-            users.map((user) => (
+            ) : (
+              users.map((user) => (
               <div
                 key={user.id}
-                className="grid grid-cols-1 gap-4 px-4 py-4 text-sm text-white/80 lg:grid-cols-[1.2fr_1fr_0.7fr_0.8fr] lg:items-center"
+                className="admin-row-card grid grid-cols-1 gap-4 px-4 py-4 text-sm text-white/80 lg:grid-cols-[1.2fr_1fr_0.7fr_0.8fr] lg:items-center"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-white/10">
@@ -214,16 +246,12 @@ export default function AdminUsers() {
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2 lg:hidden">
                       <span
-                        className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${getRoleTone(user.role)}`}
+                        className={getRoleTone(user.role)}
                       >
                         {user.role || "USER"}
                       </span>
                       <span
-                        className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
-                          user.is_active
-                            ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
-                            : "border-rose-400/30 bg-rose-500/10 text-rose-200"
-                        }`}
+                        className={`admin-status-chip ${user.is_active ? "is-success" : "is-danger"}`}
                       >
                         {user.is_active ? "Đang hoạt động" : "Bị khóa"}
                       </span>
@@ -238,21 +266,17 @@ export default function AdminUsers() {
 
                 <div className="hidden lg:block">
                   <span
-                    className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${
-                      user.is_active
-                        ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
-                        : "border-rose-400/30 bg-rose-500/10 text-rose-200"
-                    }`}
+                    className={`admin-status-chip ${user.is_active ? "is-success" : "is-danger"}`}
                   >
                     {user.is_active ? "Đang hoạt động" : "Bị khóa"}
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-end gap-2">
+                <div className="admin-inline-actions">
                   <button
                     onClick={() => navigate(`/admin/users/${user.id}`)}
                     aria-label="Xem chi tiết"
-                    className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition md:hover:bg-emerald-400/20"
+                    className="admin-button admin-button-success"
                   >
                     <FiEye />
                     <span className="hidden sm:inline">Xem</span>
@@ -260,7 +284,7 @@ export default function AdminUsers() {
                   <button
                     onClick={() => navigate(`/admin/users/${user.id}/edit`)}
                     aria-label="Sửa"
-                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition md:hover:bg-white/10"
+                    className="admin-button admin-button-ghost"
                   >
                     <FiEdit2 />
                     <span className="hidden sm:inline">Sửa</span>
@@ -268,15 +292,17 @@ export default function AdminUsers() {
                   <button
                     onClick={() => handleDelete(user)}
                     aria-label="Xóa"
-                    className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-200 transition md:hover:bg-rose-500/20"
+                    className="admin-button admin-button-danger"
                   >
                     <FiTrash2 />
                     <span className="hidden sm:inline">Xóa</span>
                   </button>
                 </div>
               </div>
-            ))}
-        </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       <Toast

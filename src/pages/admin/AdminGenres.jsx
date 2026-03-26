@@ -6,8 +6,15 @@ import {
   updateGenre,
 } from "../../api/admin.api";
 import { FiPlus, FiRefreshCw, FiTrash2 } from "react-icons/fi";
+import AdminListLoadingState from "../../components/admin/AdminListLoadingState";
+import AdminListNotice from "../../components/admin/AdminListNotice";
 import Toast from "../../components/common/Toast";
 import { confirmAdminAction, promptAdminInput } from "../../utils/adminDialog";
+import {
+  getAdminListFallbackMessage,
+  isAdminListTimeoutError,
+  withAdminListTimeout,
+} from "../../utils/adminListRequest";
 
 export default function AdminGenres() {
   const [genres, setGenres] = useState([]);
@@ -16,20 +23,29 @@ export default function AdminGenres() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [toast, setToast] = useState({ title: "", message: "" });
+  const matchingGenresCount = genres.filter((genre) =>
+    keyword.trim() ? genre?.name?.toLowerCase().includes(keyword.trim().toLowerCase()) : true
+  ).length;
 
   const loadGenres = async () => {
     try {
       setLoading(true);
-      const res = await listGenres({ page: 1, limit: 50, keyword });
-      const payload = res?.data?.data ?? res?.data ?? [];
-      const list = Array.isArray(payload)
-        ? payload
-        : payload.items || payload.genres || [];
+      const list = await withAdminListTimeout(async () => {
+        const res = await listGenres({ page: 1, limit: 50, keyword });
+        const payload = res?.data?.data ?? res?.data ?? [];
+        return Array.isArray(payload)
+          ? payload
+          : payload.items || payload.genres || [];
+      });
       setGenres(list);
       setErrorMessage("");
     } catch (error) {
-      console.error("Load genres failed", error);
-      setErrorMessage("Không thể tải danh sách thể loại.");
+      if (isAdminListTimeoutError(error)) {
+        console.warn("Load genres timed out");
+      } else {
+        console.error("Load genres failed", error);
+      }
+      setErrorMessage(getAdminListFallbackMessage("thể loại", keyword));
       setGenres([]);
     } finally {
       setLoading(false);
@@ -90,26 +106,43 @@ export default function AdminGenres() {
   };
 
   return (
-    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="admin-page-shell admin-list-page min-h-screen space-y-6 px-4 py-6 sm:px-8">
+      <div className="admin-list-header">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+          <p className="admin-list-kicker">
             Quản trị
           </p>
-          <h1 className="text-3xl font-extrabold text-white">
+          <h1 className="admin-list-title">
             Quản lý thể loại
           </h1>
+          <p className="admin-list-summary">
+            Chuyển danh sách thể loại sang một surface gọn và sáng sủa hơn để thêm,
+            đổi tên hay xóa nhanh mà không bị nặng mắt.
+          </p>
         </div>
         <button
           onClick={loadGenres}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
+          className="admin-button"
         >
           <FiRefreshCw /> Làm mới
         </button>
       </div>
 
+      <div className="admin-stat-grid">
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Thể loại</p>
+          <p className="admin-stat-value">{genres.length}</p>
+          <p className="admin-stat-note">Tổng thể loại đang hiển thị</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Khớp tìm kiếm</p>
+          <p className="admin-stat-value">{matchingGenresCount}</p>
+          <p className="admin-stat-note">Theo từ khóa hiện tại</p>
+        </div>
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+        <div className="admin-toolbar-panel">
           <input
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
@@ -117,21 +150,21 @@ export default function AdminGenres() {
               if (event.key === "Enter") loadGenres();
             }}
             placeholder="Tìm kiếm thể loại..."
-            className="ui-search-field w-full rounded-2xl px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
+            className="admin-field"
           />
         </div>
 
-        <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-          <div className="flex gap-2">
+        <div className="admin-toolbar-panel">
+          <div className="admin-toolbar-group">
             <input
               value={newGenre}
               onChange={(event) => setNewGenre(event.target.value)}
               placeholder="Thêm thể loại mới..."
-              className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none"
+              className="admin-field"
             />
             <button
               onClick={handleCreate}
-              className="inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300"
+              className="admin-button admin-button-primary"
             >
               <FiPlus /> Thêm
             </button>
@@ -139,33 +172,26 @@ export default function AdminGenres() {
         </div>
       </div>
 
-      {errorMessage && (
-        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-          {errorMessage}
-        </div>
-      )}
+      <AdminListNotice message={errorMessage} />
 
-      <div className="overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1fr_0.4fr] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50">
+      <div className="admin-data-panel">
+        <div className="admin-data-head grid grid-cols-[1fr_0.4fr] px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50">
           <span>Thể loại</span>
           <span className="text-right">Hành động</span>
         </div>
-        <div className="divide-y divide-white/5">
-          {loading && (
-            <div className="px-4 py-6 text-sm text-white/60">
-              Đang tải dữ liệu...
-            </div>
-          )}
-          {!loading && genres.length === 0 && (
-            <div className="px-4 py-6 text-sm text-white/60">
+        {loading ? (
+          <AdminListLoadingState variant="genres" />
+        ) : (
+          <div className="divide-y divide-white/5">
+            {genres.length === 0 ? (
+            <div className="admin-empty-state">
               Không có thể loại phù hợp.
             </div>
-          )}
-          {!loading &&
-            genres.map((genre) => (
+            ) : (
+              genres.map((genre) => (
               <div
                 key={genre.id}
-                className="flex items-center justify-between px-4 py-3 text-sm text-white/80"
+                className="admin-row-card flex items-center justify-between px-4 py-3 text-sm text-white/80"
               >
                 <span
                   className="cursor-pointer text-white md:hover:text-emerald-300"
@@ -175,13 +201,15 @@ export default function AdminGenres() {
                 </span>
                 <button
                   onClick={() => handleDelete(genre)}
-                  className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition md:hover:bg-rose-500/20"
+                  className="admin-button admin-button-danger"
                 >
                   <FiTrash2 /> Xoá mềm
                 </button>
               </div>
-            ))}
-        </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
       <Toast
         title={toast.title}

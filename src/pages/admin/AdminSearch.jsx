@@ -3,12 +3,18 @@ import { FiSearch } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { searchAdmin } from "../../api/admin.api";
 import { resolveAssetUrl } from "../../utils/asset";
+import AdminListNotice from "../../components/admin/AdminListNotice";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import { getArtistLabel } from "../../utils/artist";
 import {
   extractAdminSearchItems,
   normalizeAdminSearchType,
 } from "../../utils/adminSearch";
+import {
+  getAdminListFallbackMessage,
+  isAdminListTimeoutError,
+  withAdminListTimeout,
+} from "../../utils/adminListRequest";
 import useDebouncedValue from "../../hooks/useDebouncedValue";
 
 const SEARCH_TABS = [
@@ -172,12 +178,14 @@ export default function AdminSearch() {
 
     try {
       setLoading(true);
-      const res = await searchAdmin({
-        q: trimmed,
-        keyword: trimmed,
-        page: 1,
-        limit: 50,
-      });
+      const res = await withAdminListTimeout(() =>
+        searchAdmin({
+          q: trimmed,
+          keyword: trimmed,
+          page: 1,
+          limit: 50,
+        })
+      );
       const payload = res?.data?.data ?? res?.data ?? [];
       const list = extractAdminSearchItems(payload);
       if (requestId !== searchRequestRef.current) return;
@@ -186,8 +194,12 @@ export default function AdminSearch() {
       setErrorMessage("");
     } catch (error) {
       if (requestId !== searchRequestRef.current) return;
-      console.error("Search admin failed", error);
-      setErrorMessage("Không thể tìm kiếm dữ liệu.");
+      if (isAdminListTimeoutError(error)) {
+        console.warn("Search admin timed out");
+      } else {
+        console.error("Search admin failed", error);
+      }
+      setErrorMessage(getAdminListFallbackMessage("kết quả", trimmed));
       setResults([]);
     } finally {
       if (requestId === searchRequestRef.current) {
@@ -331,11 +343,7 @@ export default function AdminSearch() {
         </div>
       </div>
 
-      {errorMessage && (
-        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-          {errorMessage}
-        </div>
-      )}
+      <AdminListNotice message={errorMessage} />
 
       {hasNoResult && (
         <div className="rounded-2xl border border-white/5 bg-[#181818] p-6 text-white/70">

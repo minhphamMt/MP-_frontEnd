@@ -3,9 +3,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { FiRefreshCw, FiSearch } from "react-icons/fi";
 import { deleteAlbum, getAlbums } from "../../api/album.api";
 import { searchAdmin } from "../../api/admin.api";
+import AdminListLoadingState from "../../components/admin/AdminListLoadingState";
+import AdminListNotice from "../../components/admin/AdminListNotice";
 import ArtistAlbumTile from "../../components/artist/ArtistAlbumTile";
 import Toast from "../../components/common/Toast";
 import { confirmAdminAction } from "../../utils/adminDialog";
+import {
+  getAdminListFallbackMessage,
+  isAdminListTimeoutError,
+  withAdminListTimeout,
+} from "../../utils/adminListRequest";
 import {
   extractAdminSearchItems,
   filterAdminSearchItemsByType,
@@ -22,41 +29,51 @@ export default function AdminAlbums() {
   const [errorMessage, setErrorMessage] = useState("");
   const [toast, setToast] = useState({ title: "", message: "" });
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 320);
+  const albumsWithCoverCount = albums.filter((album) => album?.cover_url || album?.cover).length;
+  const releasedThisYearCount = albums.filter((album) => {
+    if (!album?.release_date) return false;
+    const parsed = new Date(album.release_date);
+    return !Number.isNaN(parsed.getTime()) && parsed.getFullYear() === new Date().getFullYear();
+  }).length;
 
   const loadAlbums = async (searchTerm = "") => {
     try {
       setLoading(true);
-      let list = [];
+      const list = await withAdminListTimeout(async () => {
+        if (searchTerm) {
+          const res = await searchAdmin({
+            q: searchTerm,
+            keyword: searchTerm,
+            page: 1,
+            limit: 100,
+          });
+          const payload = res?.data?.data ?? res?.data ?? [];
+          return filterAdminSearchItemsByType(
+            extractAdminSearchItems(payload),
+            "album"
+          );
+        }
 
-      if (searchTerm) {
-        const res = await searchAdmin({
-          q: searchTerm,
-          keyword: searchTerm,
-          page: 1,
-          limit: 100,
-        });
-        const payload = res?.data?.data ?? res?.data ?? [];
-        list = filterAdminSearchItemsByType(
-          extractAdminSearchItems(payload),
-          "album"
-        );
-      } else {
         const res = await getAlbums({
           page: 1,
           limit: 200,
           sort: "release_date",
         });
         const payload = res?.data?.data ?? res?.data ?? [];
-        list = Array.isArray(payload)
+        return Array.isArray(payload)
           ? payload
           : payload.items || payload.albums || [];
-      }
+      });
 
       setAlbums(list);
       setErrorMessage("");
     } catch (error) {
-      console.error("Load albums failed", error);
-      setErrorMessage("Không thể tải danh sách album.");
+      if (isAdminListTimeoutError(error)) {
+        console.warn("Load albums timed out");
+      } else {
+        console.error("Load albums failed", error);
+      }
+      setErrorMessage(getAdminListFallbackMessage("album", searchTerm));
       setAlbums([]);
     } finally {
       setLoading(false);
@@ -99,56 +116,68 @@ export default function AdminAlbums() {
   };
 
   return (
-    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="admin-page-shell admin-list-page min-h-screen space-y-6 px-4 py-6 sm:px-8">
+      <div className="admin-list-header">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+          <p className="admin-list-kicker">
             Quản trị
           </p>
-          <h1 className="text-3xl font-extrabold text-white">Quản lý album</h1>
+          <h1 className="admin-list-title">Quản lý album</h1>
+          <p className="admin-list-summary">
+            Giữ danh sách album rõ nhịp hơn với card phẳng, khoảng thở tốt và các
+            điểm dữ liệu quan trọng được đẩy lên phía trước.
+          </p>
         </div>
         <button
           onClick={() => loadAlbums(keyword.trim())}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
+          className="admin-button"
         >
           <FiRefreshCw /> Làm mới
         </button>
       </div>
 
-      <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex flex-1 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80">
-            <FiSearch className="text-white/50" />
+      <div className="admin-stat-grid">
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Album</p>
+          <p className="admin-stat-value">{albums.length}</p>
+          <p className="admin-stat-note">Tổng album đang hiển thị</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Có cover</p>
+          <p className="admin-stat-value">{albumsWithCoverCount}</p>
+          <p className="admin-stat-note">Sẵn sàng hiển thị tốt</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Năm nay</p>
+          <p className="admin-stat-value">{releasedThisYearCount}</p>
+          <p className="admin-stat-note">Album phát hành trong năm hiện tại</p>
+        </div>
+      </div>
+
+      <div className="admin-toolbar-panel">
+        <div className="admin-toolbar-group">
+          <label className="admin-search-shell">
+            <FiSearch className="admin-search-icon" />
             <input
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
               placeholder="Tìm theo tên album hoặc nghệ sĩ..."
-              className="w-full bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
+              className="admin-field"
             />
-          </div>
+          </label>
         </div>
       </div>
 
-      {errorMessage && (
-        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-          {errorMessage}
-        </div>
-      )}
+      <AdminListNotice message={errorMessage} />
 
-      {loading && (
-        <div className="rounded-2xl border border-white/10 bg-[#181818] px-4 py-6 text-sm text-white/60">
-          Đang tải dữ liệu...
-        </div>
-      )}
-
-      {!loading && albums.length === 0 && (
-        <div className="rounded-2xl border border-white/10 bg-[#181818] px-4 py-6 text-sm text-white/60">
+      {loading ? (
+        <AdminListLoadingState variant="albums" />
+      ) : albums.length === 0 ? (
+        <div className="admin-empty-state admin-data-panel">
           Không có album phù hợp.
         </div>
-      )}
-
-      {!loading && albums.length > 0 && (
-        <div className="grid gap-5 lg:grid-cols-3">
+      ) : (
+        <div className="admin-collection-grid">
           {albums.map((album) => (
             <ArtistAlbumTile
               key={album.id}

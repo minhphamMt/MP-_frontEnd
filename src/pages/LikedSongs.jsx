@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getLikedSongs } from "../api/like.api";
 import { getSongById } from "../api/song.api";
 import FilterToolbar from "../components/common/FilterToolbar";
+import { UserSurfaceRowsLoading } from "../components/common/UserLoadingState";
 import LikedSongsSection from "../components/playlists/LikedSongsSection";
 import usePlayerStore, { normalizeSongId } from "../store/player.store";
 import { matchesAnyText } from "../utils/searchText";
@@ -148,9 +149,7 @@ export default function LikedSongs() {
 
       <section>
         {loading ? (
-          <div className="user-surface p-6 text-sm text-white/60">
-            Đang tải bài hát đã thích...
-          </div>
+          <UserSurfaceRowsLoading rows={5} />
         ) : (
           <LikedSongsSection
             songs={filteredLikedSongs}

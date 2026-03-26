@@ -70,13 +70,13 @@ export default function Profile() {
   const isArtistProfileTheme = role === "ARTIST" || authContext === "artist_request";
   const pageShellClassName = `${
     isArtistProfileTheme ? "artist-page-shell" : "user-page-shell"
-  } min-h-screen space-y-8 px-4 py-6 sm:px-8`;
+  } profile-page-shell flex w-full flex-col gap-4 px-2 py-2 sm:px-4 sm:py-3`;
   const sectionClassName = isArtistProfileTheme
-    ? "relative overflow-hidden rounded-3xl artist-page-shell artist-glass p-6 shadow-[0_25px_80px_rgba(2,6,18,0.42)]"
-    : "relative overflow-hidden rounded-3xl border border-white/15 bg-[#1a1a1a] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.55)]";
+    ? "profile-panel relative overflow-hidden rounded-3xl artist-page-shell artist-glass p-4 sm:p-5 shadow-[0_25px_80px_rgba(2,6,18,0.42)]"
+    : "profile-panel relative overflow-hidden rounded-3xl border border-white/10 bg-[#171717] p-4 sm:p-5 shadow-[0_22px_64px_rgba(0,0,0,0.48)]";
   const heroSectionClassName = isArtistProfileTheme
-    ? "relative overflow-hidden rounded-3xl artist-page-shell artist-glass p-6 shadow-[0_30px_90px_rgba(2,6,18,0.46)]"
-    : "relative overflow-hidden rounded-3xl border border-white/15 bg-[#1a1a1a] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)]";
+    ? "relative overflow-hidden rounded-3xl artist-page-shell artist-glass p-4 sm:p-5 shadow-[0_30px_90px_rgba(2,6,18,0.46)]"
+    : "relative overflow-hidden rounded-3xl border border-white/10 bg-[#181818] p-4 sm:p-5 shadow-[0_26px_72px_rgba(0,0,0,0.46)]";
   const primaryButtonClassName = `${
     isArtistProfileTheme ? "artist-btn-primary" : "user-btn-primary"
   } px-6 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60`;
@@ -88,19 +88,28 @@ export default function Profile() {
   } w-full px-6 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60`;
   const textInputClassName = isArtistProfileTheme
     ? "artist-input"
-    : "w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none transition focus:border-white/40";
+    : "user-input w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-2.5 text-sm text-white outline-none transition";
   const readOnlyInputClassName = isArtistProfileTheme
     ? "artist-input cursor-not-allowed !bg-white/5 text-white/65"
-    : "w-full cursor-not-allowed rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/65 outline-none";
+    : "user-input w-full cursor-not-allowed rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.05] px-4 py-2.5 text-sm text-white/72 outline-none";
   const fileInputClassName = isArtistProfileTheme
     ? "w-full rounded-2xl border border-dashed border-sky-200/20 bg-[#132034] px-4 py-3 text-sm text-white/75 file:mr-4 file:rounded-full file:border-0 file:bg-sky-200/12 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-sky-50 file:transition md:hover:border-sky-200/32"
-    : "w-full rounded-2xl border border-dashed border-white/20 bg-[#111111] px-4 py-3 text-sm text-white/70 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/80 file:transition md:hover:border-white/30";
+    : "w-full rounded-2xl border border-dashed border-emerald-400/20 bg-[#111111] px-4 py-2.5 text-sm text-white/74 file:mr-4 file:rounded-full file:border-0 file:bg-emerald-400/12 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-emerald-50 file:transition md:hover:border-emerald-400/32";
   const formHintCardClassName = isArtistProfileTheme
     ? "flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-200/16 bg-sky-200/[0.06] p-4 text-sm text-white/65"
-    : "flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/60";
+    : "flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300/14 bg-amber-300/[0.06] p-4 text-sm text-white/62";
   const forgotLinkClassName = isArtistProfileTheme
     ? "text-xs font-medium text-sky-100 transition md:hover:text-white"
     : "text-xs font-medium text-emerald-200 transition md:hover:text-emerald-100";
+  const userHeadingLabelClassName = isArtistProfileTheme
+    ? "text-[11px] uppercase tracking-[0.35em] text-white/50"
+    : "text-[11px] uppercase tracking-[0.35em] text-amber-200/72";
+  const userSectionLabelClassName = isArtistProfileTheme
+    ? "text-[11px] uppercase tracking-[0.35em] text-white/50"
+    : "text-[11px] uppercase tracking-[0.35em] text-amber-200/68";
+  const passwordHintCardClassName = isArtistProfileTheme
+    ? "rounded-2xl border border-sky-200/16 bg-sky-200/[0.06] p-4 text-xs text-white/64"
+    : "rounded-2xl border border-emerald-400/16 bg-emerald-400/[0.06] p-4 text-xs text-white/66";
 
   useEffect(() => {
     if (authUser) {
@@ -373,13 +382,19 @@ export default function Profile() {
       />
 
       <header className={heroSectionClassName}>
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
+        {!isArtistProfileTheme && (
+          <>
+            <div className="pointer-events-none absolute -right-4 top-0 h-28 w-28 rounded-full bg-emerald-400/12 blur-3xl" />
+            <div className="pointer-events-none absolute left-16 top-2 h-16 w-40 rounded-full bg-amber-300/10 blur-2xl" />
+          </>
+        )}
+        <div className="profile-hero-row relative flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-3">
             <div
-              className={`relative h-16 w-16 overflow-hidden rounded-full ${
+              className={`relative h-12 w-12 overflow-hidden rounded-full ${
                 isArtistProfileTheme
                   ? "border border-sky-200/16 bg-sky-200/10"
-                  : "border border-white/10 bg-white/10"
+                  : "border border-emerald-300/18 bg-emerald-400/[0.10] shadow-[0_0_0_6px_rgba(29,185,84,0.06)]"
               }`}
             >
               {profile.avatar_url ? (
@@ -398,44 +413,47 @@ export default function Profile() {
               )}
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+              <p className={userHeadingLabelClassName}>
                 Hồ sơ cá nhân
               </p>
-              <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
+              <h1 className="profile-hero-title text-[1.75rem] font-extrabold leading-none text-white sm:text-[1.95rem] xl:text-[2.1rem]">
                 {profile.display_name || authUser?.email || "Tài khoản của bạn"}
               </h1>
-              <p className="mt-1 text-sm text-white/60">
+              <p className="mt-1 text-[13px] text-white/58">
                 Cập nhật thông tin và bảo mật tài khoản.
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <div className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/90 shadow-[0_8px_24px_rgba(0,0,0,0.35)] ${isArtistProfileTheme ? "border border-sky-200/16 bg-sky-200/10" : "border border-white/20 bg-white/10"}`}>
+          <div className="flex flex-wrap gap-2">
+            <div className={`rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 shadow-[0_8px_24px_rgba(0,0,0,0.35)] ${isArtistProfileTheme ? "border border-sky-200/16 bg-sky-200/10" : "border border-amber-300/20 bg-amber-300/[0.08]"}`}>
               {authUser?.role || "USER"}
             </div>
-            <div className={`rounded-full px-4 py-2 text-xs font-bold shadow-[0_8px_24px_rgba(16,185,129,0.35)] ${isArtistProfileTheme ? "border border-sky-200/24 bg-sky-300/14 text-sky-100" : "border border-emerald-300/40 bg-emerald-400/15 text-emerald-200"}`}>
+            <div className={`rounded-full px-4 py-2 text-[11px] font-bold shadow-[0_8px_24px_rgba(16,185,129,0.35)] ${isArtistProfileTheme ? "border border-sky-200/24 bg-sky-300/14 text-sky-100" : "border border-emerald-300/40 bg-emerald-400/15 text-emerald-200"}`}>
               Đang hoạt động
             </div>
           </div>
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="profile-main-grid grid gap-4 lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch">
         <form
           onSubmit={submitProfile}
           className={sectionClassName}
         >
-          <div className="relative space-y-6">
+          {!isArtistProfileTheme && (
+            <div className="pointer-events-none absolute left-5 top-0 h-px w-28 bg-amber-300/40" />
+          )}
+          <div className="profile-panel-stack relative flex h-full flex-col gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+              <p className={userSectionLabelClassName}>
                 Thông tin cơ bản
               </p>
-              <h2 className="mt-2 text-xl font-bold text-white">Chỉnh sửa hồ sơ</h2>
+              <h2 className="mt-1.5 text-[1.15rem] font-bold text-white">Chỉnh sửa hồ sơ</h2>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="space-y-2 text-sm text-white/70">
-                  <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
+            <div className="profile-basic-grid grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1.5 text-sm text-white/70">
+                  <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/50">
                   <FiUser className="text-white/70" /> Tên hiển thị
                 </span>
                 <input
@@ -446,8 +464,8 @@ export default function Profile() {
                 />
               </label>
 
-              <div className="space-y-2 text-sm text-white/70">
-                <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
+              <div className="space-y-1.5 text-sm text-white/70">
+                <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/50">
                   <FiMail className="text-white/70" /> Email
                 </span>
                 <input
@@ -457,7 +475,7 @@ export default function Profile() {
                   aria-readonly="true"
 	                  className={readOnlyInputClassName}
                 />
-                <p className="text-xs text-white/45">
+                <p className="text-[11px] leading-5 text-white/42">
                   Email dùng để đăng nhập và xác nhận tài khoản nên không thể đổi tại đây.
                 </p>
               </div>
@@ -478,8 +496,8 @@ export default function Profile() {
               </p>
             </label> */}
 
-            <label className="space-y-2 text-sm text-white/70">
-              <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
+            <label className="space-y-1.5 text-sm text-white/70">
+              <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/50">
                 <FiCamera className="text-white/70" /> Tải ảnh từ máy
               </span>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -490,18 +508,18 @@ export default function Profile() {
                   disabled={loadingAvatar}
 	                  className={fileInputClassName}
                 />
-                <span className="text-xs text-white/50">
-                  Ảnh sẽ được tải lên máy chủ và cập nhật ngay lập tức.
+                <span className="text-[11px] leading-5 text-white/48">
+                  Ảnh avatar sẽ được cập nhật ngay sau khi tải lên.
                 </span>
               </div>
             </label>
 
-	            <div className={formHintCardClassName}>
+			            <div className={`${formHintCardClassName} profile-action-strip mt-auto`}>
               <div className="flex items-start gap-3">
-                <FiCheckCircle className="mt-0.5 text-white/70" />
+                <FiCheckCircle className={`mt-0.5 ${isArtistProfileTheme ? "text-white/70" : "text-amber-200"}`} />
                 <div>
                   <p className="font-semibold text-white">Lưu ý</p>
-                  <p className="text-xs text-white/60">
+                  <p className="text-[11px] leading-5 text-white/58">
                     Thông tin đã cập nhật sẽ đồng bộ cho toàn bộ hệ thống.
                   </p>
                 </div>
@@ -518,24 +536,27 @@ export default function Profile() {
         </form>
 
          {!isGoogleAccount && (
-          <form
+         <form
             onSubmit={submitPassword}
 	            className={sectionClassName}
           >
-            <div className="relative space-y-6">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-                  Bảo mật
-                </p>
-                <h2 className="mt-2 text-xl font-bold text-white">
-                  Đổi mật khẩu
-                </h2>
-              </div>
+            {!isArtistProfileTheme && (
+              <div className="pointer-events-none absolute left-5 top-0 h-px w-28 bg-emerald-400/45" />
+            )}
+	            <div className="profile-panel-stack relative flex h-full flex-col gap-4">
+	              <div>
+	                <p className={userSectionLabelClassName}>
+	                  Bảo mật
+	                </p>
+	                <h2 className="mt-1.5 text-[1.15rem] font-bold text-white">
+	                  Đổi mật khẩu
+	                </h2>
+	              </div>
 
-              <label className="space-y-2 text-sm text-white/70">
-                <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                  <FiKey className="text-white/70" /> Mật khẩu hiện tại
-                </span>
+	              <label className="space-y-1.5 text-sm text-white/70">
+	                <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/50">
+	                  <FiKey className="text-white/70" /> Mật khẩu hiện tại
+	                </span>
                 <div className="relative">
                   <input
                     type={showPasswords.oldPassword ? "text" : "password"}
@@ -555,68 +576,73 @@ export default function Profile() {
                 </div>
               </label>
 
-              <label className="space-y-2 text-sm text-white/70">
-                <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                  <FiKey className="text-white/70" /> Mật khẩu mới
-                </span>
-                <div className="relative">
-                  <input
-                    type={showPasswords.newPassword ? "text" : "password"}
-                    value={passwords.newPassword}
-                    onChange={handlePasswordChange("newPassword")}
-                    placeholder="Tối thiểu 6 ký tự"
-	                    className={`${textInputClassName} pr-12`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => togglePasswordVisibility("newPassword")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition md:hover:bg-white/10 md:hover:text-white"
-                    aria-label={showPasswords.newPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                  >
-                    {showPasswords.newPassword ? <FiEyeOff /> : <FiEye />}
-                  </button>
-                </div>
-              </label>
+                <div className="profile-password-grid grid gap-3 sm:grid-cols-2">
+	                <label className="space-y-1.5 text-sm text-white/70">
+	                  <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/50">
+	                    <FiKey className="text-white/70" /> Mật khẩu mới
+	                  </span>
+	                  <div className="relative">
+	                    <input
+	                      type={showPasswords.newPassword ? "text" : "password"}
+	                      value={passwords.newPassword}
+	                      onChange={handlePasswordChange("newPassword")}
+	                      placeholder="Tối thiểu 6 ký tự"
+		                      className={`${textInputClassName} pr-12`}
+	                    />
+	                    <button
+	                      type="button"
+	                      onClick={() => togglePasswordVisibility("newPassword")}
+	                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition md:hover:bg-white/10 md:hover:text-white"
+	                      aria-label={showPasswords.newPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+	                    >
+	                      {showPasswords.newPassword ? <FiEyeOff /> : <FiEye />}
+	                    </button>
+	                  </div>
+	                </label>
 
-              <label className="space-y-2 text-sm text-white/70">
-                <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                  <FiKey className="text-white/70" /> Xác nhận mật khẩu mới
-                </span>
-                <div className="relative">
-                  <input
-                    type={showPasswords.confirmPassword ? "text" : "password"}
-                    value={passwords.confirmPassword}
-                    onChange={handlePasswordChange("confirmPassword")}
-                    placeholder="Nhập lại mật khẩu mới"
-	                    className={`${textInputClassName} pr-12`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => togglePasswordVisibility("confirmPassword")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition md:hover:bg-white/10 md:hover:text-white"
-                    aria-label={showPasswords.confirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                  >
-                    {showPasswords.confirmPassword ? <FiEyeOff /> : <FiEye />}
-                  </button>
+	                <label className="space-y-1.5 text-sm text-white/70">
+	                  <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/50">
+	                    <FiKey className="text-white/70" /> Xác nhận mật khẩu
+	                  </span>
+	                  <div className="relative">
+	                    <input
+	                      type={showPasswords.confirmPassword ? "text" : "password"}
+	                      value={passwords.confirmPassword}
+	                      onChange={handlePasswordChange("confirmPassword")}
+	                      placeholder="Nhập lại mật khẩu"
+		                      className={`${textInputClassName} pr-12`}
+	                    />
+	                    <button
+	                      type="button"
+	                      onClick={() => togglePasswordVisibility("confirmPassword")}
+	                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition md:hover:bg-white/10 md:hover:text-white"
+	                      aria-label={showPasswords.confirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+	                    >
+	                      {showPasswords.confirmPassword ? <FiEyeOff /> : <FiEye />}
+	                    </button>
+	                  </div>
+	                </label>
                 </div>
-              </label>
 
-	              <div className={`rounded-2xl p-4 text-xs ${isArtistProfileTheme ? "border border-sky-200/16 bg-sky-200/[0.06] text-white/64" : "border border-white/10 bg-white/5 text-white/60"}`}>
-                Gợi ý: Hãy dùng mật khẩu mạnh kết hợp chữ hoa, chữ thường và ký tự đặc biệt.
-              </div>
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={openForgotModal}
+	              <div className={passwordHintCardClassName}>
+	                Gợi ý: Hãy dùng mật khẩu mạnh kết hợp chữ hoa, chữ thường và ký tự đặc biệt.
+	              </div>
+	              <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] text-white/42">
+                    Đổi mật khẩu sẽ áp dụng cho tài khoản hiện tại ngay lập tức.
+                  </span>
+	                <button
+	                  type="button"
+	                  onClick={openForgotModal}
 	                  className={forgotLinkClassName}
                 >
                   Quên mật khẩu?
                 </button>
               </div>
-              <button
+	              <button
                 type="submit"
                 disabled={loadingPassword}
-	                className={widePrimaryButtonClassName}
+		                className={`${widePrimaryButtonClassName} mt-auto`}
               >
                 {loadingPassword ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
               </button>

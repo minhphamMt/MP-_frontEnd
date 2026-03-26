@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiChevronRight } from "react-icons/fi";
 import { getTop50ByGenres } from "../api/chart.api";
+import { UserGenreGridLoading } from "../components/common/UserLoadingState";
 import usePageMetadata from "../hooks/usePageMetadata";
 import { filterPlayableSongs } from "../utils/song";
 import { resolveAssetUrl } from "../utils/asset";
@@ -59,11 +60,7 @@ export default function Top50Genres() {
 
   const content = useMemo(() => {
     if (loading) {
-      return (
-         <div className="user-surface p-4 text-xs text-white/60">
-          Đang tải Top 50 theo thể loại...
-        </div>
-      );
+      return <UserGenreGridLoading cards={6} />;
     }
 
     if (!genres.length) {

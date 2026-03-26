@@ -8,6 +8,7 @@ import { resolveAssetUrl } from "../../utils/asset";
 import { getAlbumPath } from "../../utils/entityPath";
 import AddToPlaylistButton from "../playlists/AddToPlaylistButton";
 import OptimizedImage from "../common/OptimizedImage";
+import { UserSurfaceRowsLoading } from "../common/UserLoadingState";
 import ArtistNames from "../artist/ArtistNames";
 import { SongDetailIconButton, SongDetailLink } from "./SongDetailLink";
 
@@ -58,11 +59,7 @@ export default function SongTable({ title, subtitle, songs, loading, onRefresh, 
   );
 
   if (loading) {
-    return (
-      <div className="user-page-shell p-6 text-sm text-white/60">
-        Đang tải dữ liệu...
-      </div>
-    );
+    return <UserSurfaceRowsLoading rows={5} />;
   }
 
   if (!songs.length) {

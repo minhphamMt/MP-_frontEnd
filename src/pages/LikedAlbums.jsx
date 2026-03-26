@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AlbumCard from "../components/album/AlbumCard";
 import FilterToolbar from "../components/common/FilterToolbar";
+import { UserCardGridLoading } from "../components/common/UserLoadingState";
 import { getLikedAlbums } from "../api/like.api";
 import useAuthStore from "../store/auth.store";
 import useAlbumLikeStore, { normalizeAlbumId } from "../store/album-like.store";
@@ -112,9 +113,7 @@ export default function LikedAlbums() {
 
       <section className="space-y-4">
         {loading ? (
-          <div className="user-surface p-6 text-sm text-white/60">
-            Đang tải album yêu thích...
-          </div>
+          <UserCardGridLoading cards={5} />
         ) : filteredLikedAlbums.length ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {filteredLikedAlbums.map((album) => (

@@ -150,174 +150,179 @@ export default function AdminArtistForm() {
   };
 
   return (
-    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
+    <div className="admin-page-shell admin-list-page min-h-screen space-y-6 px-4 py-6 sm:px-8">
       <button
         onClick={() => navigate("/admin/artists")}
-        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
+        className="admin-button admin-button-ghost"
       >
         <FiChevronLeft /> Quay lại danh sách
       </button>
 
-      <div className="flex min-h-0 flex-1 flex-col admin-glass rounded-3xl border border-white/10 bg-[#181818] p-5 text-xs shadow-[0_25px_80px_rgba(0,0,0,0.45)] sm:p-6 sm:text-sm">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-              Quản trị
-            </p>
-            <h1 className="text-base font-semibold text-white sm:text-2xl">
+      <div className="admin-detail-shell">
+        <div className="admin-detail-header">
+          <div className="admin-detail-heading">
+            <p className="admin-list-kicker">Quản trị</p>
+            <h1 className="admin-list-title">
               {isEdit ? "Chỉnh sửa nghệ sĩ" : "Tạo nghệ sĩ mới"}
             </h1>
+            <p className="admin-list-summary">
+              Một biểu mẫu gọn, đồng bộ với admin mới, tập trung vào nhận diện nghệ sĩ
+              và phần mô tả quan trọng.
+            </p>
           </div>
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="inline-flex items-center justify-center rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
+            className="admin-button admin-button-primary"
           >
             {saving ? "Đang lưu..." : isEdit ? "Lưu cập nhật" : "Tạo nghệ sĩ"}
           </button>
         </div>
 
         {errorMessage && (
-          <div className="mt-4 admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-100 sm:text-sm">
+          <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-100 sm:text-sm">
             {errorMessage}
           </div>
         )}
 
-        <div className="mt-6 flex min-h-0 flex-1 flex-col">
-          {loading ? (
-            <div className="text-xs text-white/60 sm:text-sm">Đang tải dữ liệu...</div>
-          ) : (
-            <div className="h-full overflow-y-auto pr-1">
-              <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-xs font-semibold text-white sm:text-sm">
-                    {isEdit ? "Thông tin hiện tại" : "Ảnh đại diện"}
-                  </p>
-                  <div className="mt-4 flex flex-col gap-4">
-                    {avatarPreview ? (
-                      <OptimizedImage
-                        src={avatarPreview}
-                        alt={formValues.name || "Artist avatar"}
-                        className="h-56 w-full rounded-2xl object-cover shadow-lg"
-                      />
-                    ) : (
-                      <div className="flex h-56 items-center justify-center rounded-2xl bg-white/10 text-xs text-white/60 sm:text-sm">
-                        Chưa có ảnh đại diện
-                      </div>
-                    )}
-                    <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 transition md:hover:bg-white/10">
-                      <FiCamera /> {isEdit ? "Tải avatar mới" : "Chọn avatar"}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(event) => {
-                          const file = event.target.files?.[0] || null;
-                          setAvatarFile(file);
-                        }}
-                      />
-                    </label>
-                    {isEdit && artist && (
-                      <div className="space-y-2 text-xs text-white/70 sm:text-sm">
-                        <p>
-                          <span className="text-white/60">Tên nghệ sĩ:</span>{" "}
-                          <span className="text-white">
-                            {artist.name || "Chưa cập nhật"}
-                          </span>
-                        </p>
-                        <p>
-                          <span className="text-white/60">Alias:</span>{" "}
-                          <span className="text-white">{artist.alias || "-"}</span>
-                        </p>
-                        <p>
-                          <span className="text-white/60">Zing ID:</span>{" "}
-                          <span className="text-white">
-                            {artist.zing_artist_id || "-"}
-                          </span>
-                        </p>
-                      </div>
-                    )}
+        {loading ? (
+          <div className="admin-loading-state admin-detail-panel">Đang tải dữ liệu...</div>
+        ) : (
+          <div className="admin-detail-grid is-two-column">
+            <div className="admin-detail-panel">
+              <p className="admin-detail-panel-title">
+                {isEdit ? "Thông tin hiện tại" : "Ảnh đại diện"}
+              </p>
+              <p className="admin-detail-panel-note">
+                Ưu tiên một avatar rõ nét và kiểm tra nhanh các thông tin nhận diện
+                chính trước khi lưu.
+              </p>
+              <div className="mt-4 flex flex-col gap-4">
+                {avatarPreview ? (
+                  <div className="admin-detail-media is-square">
+                    <OptimizedImage
+                      src={avatarPreview}
+                      alt={formValues.name || "Artist avatar"}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
-                </div>
+                ) : (
+                  <div className="admin-detail-placeholder">
+                    Chưa có ảnh đại diện
+                  </div>
+                )}
+                <label className="admin-button admin-button-ghost cursor-pointer">
+                  <FiCamera /> {isEdit ? "Tải avatar mới" : "Chọn avatar"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] || null;
+                      setAvatarFile(file);
+                    }}
+                  />
+                </label>
 
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-xs font-semibold text-white sm:text-sm">
-                    {isEdit ? "Cập nhật nghệ sĩ" : "Thông tin nghệ sĩ"}
-                  </p>
-                  <div className="mt-4 grid gap-3 sm:gap-4 sm:grid-cols-2">
-                    <input
-                      value={formValues.name}
-                      onChange={handleChange("name")}
-                      placeholder="Tên nghệ sĩ"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
-                    />
-                    <input
-                      value={formValues.alias}
-                      onChange={handleChange("alias")}
-                      placeholder="Alias"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
-                    />
-                    <input
-                      value={formValues.realname}
-                      onChange={handleChange("realname")}
-                      placeholder="Tên thật"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
-                    />
-                    <input
-                      value={formValues.national}
-                      onChange={handleChange("national")}
-                      placeholder="Quốc gia"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
-                    />
-                    <input
-                      type="date"
-                      value={formValues.birthday}
-                      onChange={handleChange("birthday")}
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/80 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
-                    />
-                    <input
-                      value={formValues.avatar_url}
-                      onChange={handleChange("avatar_url")}
-                      placeholder="Avatar URL (nếu không upload)"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2 sm:text-sm"
-                    />
-                    <input
-                      value={formValues.cover_url}
-                      onChange={handleChange("cover_url")}
-                      placeholder="Cover URL"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2 sm:text-sm"
-                    />
-                    <input
-                      value={formValues.short_bio}
-                      onChange={handleChange("short_bio")}
-                      placeholder="Tiểu sử ngắn"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2 sm:text-sm"
-                    />
-                    <textarea
-                      value={formValues.bio}
-                      onChange={handleChange("bio")}
-                      placeholder="Tiểu sử chi tiết"
-                      className="min-h-[140px] rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2 sm:text-sm"
-                    />
+                <div className="admin-detail-meta-grid">
+                  <div className="admin-detail-meta-card">
+                    <p className="admin-detail-meta-label">Tên nghệ sĩ</p>
+                    <p className="admin-detail-meta-value">
+                      {artist?.name || formValues.name || "Chưa cập nhật"}
+                    </p>
                   </div>
-                  <div className="mt-4 flex justify-end">
-                    <button
-                      onClick={handleSubmit}
-                      disabled={saving}
-                      className="rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      {saving
-                        ? "Đang lưu..."
-                        : isEdit
-                          ? "Lưu cập nhật"
-                          : "Tạo nghệ sĩ"}
-                    </button>
+                  <div className="admin-detail-meta-card">
+                    <p className="admin-detail-meta-label">Alias</p>
+                    <p className="admin-detail-meta-value">
+                      {artist?.alias || formValues.alias || "-"}
+                    </p>
+                  </div>
+                  <div className="admin-detail-meta-card">
+                    <p className="admin-detail-meta-label">Zing ID</p>
+                    <p className="admin-detail-meta-value">
+                      {artist?.zing_artist_id || "-"}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-          )}
-        </div>
+
+            <div className="admin-detail-panel">
+              <p className="admin-detail-panel-title">
+                {isEdit ? "Cập nhật nghệ sĩ" : "Thông tin nghệ sĩ"}
+              </p>
+              <p className="admin-detail-panel-note">
+                Giữ form ngắn, rõ và chỉ hiển thị những trường thật sự cần thiết cho
+                việc quản trị.
+              </p>
+              <div className="mt-4 admin-detail-form-grid">
+                <input
+                  value={formValues.name}
+                  onChange={handleChange("name")}
+                  placeholder="Tên nghệ sĩ"
+                  className="admin-field"
+                />
+                <input
+                  value={formValues.alias}
+                  onChange={handleChange("alias")}
+                  placeholder="Alias"
+                  className="admin-field"
+                />
+                <input
+                  value={formValues.realname}
+                  onChange={handleChange("realname")}
+                  placeholder="Tên thật"
+                  className="admin-field"
+                />
+                <input
+                  value={formValues.national}
+                  onChange={handleChange("national")}
+                  placeholder="Quốc gia"
+                  className="admin-field"
+                />
+                <input
+                  type="date"
+                  value={formValues.birthday}
+                  onChange={handleChange("birthday")}
+                  className="admin-field"
+                />
+                <input
+                  value={formValues.avatar_url}
+                  onChange={handleChange("avatar_url")}
+                  placeholder="Avatar URL (nếu không upload)"
+                  className="admin-field sm:col-span-2"
+                />
+                <input
+                  value={formValues.cover_url}
+                  onChange={handleChange("cover_url")}
+                  placeholder="Cover URL"
+                  className="admin-field sm:col-span-2"
+                />
+                <input
+                  value={formValues.short_bio}
+                  onChange={handleChange("short_bio")}
+                  placeholder="Tiểu sử ngắn"
+                  className="admin-field sm:col-span-2"
+                />
+                <textarea
+                  value={formValues.bio}
+                  onChange={handleChange("bio")}
+                  placeholder="Tiểu sử chi tiết"
+                  className="admin-field admin-detail-textarea sm:col-span-2"
+                />
+              </div>
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={handleSubmit}
+                  disabled={saving}
+                  className="admin-button admin-button-primary"
+                >
+                  {saving ? "Đang lưu..." : isEdit ? "Lưu cập nhật" : "Tạo nghệ sĩ"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <Toast

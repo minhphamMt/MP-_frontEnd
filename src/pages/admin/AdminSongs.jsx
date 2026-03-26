@@ -7,11 +7,18 @@ import {
   listAdminSongs,
   searchAdmin,
 } from "../../api/admin.api";
+import AdminListLoadingState from "../../components/admin/AdminListLoadingState";
+import AdminListNotice from "../../components/admin/AdminListNotice";
 import { resolveAssetUrl } from "../../utils/asset";
 import { toPlayableSong } from "../../utils/song";
 import { promptAdminInput } from "../../utils/adminDialog";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import Toast from "../../components/common/Toast";
+import {
+  getAdminListFallbackMessage,
+  isAdminListTimeoutError,
+  withAdminListTimeout,
+} from "../../utils/adminListRequest";
 import {
   extractAdminSearchItems,
   filterAdminSearchItemsByType,
@@ -61,28 +68,31 @@ export default function AdminSongs() {
   const [errorMessage, setErrorMessage] = useState("");
   const [toast, setToast] = useState({ title: "", message: "" });
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 320);
+  const pendingSongsCount = songs.filter((song) => song?.status === "pending").length;
+  const approvedSongsCount = songs.filter((song) => song?.status === "approved").length;
+  const missingAudioCount = songs.filter((song) => !getSongAudio(song)).length;
 
   const loadSongs = async (searchTerm = "", statusValue = statusFilter) => {
     try {
       setLoading(true);
-      let list = [];
-
-      if (searchTerm) {
-        const res = await searchAdmin({
-          q: searchTerm,
-          keyword: searchTerm,
-          page: 1,
-          limit: 100,
-        });
-        const payload = res?.data?.data ?? res?.data ?? [];
-        list = filterAdminSearchItemsByType(
-          extractAdminSearchItems(payload),
-          "song"
-        );
-        if (statusValue) {
-          list = list.filter((song) => song?.status === statusValue);
+      const list = await withAdminListTimeout(async () => {
+        if (searchTerm) {
+          const res = await searchAdmin({
+            q: searchTerm,
+            keyword: searchTerm,
+            page: 1,
+            limit: 100,
+          });
+          const payload = res?.data?.data ?? res?.data ?? [];
+          const filtered = filterAdminSearchItemsByType(
+            extractAdminSearchItems(payload),
+            "song"
+          );
+          return statusValue
+            ? filtered.filter((song) => song?.status === statusValue)
+            : filtered;
         }
-      } else {
+
         const params = {
           page: 1,
           limit: 100,
@@ -90,16 +100,20 @@ export default function AdminSongs() {
         };
         const res = await listAdminSongs(params);
         const payload = res?.data?.data ?? res?.data ?? [];
-        list = Array.isArray(payload)
+        return Array.isArray(payload)
           ? payload
           : payload.items || payload.songs || [];
-      }
+      });
 
       setSongs(list);
       setErrorMessage("");
     } catch (error) {
-      console.error("Load songs failed", error);
-      setErrorMessage("Không thể tải danh sách bài hát.");
+      if (isAdminListTimeoutError(error)) {
+        console.warn("Load songs timed out");
+      } else {
+        console.error("Load songs failed", error);
+      }
+      setErrorMessage(getAdminListFallbackMessage("bài hát", searchTerm));
       setSongs([]);
     } finally {
       setLoading(false);
@@ -207,7 +221,8 @@ export default function AdminSongs() {
       ]),
     ];
 
-    const blob = new Blob([rows.map((row) => row.join(",")).join("\n")], {
+    const csvContent = rows.map((row) => row.join(",")).join("\r\n");
+    const blob = new Blob(["\uFEFF", csvContent], {
       type: "text/csv;charset=utf-8;",
     });
     const url = window.URL.createObjectURL(blob);
@@ -268,58 +283,84 @@ export default function AdminSongs() {
   };
 
   return (
-    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="admin-page-shell admin-list-page min-h-screen space-y-6 px-4 py-6 sm:px-8">
+      <div className="admin-list-header">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+          <p className="admin-list-kicker">
             Quản trị
           </p>
-          <h1 className="text-3xl font-extrabold text-white">Duyệt bài hát</h1>
+          <h1 className="admin-list-title">Duyệt bài hát</h1>
+          <p className="admin-list-summary">
+            Ưu tiên kiểm duyệt, lọc nhanh các bài chờ xử lý và thao tác hàng loạt
+            trong một giao diện gọn, rõ, không rối mắt.
+          </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="admin-toolbar-actions">
           <input
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
             placeholder="Tìm theo bài hát, nghệ sĩ, album..."
-            className="ui-search-field w-full rounded-full px-4 py-2 text-xs font-semibold text-white/80 focus:border-white/30 focus:outline-none sm:w-72"
+            className="admin-field sm:w-72"
           />
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="ui-select rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white"
+            className="admin-select-field"
           >
             {STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value} className="text-black">
+              <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
           <button
             onClick={() => loadSongs(keyword.trim(), statusFilter)}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
+            className="admin-button"
           >
             <FiRefreshCw /> Làm mới
           </button>
           <button
             onClick={exportVisibleSongs}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
+            className="admin-button admin-button-ghost"
           >
             <FiDownload /> Xuất CSV
           </button>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="admin-stat-grid">
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Hiển thị</p>
+          <p className="admin-stat-value">{visibleSongs.length}</p>
+          <p className="admin-stat-note">Bài hát trong danh sách hiện tại</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Chờ duyệt</p>
+          <p className="admin-stat-value">{pendingSongsCount}</p>
+          <p className="admin-stat-note">Ưu tiên xử lý trước</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Đã duyệt</p>
+          <p className="admin-stat-value">{approvedSongsCount}</p>
+          <p className="admin-stat-note">Đã thông qua kiểm duyệt</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Thiếu mp3</p>
+          <p className="admin-stat-value">{missingAudioCount}</p>
+          <p className="admin-stat-note">Cần bổ sung file audio</p>
+        </div>
+      </div>
+
+      <div className="admin-toolbar-panel">
+        <div className="admin-toolbar-actions">
         <button
           type="button"
           onClick={() => {
             setStatusFilter("pending");
             setMissingAudioOnly(false);
           }}
-          className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-            statusFilter === "pending" && !missingAudioOnly
-              ? "bg-amber-400/18 text-amber-100"
-              : "border border-white/12 bg-white/[0.04] text-white/70 md:hover:bg-white/[0.08]"
+          className={`admin-toggle-chip ${
+            statusFilter === "pending" && !missingAudioOnly ? "is-active" : ""
           }`}
         >
           Chờ duyệt
@@ -330,11 +371,7 @@ export default function AdminSongs() {
             setStatusFilter("");
             setMissingAudioOnly(true);
           }}
-          className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-            missingAudioOnly
-              ? "bg-rose-400/18 text-rose-100"
-              : "border border-white/12 bg-white/[0.04] text-white/70 md:hover:bg-white/[0.08]"
-          }`}
+          className={`admin-toggle-chip ${missingAudioOnly ? "is-active" : ""}`}
         >
           Thiếu mp3
         </button>
@@ -344,26 +381,25 @@ export default function AdminSongs() {
             setStatusFilter("");
             setMissingAudioOnly(false);
           }}
-          className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-            !statusFilter && !missingAudioOnly
-              ? "bg-emerald-400/18 text-emerald-100"
-              : "border border-white/12 bg-white/[0.04] text-white/70 md:hover:bg-white/[0.08]"
+          className={`admin-toggle-chip ${
+            !statusFilter && !missingAudioOnly ? "is-active" : ""
           }`}
         >
           Toàn bộ
         </button>
+        </div>
       </div>
 
       {selectedSongs.length ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-white/10 bg-white/[0.04] px-4 py-3">
+        <div className="admin-toolbar-panel">
           <div className="text-sm text-white/78">
             Đã chọn <span className="font-semibold text-white">{selectedSongs.length}</span> bài hát
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="admin-toolbar-actions">
             <button
               type="button"
               onClick={handleBulkApprove}
-              className="inline-flex items-center gap-2 rounded-full border border-emerald-400/35 bg-emerald-500/12 px-4 py-2 text-xs font-semibold text-emerald-100 transition md:hover:bg-emerald-500/18"
+              className="admin-button admin-button-success"
             >
               <FiCheckCircle />
               Duyệt đã chọn
@@ -371,7 +407,7 @@ export default function AdminSongs() {
             <button
               type="button"
               onClick={handleBulkReject}
-              className="inline-flex items-center gap-2 rounded-full border border-rose-400/35 bg-rose-500/12 px-4 py-2 text-xs font-semibold text-rose-100 transition md:hover:bg-rose-500/18"
+              className="admin-button admin-button-danger"
             >
               <FiSlash />
               Từ chối đã chọn
@@ -379,7 +415,7 @@ export default function AdminSongs() {
             <button
               type="button"
               onClick={() => setSelectedIds([])}
-              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-white/75 transition md:hover:bg-white/[0.08]"
+              className="admin-button admin-button-ghost"
             >
               Bỏ chọn
             </button>
@@ -387,14 +423,10 @@ export default function AdminSongs() {
         </div>
       ) : null}
 
-      {errorMessage && (
-        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-          {errorMessage}
-        </div>
-      )}
+      <AdminListNotice message={errorMessage} />
 
-      <div className="overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[40px_1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[40px_1.5fr_1fr_0.6fr_0.9fr]">
+      <div className="admin-data-panel">
+        <div className="admin-data-head grid grid-cols-[40px_1fr_auto] px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[40px_1.5fr_1fr_0.6fr_0.9fr]">
           <label className="flex items-center justify-center">
             <input
               type="checkbox"
@@ -409,22 +441,19 @@ export default function AdminSongs() {
           <span className="hidden lg:block">Trạng thái</span>
           <span className="text-right">Hành động</span>
         </div>
-        <div className="divide-y divide-white/5">
-          {loading && (
-            <div className="px-4 py-6 text-sm text-white/60">
-              Đang tải dữ liệu...
-            </div>
-          )}
-          {!loading && visibleSongs.length === 0 && (
-            <div className="px-4 py-6 text-sm text-white/60">
+        {loading ? (
+          <AdminListLoadingState variant="songs" />
+        ) : (
+          <div className="divide-y divide-white/5">
+            {visibleSongs.length === 0 ? (
+            <div className="admin-empty-state">
               Không có bài hát phù hợp.
             </div>
-          )}
-          {!loading &&
-            visibleSongs.map((song) => (
+            ) : (
+              visibleSongs.map((song) => (
               <div
                 key={song.id}
-                className="grid grid-cols-[40px_1fr_auto] items-center gap-2 px-4 py-3 text-sm text-white/80 lg:grid-cols-[40px_1.5fr_1fr_0.6fr_0.9fr]"
+                className="admin-row-card grid grid-cols-[40px_1fr_auto] items-center gap-2 px-4 py-3 text-sm text-white/80 lg:grid-cols-[40px_1.5fr_1fr_0.6fr_0.9fr]"
               >
                 <label className="flex items-center justify-center">
                   <input
@@ -467,7 +496,7 @@ export default function AdminSongs() {
                   <button
                     onClick={() => navigate(`/admin/songs/review/${song.id}`)}
                     aria-label="Xem chi tiết"
-                    className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/80 transition md:hover:bg-white/10"
+                    className="admin-button admin-button-ghost"
                   >
                     <FiInfo />
                     <span className="hidden lg:inline">Chi tiết</span>
@@ -476,7 +505,7 @@ export default function AdminSongs() {
                     <button
                       onClick={() => handleApprove(song)}
                       aria-label="Duyệt"
-                      className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200 transition md:hover:bg-emerald-500/20"
+                      className="admin-button admin-button-success"
                     >
                       <FiCheckCircle />
                       <span className="hidden lg:inline">Duyệt</span>
@@ -486,7 +515,7 @@ export default function AdminSongs() {
                     <button
                       onClick={() => handleReject(song)}
                       aria-label="Từ chối"
-                      className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition md:hover:bg-rose-500/20"
+                      className="admin-button admin-button-danger"
                     >
                       <FiSlash />
                       <span className="hidden lg:inline">Từ chối</span>
@@ -494,8 +523,10 @@ export default function AdminSongs() {
                   )}
                 </div>
               </div>
-            ))}
-        </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       <Toast

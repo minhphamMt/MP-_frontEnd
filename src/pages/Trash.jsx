@@ -12,8 +12,52 @@ import {
   restoreGenre,
   restoreSong,
 } from "../api/trash.api";
+import { UserTrashLoading } from "../components/common/UserLoadingState";
+import AdminListNotice from "../components/admin/AdminListNotice";
 import { confirmAdminAction } from "../utils/adminDialog";
 import { getArtistLabel } from "../utils/artist";
+import {
+  getAdminListFallbackMessage,
+  isAdminListTimeoutError,
+  withAdminListTimeout,
+} from "../utils/adminListRequest";
+
+function SkeletonBlock({ className = "" }) {
+  return <div className={`ui-skeleton ${className}`.trim()} />;
+}
+
+function TrashSectionLoading({ gridClass, columnsCount }) {
+  return (
+    <div className="divide-y divide-white/5">
+      {Array.from({ length: 3 }).map((_, rowIndex) => (
+        <div
+          key={`trash-admin-loading-${columnsCount}-${rowIndex}`}
+          className={`flex flex-col gap-4 px-4 py-4 text-sm text-white/80 sm:grid sm:items-center ${gridClass}`}
+        >
+          {Array.from({ length: Math.max(columnsCount - 1, 1) }).map((__, cellIndex) => (
+            <div key={`trash-admin-loading-cell-${rowIndex}-${cellIndex}`} className="flex flex-col gap-2">
+              <SkeletonBlock className="h-3 w-16 rounded-full bg-white/8 sm:hidden" />
+              <SkeletonBlock className="h-4 w-40 max-w-full rounded-full bg-white/8" />
+              {cellIndex === 0 ? (
+                <SkeletonBlock className="h-3 w-28 rounded-full bg-white/8" />
+              ) : (
+                <SkeletonBlock className="h-3 w-20 rounded-full bg-white/8" />
+              )}
+            </div>
+          ))}
+
+          <div className="flex flex-col gap-2 sm:items-end">
+            <SkeletonBlock className="h-3 w-16 rounded-full bg-white/8 sm:hidden" />
+            <div className="flex flex-wrap gap-2 sm:justify-end">
+              <SkeletonBlock className="h-8 w-24 rounded-full bg-white/8" />
+              <SkeletonBlock className="h-8 w-28 rounded-full bg-white/8" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const formatDateTime = (value) => {
   if (!value) return "Chưa rõ";
@@ -134,7 +178,7 @@ export default function Trash() {
   const loadDeletedItems = async () => {
     try {
       setLoading(true);
-      const res = await getDeletedItems();
+      const res = await withAdminListTimeout(() => getDeletedItems());
       const payload = res?.data?.data ?? res?.data ?? emptyState;
       setDeletedItems({
         songs: payload.songs || [],
@@ -144,8 +188,12 @@ export default function Trash() {
       });
       setErrorMessage("");
     } catch (error) {
-      console.error("Load deleted items failed", error);
-      setErrorMessage("Không thể tải danh sách thùng rác.");
+      if (isAdminListTimeoutError(error)) {
+        console.warn("Load deleted items timed out");
+      } else {
+        console.error("Load deleted items failed", error);
+      }
+      setErrorMessage(getAdminListFallbackMessage("thùng rác"));
       setDeletedItems(emptyState);
     } finally {
       setLoading(false);
@@ -243,11 +291,7 @@ export default function Trash() {
         </div>
       </section>
 
-      {errorMessage && (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-          {errorMessage}
-        </div>
-      )}
+      <AdminListNotice message={errorMessage} />
 
       {sections.map((section) => {
         const items = deletedItems[section.key] || [];
@@ -283,8 +327,21 @@ export default function Trash() {
               ))}
             </div>
 
-            <div className="divide-y divide-white/5">
-              {loading && <div className={`px-4 py-6 ${emptyTextClassName}`}>Đang tải dữ liệu...</div>}
+	            <div className="divide-y divide-white/5">
+	              {!isArtistView && loading ? (
+	                <TrashSectionLoading
+	                  gridClass={gridClass}
+	                  columnsCount={section.columns.length}
+	                />
+	              ) : null}
+	              {loading && isArtistView &&
+	                (isArtistView ? (
+	                  <div className="px-4 py-4">
+	                    <UserTrashLoading sections={1} rows={3} />
+                  </div>
+                ) : (
+                  <div className={`px-4 py-6 ${emptyTextClassName}`}>Đang tải dữ liệu...</div>
+                ))}
               {!loading && items.length === 0 && (
                 <div className={`px-4 py-6 ${emptyTextClassName}`}>Chưa có bản ghi nào.</div>
               )}

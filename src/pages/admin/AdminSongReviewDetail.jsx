@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FiCheckCircle, FiChevronLeft, FiRefreshCw, FiSlash } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
 import { approveSong, blockSong, listAdminSongs } from "../../api/admin.api";
@@ -10,19 +10,6 @@ import OptimizedImage from "../../components/common/OptimizedImage";
 import Toast from "../../components/common/Toast";
 import { getArtistLabel } from "../../utils/artist";
 
-const statusBadge = (status) => {
-  switch (status) {
-    case "approved":
-      return "text-emerald-300";
-    case "pending":
-      return "text-amber-300";
-    case "rejected":
-      return "text-rose-300";
-    default:
-      return "text-white/60";
-  }
-};
-
 const getSongCover = (song) =>
   song?.cover_url ||
   song?.cover ||
@@ -31,6 +18,32 @@ const getSongCover = (song) =>
   song?.album_cover;
 
 const getSongAudio = (song) => (song ? toPlayableSong(song).audio_url : "");
+
+const getStatusLabel = (status) => {
+  switch (status) {
+    case "approved":
+      return "Đã duyệt";
+    case "pending":
+      return "Chờ duyệt";
+    case "rejected":
+      return "Từ chối";
+    default:
+      return "Chưa rõ";
+  }
+};
+
+const getStatusChipClass = (status) => {
+  switch (status) {
+    case "approved":
+      return "admin-status-chip is-success";
+    case "pending":
+      return "admin-status-chip is-warning";
+    case "rejected":
+      return "admin-status-chip is-danger";
+    default:
+      return "admin-status-chip";
+  }
+};
 
 export default function AdminSongReviewDetail() {
   const navigate = useNavigate();
@@ -115,7 +128,7 @@ export default function AdminSongReviewDetail() {
     return cover ? resolveAssetUrl(cover) : "";
   }, [song]);
 
-    const handleApprove = async () => {
+  const handleApprove = async () => {
     if (!song?.id) return;
     if (!songAudioUrl) {
       setToast({
@@ -138,7 +151,7 @@ export default function AdminSongReviewDetail() {
     }
   };
 
-    const handleReject = async () => {
+  const handleReject = async () => {
     if (!song?.id) return;
 
     const reason = await promptAdminInput({
@@ -165,26 +178,24 @@ export default function AdminSongReviewDetail() {
   };
 
   return (
-    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
+    <div className="admin-page-shell admin-list-page min-h-screen space-y-6 px-4 py-6 sm:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={() => navigate("/admin/songs/review")}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
+          className="admin-button admin-button-ghost"
         >
           <FiChevronLeft /> Quay lại danh sách duyệt
         </button>
         <button
           onClick={loadSongDetail}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
+          className="admin-button"
         >
           <FiRefreshCw /> Làm mới
         </button>
       </div>
 
       {loading && (
-        <div className="rounded-2xl border border-white/10 bg-[#181818] px-4 py-6 text-sm text-white/60">
-          Đang tải dữ liệu...
-        </div>
+        <div className="admin-loading-state admin-detail-panel">Đang tải dữ liệu...</div>
       )}
 
       {!loading && errorMessage && (
@@ -195,114 +206,147 @@ export default function AdminSongReviewDetail() {
 
       {!loading && song && (
         <>
-          <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-5 text-xs shadow-[0_25px_80px_rgba(0,0,0,0.55)] sm:p-6 sm:text-sm">
-            <div className="grid gap-5 md:grid-cols-[260px_1fr]">
-              <div>
-                {songCoverUrl ? (
-                  <OptimizedImage
-                    src={songCoverUrl}
-                    alt={song.title}
-                    className="h-[260px] w-full rounded-2xl object-cover"
-                  />
-                ) : (
-                  <div className="flex h-[260px] items-center justify-center rounded-2xl bg-white/10 text-xs text-white/60">
-                    Chưa có ảnh bìa
-                  </div>
-                )}
+          <div className="admin-detail-shell">
+            <div className="admin-detail-header">
+              <div className="admin-detail-heading">
+                <p className="admin-list-kicker">Duyệt bài hát</p>
+                <h1 className="admin-list-title">{song.title || "Bài hát"}</h1>
+                <p className="admin-list-summary">
+                  Kiểm tra dữ liệu hiển thị, audio và trạng thái trước khi duyệt hoặc
+                  từ chối bài hát.
+                </p>
               </div>
-
-              <div className="space-y-3 text-xs text-white/80 sm:text-sm">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Duyệt bài hát</p>
-                <h1 className="text-2xl font-bold text-white">{song.title || "-"}</h1>
-                <p>
-                  <span className="text-white/50">Nghệ sĩ:</span>{" "}
-                  {getArtistLabel(song, song.artist_name || song.artist?.name || "") || "-"}
-                </p>
-                <p>
-                  <span className="text-white/50">Album:</span> {song.album_title || "Single"}
-                </p>
-                <p>
-                  <span className="text-white/50">Thể loại:</span>{" "}
-                  {Array.isArray(song.genres) ? song.genres.join(", ") || "-" : song.genres || "-"}
-                </p>
-                <p>
-                  <span className="text-white/50">Thời lượng:</span>{" "}
-                  {song.duration ? `${song.duration}s` : "Chưa có"}
-                </p>
-                <p>
-                  <span className="text-white/50">Ngày phát hành:</span>{" "}
-                  {song.release_date
-                    ? new Date(song.release_date).toLocaleDateString("vi-VN")
-                    : "Chưa có"}
-                </p>
-                <p>
-                  <span className="text-white/50">Trạng thái:</span>{" "}
-                  <span className={statusBadge(song.status)}>{song.status || "-"}</span>
-                </p>
-                <p>
-                  <span className="text-white/50">ID:</span> {song.id}
-                </p>
-                {song.reject_reason && (
-                  <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-rose-100">
-                    Lý do từ chối trước đó: {song.reject_reason}
-                  </p>
-                )}
+              <div className="admin-toolbar-actions">
+                <span className={getStatusChipClass(song.status)}>
+                  {getStatusLabel(song.status)}
+                </span>
               </div>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="mb-2 text-xs font-semibold text-white sm:text-sm">File nhạc mp3/audio</p>
+            <div className="admin-detail-grid is-two-column">
+              <section className="admin-detail-panel">
+                <p className="admin-detail-panel-title">Ảnh bìa</p>
+                <div className="mt-4">
+                  {songCoverUrl ? (
+                    <div className="admin-detail-media is-square">
+                      <OptimizedImage
+                        src={songCoverUrl}
+                        alt={song.title}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="admin-detail-placeholder">Chưa có ảnh bìa</div>
+                  )}
+                </div>
+              </section>
+
+              <section className="admin-detail-panel">
+                <p className="admin-detail-panel-title">Thông tin kiểm duyệt</p>
+                <p className="admin-detail-panel-note">
+                  Các thông tin cốt lõi được gom lại để bạn quyết định duyệt nhanh hơn.
+                </p>
+                <div className="mt-4 admin-detail-meta-grid">
+                  <div className="admin-detail-meta-card">
+                    <p className="admin-detail-meta-label">Nghệ sĩ</p>
+                    <p className="admin-detail-meta-value">
+                      {getArtistLabel(song, song.artist_name || song.artist?.name || "") || "-"}
+                    </p>
+                  </div>
+                  <div className="admin-detail-meta-card">
+                    <p className="admin-detail-meta-label">Album</p>
+                    <p className="admin-detail-meta-value">{song.album_title || "Single"}</p>
+                  </div>
+                  <div className="admin-detail-meta-card">
+                    <p className="admin-detail-meta-label">Thể loại</p>
+                    <p className="admin-detail-meta-value">
+                      {Array.isArray(song.genres)
+                        ? song.genres.join(", ") || "-"
+                        : song.genres || "-"}
+                    </p>
+                  </div>
+                  <div className="admin-detail-meta-card">
+                    <p className="admin-detail-meta-label">Thời lượng</p>
+                    <p className="admin-detail-meta-value">
+                      {song.duration ? `${song.duration}s` : "Chưa có"}
+                    </p>
+                  </div>
+                  <div className="admin-detail-meta-card">
+                    <p className="admin-detail-meta-label">Ngày phát hành</p>
+                    <p className="admin-detail-meta-value">
+                      {song.release_date
+                        ? new Date(song.release_date).toLocaleDateString("vi-VN")
+                        : "Chưa có"}
+                    </p>
+                  </div>
+                  <div className="admin-detail-meta-card">
+                    <p className="admin-detail-meta-label">ID</p>
+                    <p className="admin-detail-meta-value">{song.id}</p>
+                  </div>
+                </div>
+                {song.reject_reason && (
+                  <div className="mt-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+                    Lý do từ chối trước đó: {song.reject_reason}
+                  </div>
+                )}
+              </section>
+            </div>
+
+            <section className="admin-detail-panel">
+              <p className="admin-detail-panel-title">File nhạc mp3/audio</p>
+              <p className="admin-detail-panel-note">
+                Audio là điều kiện tối thiểu trước khi duyệt bài hát vào hệ thống.
+              </p>
               {songAudioUrl ? (
-                <>
+                <div className="mt-4">
                   <audio controls className="w-full">
                     <source src={songAudioUrl} />
                   </audio>
-                  <p className="mt-2 text-xs text-emerald-300 sm:text-sm">
+                  <p className="mt-3 text-sm text-emerald-300">
                     Đã có file audio, đủ điều kiện cơ bản để duyệt.
                   </p>
-                </>
+                </div>
               ) : (
-                <p className="text-xs text-rose-300 sm:text-sm">
+                <div className="mt-4 rounded-2xl border border-rose-500/25 bg-rose-500/10 px-4 py-4 text-sm text-rose-200">
                   Chưa có file audio/mp3. Không nên duyệt bài hát này.
-                </p>
+                </div>
+              )}
+            </section>
+
+            <div className="admin-detail-actions">
+              <button
+                onClick={() => navigate(`/admin/songs/${song.id}/edit`)}
+                className="admin-button admin-button-ghost"
+              >
+                Chỉnh sửa bài hát
+              </button>
+              {song.status !== "approved" && (
+                <button
+                  onClick={handleApprove}
+                  disabled={submitting}
+                  className="admin-button admin-button-success"
+                >
+                  <FiCheckCircle /> Duyệt
+                </button>
+              )}
+              {song.status !== "rejected" && (
+                <button
+                  onClick={handleReject}
+                  disabled={submitting}
+                  className="admin-button admin-button-danger"
+                >
+                  <FiSlash /> Từ chối
+                </button>
               )}
             </div>
           </div>
-
-          <div className="flex flex-wrap justify-end gap-3">
-            <button
-              onClick={() => navigate(`/admin/songs/${song.id}/edit`)}
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/80 transition md:hover:bg-white/10 sm:text-sm"
-            >
-              Chỉnh sửa bài hát
-            </button>
-            {song.status !== "approved" && (
-              <button
-                onClick={handleApprove}
-                disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-xs text-emerald-200 transition md:hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-70 sm:text-sm"
-              >
-                <FiCheckCircle /> Duyệt
-              </button>
-            )}
-            {song.status !== "rejected" && (
-              <button
-                onClick={handleReject}
-                disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-rose-500/10 px-4 py-2 text-xs text-rose-200 transition md:hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-70 sm:text-sm"
-              >
-                <FiSlash /> Từ chối
-              </button>
-            )}
-          </div>
+          <Toast
+            title={toast.title}
+            message={toast.message}
+            onClose={() => setToast({ title: "", message: "" })}
+          />
         </>
       )}
-      <Toast
-        title={toast.title}
-        message={toast.message}
-        onClose={() => setToast({ title: "", message: "" })}
-      />
     </div>
   );
 }
-

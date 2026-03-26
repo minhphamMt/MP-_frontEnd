@@ -9,12 +9,19 @@ import {
   listUsers,
 } from "../../api/admin.api";
 import { getAlbums } from "../../api/album.api";
+import AdminListLoadingState from "../../components/admin/AdminListLoadingState";
+import AdminListNotice from "../../components/admin/AdminListNotice";
 import { resolveAssetUrl } from "../../utils/asset";
 import { deleteSong } from "../../api/song.api";
 import useAuthStore from "../../store/auth.store";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import Toast from "../../components/common/Toast";
 import { confirmAdminAction } from "../../utils/adminDialog";
+import {
+  getAdminListFallbackMessage,
+  isAdminListTimeoutError,
+  withAdminListTimeout,
+} from "../../utils/adminListRequest";
 import {
   extractAdminSearchItems,
   filterAdminSearchItemsByType,
@@ -28,6 +35,32 @@ const STATUS_OPTIONS = [
   { value: "approved", label: "Đã duyệt" },
   { value: "rejected", label: "Từ chối" },
 ];
+
+const getStatusLabel = (status) => {
+  switch (status) {
+    case "approved":
+      return "Đã duyệt";
+    case "pending":
+      return "Chờ duyệt";
+    case "rejected":
+      return "Từ chối";
+    default:
+      return "Không rõ";
+  }
+};
+
+const getStatusChipClassName = (status) => {
+  switch (status) {
+    case "approved":
+      return "admin-status-chip is-success";
+    case "pending":
+      return "admin-status-chip is-warning";
+    case "rejected":
+      return "admin-status-chip is-danger";
+    default:
+      return "admin-status-chip";
+  }
+};
 
 const normalizeGenreValue = (genres) => {
   if (!genres) return [];
@@ -90,40 +123,44 @@ export default function AdminSongManagement() {
   const loadSongs = async (searchTerm = "", statusValue = statusFilter) => {
     try {
       setLoading(true);
-      let list = [];
-
-      if (searchTerm) {
-        const res = await searchAdmin({
-          q: searchTerm,
-          keyword: searchTerm,
-          page: 1,
-          limit: 100,
-        });
-        const payload = res?.data?.data ?? res?.data ?? [];
-        list = filterAdminSearchItemsByType(
-          extractAdminSearchItems(payload),
-          "song"
-        );
-        if (statusValue) {
-          list = list.filter((song) => song?.status === statusValue);
+      const list = await withAdminListTimeout(async () => {
+        if (searchTerm) {
+          const res = await searchAdmin({
+            q: searchTerm,
+            keyword: searchTerm,
+            page: 1,
+            limit: 100,
+          });
+          const payload = res?.data?.data ?? res?.data ?? [];
+          const filtered = filterAdminSearchItemsByType(
+            extractAdminSearchItems(payload),
+            "song"
+          );
+          return statusValue
+            ? filtered.filter((song) => song?.status === statusValue)
+            : filtered;
         }
-      } else {
+
         const res = await listAdminSongs({
           page: 1,
           limit: 200,
           ...(statusValue ? { status: statusValue } : {}),
         });
         const payload = res?.data?.data ?? res?.data ?? [];
-        list = Array.isArray(payload)
+        return Array.isArray(payload)
           ? payload
           : payload.items || payload.songs || [];
-      }
+      });
 
       setSongs(list);
       setErrorMessage("");
     } catch (error) {
-      console.error("Load admin songs failed", error);
-      setErrorMessage("Không thể tải danh sách bài hát.");
+      if (isAdminListTimeoutError(error)) {
+        console.warn("Load admin songs timed out");
+      } else {
+        console.error("Load admin songs failed", error);
+      }
+      setErrorMessage(getAdminListFallbackMessage("bài hát", searchTerm));
       setSongs([]);
     } finally {
       setLoading(false);
@@ -263,6 +300,9 @@ export default function AdminSongManagement() {
       statusFilter ? song?.status === statusFilter : true
     );
   }, [songs, statusFilter]);
+  const approvedSongsCount = songs.filter((song) => song?.status === "approved").length;
+  const pendingSongsCount = songs.filter((song) => song?.status === "pending").length;
+  const linkedAlbumCount = songs.filter((song) => song?.album_id || song?.album_title).length;
   const artistOptions = useMemo(() => {
     const mapped = artists.map((artist) => ({
       id: `${artist.id}`,
@@ -349,44 +389,65 @@ export default function AdminSongManagement() {
   }, [autoOpenedId, location.search, songs]);
 
   return (
-    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="admin-page-shell admin-list-page min-h-screen space-y-6 px-4 py-6 sm:px-8">
+      <div className="admin-list-header">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
-            Quản trị
+          <p className="admin-list-kicker">Quản trị</p>
+          <h1 className="admin-list-title">Quản lý bài hát</h1>
+          <p className="admin-list-summary">
+            Theo dõi thư viện bài hát với danh sách gọn, rõ trạng thái và thao tác
+            chỉnh sửa ngay trên một mặt phẳng dữ liệu thống nhất.
           </p>
-          <h1 className="text-3xl font-extrabold text-white">
-            Quản lý bài hát
-          </h1>
         </div>
         <button
           onClick={() => loadSongs(keyword.trim(), statusFilter)}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
+          className="admin-button"
         >
           <FiRefreshCw /> Làm mới
         </button>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_0.4fr]">
-        <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80">
-            <FiSearch className="text-white/50" />
+      <div className="admin-stat-grid">
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Hiển thị</p>
+          <p className="admin-stat-value">{filteredSongs.length}</p>
+          <p className="admin-stat-note">Bài hát trong danh sách hiện tại</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Chờ duyệt</p>
+          <p className="admin-stat-value">{pendingSongsCount}</p>
+          <p className="admin-stat-note">Cần xử lý trong hệ thống</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Đã duyệt</p>
+          <p className="admin-stat-value">{approvedSongsCount}</p>
+          <p className="admin-stat-note">Đã sẵn sàng hiển thị</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Có album</p>
+          <p className="admin-stat-value">{linkedAlbumCount}</p>
+          <p className="admin-stat-note">Đã liên kết album hoặc single</p>
+        </div>
+      </div>
+
+      <div className="admin-toolbar-panel">
+        <div className="admin-toolbar-group">
+          <label className="admin-search-shell">
+            <FiSearch className="admin-search-icon" />
             <input
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
               placeholder="Tìm theo tên bài hát, nghệ sĩ, album..."
-              className="w-full bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
+              className="admin-field"
             />
-          </div>
-        </div>
-        <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+          </label>
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="ui-select w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white"
+            className="admin-select-field"
           >
             {STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value} className="text-black">
+              <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
@@ -394,35 +455,29 @@ export default function AdminSongManagement() {
         </div>
       </div>
 
-      {errorMessage && (
-        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-          {errorMessage}
-        </div>
-      )}
+      <AdminListNotice message={errorMessage} />
 
-      <div className="overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.4fr_0.8fr_0.6fr_0.7fr]">
+      <div className="admin-data-panel">
+        <div className="admin-data-head grid grid-cols-[1fr_auto] px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.35fr_0.8fr_0.75fr_0.55fr_0.72fr]">
           <span>Bài hát</span>
           <span className="hidden lg:block">Nghệ sĩ</span>
           <span className="hidden lg:block">Thể loại</span>
+          <span className="hidden lg:block">Trạng thái</span>
           <span className="text-right">Hành động</span>
         </div>
-        <div className="divide-y divide-white/5">
-          {loading && (
-            <div className="px-4 py-6 text-sm text-white/60">
-              Đang tải dữ liệu...
-            </div>
-          )}
-          {!loading && filteredSongs.length === 0 && (
-            <div className="px-4 py-6 text-sm text-white/60">
+        {loading ? (
+          <AdminListLoadingState variant="song-management" />
+        ) : (
+          <div className="divide-y divide-white/5">
+            {filteredSongs.length === 0 ? (
+            <div className="admin-empty-state">
               Không có bài hát phù hợp.
             </div>
-          )}
-          {!loading &&
-            filteredSongs.map((song) => (
+            ) : (
+              filteredSongs.map((song) => (
               <div
                 key={song.id}
-                className="grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3 text-sm text-white/80 lg:grid-cols-[1.4fr_0.8fr_0.6fr_0.7fr]"
+                className="admin-row-card grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 text-sm text-white/80 lg:grid-cols-[1.35fr_0.8fr_0.75fr_0.55fr_0.72fr]"
               >
                 <div className="flex items-center gap-3">
                   {getSongCover(song) ? (
@@ -438,7 +493,7 @@ export default function AdminSongManagement() {
                   )}
                   <div>
                     <p className="font-semibold text-white">{song.title}</p>
-                    <p className="text-xs text-white/50">
+                    <p className="admin-row-muted">
                       {song.album_title || "Single"}
                     </p>
                   </div>
@@ -449,19 +504,26 @@ export default function AdminSongManagement() {
                 <span className="hidden text-xs text-white/60 lg:block">
                   {normalizeGenreValue(song.genres).join(", ") || "-"}
                 </span>
+                <div className="hidden lg:block">
+                  <span className={getStatusChipClassName(song.status)}>
+                    {getStatusLabel(song.status)}
+                  </span>
+                </div>
                 <div className="flex justify-end">
                   <button
                     onClick={() => handleEdit(song)}
                     aria-label="Chỉnh sửa"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10 sm:px-4"
+                    className="admin-button admin-button-ghost"
                   >
                     <FiEdit2 />
                     <span className="hidden lg:inline">Chỉnh sửa</span>
                   </button>
                 </div>
               </div>
-            ))}
-        </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {editingSong && (

@@ -10,12 +10,19 @@ import {
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { deleteArtist, getArtistById, getArtists, updateArtist } from "../../api/artist.api";
+import AdminListLoadingState from "../../components/admin/AdminListLoadingState";
+import AdminListNotice from "../../components/admin/AdminListNotice";
 import Toast from "../../components/common/Toast";
 import { resolveAssetUrl } from "../../utils/asset";
 import { formatDateDisplay } from "../../utils/date";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import { confirmAdminAction } from "../../utils/adminDialog";
 import { searchAdmin } from "../../api/admin.api";
+import {
+  getAdminListFallbackMessage,
+  isAdminListTimeoutError,
+  withAdminListTimeout,
+} from "../../utils/adminListRequest";
 import {
   extractAdminSearchItems,
   filterAdminSearchItemsByType,
@@ -41,6 +48,8 @@ export default function AdminArtistList() {
   const [editingArtist, setEditingArtist] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 320);
+  const artistsWithAvatarCount = artists.filter((artist) => artist?.avatar_url).length;
+  const artistsWithAliasCount = artists.filter((artist) => artist?.alias || artist?.realname).length;
   const [editPayload, setEditPayload] = useState({
     name: "",
     alias: "",
@@ -56,36 +65,40 @@ export default function AdminArtistList() {
   const loadArtists = async (searchTerm = "") => {
     try {
       setLoading(true);
-      let list = [];
+      const list = await withAdminListTimeout(async () => {
+        if (searchTerm) {
+          const res = await searchAdmin({
+            q: searchTerm,
+            keyword: searchTerm,
+            page: 1,
+            limit: 100,
+          });
+          const payload = res?.data?.data ?? res?.data ?? [];
+          return filterAdminSearchItemsByType(
+            extractAdminSearchItems(payload),
+            "artist"
+          );
+        }
 
-      if (searchTerm) {
-        const res = await searchAdmin({
-          q: searchTerm,
-          keyword: searchTerm,
-          page: 1,
-          limit: 100,
-        });
-        const payload = res?.data?.data ?? res?.data ?? [];
-        list = filterAdminSearchItemsByType(
-          extractAdminSearchItems(payload),
-          "artist"
-        );
-      } else {
         const res = await getArtists({
           page: 1,
           limit: 200,
         });
         const payload = res?.data?.data ?? res?.data ?? [];
-        list = Array.isArray(payload)
+        return Array.isArray(payload)
           ? payload
           : payload.items || payload.artists || [];
-      }
+      });
 
       setArtists(list);
       setErrorMessage("");
     } catch (error) {
-      console.error("Load artists failed", error);
-      setErrorMessage("Không thể tải danh sách nghệ sĩ.");
+      if (isAdminListTimeoutError(error)) {
+        console.warn("Load artists timed out");
+      } else {
+        console.error("Load artists failed", error);
+      }
+      setErrorMessage(getAdminListFallbackMessage("nghệ sĩ", searchTerm));
       setArtists([]);
     } finally {
       setLoading(false);
@@ -212,69 +225,86 @@ export default function AdminArtistList() {
   };
 
   return (
-    <div className="admin-page-shell min-h-screen space-y-6 px-4 py-6 sm:px-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="admin-page-shell admin-list-page min-h-screen space-y-6 px-4 py-6 sm:px-8">
+      <div className="admin-list-header">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">
+          <p className="admin-list-kicker">
             Quản trị
           </p>
-          <h1 className="text-3xl font-extrabold text-white">
+          <h1 className="admin-list-title">
             Quản lý nghệ sĩ
           </h1>
+          <p className="admin-list-summary">
+            Tổ chức danh sách nghệ sĩ theo kiểu directory rõ ràng hơn, bớt cảm giác
+            bảng thô và dễ thao tác nhanh trên laptop.
+          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="admin-toolbar-actions">
           <button
             onClick={() => loadArtists(keyword.trim())}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 transition md:hover:border-white/30 md:hover:bg-white/10"
+            className="admin-button"
           >
             <FiRefreshCw /> Làm mới
           </button>
           <button
             onClick={() => navigate("/admin/artists/new")}
-            className="inline-flex items-center gap-2 rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-black shadow-lg shadow-emerald-400/30 transition md:hover:bg-emerald-300"
+            className="admin-button admin-button-primary"
           >
             <FiPlus /> Thêm nghệ sĩ
           </button>
         </div>
       </div>
 
-      <div className="admin-glass rounded-3xl border border-white/10 bg-[#181818] p-4 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <input
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
-          placeholder="Tìm kiếm nghệ sĩ theo tên, alias, mã..."
-          className="ui-search-field w-full rounded-2xl px-4 py-2 text-sm text-white focus:border-emerald-400/60 focus:outline-none"
-        />
+      <div className="admin-stat-grid">
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Nghệ sĩ</p>
+          <p className="admin-stat-value">{artists.length}</p>
+          <p className="admin-stat-note">Tổng nghệ sĩ đang hiển thị</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Có avatar</p>
+          <p className="admin-stat-value">{artistsWithAvatarCount}</p>
+          <p className="admin-stat-note">Nhận diện hình ảnh đầy đủ</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Có alias</p>
+          <p className="admin-stat-value">{artistsWithAliasCount}</p>
+          <p className="admin-stat-note">Có thêm metadata hiển thị</p>
+        </div>
       </div>
 
-      {errorMessage && (
-        <div className="admin-alert rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-          {errorMessage}
+      <div className="admin-toolbar-panel">
+        <div className="admin-toolbar-group">
+          <input
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            placeholder="Tìm kiếm nghệ sĩ theo tên, alias, mã..."
+            className="admin-field"
+          />
         </div>
-      )}
+      </div>
 
-      <div className="overflow-hidden admin-glass rounded-3xl border border-white/10 bg-[#181818] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.4fr_0.8fr_0.6fr]">
+      <AdminListNotice message={errorMessage} />
+
+      <div className="admin-data-panel">
+        <div className="admin-data-head grid grid-cols-[1fr_auto] px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-white/50 lg:grid-cols-[1.4fr_0.8fr_0.6fr]">
           <span>Nghệ sĩ</span>
           <span className="hidden lg:block">Thông tin</span>
           <span className="text-right">Hành động</span>
         </div>
-        <div className="divide-y divide-white/5">
-          {loading && (
-            <div className="px-4 py-6 text-sm text-white/60">
-              Đang tải dữ liệu...
-            </div>
-          )}
-          {!loading && artists.length === 0 && (
-            <div className="px-4 py-6 text-sm text-white/60">
+        {loading ? (
+          <AdminListLoadingState variant="artists" />
+        ) : (
+          <div className="divide-y divide-white/5">
+            {artists.length === 0 ? (
+            <div className="admin-empty-state">
               Không có nghệ sĩ phù hợp.
             </div>
-          )}
-          {!loading &&
-            artists.map((artist) => (
+            ) : (
+              artists.map((artist) => (
               <div
                 key={artist.id}
-                className="grid grid-cols-[1fr_auto] gap-4 px-4 py-4 text-sm text-white/80 lg:grid-cols-[1.4fr_0.8fr_0.6fr]"
+                className="admin-row-card grid grid-cols-[1fr_auto] gap-4 px-4 py-4 text-sm text-white/80 lg:grid-cols-[1.4fr_0.8fr_0.6fr]"
               >
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 overflow-hidden rounded-full bg-white/10">
@@ -301,11 +331,11 @@ export default function AdminArtistList() {
                   <p>Mã: {artist.zing_artist_id || "-"}</p>
                   <p>Quốc gia: {artist.national || "-"}</p>
                 </div>
-                <div className="flex items-center justify-end gap-2">
+                <div className="admin-inline-actions">
                   <button
                     onClick={() => navigate(`/admin/artists/${artist.id}/edit`)}
                     aria-label="Sửa"
-                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition md:hover:bg-white/10"
+                    className="admin-button admin-button-ghost"
                   >
                     <FiEdit2 />
                     <span className="hidden lg:inline">Sửa</span>
@@ -313,15 +343,17 @@ export default function AdminArtistList() {
                   <button
                     onClick={() => handleDelete(artist)}
                     aria-label="Xoá mềm"
-                    className="inline-flex items-center gap-1 rounded-full border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 transition md:hover:bg-rose-500/20"
+                    className="admin-button admin-button-danger"
                   >
                     <FiTrash2 />
                     <span className="hidden lg:inline">Xoá mềm</span>
                   </button>
                 </div>
               </div>
-            ))}
-        </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       <Toast
