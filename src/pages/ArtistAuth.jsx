@@ -317,6 +317,114 @@ export default function ArtistAuth() {
   const effectiveFormSwapTransition = isCompactAuthMotion
     ? { duration: 0.14, ease: "easeOut" }
     : formSwapTransition;
+  const compactFormSwapTransition = {
+    duration: 0.22,
+    ease: [0.22, 1, 0.36, 1],
+  };
+  const compactFormMotion = {
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -8 },
+  };
+  const loginFields = (
+    <>
+      <AuthField
+        label="Email"
+        value={loginEmail}
+        onChange={(event) => setLoginEmail(event.target.value)}
+        placeholder="email@artist.com"
+        type="email"
+        autoComplete="email"
+        required={isLoginMode}
+        disabled={!isLoginMode}
+      />
+
+      <AuthPasswordField
+        label="Mật khẩu"
+        value={loginPassword}
+        onChange={(event) => setLoginPassword(event.target.value)}
+        autoComplete="current-password"
+        showPassword={showLoginPassword}
+        toggleShowPassword={() => setShowLoginPassword((prev) => !prev)}
+        required={isLoginMode}
+        disabled={!isLoginMode}
+      />
+
+      <div className="flex items-center justify-end">
+        <button type="button" onClick={openForgotModal} className="text-xs font-medium auth-ui-link">
+          Quên mật khẩu?
+        </button>
+      </div>
+
+      {loginError ? <AuthMessage tone="error">{loginError}</AuthMessage> : null}
+    </>
+  );
+  const registerFields = (
+    <>
+      <AuthField
+        label="Tên hiển thị"
+        value={displayName}
+        onChange={(event) => {
+          setDisplayName(event.target.value);
+          setRegisterFieldErrors((prev) => ({ ...prev, displayName: "" }));
+        }}
+        placeholder="Tên nghệ sĩ"
+        type="text"
+        autoComplete="name"
+        required={isRegisterMode}
+        disabled={!isRegisterMode}
+        error={registerFieldErrors.displayName}
+      />
+
+      <AuthField
+        label="Email"
+        value={registerEmail}
+        onChange={(event) => {
+          setRegisterEmail(event.target.value);
+          setRegisterFieldErrors((prev) => ({ ...prev, email: "" }));
+        }}
+        placeholder="email@artist.com"
+        type="email"
+        autoComplete="email"
+        required={isRegisterMode}
+        disabled={!isRegisterMode}
+        error={registerFieldErrors.email}
+      />
+
+      <AuthPasswordField
+        label="Mật khẩu"
+        value={registerPassword}
+        onChange={(event) => {
+          setRegisterPassword(event.target.value);
+          setRegisterFieldErrors((prev) => ({ ...prev, password: "" }));
+        }}
+        autoComplete="new-password"
+        showPassword={showRegisterPassword}
+        toggleShowPassword={() => setShowRegisterPassword((prev) => !prev)}
+        required={isRegisterMode}
+        disabled={!isRegisterMode}
+        error={registerFieldErrors.password}
+      />
+
+      <AuthPasswordField
+        label="Nhập lại mật khẩu"
+        value={confirmPassword}
+        onChange={(event) => {
+          setConfirmPassword(event.target.value);
+          setRegisterFieldErrors((prev) => ({ ...prev, confirmPassword: "" }));
+        }}
+        autoComplete="new-password"
+        showPassword={showConfirmPassword}
+        toggleShowPassword={() => setShowConfirmPassword((prev) => !prev)}
+        required={isRegisterMode}
+        disabled={!isRegisterMode}
+        error={registerFieldErrors.confirmPassword}
+      />
+
+      {registerNotice ? <AuthMessage tone="success">{registerNotice}</AuthMessage> : null}
+      {registerError ? <AuthMessage tone="error">{registerError}</AuthMessage> : null}
+    </>
+  );
 
   const formSection = (
     <MotionDiv
@@ -359,136 +467,54 @@ export default function ArtistAuth() {
             transition={effectiveCardLayoutTransition}
             className="auth-form-stage relative mt-4 overflow-hidden"
           >
-              <MotionDiv
-                initial={false}
-                animate={
-                  mode === "login"
-                    ? { opacity: 1, x: 0, y: 0, scale: 1 }
-                    : isCompactAuthMotion
-                      ? { opacity: 0, x: 0, y: 0, scale: 1 }
+            {isCompactAuthMotion ? (
+              <AnimatePresence initial={false} mode="wait">
+                <MotionDiv
+                  key={mode}
+                  initial={compactFormMotion.initial}
+                  animate={compactFormMotion.animate}
+                  exit={compactFormMotion.exit}
+                  transition={compactFormSwapTransition}
+                  className={`auth-form-panel will-change-transform ${
+                    mode === "register" ? "space-y-3 pb-1" : "space-y-3"
+                  }`}
+                >
+                  {mode === "login" ? loginFields : registerFields}
+                </MotionDiv>
+              </AnimatePresence>
+            ) : (
+              <>
+                <MotionDiv
+                  initial={false}
+                  animate={
+                    mode === "login"
+                      ? { opacity: 1, x: 0, y: 0, scale: 1 }
                       : { opacity: 0, x: -14, y: 4, scale: 0.994 }
-                }
-                transition={effectiveFormSwapTransition}
-                className={`auth-form-panel space-y-3 will-change-transform ${
-                  mode === "login"
-                    ? "is-active relative"
-                    : isCompactAuthMotion
-                      ? "is-inactive hidden"
-                      : "is-inactive pointer-events-none absolute inset-0"
-                }`}
-              >
-                <AuthField
-                  label="Email"
-                  value={loginEmail}
-                  onChange={(event) => setLoginEmail(event.target.value)}
-                  placeholder="email@artist.com"
-                  type="email"
-                  autoComplete="email"
-                  required={isLoginMode}
-                  disabled={!isLoginMode}
-                />
+                  }
+                  transition={effectiveFormSwapTransition}
+                  className={`auth-form-panel space-y-3 will-change-transform ${
+                    mode === "login" ? "is-active relative" : "is-inactive pointer-events-none absolute inset-0"
+                  }`}
+                >
+                  {loginFields}
+                </MotionDiv>
 
-                <AuthPasswordField
-                  label="Mật khẩu"
-                  value={loginPassword}
-                  onChange={(event) => setLoginPassword(event.target.value)}
-                  autoComplete="current-password"
-                  showPassword={showLoginPassword}
-                  toggleShowPassword={() => setShowLoginPassword((prev) => !prev)}
-                  required={isLoginMode}
-                  disabled={!isLoginMode}
-                />
-
-                <div className="flex items-center justify-end">
-                  <button type="button" onClick={openForgotModal} className="text-xs font-medium auth-ui-link">
-                    Quên mật khẩu?
-                  </button>
-                </div>
-
-                {loginError ? <AuthMessage tone="error">{loginError}</AuthMessage> : null}
-              </MotionDiv>
-
-              <MotionDiv
-                initial={false}
-                animate={
-                  mode === "register"
-                    ? { opacity: 1, x: 0, y: 0, scale: 1 }
-                    : isCompactAuthMotion
-                      ? { opacity: 0, x: 0, y: 0, scale: 1 }
+                <MotionDiv
+                  initial={false}
+                  animate={
+                    mode === "register"
+                      ? { opacity: 1, x: 0, y: 0, scale: 1 }
                       : { opacity: 0, x: 14, y: 4, scale: 0.994 }
-                }
-                transition={effectiveFormSwapTransition}
-                className={`auth-form-panel space-y-3 pb-1 will-change-transform ${
-                  mode === "register"
-                    ? "is-active relative"
-                    : isCompactAuthMotion
-                      ? "is-inactive hidden"
-                      : "is-inactive pointer-events-none absolute inset-0"
-                }`}
-              >
-                <AuthField
-                  label="Tên hiển thị"
-                  value={displayName}
-                  onChange={(event) => {
-                    setDisplayName(event.target.value);
-                    setRegisterFieldErrors((prev) => ({ ...prev, displayName: "" }));
-                  }}
-                  placeholder="Tên nghệ sĩ"
-                  type="text"
-                  autoComplete="name"
-                  required={isRegisterMode}
-                  disabled={!isRegisterMode}
-                  error={registerFieldErrors.displayName}
-                />
-
-                <AuthField
-                  label="Email"
-                  value={registerEmail}
-                  onChange={(event) => {
-                    setRegisterEmail(event.target.value);
-                    setRegisterFieldErrors((prev) => ({ ...prev, email: "" }));
-                  }}
-                  placeholder="email@artist.com"
-                  type="email"
-                  autoComplete="email"
-                  required={isRegisterMode}
-                  disabled={!isRegisterMode}
-                  error={registerFieldErrors.email}
-                />
-
-                <AuthPasswordField
-                  label="Mật khẩu"
-                  value={registerPassword}
-                  onChange={(event) => {
-                    setRegisterPassword(event.target.value);
-                    setRegisterFieldErrors((prev) => ({ ...prev, password: "" }));
-                  }}
-                  autoComplete="new-password"
-                  showPassword={showRegisterPassword}
-                  toggleShowPassword={() => setShowRegisterPassword((prev) => !prev)}
-                  required={isRegisterMode}
-                  disabled={!isRegisterMode}
-                  error={registerFieldErrors.password}
-                />
-
-                <AuthPasswordField
-                  label="Nhập lại mật khẩu"
-                  value={confirmPassword}
-                  onChange={(event) => {
-                    setConfirmPassword(event.target.value);
-                    setRegisterFieldErrors((prev) => ({ ...prev, confirmPassword: "" }));
-                  }}
-                  autoComplete="new-password"
-                  showPassword={showConfirmPassword}
-                  toggleShowPassword={() => setShowConfirmPassword((prev) => !prev)}
-                  required={isRegisterMode}
-                  disabled={!isRegisterMode}
-                  error={registerFieldErrors.confirmPassword}
-                />
-
-                {registerNotice ? <AuthMessage tone="success">{registerNotice}</AuthMessage> : null}
-                {registerError ? <AuthMessage tone="error">{registerError}</AuthMessage> : null}
-              </MotionDiv>
+                  }
+                  transition={effectiveFormSwapTransition}
+                  className={`auth-form-panel space-y-3 pb-1 will-change-transform ${
+                    mode === "register" ? "is-active relative" : "is-inactive pointer-events-none absolute inset-0"
+                  }`}
+                >
+                  {registerFields}
+                </MotionDiv>
+              </>
+            )}
           </MotionDiv>
 
           <MotionDiv

@@ -42,14 +42,22 @@
     <meta name="theme-color" content="#050705" />
     <style>
       :root {
-        --boot-accent: 123, 212, 176;
-        --boot-glow: 89, 170, 136;
-        --boot-grid: 108, 191, 157;
-        --boot-grid-strong: 200, 231, 216;
-        --boot-bg: #0b1611;
-        --boot-card: 24, 35, 31;
-        --boot-card-soft: 18, 26, 24;
-        --boot-border: 143, 181, 163;
+        --boot-accent: 52, 211, 153;
+        --boot-glow: 29, 185, 84;
+        --boot-grid: 96, 207, 164;
+        --boot-grid-strong: 185, 248, 221;
+        --boot-bg-rgb: 18, 24, 20;
+        --boot-card: 23, 31, 27;
+        --boot-card-soft: 17, 24, 20;
+        --boot-border: 112, 158, 129;
+        --boot-backdrop-top: 19, 29, 42;
+        --boot-backdrop-mid: 13, 20, 30;
+        --boot-backdrop-bottom: 9, 14, 21;
+        --boot-backdrop-glow-alpha: 0.26;
+        --boot-backdrop-glow-stop: 42%;
+        --boot-atmosphere-grid-alpha: 0.09;
+        --boot-atmosphere-accent-alpha: 0.075;
+        --boot-atmosphere-opacity: 0.74;
       }
 
       html,
@@ -59,14 +67,22 @@
       }
 
       html[data-boot-theme="artist"] {
-        --boot-accent: 132, 190, 232;
-        --boot-glow: 94, 149, 204;
-        --boot-grid: 118, 178, 219;
-        --boot-grid-strong: 206, 225, 241;
-        --boot-bg: #0b1420;
-        --boot-card: 23, 30, 45;
-        --boot-card-soft: 16, 22, 34;
-        --boot-border: 143, 176, 205;
+        --boot-accent: 120, 194, 244;
+        --boot-glow: 92, 168, 224;
+        --boot-grid: 123, 189, 232;
+        --boot-grid-strong: 216, 236, 249;
+        --boot-bg-rgb: 16, 26, 41;
+        --boot-card: 24, 38, 58;
+        --boot-card-soft: 18, 31, 46;
+        --boot-border: 154, 194, 225;
+        --boot-backdrop-top: 22, 34, 50;
+        --boot-backdrop-mid: 15, 25, 40;
+        --boot-backdrop-bottom: 10, 17, 28;
+        --boot-backdrop-glow-alpha: 0.28;
+        --boot-backdrop-glow-stop: 40%;
+        --boot-atmosphere-grid-alpha: 0.09;
+        --boot-atmosphere-accent-alpha: 0.075;
+        --boot-atmosphere-opacity: 0.74;
       }
 
       #app-boot-intro {
@@ -75,10 +91,25 @@
         z-index: 4000;
         overflow: hidden;
         background:
-          linear-gradient(180deg, rgba(255, 255, 255, 0.075), transparent 16%),
-          linear-gradient(180deg, rgba(var(--boot-glow), 0.2), transparent 38%),
-          linear-gradient(90deg, rgba(var(--boot-accent), 0.075), transparent 16%, transparent 84%, rgba(var(--boot-accent), 0.075)),
-          linear-gradient(180deg, rgb(15, 23, 35), rgb(10, 16, 24) 48%, rgb(7, 11, 17) 100%);
+          linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 18%),
+          linear-gradient(
+            180deg,
+            rgba(var(--boot-glow), var(--boot-backdrop-glow-alpha)),
+            transparent var(--boot-backdrop-glow-stop)
+          ),
+          linear-gradient(
+            90deg,
+            rgba(var(--boot-accent), 0.09),
+            transparent 14%,
+            transparent 86%,
+            rgba(var(--boot-accent), 0.09)
+          ),
+          linear-gradient(
+            180deg,
+            rgb(var(--boot-backdrop-top)),
+            rgb(var(--boot-backdrop-mid)) 50%,
+            rgb(var(--boot-backdrop-bottom)) 100%
+          );
         color: #fff;
         opacity: 1;
         visibility: visible;
@@ -169,7 +200,7 @@
       }
 
       .boot-tunnel-portal {
-        fill: rgba(var(--boot-bg), 0.12);
+        fill: rgba(var(--boot-bg-rgb), 0.12);
         stroke: rgba(var(--boot-grid-strong), 0.5);
         stroke-width: 1.2;
         vector-effect: non-scaling-stroke;
@@ -180,9 +211,18 @@
         inset: 0 0 auto 0;
         height: 56%;
         background:
-          linear-gradient(180deg, rgba(var(--boot-grid-strong), 0.07), transparent 24%),
-          linear-gradient(90deg, transparent 0, rgba(var(--boot-accent), 0.06) 50%, transparent 100%);
-        opacity: 0.42;
+          linear-gradient(
+            180deg,
+            rgba(var(--boot-grid-strong), var(--boot-atmosphere-grid-alpha)),
+            transparent 24%
+          ),
+          linear-gradient(
+            90deg,
+            transparent 0,
+            rgba(var(--boot-accent), var(--boot-atmosphere-accent-alpha)) 50%,
+            transparent 100%
+          );
+        opacity: var(--boot-atmosphere-opacity);
       }
 
       .boot-intro__noise {
@@ -459,11 +499,11 @@
         document.documentElement.setAttribute("data-boot-theme", isArtistRoute ? "artist" : "listener");
       })();
     </script>
-    <script type="module" crossorigin src="/assets/index-39Sw0TnQ.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/core-W4aD5EFd.js">
-    <link rel="modulepreload" crossorigin href="/assets/index-39Sw0TnQ.js">
-    <link rel="modulepreload" crossorigin href="/assets/vendor-OLCrLkkl.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-CyIJLWUu.css">
+    <script type="module" crossorigin src="/assets/index-BuAvkGSC.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/core-DstSUElQ.js">
+    <link rel="modulepreload" crossorigin href="/assets/index-BuAvkGSC.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-DAr68pOg.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-BZOpImf3.css">
   <link rel="manifest" href="/manifest.webmanifest"></head>
 
   <body>

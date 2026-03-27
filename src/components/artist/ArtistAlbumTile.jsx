@@ -51,10 +51,13 @@ export default function ArtistAlbumTile({
   const actionLayoutClassName = isAdminTheme
     ? "grid grid-cols-3 gap-2"
     : "flex flex-wrap gap-2";
+  const mediaFrameClassName = isAdminTheme
+    ? "rounded-[22px] border border-white/[0.06] bg-[#191b1d]/92 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_12px_26px_rgba(0,0,0,0.18)]"
+    : "rounded-[22px] border border-sky-200/[0.12] bg-[#111b2a]/92 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_14px_30px_rgba(3,8,20,0.24)]";
 
   return (
     <article
-      className={`group flex h-full flex-col overflow-hidden rounded-[22px] border shadow-[0_16px_34px_rgba(0,0,0,0.22)] transition ${cardClassName}`}
+      className={`artist-album-card group flex h-full flex-col overflow-hidden rounded-[22px] border shadow-[0_16px_34px_rgba(0,0,0,0.22)] transition ${cardClassName}`}
     >
       <div className="relative">
         {coverUrl ? (
@@ -68,12 +71,24 @@ export default function ArtistAlbumTile({
             />
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,10,18,0.08),rgba(7,10,18,0.22))]" />
             <div className="relative flex h-full items-center justify-center p-4 sm:p-5">
-              <OptimizedImage
-                src={coverUrl}
-                alt={album?.title || "Album"}
-                className="max-h-full w-full rounded-[18px] object-contain drop-shadow-[0_18px_34px_rgba(0,0,0,0.28)] transition duration-500 md:group-hover:scale-[1.03]"
-                loading="lazy"
-              />
+              <div
+                className={`relative flex h-full w-full items-center justify-center overflow-hidden transition duration-500 md:group-hover:scale-[1.015] ${mediaFrameClassName}`}
+              >
+                <OptimizedImage
+                  src={coverUrl}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-0 h-full w-full scale-110 object-cover opacity-55 blur-2xl transition duration-500 md:group-hover:scale-[1.14]"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_52%),linear-gradient(180deg,rgba(10,14,20,0.08),rgba(10,14,20,0.2))]" />
+                <OptimizedImage
+                  src={coverUrl}
+                  alt={album?.title || "Album"}
+                  className="relative z-[1] max-h-full max-w-full rounded-[18px] object-contain drop-shadow-[0_18px_34px_rgba(0,0,0,0.28)] transition duration-500 md:group-hover:scale-[1.03]"
+                  loading="lazy"
+                />
+              </div>
             </div>
           </div>
         ) : (

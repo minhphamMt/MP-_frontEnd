@@ -137,7 +137,7 @@ const tunnelMusic = (() => {
   };
 })();
 
-function TunnelSvg({ hover = false }) {
+export function AuthTunnelSvg({ hover = false }) {
   const lineClassName = hover ? "auth-tunnel-line auth-tunnel-line--hover" : "auth-tunnel-line";
   const rectClassName = hover ? "auth-tunnel-portal auth-tunnel-portal--hover" : "auth-tunnel-portal";
   const eqBarClassName = hover ? "auth-tunnel-eq-bar auth-tunnel-eq-bar--hover" : "auth-tunnel-eq-bar";
@@ -241,10 +241,10 @@ export default function AuthShell({
       <div className="absolute inset-0 auth-shell-backdrop" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[58%] auth-shell-atmosphere" />
       <div className="pointer-events-none absolute inset-0 auth-shell-tunnel-layer">
-        <TunnelSvg />
+        <AuthTunnelSvg />
       </div>
       <div className="pointer-events-none absolute inset-0 auth-shell-tunnel-layer auth-shell-tunnel-layer--hover">
-        <TunnelSvg hover />
+        <AuthTunnelSvg hover />
       </div>
       <div className="absolute inset-0 auth-shell-vignette" />
       <div className="absolute inset-0 opacity-[0.08] auth-shell-noise-map" />

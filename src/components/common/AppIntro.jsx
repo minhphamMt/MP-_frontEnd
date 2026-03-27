@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useSearchParams } from "react-router-dom";
+import { AuthTunnelSvg } from "../auth/AuthShell";
 import useAuthStore from "../../store/auth.store";
 import { shouldUseArtistTheme } from "../../utils/routeContext";
 
@@ -79,25 +80,25 @@ function getIntroTone({ role, authContext, pathname, intent }) {
   if (isArtistRoute) {
       return {
         shellClassName: "auth-shell-artist",
-        badgeClassName: "border-sky-300/18 bg-sky-400/10 text-sky-100/85",
+        badgeClassName: "border-sky-300/22 bg-sky-400/14 text-sky-50/92",
         panelClassName:
-          "border-sky-300/[0.06] bg-[#0a121d]/96 shadow-[0_28px_90px_rgba(0,0,0,0.52),inset_0_1px_0_rgba(191,219,254,0.025)]",
-        pulseBarClassName: "bg-gradient-to-t from-sky-500/35 via-sky-300/90 to-cyan-200/90",
-        logoAuraClassName: "bg-[radial-gradient(circle_at_top,rgba(125,211,252,0.16),transparent_50%)]",
+          "border-sky-300/[0.08] bg-[#101b2a]/96 shadow-[0_28px_90px_rgba(0,0,0,0.52),inset_0_1px_0_rgba(191,219,254,0.04)]",
+        pulseBarClassName: "bg-gradient-to-t from-sky-500/42 via-sky-300/95 to-cyan-100/96",
+        logoAuraClassName: "bg-[radial-gradient(circle_at_top,rgba(125,211,252,0.2),transparent_52%)]",
         progressClassName:
-        "bg-gradient-to-r from-sky-300 via-blue-400 to-cyan-300 shadow-[0_0_22px_rgba(96,165,250,0.42)]",
+        "bg-gradient-to-r from-sky-300 via-blue-400 to-cyan-200 shadow-[0_0_24px_rgba(96,165,250,0.5)]",
     };
   }
 
   return {
     shellClassName: "auth-shell-listener",
-    badgeClassName: "border-emerald-300/18 bg-emerald-400/10 text-emerald-100/85",
+    badgeClassName: "border-emerald-300/22 bg-emerald-400/14 text-emerald-50/92",
     panelClassName:
-      "border-emerald-300/[0.06] bg-[#0a1512]/96 shadow-[0_28px_90px_rgba(0,0,0,0.52),inset_0_1px_0_rgba(167,243,208,0.025)]",
-    pulseBarClassName: "bg-gradient-to-t from-emerald-500/28 via-emerald-300/82 to-lime-200/88",
-    logoAuraClassName: "bg-[radial-gradient(circle_at_top,rgba(118,204,152,0.14),transparent_50%)]",
+      "border-emerald-300/[0.08] bg-[#0d1713]/96 shadow-[0_28px_90px_rgba(0,0,0,0.52),inset_0_1px_0_rgba(167,243,208,0.04)]",
+    pulseBarClassName: "bg-gradient-to-t from-emerald-500/36 via-emerald-300/92 to-lime-200/94",
+    logoAuraClassName: "bg-[radial-gradient(circle_at_top,rgba(118,204,152,0.18),transparent_52%)]",
     progressClassName:
-      "bg-gradient-to-r from-emerald-300 via-emerald-400 to-lime-300 shadow-[0_0_22px_rgba(88,168,121,0.34)]",
+      "bg-gradient-to-r from-emerald-300 via-emerald-400 to-lime-300 shadow-[0_0_24px_rgba(88,168,121,0.42)]",
   };
 }
 
@@ -141,12 +142,12 @@ export default function AppIntro() {
     >
       <div className="absolute inset-0 auth-shell-backdrop" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[58%] auth-shell-atmosphere" />
-      <div className="pointer-events-none absolute inset-0 auth-shell-wave auth-shell-wave--left" />
-      <div className="pointer-events-none absolute inset-0 auth-shell-wave auth-shell-wave--right" />
-      <div className="absolute inset-0 auth-shell-top-grid" />
-      <div className="pointer-events-none absolute left-1/2 top-[40%] h-[380px] w-[min(84vw,780px)] -translate-x-1/2 -translate-y-1/2 rounded-full auth-shell-focus-glow md:h-[440px]" />
-      <div className="absolute inset-x-[-12%] bottom-[-22%] h-[62%] auth-shell-floor-grid" />
-      <div className="absolute inset-x-[-12%] bottom-[-22%] h-[62%] auth-shell-floor-grid auth-shell-floor-grid--fine" />
+      <div className="pointer-events-none absolute inset-0 auth-shell-tunnel-layer">
+        <AuthTunnelSvg />
+      </div>
+      <div className="pointer-events-none absolute inset-0 auth-shell-tunnel-layer auth-shell-tunnel-layer--hover">
+        <AuthTunnelSvg hover />
+      </div>
       <div className="absolute inset-0 auth-shell-vignette" />
       <div className="absolute inset-0 opacity-[0.08] auth-shell-noise-map" />
       <img

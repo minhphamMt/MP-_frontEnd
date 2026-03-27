@@ -110,9 +110,9 @@ export function AuthPasswordField({
   return (
     <label className={clsx("block space-y-2 text-sm", className)}>
       <span className="auth-ui-kicker text-white/58">{label}</span>
-      <div className="relative">
+      <div className="auth-ui-password-wrap relative">
         <input
-          className={clsx("auth-ui-input pr-12", inputClassName)}
+          className={clsx("auth-ui-input auth-ui-password-input", inputClassName)}
           value={value}
           onChange={onChange}
           type={showPassword ? "text" : "password"}

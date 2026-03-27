@@ -338,8 +338,9 @@ export default function AdminUserDetail() {
             <div className="admin-detail-grid is-two-column">
               <section className="admin-detail-panel flex h-full flex-col">
                 <p className="admin-detail-panel-title">Hồ sơ tài khoản</p>
-                <div className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-start">
-                  <div className="admin-detail-media is-square is-avatar">
+                <div className="admin-user-detail-profile mt-4">
+                  <div className="admin-user-detail-identity">
+                    <div className="admin-detail-media is-square is-avatar">
                     {getUserAvatar(user) ? (
                       <OptimizedImage
                         src={resolveAssetUrl(getUserAvatar(user))}
@@ -351,17 +352,18 @@ export default function AdminUserDetail() {
                         <FiUser />
                       </div>
                     )}
-                  </div>
+                    </div>
 
-                  <div className="min-w-0 flex-1 space-y-4">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="admin-user-detail-badges">
                       <span className={getRoleTone(user.role)}>{user.role || "USER"}</span>
                       <span className={getStatusTone(user.is_active)}>
                         {user.is_active ? "Đang hoạt động" : "Bị khóa"}
                       </span>
                     </div>
 
-                    <div className="admin-detail-meta-grid">
+                  </div>
+
+                  <div className="admin-user-detail-facts admin-detail-meta-grid">
                       <div className="admin-detail-meta-card">
                         <p className="admin-detail-meta-label">Tên hiển thị</p>
                         <p className="admin-detail-meta-value">
@@ -384,7 +386,6 @@ export default function AdminUserDetail() {
                           {user.auth_provider || "Chưa cập nhật"}
                         </p>
                       </div>
-                    </div>
                   </div>
                 </div>
               </section>

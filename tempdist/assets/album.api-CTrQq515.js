@@ -1,1 +1,0 @@
-import{b as t}from"./index-39Sw0TnQ.js";const u=(s={})=>t.get("/albums",{params:s}),l=s=>t.get(`/albums/${s}`),m=s=>t.post("/albums",s),b=(s,a)=>t.put(`/albums/${s}`,a),o=s=>t.delete(`/albums/${s}`);export{l as a,m as c,o as d,u as g,b as u};
