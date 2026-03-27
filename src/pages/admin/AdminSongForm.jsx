@@ -293,10 +293,6 @@ export default function AdminSongForm() {
           <div className="admin-detail-heading">
             <p className="admin-list-kicker">Quản trị</p>
             <h1 className="admin-list-title">Chỉnh sửa bài hát</h1>
-            <p className="admin-list-summary">
-              Cập nhật thông tin bài hát trong một form gọn, tập trung vào ảnh bìa,
-              trạng thái và các trường metadata chính.
-            </p>
           </div>
           <button
             onClick={handleSubmit}
@@ -321,10 +317,6 @@ export default function AdminSongForm() {
               <div className="admin-detail-grid is-two-column">
                 <div className="admin-detail-panel">
                   <p className="admin-detail-panel-title">Ảnh bìa và thông tin nhanh</p>
-                  <p className="admin-detail-panel-note">
-                    Kiểm tra ảnh hiển thị, album liên kết và trạng thái hiện tại trước
-                    khi lưu thay đổi.
-                  </p>
                   <div className="mt-4 flex flex-col gap-4">
                     {coverPreview ? (
                       <div className="admin-detail-media is-square">
@@ -386,10 +378,6 @@ export default function AdminSongForm() {
 
                 <div className="admin-detail-panel">
                   <p className="admin-detail-panel-title">Thông tin chỉnh sửa</p>
-                  <p className="admin-detail-panel-note">
-                    Giữ lại các trường cần thiết để cập nhật nhanh mà không làm form quá
-                    nặng.
-                  </p>
                   <div className="mt-4 admin-detail-form-grid">
                   <label className="admin-detail-label is-full">
                     Tên bài hát

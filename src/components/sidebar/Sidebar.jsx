@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaChartLine } from "react-icons/fa";
 import { BsHeartFill, BsMusicNoteList } from "react-icons/bs";
 import { FiChevronsLeft, FiChevronsRight, FiFolder, FiUsers, FiX } from "react-icons/fi";

@@ -332,10 +332,6 @@ export default function AdminUserDetail() {
                 <h1 className="admin-list-title">
                   {user.display_name || user.name || "Người dùng"}
                 </h1>
-                <p className="admin-list-summary">
-                  Theo dõi nhanh trạng thái tài khoản, lịch sử nghe và lịch sử tìm kiếm
-                  trong một bố cục gọn hơn và dễ quét hơn.
-                </p>
               </div>
             </div>
 
@@ -395,9 +391,6 @@ export default function AdminUserDetail() {
 
               <section className="admin-detail-panel flex h-full flex-col">
                 <p className="admin-detail-panel-title">Tổng quan tài khoản</p>
-                <p className="admin-detail-panel-note">
-                  Những chỉ số và mốc thời gian quan trọng được gom lại để theo dõi nhanh.
-                </p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {statCards.map((card) => (
                     <div key={card.label} className="admin-detail-meta-card">

@@ -28,8 +28,8 @@ export default function ArtistAlbumTile({
   const statusLabel = statusLabelMap[album?.status] || album?.status || "";
   const isAdminTheme = theme === "admin";
   const cardClassName = isAdminTheme
-    ? "border-white/[0.04] bg-[#151617] md:hover:border-white/[0.08] md:hover:bg-[#18191a]"
-    : "border-sky-200/[0.1] bg-[#0f1727]/88 md:hover:border-sky-300/28 md:hover:bg-[#142038]";
+    ? "border-white/[0.04] bg-[#151617] md:hover:-translate-y-1 md:hover:border-white/[0.08] md:hover:bg-[#18191a] md:hover:shadow-[0_22px_48px_rgba(0,0,0,0.28)]"
+    : "border-sky-200/[0.1] bg-[#121b28] md:hover:-translate-y-1 md:hover:border-sky-300/20 md:hover:bg-[#152031] md:hover:shadow-[0_24px_54px_rgba(3,8,20,0.34)]";
   const fallbackCoverClassName = isAdminTheme
     ? "bg-[#202325]"
     : "bg-[linear-gradient(135deg,rgba(56,189,248,0.22),rgba(59,130,246,0.14),rgba(5,10,18,0.96))]";
@@ -43,21 +43,39 @@ export default function ArtistAlbumTile({
         : "rounded-full border border-sky-300/30 bg-sky-400/12 px-3 py-1 text-sky-100"
       : metaBadgeClassName;
   const secondaryActionClassName = isAdminTheme
-    ? "inline-flex items-center gap-2 rounded-full border border-white/[0.06] bg-[#1a1b1c] px-4 py-2 text-sm text-white/80 transition md:hover:border-white/[0.1] md:hover:bg-[#1d1e1f]"
+    ? "inline-flex min-w-0 items-center justify-center gap-2 rounded-full border border-white/[0.06] bg-[#1a1b1c] px-3 py-2 text-sm text-white/80 transition md:hover:border-white/[0.1] md:hover:bg-[#1d1e1f]"
     : "artist-btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm";
+  const deleteActionClassName = isAdminTheme
+    ? "inline-flex min-w-0 items-center justify-center gap-2 rounded-full bg-[#24191b] px-3 py-2 text-sm text-rose-100 ring-1 ring-inset ring-rose-300/10 shadow-[0_10px_20px_rgba(0,0,0,0.16)] transition md:hover:bg-[#2c1d20] md:hover:text-white md:hover:ring-rose-300/18"
+    : "inline-flex items-center gap-2 rounded-full bg-[#2a171b] px-4 py-2 text-sm text-rose-100 ring-1 ring-inset ring-rose-300/10 shadow-[0_10px_22px_rgba(7,10,18,0.18)] transition md:hover:bg-[#341d22] md:hover:text-white md:hover:ring-rose-300/16";
+  const actionLayoutClassName = isAdminTheme
+    ? "grid grid-cols-3 gap-2"
+    : "flex flex-wrap gap-2";
 
   return (
     <article
-      className={`group flex h-full flex-col overflow-hidden rounded-[22px] border shadow-[0_20px_50px_rgba(0,0,0,0.26)] transition md:hover:-translate-y-1 ${cardClassName}`}
+      className={`group flex h-full flex-col overflow-hidden rounded-[22px] border shadow-[0_16px_34px_rgba(0,0,0,0.22)] transition ${cardClassName}`}
     >
       <div className="relative">
         {coverUrl ? (
-          <OptimizedImage
-            src={coverUrl}
-            alt={album?.title || "Album"}
-            className="h-44 w-full bg-black/40 object-cover sm:h-52"
-            loading="lazy"
-          />
+          <div className="relative h-44 w-full overflow-hidden bg-[#0d131d] sm:h-52">
+            <OptimizedImage
+              src={coverUrl}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-2xl transition duration-500 md:group-hover:scale-[1.14]"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,10,18,0.08),rgba(7,10,18,0.22))]" />
+            <div className="relative flex h-full items-center justify-center p-4 sm:p-5">
+              <OptimizedImage
+                src={coverUrl}
+                alt={album?.title || "Album"}
+                className="max-h-full w-full rounded-[18px] object-contain drop-shadow-[0_18px_34px_rgba(0,0,0,0.28)] transition duration-500 md:group-hover:scale-[1.03]"
+                loading="lazy"
+              />
+            </div>
+          </div>
         ) : (
           <div className={`flex h-44 w-full items-center justify-center sm:h-52 ${fallbackCoverClassName}`}>
             <FiMusic className="text-3xl text-white/50" />
@@ -94,7 +112,7 @@ export default function ArtistAlbumTile({
           {statusLabel && <span className={statusClassName}>{statusLabel}</span>}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className={actionLayoutClassName}>
           <button
             type="button"
             onClick={onView}
@@ -114,7 +132,7 @@ export default function ArtistAlbumTile({
           <button
             type="button"
             onClick={onDelete}
-            className="inline-flex items-center gap-2 rounded-full border border-rose-400/18 bg-[#211719] px-4 py-2 text-sm text-rose-100 transition md:hover:border-rose-300/30 md:hover:bg-[#281b1e]"
+            className={deleteActionClassName}
           >
             <FiTrash2 />
             Xóa mềm

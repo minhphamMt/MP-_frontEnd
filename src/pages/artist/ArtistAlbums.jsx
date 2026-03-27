@@ -96,15 +96,12 @@ export default function ArtistAlbums() {
   };
 
   return (
-    <div className="space-y-6">
-      <section className="artist-page-shell artist-glass p-6 sm:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
+    <div className="artist-list-page">
+      <section className="artist-page-shell p-6 sm:p-8">
+        <div className="artist-list-header">
+          <div className="artist-list-heading">
             <p className="artist-label">Albums</p>
-            <h1 className="mt-2 text-3xl font-black text-white">Quản lý album</h1>
-            <p className="mt-2 text-sm text-white/65">
-              Theo dõi toàn bộ album, trạng thái phát hành và cập nhật nội dung nhanh.
-            </p>
+            <h1 className="artist-list-title">Quản lý album</h1>
           </div>
           <button
             type="button"
@@ -115,27 +112,33 @@ export default function ArtistAlbums() {
             Tạo album mới
           </button>
         </div>
+      </section>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
-          <div className="relative">
-            <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
+      <section className="artist-stat-grid">
+        <article className="artist-stat-card">
+          <p className="artist-stat-label">Tổng album</p>
+          <p className="artist-stat-value">{stats.total}</p>
+        </article>
+        <article className="artist-stat-card">
+          <p className="artist-stat-label">Đã duyệt</p>
+          <p className="artist-stat-value">{stats.approved}</p>
+        </article>
+        <article className="artist-stat-card">
+          <p className="artist-stat-label">Chờ duyệt</p>
+          <p className="artist-stat-value">{stats.pending}</p>
+        </article>
+      </section>
+
+      <section className="artist-toolbar-panel">
+        <div className="artist-toolbar-group">
+          <div className="artist-search-shell">
+            <FiSearch className="artist-search-icon" />
             <input
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
               placeholder="Tìm theo tên album..."
-              className="artist-input rounded-full pl-11 pr-4"
+              className="artist-input"
             />
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70">
-              Tổng: {stats.total}
-            </span>
-            <span className="rounded-full border border-sky-300/30 bg-sky-400/12 px-3 py-1 text-sky-100">
-              Đã duyệt: {stats.approved}
-            </span>
-            <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-amber-100">
-              Chờ duyệt: {stats.pending}
-            </span>
           </div>
         </div>
       </section>
@@ -143,7 +146,7 @@ export default function ArtistAlbums() {
       {loading && <ArtistAlbumGridLoading cards={6} />}
 
       {!loading && !filteredAlbums.length && (
-        <div className="artist-soft-card p-5 text-sm text-white/70">
+        <div className="artist-empty-state">
           Không tìm thấy album phù hợp. Hãy thử từ khóa khác hoặc tạo album mới.
         </div>
       )}

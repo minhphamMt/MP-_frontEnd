@@ -2,6 +2,7 @@ import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import { FiCheck, FiEye, FiEyeOff, FiX } from "react-icons/fi";
+import useMediaQuery from "../../hooks/useMediaQuery";
 
 const MotionDiv = motion.div;
 
@@ -199,25 +200,43 @@ export function AuthModal({
   className = "",
 }) {
   const themeClassName = modalThemeClasses[theme] ?? modalThemeClasses.listener;
+  const isCompactMotion = useMediaQuery("(max-width: 767px), (hover: none) and (pointer: coarse)");
+  const backdropTransition = isCompactMotion
+    ? { duration: 0.12, ease: "linear" }
+    : { duration: 0.18, ease: "easeOut" };
+  const cardTransition = isCompactMotion
+    ? { duration: 0.14, ease: "easeOut" }
+    : { duration: 0.22, ease: "easeOut" };
+  const cardInitial = isCompactMotion
+    ? { opacity: 0 }
+    : { opacity: 0, y: 14, scale: 0.985 };
+  const cardExit = isCompactMotion
+    ? { opacity: 0 }
+    : { opacity: 0, y: 14, scale: 0.985 };
 
   if (typeof document === "undefined") return null;
 
   return createPortal(
-    <AnimatePresence>
+    <AnimatePresence initial={false}>
       {open ? (
         <MotionDiv
-          className={clsx("auth-ui-modal-backdrop", themeClassName)}
+          className={clsx(
+            "auth-ui-modal-backdrop",
+            isCompactMotion && "auth-ui-modal-backdrop--compact",
+            themeClassName
+          )}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={backdropTransition}
           onClick={onClose}
         >
           <MotionDiv
             className={clsx("auth-ui-modal-card auth-main-card w-full max-w-[460px] rounded-[28px] p-5 sm:p-6", className)}
-            initial={{ opacity: 0, y: 14, scale: 0.985 }}
+            initial={cardInitial}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 14, scale: 0.985 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
+            exit={cardExit}
+            transition={cardTransition}
             role="dialog"
             aria-modal="true"
             onClick={(event) => event.stopPropagation()}

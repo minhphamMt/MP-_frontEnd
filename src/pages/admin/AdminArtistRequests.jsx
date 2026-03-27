@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FiCheckCircle,
   FiChevronDown,
@@ -231,10 +231,6 @@ export default function AdminArtistRequests() {
           <h1 className="admin-list-title">
             Duyệt yêu cầu nghệ sĩ
           </h1>
-          <p className="admin-list-summary">
-            Gom các yêu cầu vào một review queue dễ đọc hơn, ưu tiên hành động và
-            phần thông tin đối chiếu tài khoản.
-          </p>
         </div>
         <div className="admin-toolbar-actions">
           <input
@@ -270,22 +266,18 @@ export default function AdminArtistRequests() {
         <div className="admin-stat-card">
           <p className="admin-stat-label">Yêu cầu</p>
           <p className="admin-stat-value">{visibleRequests.length}</p>
-          <p className="admin-stat-note">Đang hiển thị trong hàng chờ</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Chờ duyệt</p>
           <p className="admin-stat-value">{pendingRequestsCount}</p>
-          <p className="admin-stat-note">Cần xử lý ngay</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Đã duyệt</p>
           <p className="admin-stat-value">{approvedRequestsCount}</p>
-          <p className="admin-stat-note">Đã hoàn tất duyệt</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Liên kết user</p>
           <p className="admin-stat-value">{linkedRequestsCount}</p>
-          <p className="admin-stat-note">Có tài khoản người dùng hợp lệ</p>
         </div>
       </div>
 

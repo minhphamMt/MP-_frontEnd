@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FiCamera,
   FiEdit2,
@@ -234,10 +234,6 @@ export default function AdminArtistList() {
           <h1 className="admin-list-title">
             Quản lý nghệ sĩ
           </h1>
-          <p className="admin-list-summary">
-            Tổ chức danh sách nghệ sĩ theo kiểu directory rõ ràng hơn, bớt cảm giác
-            bảng thô và dễ thao tác nhanh trên laptop.
-          </p>
         </div>
         <div className="admin-toolbar-actions">
           <button
@@ -259,17 +255,14 @@ export default function AdminArtistList() {
         <div className="admin-stat-card">
           <p className="admin-stat-label">Nghệ sĩ</p>
           <p className="admin-stat-value">{artists.length}</p>
-          <p className="admin-stat-note">Tổng nghệ sĩ đang hiển thị</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Có avatar</p>
           <p className="admin-stat-value">{artistsWithAvatarCount}</p>
-          <p className="admin-stat-note">Nhận diện hình ảnh đầy đủ</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Có alias</p>
           <p className="admin-stat-value">{artistsWithAliasCount}</p>
-          <p className="admin-stat-note">Có thêm metadata hiển thị</p>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaPlay, FaRegClock } from "react-icons/fa";
 import { FiExternalLink, FiRefreshCw, FiTrendingUp } from "react-icons/fi";

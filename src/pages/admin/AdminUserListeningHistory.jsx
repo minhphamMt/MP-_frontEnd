@@ -141,10 +141,6 @@ export default function AdminUserListeningHistory() {
         <h1 className="admin-list-title">
           Lịch sử nghe của {user?.display_name || user?.name || "người dùng"}
         </h1>
-        <p className="admin-list-summary">
-          Trang danh sách hiển thị đầy đủ các lượt nghe gần đây, giữ cùng một nhịp giao
-          diện với khu admin mới.
-        </p>
       </div>
 
       {!loading && !errorMessage && (
@@ -152,19 +148,16 @@ export default function AdminUserListeningHistory() {
           <div className="admin-stat-card">
             <p className="admin-stat-label">Tổng lượt nghe</p>
             <p className="admin-stat-value">{resolveTotal(history.meta, items)}</p>
-            <p className="admin-stat-note">Tổng số mục đã tải từ hệ thống</p>
           </div>
           <div className="admin-stat-card">
             <p className="admin-stat-label">Trang hiện tại</p>
             <p className="admin-stat-value">{getMetaPage(history.meta)}</p>
-            <p className="admin-stat-note">Mỗi trang hiển thị {USER_ACTIVITY_PAGE_LIMIT} mục</p>
           </div>
           <div className="admin-stat-card">
             <p className="admin-stat-label">Lần nghe gần nhất</p>
             <p className="admin-stat-value text-base sm:text-xl">
               {latestItem ? formatDateTime(latestItem.listenedAt) : "Chưa có"}
             </p>
-            <p className="admin-stat-note">Mốc hoạt động gần đây nhất của người dùng</p>
           </div>
         </div>
       )}

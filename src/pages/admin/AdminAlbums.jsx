@@ -123,10 +123,6 @@ export default function AdminAlbums() {
             Quản trị
           </p>
           <h1 className="admin-list-title">Quản lý album</h1>
-          <p className="admin-list-summary">
-            Giữ danh sách album rõ nhịp hơn với card phẳng, khoảng thở tốt và các
-            điểm dữ liệu quan trọng được đẩy lên phía trước.
-          </p>
         </div>
         <button
           onClick={() => loadAlbums(keyword.trim())}
@@ -140,17 +136,14 @@ export default function AdminAlbums() {
         <div className="admin-stat-card">
           <p className="admin-stat-label">Album</p>
           <p className="admin-stat-value">{albums.length}</p>
-          <p className="admin-stat-note">Tổng album đang hiển thị</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Có cover</p>
           <p className="admin-stat-value">{albumsWithCoverCount}</p>
-          <p className="admin-stat-note">Sẵn sàng hiển thị tốt</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Năm nay</p>
           <p className="admin-stat-value">{releasedThisYearCount}</p>
-          <p className="admin-stat-note">Album phát hành trong năm hiện tại</p>
         </div>
       </div>
 
@@ -177,7 +170,7 @@ export default function AdminAlbums() {
           Không có album phù hợp.
         </div>
       ) : (
-        <div className="admin-collection-grid">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {albums.map((album) => (
             <ArtistAlbumTile
               key={album.id}

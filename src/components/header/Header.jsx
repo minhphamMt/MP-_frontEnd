@@ -1,4 +1,4 @@
-﻿import { FiChevronLeft, FiChevronRight, FiMenu } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiMenu } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import SearchBox from "./SearchBox";
 import UserMenu from "./UserMenu";

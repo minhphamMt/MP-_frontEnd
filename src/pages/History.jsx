@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiHeart, FiMusic, FiPause, FiPlay } from "react-icons/fi";
 import { getMyHistory } from "../api/history.api";
 import { getSongById } from "../api/song.api";

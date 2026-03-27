@@ -199,25 +199,25 @@ export default function ArtistSongForm() {
     return formValues.cover_url ? resolveAssetUrl(formValues.cover_url) : "";
   }, [coverFile, formValues.cover_url]);
 
+  const selectedAlbum = useMemo(
+    () => albums.find((album) => String(album.id) === String(formValues.album_id)),
+    [albums, formValues.album_id],
+  );
+
   useEffect(() => {
     if (!coverFile || !coverPreview) return;
     return () => URL.revokeObjectURL(coverPreview);
   }, [coverFile, coverPreview]);
 
   return (
-    <div className="space-y-6">
-      <section className="artist-page-shell artist-glass p-6 sm:p-8">
+    <div className="artist-list-page">
+      <section className="artist-detail-shell">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="artist-label">Song Editor</p>
             <h1 className="mt-2 text-3xl font-black text-white">
               {isEdit ? "Chỉnh sửa bài hát" : "Tạo bài hát mới"}
             </h1>
-            <p className="mt-2 text-sm text-white/65">
-              {isEdit
-                ? "Cập nhật metadata và file audio của bài hát."
-                : "Thêm bản nhạc mới vào kho phát hành nghệ sĩ."}
-            </p>
           </div>
           <button
             type="button"
@@ -230,15 +230,13 @@ export default function ArtistSongForm() {
         </div>
       </section>
 
-      <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+      <form onSubmit={handleSubmit} className="artist-detail-grid is-two-column">
         <div className="space-y-6">
-          <section className="artist-page-shell artist-glass p-6">
-            <h2 className="text-lg font-semibold text-white">Thông tin bài hát</h2>
+          <section className="artist-detail-panel">
+            <p className="artist-detail-panel-title">Thông tin bài hát</p>
             <div className="mt-5 space-y-4">
-              <div>
-                <label className="text-sm text-white/75">
-                  Tên bài hát <span className="text-rose-300">*</span>
-                </label>
+              <label className="artist-detail-label is-full">
+                Tên bài hát <span className="text-rose-300">*</span>
                 <input
                   name="title"
                   value={formValues.title}
@@ -247,10 +245,10 @@ export default function ArtistSongForm() {
                   className="artist-input mt-2"
                   required
                 />
-              </div>
+              </label>
 
-              <div>
-                <label className="text-sm text-white/75">Album</label>
+              <label className="artist-detail-label is-full">
+                Album
                 <select
                   name="album_id"
                   value={formValues.album_id}
@@ -264,22 +262,24 @@ export default function ArtistSongForm() {
                     </option>
                   ))}
                 </select>
-              </div>
+              </label>
 
-              <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-                <p className="text-sm text-white/70">Thời lượng bài hát</p>
-                <p className="mt-1 text-sm font-semibold text-white">
+              <div className="artist-preview-meta-card">
+                <strong>Thời lượng bài hát</strong>
+                <span>
                   {formValues.duration
                     ? formatDuration(formValues.duration)
                     : "Sẽ tự động tính sau khi chọn file audio"}
-                </p>
-                <p className="mt-1 text-xs text-white/50">
-                  File âm thanh được upload lên Firebase Storage, backend lưu URL và metadata.
-                </p>
+                </span>
               </div>
+            </div>
+          </section>
 
-              <div>
-                <label className="text-sm text-white/75">Ảnh bìa (URL)</label>
+          <section className="artist-detail-panel">
+            <p className="artist-detail-panel-title">Ảnh bìa</p>
+            <div className="artist-upload-cluster mt-5">
+              <label className="artist-detail-label is-full">
+                Ảnh bìa (URL)
                 <input
                   name="cover_url"
                   value={formValues.cover_url}
@@ -287,19 +287,32 @@ export default function ArtistSongForm() {
                   placeholder="https://..."
                   className="artist-input mt-2"
                 />
-                <div className="mt-3">
-                  <label className="text-xs text-white/55">Hoặc tải ảnh bìa từ máy (PNG/JPG)</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) => setCoverFile(event.target.files?.[0] || null)}
-                    className="mt-2 block w-full rounded-2xl border border-dashed border-white/15 bg-black/25 px-4 py-3 text-xs text-white/75 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white"
-                  />
-                </div>
-              </div>
+              </label>
 
-              <div>
-                <label className="text-sm text-white/75">Audio URL</label>
+              <div className="artist-file-dropzone">
+                <div className="artist-file-name">
+                  <strong>{coverFile ? "Ảnh mới đã chọn" : "Tải ảnh bìa từ máy"}</strong>
+                      <span>{coverFile?.name || "PNG/JPG"}</span>
+                    </div>
+                <label className="artist-file-trigger" htmlFor="artist-song-cover-upload">
+                  {coverFile ? "Đổi ảnh" : "Chọn ảnh"}
+                </label>
+                <input
+                  id="artist-song-cover-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => setCoverFile(event.target.files?.[0] || null)}
+                  className="artist-file-input"
+                />
+              </div>
+            </div>
+          </section>
+
+          <section className="artist-detail-panel">
+            <p className="artist-detail-panel-title">Audio</p>
+            <div className="artist-upload-cluster mt-5">
+              <label className="artist-detail-label is-full">
+                Audio URL
                 <input
                   name="audio_path"
                   value={formValues.audio_path}
@@ -307,54 +320,80 @@ export default function ArtistSongForm() {
                   placeholder="https://storage.googleapis.com/..."
                   className="artist-input mt-2"
                 />
-                <div className="mt-3">
-                  <label className="text-xs text-white/55">Hoặc tải file nhạc lên Firebase (MP3/WAV)</label>
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    onChange={handleAudioFileChange}
-                    className="mt-2 block w-full rounded-2xl border border-dashed border-white/15 bg-black/25 px-4 py-3 text-xs text-white/75 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white"
-                  />
-                </div>
+              </label>
+
+              <div className="artist-file-dropzone">
+                <div className="artist-file-name">
+                  <strong>{audioFile ? "Audio mới đã chọn" : "Tải file nhạc lên Firebase"}</strong>
+                      <span>{audioFile?.name || "MP3/WAV"}</span>
+                    </div>
+                <label className="artist-file-trigger" htmlFor="artist-song-audio-upload">
+                  {audioFile ? "Đổi file" : "Chọn file"}
+                </label>
+                <input
+                  id="artist-song-audio-upload"
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleAudioFileChange}
+                  className="artist-file-input"
+                />
               </div>
             </div>
           </section>
         </div>
 
-        <div className="space-y-6">
-          <section className="artist-page-shell artist-glass p-6">
-            <h2 className="text-lg font-semibold text-white">Xem trước</h2>
-            <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-[#111]">
+        <div className="artist-preview-stack lg:sticky lg:top-4">
+          <section className="artist-detail-panel">
+            <p className="artist-detail-panel-title">Xem trước</p>
+            <div className="artist-preview-stage is-cover mt-5">
+              {coverPreview && (
+                <>
+                  <div
+                    className="artist-preview-backdrop"
+                    style={{ backgroundImage: `url(${coverPreview})` }}
+                  />
+                  <div className="artist-preview-overlay" />
+                </>
+              )}
               {coverPreview ? (
-                <OptimizedImage
-                  src={coverPreview}
-                  alt="Ảnh bìa"
-                  className="h-56 w-full object-cover"
-                />
+                <div className="artist-preview-canvas">
+                  <OptimizedImage src={coverPreview} alt="Ảnh bìa bài hát" className="h-full w-full" />
+                </div>
               ) : (
-                <div className="flex h-56 items-center justify-center text-4xl text-white/50">
-                  <FiMusic />
+                <div className="artist-preview-empty">
+                  <FiMusic className="text-4xl text-white/45" />
+                  <div className="artist-preview-caption">
+                    <strong>Chưa có ảnh bìa</strong>
+                    <span>Thêm ảnh bìa</span>
+                  </div>
                 </div>
               )}
-              <div className="space-y-2 p-4">
-                <h3 className="text-lg font-semibold text-white">
-                  {formValues.title || "Tên bài hát"}
-                </h3>
-                <p className="text-sm text-white/65">
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div className="artist-preview-caption">
+                <strong>{formValues.title || "Tên bài hát"}</strong>
+                <span>
                   {formValues.duration
                     ? `Thời lượng: ${formatDuration(formValues.duration)}`
                     : "Chưa có thời lượng"}
-                </p>
-                {(formValues.audio_path || audioFile) && (
-                  <p className="text-xs text-white/55">
-                    {audioFile ? "Đã chọn file audio mới" : "Đã có audio URL"}
-                  </p>
-                )}
+                </span>
+              </div>
+
+              <div className="artist-preview-meta-grid">
+                <div className="artist-preview-meta-card">
+                  <strong>Album</strong>
+                  <span>{selectedAlbum?.title || "Phát hành đơn lẻ"}</span>
+                </div>
+                <div className="artist-preview-meta-card">
+                  <strong>Audio</strong>
+                  <span>{audioFile ? "File audio mới từ máy" : formValues.audio_path ? "Đã có audio URL" : "Chưa có nguồn audio"}</span>
+                </div>
               </div>
             </div>
           </section>
 
-          <section className="artist-page-shell artist-glass p-6">
+          <section className="artist-detail-panel">
             {error && (
               <div className="mb-4 rounded-2xl border border-rose-400/40 bg-rose-500/10 p-3 text-sm text-rose-100">
                 {error}
@@ -366,11 +405,7 @@ export default function ArtistSongForm() {
               className="artist-btn-primary inline-flex w-full items-center justify-center gap-2 px-5 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"
             >
               <FiSave />
-              {loading || uploading
-                ? "Đang lưu..."
-                : isEdit
-                  ? "Lưu thay đổi"
-                  : "Tạo bài hát"}
+              {loading || uploading ? "Đang lưu..." : isEdit ? "Lưu thay đổi" : "Tạo bài hát"}
             </button>
           </section>
         </div>

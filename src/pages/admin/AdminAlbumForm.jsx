@@ -165,10 +165,6 @@ export default function AdminAlbumForm() {
           <div className="admin-detail-heading">
             <p className="admin-list-kicker">Quản trị</p>
             <h1 className="admin-list-title">Chỉnh sửa album</h1>
-            <p className="admin-list-summary">
-              Tập trung vào bìa album, ngày phát hành và danh sách bài hát liên quan
-              trong một giao diện gọn, phẳng và dễ quét.
-            </p>
           </div>
           <button
             onClick={handleSubmit}
@@ -193,10 +189,6 @@ export default function AdminAlbumForm() {
               <div className="admin-detail-grid is-two-column">
                 <div className="admin-detail-panel">
                   <p className="admin-detail-panel-title">Tổng quan album</p>
-                  <p className="admin-detail-panel-note">
-                    Xem nhanh cover, nghệ sĩ và ngày phát hành trước khi cập nhật dữ
-                    liệu.
-                  </p>
                   <div className="mt-4 flex flex-col gap-4">
                     {coverPreview ? (
                       <div className="admin-detail-media is-square">
@@ -236,10 +228,6 @@ export default function AdminAlbumForm() {
 
                 <div className="admin-detail-panel">
                   <p className="admin-detail-panel-title">Cập nhật album</p>
-                  <p className="admin-detail-panel-note">
-                    Chỉnh các trường chính và ưu tiên giữ cấu trúc dữ liệu sạch, dễ tra
-                    cứu.
-                  </p>
                   <div className="mt-4 space-y-4">
                     <label className="admin-detail-label">
                       Tên album
@@ -298,10 +286,6 @@ export default function AdminAlbumForm() {
               {album?.songs?.length > 0 && (
                 <div className="admin-detail-panel">
                   <p className="admin-detail-panel-title">Danh sách bài hát</p>
-                  <p className="admin-detail-panel-note">
-                    Các bài hát đang thuộc album này để bạn kiểm tra nhanh trước khi
-                    chỉnh sửa.
-                  </p>
                   <div className="mt-4 admin-detail-list">
                     {album.songs.map((song) => (
                       <div key={song.id} className="admin-detail-list-card">

@@ -181,10 +181,6 @@ export default function AdminUserForm() {
             <h1 className="admin-list-title">
               {isEdit ? "Chỉnh sửa người dùng" : "Tạo người dùng mới"}
             </h1>
-            <p className="admin-list-summary">
-              Giao diện chỉnh sửa người dùng giờ gọn hơn, bớt nặng mắt và ưu tiên
-              các trường quản trị cần thao tác thường xuyên.
-            </p>
           </div>
           <button
             onClick={handleSubmit}
@@ -207,10 +203,6 @@ export default function AdminUserForm() {
           <div className="admin-detail-grid is-two-column">
             <div className="admin-detail-panel">
               <p className="admin-detail-panel-title">Hồ sơ hiện tại</p>
-              <p className="admin-detail-panel-note">
-                Kiểm tra avatar, email và vai trò hiện tại trước khi thay đổi quyền
-                hoặc trạng thái tài khoản.
-              </p>
               <div className="mt-4 flex flex-col gap-4">
                 {avatarPreview ? (
                   <div className="admin-detail-media is-square">
@@ -281,10 +273,6 @@ export default function AdminUserForm() {
             <div className="admin-detail-panel">
               <p className="admin-detail-panel-title">
                 {isEdit ? "Cập nhật người dùng" : "Thông tin người dùng"}
-              </p>
-              <p className="admin-detail-panel-note">
-                Phần form chỉ giữ những trường quản trị quan trọng để giảm rối và thao
-                tác nhanh hơn trên màn laptop.
               </p>
               <div className="mt-4 admin-detail-form-grid">
                 <input

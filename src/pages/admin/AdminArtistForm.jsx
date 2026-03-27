@@ -165,10 +165,6 @@ export default function AdminArtistForm() {
             <h1 className="admin-list-title">
               {isEdit ? "Chỉnh sửa nghệ sĩ" : "Tạo nghệ sĩ mới"}
             </h1>
-            <p className="admin-list-summary">
-              Một biểu mẫu gọn, đồng bộ với admin mới, tập trung vào nhận diện nghệ sĩ
-              và phần mô tả quan trọng.
-            </p>
           </div>
           <button
             onClick={handleSubmit}
@@ -192,10 +188,6 @@ export default function AdminArtistForm() {
             <div className="admin-detail-panel">
               <p className="admin-detail-panel-title">
                 {isEdit ? "Thông tin hiện tại" : "Ảnh đại diện"}
-              </p>
-              <p className="admin-detail-panel-note">
-                Ưu tiên một avatar rõ nét và kiểm tra nhanh các thông tin nhận diện
-                chính trước khi lưu.
               </p>
               <div className="mt-4 flex flex-col gap-4">
                 {avatarPreview ? (
@@ -250,10 +242,6 @@ export default function AdminArtistForm() {
             <div className="admin-detail-panel">
               <p className="admin-detail-panel-title">
                 {isEdit ? "Cập nhật nghệ sĩ" : "Thông tin nghệ sĩ"}
-              </p>
-              <p className="admin-detail-panel-note">
-                Giữ form ngắn, rõ và chỉ hiển thị những trường thật sự cần thiết cho
-                việc quản trị.
               </p>
               <div className="mt-4 admin-detail-form-grid">
                 <input

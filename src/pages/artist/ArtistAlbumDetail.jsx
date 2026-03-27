@@ -232,7 +232,7 @@ export default function ArtistAlbumDetail() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="artist-list-page">
         <div className="artist-page-shell artist-glass ui-skeleton h-[220px] rounded-[32px]" />
         <div className="artist-page-shell artist-glass ui-skeleton h-[180px] rounded-[32px]" />
         <div className="artist-page-shell artist-glass ui-skeleton h-[320px] rounded-[32px]" />
@@ -242,8 +242,8 @@ export default function ArtistAlbumDetail() {
 
   if (!album) {
     return (
-      <div className="space-y-6">
-        <section className="artist-page-shell artist-glass p-6 sm:p-8">
+      <div className="artist-list-page">
+        <section className="artist-detail-shell">
           <button
             type="button"
             onClick={() => navigate("/artist/albums")}
@@ -253,7 +253,7 @@ export default function ArtistAlbumDetail() {
             Quay lại danh sách album
           </button>
 
-          <div className="mt-6 rounded-[28px] border border-white/10 bg-black/20 p-6 text-center">
+          <div className="artist-empty-state mt-6 text-center">
             <p className="artist-label">Album Detail</p>
             <h1 className="mt-3 text-2xl font-black text-white">
               Không mở được album
@@ -268,14 +268,14 @@ export default function ArtistAlbumDetail() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="artist-list-page">
       {errorMessage ? (
         <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
           {errorMessage}
         </div>
       ) : null}
 
-      <section className="artist-page-shell artist-glass overflow-hidden p-6 sm:p-8">
+      <section className="artist-detail-shell overflow-hidden">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="artist-label">Album Detail</p>
@@ -387,7 +387,7 @@ export default function ArtistAlbumDetail() {
         </div>
       </section>
 
-      <section className="artist-page-shell artist-glass p-6">
+      <section className="artist-detail-panel">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="artist-label">Tổng quan</p>
@@ -418,22 +418,11 @@ export default function ArtistAlbumDetail() {
             <p className="text-[11px] uppercase tracking-[0.22em] text-white/55">
               Ghi chú
             </p>
-            <div className="mt-4 space-y-3 text-sm leading-relaxed text-white/68">
-              <p>
-                Trang này được tách riêng cho nghệ sĩ để bạn xem chi tiết album trong
-                workspace mà không phải đi qua trang public của user.
-              </p>
-              <p>
-                Nếu cần chỉnh tên, ngày phát hành, ảnh bìa hoặc Zing ID, bạn có thể
-                dùng nút <span className="font-semibold text-white">Chỉnh sửa</span>{" "}
-                ở phía trên.
-              </p>
-            </div>
           </article>
         </div>
       </section>
 
-      <section className="artist-page-shell artist-glass p-6">
+      <section className="artist-detail-panel">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="artist-label">Tracklist</p>
@@ -454,7 +443,7 @@ export default function ArtistAlbumDetail() {
             Album này hiện chưa có bài hát nào.
           </div>
         ) : (
-          <div className="mt-5 overflow-hidden rounded-[28px] border border-white/10 bg-black/20">
+          <div className="artist-data-panel mt-5">
             <div className="hidden grid-cols-[56px_minmax(0,2fr)_minmax(0,1fr)_96px_120px] items-center border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.28em] text-white/45 lg:grid">
               <span className="text-center">#</span>
               <span>Bài hát</span>

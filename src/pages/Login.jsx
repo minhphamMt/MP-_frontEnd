@@ -12,6 +12,7 @@ import {
   AuthModal,
   AuthPasswordField,
 } from "../components/auth/AuthPrimitives";
+import useMediaQuery from "../hooks/useMediaQuery";
 import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
 import { showBootIntro } from "../utils/bootIntro";
@@ -107,6 +108,7 @@ const validateRegisterFields = ({ displayName, email, password, confirmPassword 
 };
 
 export default function Login() {
+  const isCompactAuthMotion = useMediaQuery("(max-width: 767px), (hover: none) and (pointer: coarse)");
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -402,19 +404,26 @@ export default function Login() {
 
   const isLoginMode = mode === "login";
   const isRegisterMode = mode === "register";
+  const layoutEnabled = !isCompactAuthMotion;
+  const effectiveCardLayoutTransition = isCompactAuthMotion
+    ? { duration: 0.12, ease: "linear" }
+    : cardLayoutTransition;
+  const effectiveFormSwapTransition = isCompactAuthMotion
+    ? { duration: 0.14, ease: "easeOut" }
+    : formSwapTransition;
 
   const formSection = (
     <MotionDiv
-      layout
+      layout={layoutEnabled}
       initial={false}
-      transition={cardLayoutTransition}
+      transition={effectiveCardLayoutTransition}
       className="auth-form-wrap relative mx-auto w-full max-w-[448px]"
     >
       <AuthCard variant="main" className="auth-fit-card p-5 sm:p-6">
         <form onSubmit={mode === "login" ? handleLogin : handleRegister}>
           <MotionDiv
-            layout="position"
-            transition={cardLayoutTransition}
+            layout={layoutEnabled ? "position" : false}
+            transition={effectiveCardLayoutTransition}
             className="flex flex-col items-center text-center"
           >
             <button
@@ -439,9 +448,9 @@ export default function Login() {
           </MotionDiv>
 
           <MotionDiv
-            layout
+            layout={layoutEnabled}
             initial={false}
-            transition={cardLayoutTransition}
+            transition={effectiveCardLayoutTransition}
             className="auth-form-stage relative mt-4 overflow-hidden"
           >
             <MotionDiv
@@ -449,10 +458,18 @@ export default function Login() {
               animate={
                 mode === "login"
                   ? { opacity: 1, x: 0, y: 0, scale: 1 }
-                  : { opacity: 0, x: -14, y: 4, scale: 0.994 }
+                  : isCompactAuthMotion
+                    ? { opacity: 0, x: 0, y: 0, scale: 1 }
+                    : { opacity: 0, x: -14, y: 4, scale: 0.994 }
               }
-              transition={formSwapTransition}
-              className={`space-y-3 will-change-transform ${mode === "login" ? "relative" : "pointer-events-none absolute inset-0"}`}
+              transition={effectiveFormSwapTransition}
+              className={`auth-form-panel space-y-3 will-change-transform ${
+                mode === "login"
+                  ? "is-active relative"
+                  : isCompactAuthMotion
+                    ? "is-inactive hidden"
+                    : "is-inactive pointer-events-none absolute inset-0"
+              }`}
             >
               <AuthField
                 label="Email"
@@ -490,10 +507,18 @@ export default function Login() {
               animate={
                 mode === "register"
                   ? { opacity: 1, x: 0, y: 0, scale: 1 }
-                  : { opacity: 0, x: 14, y: 4, scale: 0.994 }
+                  : isCompactAuthMotion
+                    ? { opacity: 0, x: 0, y: 0, scale: 1 }
+                    : { opacity: 0, x: 14, y: 4, scale: 0.994 }
               }
-              transition={formSwapTransition}
-              className={`space-y-3 pb-1 will-change-transform ${mode === "register" ? "relative" : "pointer-events-none absolute inset-0"}`}
+              transition={effectiveFormSwapTransition}
+              className={`auth-form-panel space-y-3 pb-1 will-change-transform ${
+                mode === "register"
+                  ? "is-active relative"
+                  : isCompactAuthMotion
+                    ? "is-inactive hidden"
+                    : "is-inactive pointer-events-none absolute inset-0"
+              }`}
             >
               <AuthField
                 label="Tên hiển thị"
@@ -562,8 +587,8 @@ export default function Login() {
           </MotionDiv>
 
           <MotionDiv
-            layout="position"
-            transition={cardLayoutTransition}
+            layout={layoutEnabled ? "position" : false}
+            transition={effectiveCardLayoutTransition}
             className="auth-actions mt-3.5 space-y-2.5"
           >
             <button disabled={loading} type="submit" className="auth-ui-primary">

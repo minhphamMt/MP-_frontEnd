@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiCheckCircle, FiDownload, FiInfo, FiRefreshCw, FiSlash } from "react-icons/fi";
 import {
@@ -290,10 +290,6 @@ export default function AdminSongs() {
             Quản trị
           </p>
           <h1 className="admin-list-title">Duyệt bài hát</h1>
-          <p className="admin-list-summary">
-            Ưu tiên kiểm duyệt, lọc nhanh các bài chờ xử lý và thao tác hàng loạt
-            trong một giao diện gọn, rõ, không rối mắt.
-          </p>
         </div>
         <div className="admin-toolbar-actions">
           <input
@@ -332,22 +328,18 @@ export default function AdminSongs() {
         <div className="admin-stat-card">
           <p className="admin-stat-label">Hiển thị</p>
           <p className="admin-stat-value">{visibleSongs.length}</p>
-          <p className="admin-stat-note">Bài hát trong danh sách hiện tại</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Chờ duyệt</p>
           <p className="admin-stat-value">{pendingSongsCount}</p>
-          <p className="admin-stat-note">Ưu tiên xử lý trước</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Đã duyệt</p>
           <p className="admin-stat-value">{approvedSongsCount}</p>
-          <p className="admin-stat-note">Đã thông qua kiểm duyệt</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Thiếu mp3</p>
           <p className="admin-stat-value">{missingAudioCount}</p>
-          <p className="admin-stat-note">Cần bổ sung file audio</p>
         </div>
       </div>
 

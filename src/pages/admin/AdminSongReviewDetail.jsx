@@ -211,10 +211,6 @@ export default function AdminSongReviewDetail() {
               <div className="admin-detail-heading">
                 <p className="admin-list-kicker">Duyệt bài hát</p>
                 <h1 className="admin-list-title">{song.title || "Bài hát"}</h1>
-                <p className="admin-list-summary">
-                  Kiểm tra dữ liệu hiển thị, audio và trạng thái trước khi duyệt hoặc
-                  từ chối bài hát.
-                </p>
               </div>
               <div className="admin-toolbar-actions">
                 <span className={getStatusChipClass(song.status)}>
@@ -243,9 +239,6 @@ export default function AdminSongReviewDetail() {
 
               <section className="admin-detail-panel">
                 <p className="admin-detail-panel-title">Thông tin kiểm duyệt</p>
-                <p className="admin-detail-panel-note">
-                  Các thông tin cốt lõi được gom lại để bạn quyết định duyệt nhanh hơn.
-                </p>
                 <div className="mt-4 admin-detail-meta-grid">
                   <div className="admin-detail-meta-card">
                     <p className="admin-detail-meta-label">Nghệ sĩ</p>
@@ -294,17 +287,11 @@ export default function AdminSongReviewDetail() {
 
             <section className="admin-detail-panel">
               <p className="admin-detail-panel-title">File nhạc mp3/audio</p>
-              <p className="admin-detail-panel-note">
-                Audio là điều kiện tối thiểu trước khi duyệt bài hát vào hệ thống.
-              </p>
               {songAudioUrl ? (
                 <div className="mt-4">
                   <audio controls className="w-full">
                     <source src={songAudioUrl} />
                   </audio>
-                  <p className="mt-3 text-sm text-emerald-300">
-                    Đã có file audio, đủ điều kiện cơ bản để duyệt.
-                  </p>
                 </div>
               ) : (
                 <div className="mt-4 rounded-2xl border border-rose-500/25 bg-rose-500/10 px-4 py-4 text-sm text-rose-200">

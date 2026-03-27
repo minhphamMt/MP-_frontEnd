@@ -143,10 +143,6 @@ export default function AdminUsers() {
           <h1 className="admin-list-title">
             Quản lý người dùng
           </h1>
-          <p className="admin-list-summary">
-            Theo dõi tài khoản, vai trò và trạng thái hoạt động trong một bố cục
-            gọn, rõ và dễ quét dữ liệu hơn.
-          </p>
         </div>
         <div className="admin-toolbar-actions">
           <button
@@ -168,22 +164,18 @@ export default function AdminUsers() {
         <div className="admin-stat-card">
           <p className="admin-stat-label">Người dùng</p>
           <p className="admin-stat-value">{users.length}</p>
-          <p className="admin-stat-note">Tổng hồ sơ đang hiển thị</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Đang hoạt động</p>
           <p className="admin-stat-value">{activeUsersCount}</p>
-          <p className="admin-stat-note">Có thể truy cập hệ thống</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Admin</p>
           <p className="admin-stat-value">{adminUsersCount}</p>
-          <p className="admin-stat-note">Tài khoản quản trị</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Nghệ sĩ</p>
           <p className="admin-stat-value">{artistUsersCount}</p>
-          <p className="admin-stat-note">Tài khoản nghệ sĩ</p>
         </div>
       </div>
 

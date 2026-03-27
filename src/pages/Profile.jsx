@@ -94,16 +94,16 @@ export default function Profile() {
   } w-full px-6 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60`;
   const textInputClassName = isArtistProfileTheme
     ? "artist-input"
-    : "user-input w-full rounded-2xl border border-white/10 bg-[#111111] px-4 py-2.5 text-sm text-white outline-none transition";
+    : "user-input w-full rounded-2xl border border-white/8 bg-[#111111] px-4 py-2.5 text-sm text-white outline-none transition";
   const readOnlyInputClassName = isArtistProfileTheme
     ? "artist-input cursor-not-allowed !bg-white/5 text-white/65"
-    : "user-input w-full cursor-not-allowed rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.05] px-4 py-2.5 text-sm text-white/72 outline-none";
+    : "user-input w-full cursor-not-allowed rounded-2xl border border-emerald-400/10 bg-emerald-400/[0.04] px-4 py-2.5 text-sm text-white/72 outline-none";
   const fileInputClassName = isArtistProfileTheme
-    ? "w-full rounded-2xl border border-dashed border-sky-200/20 bg-[#132034] px-4 py-3 text-sm text-white/75 file:mr-4 file:rounded-full file:border-0 file:bg-sky-200/12 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-sky-50 file:transition md:hover:border-sky-200/32"
-    : "w-full rounded-2xl border border-dashed border-emerald-400/20 bg-[#111111] px-4 py-2.5 text-sm text-white/74 file:mr-4 file:rounded-full file:border-0 file:bg-emerald-400/12 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-emerald-50 file:transition md:hover:border-emerald-400/32";
+    ? "w-full rounded-2xl border border-dashed border-sky-200/14 bg-[#132034] px-4 py-3 text-sm text-white/75 file:mr-4 file:rounded-full file:border-0 file:bg-sky-200/12 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-sky-50 file:transition md:hover:border-sky-200/24"
+    : "w-full rounded-2xl border border-dashed border-emerald-400/14 bg-[#111111] px-4 py-2.5 text-sm text-white/74 file:mr-4 file:rounded-full file:border-0 file:bg-emerald-400/12 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-emerald-50 file:transition md:hover:border-emerald-400/24";
   const formHintCardClassName = isArtistProfileTheme
-    ? "flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-200/16 bg-sky-200/[0.06] p-4 text-sm text-white/65"
-    : "flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300/14 bg-amber-300/[0.06] p-4 text-sm text-white/62";
+    ? "flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#132033] p-4 text-sm text-white/65 ring-1 ring-inset ring-sky-200/10"
+    : "flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#221d17] p-4 text-sm text-white/62 ring-1 ring-inset ring-amber-300/10";
   const forgotLinkClassName = isArtistProfileTheme
     ? "text-xs font-medium text-sky-100 transition md:hover:text-white"
     : "text-xs font-medium text-emerald-200 transition md:hover:text-emerald-100";
@@ -114,9 +114,21 @@ export default function Profile() {
     ? "text-[11px] uppercase tracking-[0.35em] text-white/50"
     : "text-[11px] uppercase tracking-[0.35em] text-amber-200/68";
   const passwordHintCardClassName = isArtistProfileTheme
-    ? "rounded-2xl border border-sky-200/16 bg-sky-200/[0.06] p-4 text-xs text-white/64"
-    : "rounded-2xl border border-emerald-400/16 bg-emerald-400/[0.06] p-4 text-xs text-white/66";
+    ? "rounded-2xl bg-[#132033] p-4 text-xs text-white/64 ring-1 ring-inset ring-sky-200/10"
+    : "rounded-2xl bg-[#142117] p-4 text-xs text-white/66 ring-1 ring-inset ring-emerald-400/10";
   const profileModalTheme = isArtistProfileTheme ? "artist" : "listener";
+  const mainGridClassName = isArtistProfileTheme
+    ? "profile-main-grid grid gap-4 lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch"
+    : "profile-main-grid grid gap-4 lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch";
+  const profilePanelStackClassName = isArtistProfileTheme
+    ? "profile-panel-stack relative flex h-full flex-col gap-4"
+    : "profile-panel-stack relative flex h-full flex-col gap-4";
+  const actionStripClassName = `${formHintCardClassName} profile-action-strip${
+    isArtistProfileTheme ? " mt-auto" : " mt-auto"
+  }`;
+  const passwordSubmitButtonClassName = `${widePrimaryButtonClassName}${
+    isArtistProfileTheme ? " mt-auto" : " mt-auto"
+  }`;
 
   useEffect(() => {
     if (authUser) {
@@ -432,17 +444,17 @@ export default function Profile() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <div className={`rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 shadow-[0_8px_24px_rgba(0,0,0,0.35)] ${isArtistProfileTheme ? "border border-sky-200/16 bg-sky-200/10" : "border border-amber-300/20 bg-amber-300/[0.08]"}`}>
+            <div className={`rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 shadow-[0_8px_24px_rgba(0,0,0,0.24)] ${isArtistProfileTheme ? "border border-sky-200/9 bg-sky-200/[0.06]" : "border border-amber-300/10 bg-amber-300/[0.05]"}`}>
               {authUser?.role || "USER"}
             </div>
-            <div className={`rounded-full px-4 py-2 text-[11px] font-bold shadow-[0_8px_24px_rgba(16,185,129,0.35)] ${isArtistProfileTheme ? "border border-sky-200/24 bg-sky-300/14 text-sky-100" : "border border-emerald-300/40 bg-emerald-400/15 text-emerald-200"}`}>
+            <div className={`rounded-full px-4 py-2 text-[11px] font-bold shadow-[0_8px_24px_rgba(16,185,129,0.18)] ${isArtistProfileTheme ? "bg-sky-300/[0.1] text-sky-100 ring-1 ring-inset ring-sky-200/8" : "bg-emerald-400/[0.09] text-emerald-200 ring-1 ring-inset ring-emerald-300/8"}`}>
               Đang hoạt động
             </div>
           </div>
         </div>
       </header>
 
-      <div className="profile-main-grid grid gap-4 lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch">
+      <div className={mainGridClassName}>
         <form
           onSubmit={submitProfile}
           className={sectionClassName}
@@ -450,7 +462,7 @@ export default function Profile() {
           {!isArtistProfileTheme && (
             <div className="pointer-events-none absolute left-5 top-0 h-px w-28 bg-amber-300/40" />
           )}
-          <div className="profile-panel-stack relative flex h-full flex-col gap-4">
+          <div className={profilePanelStackClassName}>
             <div>
               <p className={userSectionLabelClassName}>
                 Thông tin cơ bản
@@ -521,7 +533,7 @@ export default function Profile() {
               </div>
             </label>
 
-			            <div className={`${formHintCardClassName} profile-action-strip mt-auto`}>
+			            <div className={actionStripClassName}>
               <div className="flex items-start gap-3">
                 <FiCheckCircle className={`mt-0.5 ${isArtistProfileTheme ? "text-white/70" : "text-amber-200"}`} />
                 <div>
@@ -550,7 +562,7 @@ export default function Profile() {
             {!isArtistProfileTheme && (
               <div className="pointer-events-none absolute left-5 top-0 h-px w-28 bg-emerald-400/45" />
             )}
-	            <div className="profile-panel-stack relative flex h-full flex-col gap-4">
+		            <div className={profilePanelStackClassName}>
 	              <div>
 	                <p className={userSectionLabelClassName}>
 	                  Bảo mật
@@ -649,7 +661,7 @@ export default function Profile() {
 	              <button
                 type="submit"
                 disabled={loadingPassword}
-		                className={`${widePrimaryButtonClassName} mt-auto`}
+			                className={passwordSubmitButtonClassName}
               >
                 {loadingPassword ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
               </button>

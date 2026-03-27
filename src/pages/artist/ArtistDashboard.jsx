@@ -149,7 +149,7 @@ const pickDate = (item, keys) => {
 
 function ChartCard({ title, children }) {
   return (
-    <article data-card className="artist-soft-card p-4">
+    <article data-card className="artist-detail-panel">
       <p className="text-[11px] uppercase tracking-[0.22em] text-white/55">{title}</p>
       <div className="mt-3">{children}</div>
     </article>
@@ -449,8 +449,8 @@ export default function ArtistDashboard() {
   const latestAlbums = albums.slice(0, 3);
 
   return (
-    <div className="space-y-6">
-      <section className="artist-page-shell artist-glass overflow-hidden p-6 sm:p-8">
+    <div className="artist-list-page">
+      <section className="artist-detail-shell overflow-hidden">
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div>
             <p className="artist-label">Artist Workspace</p>
@@ -489,9 +489,6 @@ export default function ArtistDashboard() {
           <div className="artist-soft-card p-5 sm:p-6">
             <p className="text-xs uppercase tracking-[0.24em] text-white/55">Album mới nhất</p>
             <h3 className="mt-3 text-2xl font-bold text-white">{stats.newestAlbum}</h3>
-            <p className="mt-2 text-sm text-white/60">
-              Duy trì lịch phát hành ổn định để tăng độ phủ và lượt nghe.
-            </p>
             <button
               type="button"
               onClick={() => navigate("/artist/albums")}
@@ -504,7 +501,7 @@ export default function ArtistDashboard() {
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="artist-stat-grid sm:grid-cols-2 xl:grid-cols-4">
         <article data-card className="artist-kpi p-5">
           <p className="text-xs uppercase tracking-[0.24em] text-white/55">Tổng album</p>
           <div className="mt-3 flex items-center justify-between">
@@ -579,7 +576,7 @@ export default function ArtistDashboard() {
         </ChartCard>
       </section>
 
-      <section className="artist-page-shell artist-glass p-6">
+      <section className="artist-detail-panel">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="artist-label">Recent Albums</p>

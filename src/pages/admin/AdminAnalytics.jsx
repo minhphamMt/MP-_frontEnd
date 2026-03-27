@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FiBarChart2,
   FiClock,
@@ -833,9 +833,6 @@ export default function AdminAnalytics() {
         <div>
           <p className="text-[11px] uppercase tracking-[0.35em] text-white/50">Quản trị</p>
           <h1 className="text-3xl font-extrabold text-white">Dashboard</h1>
-          <p className="mt-1 text-sm text-white/60">
-            Dữ liệu biểu đồ được tổng hợp trực tiếp từ backend để bảo đảm đồng bộ.
-          </p>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-white/50">

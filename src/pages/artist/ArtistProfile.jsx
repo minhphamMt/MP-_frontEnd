@@ -14,7 +14,6 @@ const emptyForm = {
   birthday: "",
   national: "",
   avatar_url: "",
-  cover_url: "",
   short_bio: "",
   bio: "",
 };
@@ -44,8 +43,7 @@ export default function ArtistProfile() {
         realname: artist?.realname || "",
         birthday: artist?.birthday ? artist.birthday.split("T")[0] : "",
         national: artist?.national || "",
-        avatar_url: artist?.avatar_url || "",
-        cover_url: artist?.cover_url || "",
+        avatar_url: artist?.avatar_url || artist?.cover_url || "",
         short_bio: artist?.short_bio || "",
         bio: artist?.bio || "",
       });
@@ -82,14 +80,15 @@ export default function ArtistProfile() {
 
     try {
       setSaving(true);
+      const normalizedAvatar = formValues.avatar_url || null;
       const payload = {
         name: formValues.name.trim(),
         alias: formValues.alias || null,
         realname: formValues.realname || null,
         birthday: formValues.birthday || null,
         national: formValues.national || null,
-        avatar_url: formValues.avatar_url || null,
-        cover_url: formValues.cover_url || null,
+        avatar_url: normalizedAvatar,
+        cover_url: normalizedAvatar,
         short_bio: formValues.short_bio || null,
         bio: formValues.bio || null,
       };
@@ -134,14 +133,19 @@ export default function ArtistProfile() {
       const updatedArtist = payload.artist;
 
       if (avatarUrl) {
-        setFormValues((prev) => ({ ...prev, avatar_url: avatarUrl }));
+        setFormValues((prev) => ({
+          ...prev,
+          avatar_url: avatarUrl,
+        }));
       }
+
       if (updatedArtist && user) {
         updateUser({
           ...user,
           artist: {
             ...(user.artist || {}),
             ...updatedArtist,
+            cover_url: updatedArtist.cover_url || avatarUrl || updatedArtist.avatar_url,
           },
         });
       }
@@ -154,25 +158,23 @@ export default function ArtistProfile() {
     }
   };
 
-  const coverPreview = useMemo(() => {
-    const preview = formValues.cover_url || formValues.avatar_url || "";
-    return resolveAssetUrl(preview);
-  }, [formValues.cover_url, formValues.avatar_url]);
+  const avatarPreview = useMemo(
+    () => resolveAssetUrl(formValues.avatar_url || ""),
+    [formValues.avatar_url],
+  );
+  const heroBackdropUrl = avatarPreview;
 
   if (loading) {
     return <ArtistProfileLoading />;
   }
 
   return (
-    <div className="space-y-6">
-      <section className="artist-page-shell artist-glass p-6 sm:p-8">
+    <div className="artist-list-page">
+      <section className="artist-detail-shell">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="artist-label">Profile</p>
             <h1 className="mt-2 text-3xl font-black text-white">Hồ sơ nghệ sĩ</h1>
-            <p className="mt-2 text-sm text-white/65">
-              Cập nhật thông tin công khai giúp người nghe nhận diện thương hiệu của bạn.
-            </p>
           </div>
           <button
             type="button"
@@ -185,15 +187,13 @@ export default function ArtistProfile() {
         </div>
       </section>
 
-      <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+      <form onSubmit={handleSubmit} className="artist-detail-grid is-two-column">
         <div className="space-y-6">
-          <section className="artist-page-shell artist-glass p-6">
-            <h2 className="text-lg font-semibold text-white">Thông tin chung</h2>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <div className="md:col-span-2">
-                <label className="text-sm text-white/75">
-                  Tên nghệ sĩ <span className="text-rose-300">*</span>
-                </label>
+          <section className="artist-detail-panel">
+            <p className="artist-detail-panel-title">Thông tin chung</p>
+            <div className="artist-detail-form-grid mt-5">
+              <label className="artist-detail-label is-full">
+                Tên nghệ sĩ <span className="text-rose-300">*</span>
                 <input
                   name="name"
                   value={formValues.name}
@@ -202,10 +202,10 @@ export default function ArtistProfile() {
                   className="artist-input mt-2"
                   required
                 />
-              </div>
+              </label>
 
-              <div>
-                <label className="text-sm text-white/75">Nghệ danh</label>
+              <label className="artist-detail-label">
+                Nghệ danh
                 <input
                   name="alias"
                   value={formValues.alias}
@@ -213,10 +213,10 @@ export default function ArtistProfile() {
                   placeholder="Alias"
                   className="artist-input mt-2"
                 />
-              </div>
+              </label>
 
-              <div>
-                <label className="text-sm text-white/75">Tên thật</label>
+              <label className="artist-detail-label">
+                Tên thật
                 <input
                   name="realname"
                   value={formValues.realname}
@@ -224,10 +224,10 @@ export default function ArtistProfile() {
                   placeholder="Họ và tên"
                   className="artist-input mt-2"
                 />
-              </div>
+              </label>
 
-              <div>
-                <label className="text-sm text-white/75">Ngày sinh</label>
+              <label className="artist-detail-label">
+                Ngày sinh
                 <input
                   type="date"
                   name="birthday"
@@ -235,10 +235,10 @@ export default function ArtistProfile() {
                   onChange={handleChange}
                   className="artist-input mt-2"
                 />
-              </div>
+              </label>
 
-              <div>
-                <label className="text-sm text-white/75">Quốc gia</label>
+              <label className="artist-detail-label">
+                Quốc gia
                 <input
                   name="national"
                   value={formValues.national}
@@ -246,15 +246,15 @@ export default function ArtistProfile() {
                   placeholder="Việt Nam"
                   className="artist-input mt-2"
                 />
-              </div>
+              </label>
             </div>
           </section>
 
-          <section className="artist-page-shell artist-glass p-6">
-            <h2 className="text-lg font-semibold text-white">Hình ảnh và giới thiệu</h2>
-            <div className="mt-5 space-y-4">
-              <div>
-                <label className="text-sm text-white/75">Avatar (URL)</label>
+          <section className="artist-detail-panel">
+            <p className="artist-detail-panel-title">Avatar và giới thiệu</p>
+            <div className="artist-upload-cluster mt-5">
+              <label className="artist-detail-label is-full">
+                Avatar (URL)
                 <input
                   name="avatar_url"
                   value={formValues.avatar_url}
@@ -262,20 +262,32 @@ export default function ArtistProfile() {
                   placeholder="https://..."
                   className="artist-input mt-2"
                 />
-                <div className="mt-3">
-                  <label className="text-xs text-white/55">Hoặc tải avatar từ máy (PNG/JPG)</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    disabled={uploadingAvatar}
-                    className="mt-2 block w-full rounded-2xl border border-dashed border-white/15 bg-black/25 px-4 py-3 text-xs text-white/75 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white disabled:cursor-not-allowed disabled:opacity-70"
-                  />
+              </label>
+
+              <div className="artist-file-dropzone">
+                <div className="artist-file-name">
+                  <strong>{uploadingAvatar ? "Đang tải avatar..." : "Tải avatar từ máy"}</strong>
+                  <span>
+                    {uploadingAvatar
+                      ? "Đang cập nhật"
+                      : "PNG/JPG"}
+                  </span>
                 </div>
+                <label className="artist-file-trigger" htmlFor="artist-profile-avatar-upload">
+                  {uploadingAvatar ? "Đang tải..." : "Chọn avatar"}
+                </label>
+                <input
+                  id="artist-profile-avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  disabled={uploadingAvatar}
+                  className="artist-file-input"
+                />
               </div>
 
-              <div>
-                <label className="text-sm text-white/75">Mô tả ngắn</label>
+              <label className="artist-detail-label is-full">
+                Mô tả ngắn
                 <textarea
                   name="short_bio"
                   value={formValues.short_bio}
@@ -284,10 +296,10 @@ export default function ArtistProfile() {
                   placeholder="Giới thiệu ngắn gọn..."
                   className="artist-textarea mt-2"
                 />
-              </div>
+              </label>
 
-              <div>
-                <label className="text-sm text-white/75">Tiểu sử</label>
+              <label className="artist-detail-label is-full">
+                Tiểu sử
                 <textarea
                   name="bio"
                   value={formValues.bio}
@@ -296,38 +308,71 @@ export default function ArtistProfile() {
                   placeholder="Chia sẻ câu chuyện về bạn..."
                   className="artist-textarea mt-2"
                 />
-              </div>
+              </label>
             </div>
           </section>
         </div>
 
-        <div className="space-y-6">
-          <section className="artist-page-shell artist-glass overflow-hidden">
-            <div className="relative h-48 w-full overflow-hidden">
-              {coverPreview ? (
-                <OptimizedImage
-                  src={coverPreview}
-                  alt="Cover preview"
-                  className="h-full w-full object-cover"
+        <div className="artist-preview-stack lg:sticky lg:top-4">
+          <section className="artist-detail-panel">
+            <p className="artist-detail-panel-title">Xem trước công khai</p>
+            <div className="artist-profile-hero mt-5">
+              {heroBackdropUrl ? (
+                <div
+                  className="artist-profile-hero-backdrop"
+                  style={{ backgroundImage: `url(${heroBackdropUrl})` }}
                 />
-              ) : (
-                <div className="flex h-full items-center justify-center bg-[linear-gradient(135deg,rgba(56,189,248,0.22),rgba(59,130,246,0.14),rgba(5,10,18,0.96))] text-3xl text-white/50">
-                  <FiUser />
+              ) : null}
+              <div className="artist-profile-hero-overlay" />
+
+              <div className="artist-profile-hero-content">
+                <div className="artist-profile-hero-media">
+                  {avatarPreview ? (
+                    <OptimizedImage
+                      src={avatarPreview}
+                      alt="Avatar nghệ sĩ"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="artist-profile-hero-placeholder">
+                      <FiUser className="text-5xl text-white/45" />
+                    </div>
+                  )}
                 </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-            </div>
-            <div className="space-y-2 p-5">
-              <h3 className="text-lg font-semibold text-white">
-                {formValues.name || "Tên nghệ sĩ"}
-              </h3>
-              <p className="text-sm text-white/65">
-                {formValues.short_bio || "Chưa có mô tả ngắn."}
-              </p>
+
+                <div className="artist-profile-hero-copy">
+                  <p className="artist-profile-hero-kicker">Hồ sơ công khai</p>
+                  <h3 className="artist-profile-hero-title">
+                    {formValues.name || "Tên nghệ sĩ"}
+                  </h3>
+                  <p className="artist-profile-hero-text">
+                    {formValues.short_bio || "Chưa có mô tả ngắn để hiển thị."}
+                  </p>
+
+                  <div className="artist-preview-meta-grid">
+                    <div className="artist-preview-meta-card">
+                      <strong>Nghệ danh</strong>
+                      <span>{formValues.alias || "Chưa cập nhật"}</span>
+                    </div>
+                    <div className="artist-preview-meta-card">
+                      <strong>Tên thật</strong>
+                      <span>{formValues.realname || "Chưa cập nhật"}</span>
+                    </div>
+                    <div className="artist-preview-meta-card">
+                      <strong>Quốc gia</strong>
+                      <span>{formValues.national || "Chưa cập nhật"}</span>
+                    </div>
+                    <div className="artist-preview-meta-card">
+                      <strong>Nội dung</strong>
+                      <span>{formValues.bio ? "Đã có tiểu sử chi tiết" : "Chưa có tiểu sử"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
-          <section className="artist-page-shell artist-glass p-6">
+          <section className="artist-detail-panel">
             {error && (
               <div className="mb-4 rounded-2xl border border-rose-400/40 bg-rose-500/10 p-3 text-sm text-rose-100">
                 {error}

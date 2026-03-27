@@ -140,6 +140,7 @@ export default function AppIntro() {
       }}
     >
       <div className="absolute inset-0 auth-shell-backdrop" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[58%] auth-shell-atmosphere" />
       <div className="pointer-events-none absolute inset-0 auth-shell-wave auth-shell-wave--left" />
       <div className="pointer-events-none absolute inset-0 auth-shell-wave auth-shell-wave--right" />
       <div className="absolute inset-0 auth-shell-top-grid" />
@@ -216,9 +217,12 @@ export default function AppIntro() {
             {introCopy.helper}
           </MotionDiv>
 
-          <div className="mx-auto mt-6 h-[4px] w-full max-w-[260px] overflow-hidden rounded-full bg-white/8">
+          <div className="boot-intro__progress-track mx-auto mt-6 h-[4px] w-full max-w-[260px] overflow-hidden rounded-full bg-white/8">
             <MotionSpan
-              className={clsx("block h-full w-full origin-left rounded-full", introTone.progressClassName)}
+              className={clsx(
+                "boot-intro__progress-fill block h-full w-full origin-left rounded-full",
+                introTone.progressClassName
+              )}
               initial={{ scaleX: 0.12, x: "-18%" }}
               animate={
                 reduceMotion

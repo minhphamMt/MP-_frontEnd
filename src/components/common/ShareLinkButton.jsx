@@ -258,7 +258,7 @@ export default function ShareLinkButton({
                 width: previewLayout.width,
               }}
             >
-              <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#0d0f10]/96 shadow-[0_30px_80px_rgba(0,0,0,0.58)] ring-1 ring-inset ring-white/6 backdrop-blur-2xl">
+              <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#0d0f10]/96 shadow-[0_30px_80px_rgba(0,0,0,0.58)] ring-1 ring-inset ring-[#233144] backdrop-blur-2xl">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,_rgba(29,185,84,0.18),_transparent_72%)]" />
                 <div className="relative p-3">
                   <div className="overflow-hidden rounded-[22px] border border-white/10 bg-[#151718]">

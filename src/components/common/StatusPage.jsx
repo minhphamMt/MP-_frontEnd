@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import BrandLogo from "../branding/BrandLogo";
 
 function StatusAction({ action, variant = "primary" }) {

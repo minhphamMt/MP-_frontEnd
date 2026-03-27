@@ -115,10 +115,6 @@ export default function AdminGenres() {
           <h1 className="admin-list-title">
             Quản lý thể loại
           </h1>
-          <p className="admin-list-summary">
-            Chuyển danh sách thể loại sang một surface gọn và sáng sủa hơn để thêm,
-            đổi tên hay xóa nhanh mà không bị nặng mắt.
-          </p>
         </div>
         <button
           onClick={loadGenres}
@@ -132,12 +128,10 @@ export default function AdminGenres() {
         <div className="admin-stat-card">
           <p className="admin-stat-label">Thể loại</p>
           <p className="admin-stat-value">{genres.length}</p>
-          <p className="admin-stat-note">Tổng thể loại đang hiển thị</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Khớp tìm kiếm</p>
           <p className="admin-stat-value">{matchingGenresCount}</p>
-          <p className="admin-stat-note">Theo từ khóa hiện tại</p>
         </div>
       </div>
 

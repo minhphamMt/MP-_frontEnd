@@ -115,10 +115,6 @@ export default function AdminAlbumDetail() {
             <div className="admin-detail-heading">
               <p className="admin-list-kicker">Chi tiết album</p>
               <h1 className="admin-list-title">{album.title || "Album chưa đặt tên"}</h1>
-              <p className="admin-list-summary">
-                Trang chi tiết giúp bạn rà nhanh cover, nghệ sĩ, ngày phát hành và các
-                bài hát thuộc album này.
-              </p>
             </div>
           </div>
 
@@ -142,10 +138,6 @@ export default function AdminAlbumDetail() {
 
             <section className="admin-detail-panel">
               <p className="admin-detail-panel-title">Thông tin chính</p>
-              <p className="admin-detail-panel-note">
-                Các trường quan trọng được gom lại để bạn quét nhanh mà không cần mở
-                form chỉnh sửa.
-              </p>
               <div className="mt-4 admin-detail-meta-grid">
                 <div className="admin-detail-meta-card">
                   <p className="admin-detail-meta-label">Tên album</p>
@@ -181,10 +173,6 @@ export default function AdminAlbumDetail() {
 
           <section className="admin-detail-panel">
             <p className="admin-detail-panel-title">Danh sách bài hát</p>
-            <p className="admin-detail-panel-note">
-              Những bài hát đang thuộc album để bạn đối chiếu nhanh với phần dữ liệu
-              đang hiển thị.
-            </p>
             {album.songs?.length > 0 ? (
               <div className="mt-4 admin-detail-list">
                 {album.songs.map((song) => (

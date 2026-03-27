@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiEdit2, FiRefreshCw, FiSearch, FiTrash2, FiX } from "react-icons/fi";
 import {
@@ -394,10 +394,6 @@ export default function AdminSongManagement() {
         <div>
           <p className="admin-list-kicker">Quản trị</p>
           <h1 className="admin-list-title">Quản lý bài hát</h1>
-          <p className="admin-list-summary">
-            Theo dõi thư viện bài hát với danh sách gọn, rõ trạng thái và thao tác
-            chỉnh sửa ngay trên một mặt phẳng dữ liệu thống nhất.
-          </p>
         </div>
         <button
           onClick={() => loadSongs(keyword.trim(), statusFilter)}
@@ -411,22 +407,18 @@ export default function AdminSongManagement() {
         <div className="admin-stat-card">
           <p className="admin-stat-label">Hiển thị</p>
           <p className="admin-stat-value">{filteredSongs.length}</p>
-          <p className="admin-stat-note">Bài hát trong danh sách hiện tại</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Chờ duyệt</p>
           <p className="admin-stat-value">{pendingSongsCount}</p>
-          <p className="admin-stat-note">Cần xử lý trong hệ thống</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Đã duyệt</p>
           <p className="admin-stat-value">{approvedSongsCount}</p>
-          <p className="admin-stat-note">Đã sẵn sàng hiển thị</p>
         </div>
         <div className="admin-stat-card">
           <p className="admin-stat-label">Có album</p>
           <p className="admin-stat-value">{linkedAlbumCount}</p>
-          <p className="admin-stat-note">Đã liên kết album hoặc single</p>
         </div>
       </div>
 

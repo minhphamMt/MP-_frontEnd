@@ -151,15 +151,12 @@ export default function ArtistSongs() {
   };
 
   return (
-    <div className="space-y-6">
-      <section className="artist-page-shell artist-glass p-6 sm:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
+    <div className="artist-list-page">
+      <section className="artist-page-shell p-6 sm:p-8">
+        <div className="artist-list-header">
+          <div className="artist-list-heading">
             <p className="artist-label">Songs</p>
-            <h1 className="mt-2 text-3xl font-black text-white">Quản lý bài hát</h1>
-            <p className="mt-2 text-sm text-white/65">
-              Kiểm soát trạng thái duyệt, chỉnh sửa metadata và tối ưu danh mục phát hành.
-            </p>
+            <h1 className="artist-list-title">Quản lý bài hát</h1>
           </div>
           <button
             type="button"
@@ -170,18 +167,37 @@ export default function ArtistSongs() {
             Tạo bài hát mới
           </button>
         </div>
+      </section>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-[1fr_auto_auto] md:items-center">
-          <div className="relative">
-            <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
+      <section className="artist-stat-grid">
+        <article className="artist-stat-card">
+          <p className="artist-stat-label">Tổng bài hát</p>
+          <p className="artist-stat-value">{stats.total}</p>
+        </article>
+        <article className="artist-stat-card">
+          <p className="artist-stat-label">Công khai</p>
+          <p className="artist-stat-value">{stats.approved}</p>
+        </article>
+        <article className="artist-stat-card">
+          <p className="artist-stat-label">Chờ duyệt</p>
+          <p className="artist-stat-value">{stats.pending}</p>
+        </article>
+      </section>
+
+      <section className="artist-toolbar-panel">
+        <div className="artist-toolbar-group">
+          <div className="artist-search-shell">
+            <FiSearch className="artist-search-icon" />
             <input
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
               placeholder="Tìm theo tên bài hát..."
-              className="artist-input ui-search-field rounded-full pl-11 pr-4"
+              className="artist-input"
             />
           </div>
+        </div>
 
+        <div className="artist-toolbar-actions">
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
@@ -193,31 +209,19 @@ export default function ArtistSongs() {
             <option value="draft">Nháp</option>
             <option value="rejected">Từ chối</option>
           </select>
-
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70">
-              Tổng: {stats.total}
-            </span>
-            <span className="rounded-full border border-sky-300/30 bg-sky-400/12 px-3 py-1 text-sky-100">
-              Công khai: {stats.approved}
-            </span>
-            <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-amber-100">
-              Chờ duyệt: {stats.pending}
-            </span>
-          </div>
         </div>
       </section>
 
       {loading && <ArtistSongListLoading rows={5} />}
 
       {!loading && !filteredSongs.length && (
-        <div className="artist-soft-card p-5 text-sm text-white/70">
+        <div className="artist-empty-state">
           Không có bài hát phù hợp với bộ lọc hiện tại.
         </div>
       )}
 
-      <section className="artist-page-shell artist-glass overflow-hidden">
-        <div className="hidden grid-cols-[2.2fr_1fr_1fr] gap-4 border-b border-white/10 bg-white/5 px-6 py-4 text-xs uppercase tracking-[0.2em] text-white/45 md:grid">
+      <section className="artist-data-panel">
+        <div className="artist-table-head hidden grid-cols-[2.2fr_1fr_1fr] gap-4 px-6 py-4 text-xs uppercase tracking-[0.2em] text-white/45 md:grid">
           <span>Bài hát</span>
           <span>Trạng thái</span>
           <span className="text-right">Hành động</span>
@@ -227,10 +231,11 @@ export default function ArtistSongs() {
             const statusClass =
               statusClassMap[song.status] || "border-white/10 bg-white/5 text-white/75";
             const statusLabel = statusLabelMap[song.status] || song.status || "Chưa xác định";
+
             return (
               <div
                 key={`${song.id ?? song.title}-${song.album_id ?? "single"}`}
-                className="flex flex-col gap-4 px-6 py-4 text-sm text-white/85 md:grid md:grid-cols-[2.2fr_1fr_1fr] md:items-center"
+                className="artist-table-row flex flex-col gap-4 px-6 py-4 text-sm text-white/85 md:grid md:grid-cols-[2.2fr_1fr_1fr] md:items-center"
               >
                 <div className="flex items-center gap-4">
                   <div className="h-14 w-14 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
@@ -247,15 +252,15 @@ export default function ArtistSongs() {
                       </div>
                     )}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-semibold text-white">{song.title}</p>
                     <p className="text-xs text-white/55">ID #{song.id}</p>
                     <p className="text-xs text-white/55">{song.album_title || "Single"}</p>
-                    {song.status === "rejected" && song.reject_reason && (
+                    {song.status === "rejected" && song.reject_reason ? (
                       <p className="mt-1 text-xs text-rose-200/95">
                         Lý do từ chối: {song.reject_reason}
                       </p>
-                    )}
+                    ) : null}
                   </div>
                 </div>
 
