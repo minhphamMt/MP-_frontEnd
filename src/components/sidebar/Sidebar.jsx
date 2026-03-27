@@ -164,7 +164,7 @@ export default function Sidebar({ isOpen, onClose, isArtistWorkspace = false }) 
     : undefined;
   const toggleSidebarCollapse = () => setIsCollapsed((prev) => !prev);
   const sidebarShellClassName = isArtistTone
-    ? "border-sky-200/[0.1] bg-[#0f182a]/96 shadow-[0_26px_80px_rgba(2,6,18,0.58)]"
+    ? "border-sky-200/[0.1] bg-[#0f182a] shadow-[0_26px_80px_rgba(2,6,18,0.58)] lg:bg-[#0f182a]/96"
     : "border-white/10 bg-[#040404] shadow-[0_26px_80px_rgba(0,0,0,0.6)]";
   const sidebarHeaderBorderClassName = isArtistTone
     ? "border-sky-200/[0.1]"

@@ -200,6 +200,19 @@ body {
   background: linear-gradient(180deg, #21d760, #18b14f);
 }
 
+.artist-main-surface.scrollbar-page {
+  scrollbar-color: rgba(132, 190, 232, 0.8) rgba(255, 255, 255, 0.035);
+}
+
+.artist-main-surface.scrollbar-page::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #84bee8, #5ea6dd);
+  border-color: rgba(12, 22, 35, 0.85);
+}
+
+.artist-main-surface.scrollbar-page::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #9fd0ef, #6eb6e7);
+}
+
 .scrollbar-muted {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -1856,9 +1869,9 @@ body {
   --auth-glow-rgb: 89 170 136;
   --auth-grid-rgb: 108 191 157;
   --auth-grid-strong-rgb: 200 231 216;
-  --auth-shell-bg: #0d1813;
-  --auth-shell-card: 24 35 31;
-  --auth-shell-card-soft: 18 26 24;
+  --auth-shell-bg: #18261f;
+  --auth-shell-card: 33 47 41;
+  --auth-shell-card-soft: 26 37 32;
   --auth-shell-border: 143 181 163;
 }
 
@@ -1867,25 +1880,25 @@ body {
   --auth-glow-rgb: 94 149 204;
   --auth-grid-rgb: 118 178 219;
   --auth-grid-strong-rgb: 206 225 241;
-  --auth-shell-bg: #0c1623;
-  --auth-shell-card: 23 30 45;
-  --auth-shell-card-soft: 16 22 34;
+  --auth-shell-bg: #17304a;
+  --auth-shell-card: 31 42 61;
+  --auth-shell-card-soft: 23 32 47;
   --auth-shell-border: 143 176 205;
 }
 
 .auth-shell-backdrop {
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.075), transparent 16%),
-    linear-gradient(180deg, rgb(var(--auth-glow-rgb) / 0.2), transparent 38%),
-    linear-gradient(90deg, rgb(var(--auth-accent-rgb) / 0.075), transparent 16%, transparent 84%, rgb(var(--auth-accent-rgb) / 0.075)),
-    linear-gradient(180deg, rgb(15 23 35), rgb(10 16 24) 48%, rgb(7 11 17) 100%);
+    linear-gradient(180deg, rgb(255 255 255 / 0.1), transparent 18%),
+    linear-gradient(180deg, rgb(var(--auth-glow-rgb) / 0.26), transparent 42%),
+    linear-gradient(90deg, rgb(var(--auth-accent-rgb) / 0.09), transparent 14%, transparent 86%, rgb(var(--auth-accent-rgb) / 0.09)),
+    linear-gradient(180deg, rgb(19 29 42), rgb(13 20 30) 50%, rgb(9 14 21) 100%);
 }
 
 .auth-shell-atmosphere {
   background:
-    linear-gradient(180deg, rgb(var(--auth-grid-strong-rgb) / 0.07), transparent 24%),
-    linear-gradient(90deg, transparent 0, rgb(var(--auth-accent-rgb) / 0.06) 50%, transparent 100%);
-  opacity: 0.66;
+    linear-gradient(180deg, rgb(var(--auth-grid-strong-rgb) / 0.09), transparent 24%),
+    linear-gradient(90deg, transparent 0, rgb(var(--auth-accent-rgb) / 0.075) 50%, transparent 100%);
+  opacity: 0.74;
 }
 
 .auth-shell-tunnel-layer {
@@ -1955,15 +1968,15 @@ body {
   opacity: var(--auth-hover-opacity, 0);
   transition: opacity 70ms linear;
   -webkit-mask-image: radial-gradient(
-    circle 150px at var(--auth-hover-x, 50%) var(--auth-hover-y, 50%),
+    circle 200px at var(--auth-hover-x, 50%) var(--auth-hover-y, 50%),
     rgb(0 0 0 / 1) 0,
-    rgb(0 0 0 / 1) 44%,
+    rgb(0 0 0 / 1) 48%,
     transparent 100%
   );
   mask-image: radial-gradient(
-    circle 150px at var(--auth-hover-x, 50%) var(--auth-hover-y, 50%),
+    circle 200px at var(--auth-hover-x, 50%) var(--auth-hover-y, 50%),
     rgb(0 0 0 / 1) 0,
-    rgb(0 0 0 / 1) 44%,
+    rgb(0 0 0 / 1) 48%,
     transparent 100%
   );
 }
@@ -2028,16 +2041,16 @@ body {
     linear-gradient(to bottom, rgb(var(--auth-grid-strong-rgb) / 0.28) 1px, transparent 1px);
   transition: opacity 50ms linear;
   -webkit-mask-image: radial-gradient(
-    circle 120px at var(--auth-stage-hover-x, 50%) var(--auth-stage-hover-y, 50%),
+    circle 168px at var(--auth-stage-hover-x, 50%) var(--auth-stage-hover-y, 50%),
     rgb(0 0 0 / 1) 0,
-    rgb(0 0 0 / 0.98) 38%,
-    transparent 72%
+    rgb(0 0 0 / 0.98) 44%,
+    transparent 78%
   );
   mask-image: radial-gradient(
-    circle 120px at var(--auth-stage-hover-x, 50%) var(--auth-stage-hover-y, 50%),
+    circle 168px at var(--auth-stage-hover-x, 50%) var(--auth-stage-hover-y, 50%),
     rgb(0 0 0 / 1) 0,
-    rgb(0 0 0 / 0.98) 38%,
-    transparent 72%
+    rgb(0 0 0 / 0.98) 44%,
+    transparent 78%
   );
 }
 
@@ -2083,16 +2096,16 @@ body {
   opacity: var(--auth-top-hover-opacity, 0);
   transition: opacity 50ms linear;
   -webkit-mask-image: radial-gradient(
-    circle 120px at var(--auth-stage-hover-x, 50%) var(--auth-stage-hover-y, 50%),
+    circle 168px at var(--auth-stage-hover-x, 50%) var(--auth-stage-hover-y, 50%),
     rgb(0 0 0 / 1) 0,
-    rgb(0 0 0 / 0.98) 38%,
-    transparent 72%
+    rgb(0 0 0 / 0.98) 44%,
+    transparent 78%
   );
   mask-image: radial-gradient(
-    circle 120px at var(--auth-stage-hover-x, 50%) var(--auth-stage-hover-y, 50%),
+    circle 168px at var(--auth-stage-hover-x, 50%) var(--auth-stage-hover-y, 50%),
     rgb(0 0 0 / 1) 0,
-    rgb(0 0 0 / 0.98) 38%,
-    transparent 72%
+    rgb(0 0 0 / 0.98) 44%,
+    transparent 78%
   );
 }
 
@@ -2172,16 +2185,16 @@ body {
   opacity: var(--auth-floor-hover-opacity, 0);
   transition: opacity 50ms linear;
   -webkit-mask-image: radial-gradient(
-    circle 120px at var(--auth-stage-hover-x, 50%) var(--auth-stage-hover-y, 50%),
+    circle 168px at var(--auth-stage-hover-x, 50%) var(--auth-stage-hover-y, 50%),
     rgb(0 0 0 / 1) 0,
-    rgb(0 0 0 / 0.98) 34%,
-    transparent 72%
+    rgb(0 0 0 / 0.98) 40%,
+    transparent 78%
   );
   mask-image: radial-gradient(
-    circle 120px at var(--auth-stage-hover-x, 50%) var(--auth-stage-hover-y, 50%),
+    circle 168px at var(--auth-stage-hover-x, 50%) var(--auth-stage-hover-y, 50%),
     rgb(0 0 0 / 1) 0,
-    rgb(0 0 0 / 0.98) 34%,
-    transparent 72%
+    rgb(0 0 0 / 0.98) 40%,
+    transparent 78%
   );
 }
 
@@ -2195,6 +2208,34 @@ body {
   background-image: radial-gradient(rgb(255 255 255 / 0.42) 0.6px, transparent 0.6px);
   background-size: 17px 17px;
   mix-blend-mode: soft-light;
+}
+
+.boot-intro__pulse-bar {
+  transform-origin: center bottom;
+  animation: boot-intro-pulse 1.05s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes boot-intro-pulse {
+  0% {
+    transform: scaleY(0.58);
+    opacity: 0.4;
+  }
+
+  30% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+
+  65% {
+    transform: scaleY(0.7);
+    opacity: 0.55;
+  }
+
+  100% {
+    transform: scaleY(0.92);
+    opacity: 0.9;
+  }
 }
 
 .auth-shell-frame,
@@ -2488,15 +2529,15 @@ body {
 .auth-ui-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 90;
+  z-index: 1200;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.25rem;
   background:
-    radial-gradient(circle at 50% 38%, rgb(var(--auth-accent-rgb) / 0.14), transparent 24%),
-    linear-gradient(180deg, rgb(var(--auth-shell-bg) / 0.72), rgb(4 7 11 / 0.88));
-  backdrop-filter: blur(14px) saturate(118%);
+    radial-gradient(circle at 50% 34%, rgb(var(--auth-accent-rgb) / 0.16), transparent 24%),
+    linear-gradient(180deg, rgb(5 8 12 / 0.74), rgb(3 5 8 / 0.9));
+  backdrop-filter: blur(16px) saturate(118%);
 }
 
 .auth-ui-modal-backdrop::before {
@@ -2511,14 +2552,14 @@ body {
 
 .auth-ui-modal-card {
   position: relative;
-  border-color: rgb(var(--auth-shell-border) / 0.24);
+  border-color: rgb(var(--auth-shell-border) / 0.16);
   background:
-    linear-gradient(180deg, rgb(var(--auth-accent-rgb) / 0.058), transparent 22%),
-    linear-gradient(180deg, rgb(var(--auth-shell-card) / 0.982), rgb(var(--auth-shell-card-soft) / 0.995));
+    linear-gradient(180deg, rgb(var(--auth-accent-rgb) / 0.072), transparent 22%),
+    linear-gradient(180deg, rgb(var(--auth-shell-card) / 0.986), rgb(var(--auth-shell-card-soft) / 0.998));
   box-shadow:
-    0 34px 96px rgb(0 0 0 / 0.48),
-    0 0 0 1px rgb(255 255 255 / 0.02),
-    inset 0 1px 0 rgb(255 255 255 / 0.05);
+    0 34px 96px rgb(0 0 0 / 0.56),
+    0 0 0 1px rgb(var(--auth-accent-rgb) / 0.06),
+    inset 0 1px 0 rgb(var(--auth-accent-rgb) / 0.08);
 }
 
 .auth-ui-modal-icon {
@@ -2532,6 +2573,18 @@ body {
 
 .auth-ui-modal-close {
   flex-shrink: 0;
+}
+
+.profile-forgot-modal {
+  width: min(92vw, 520px);
+  border-color: rgb(var(--auth-accent-rgb) / 0.18);
+  background:
+    linear-gradient(180deg, rgb(var(--auth-accent-rgb) / 0.08), transparent 18%),
+    linear-gradient(180deg, rgb(var(--auth-shell-card) / 0.985), rgb(var(--auth-shell-card-soft) / 0.998));
+  box-shadow:
+    0 38px 104px rgb(0 0 0 / 0.56),
+    0 0 0 1px rgb(var(--auth-accent-rgb) / 0.08),
+    inset 0 1px 0 rgb(var(--auth-accent-rgb) / 0.1);
 }
 
 .auth-ui-floating-alert {

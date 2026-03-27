@@ -11,21 +11,12 @@ const MotionSpan = motion.span;
 
 function IntroPulse({ barClassName }) {
   return (
-    <div className="mt-6 flex items-center justify-center gap-2" aria-hidden="true">
+    <div className="boot-intro__pulse mt-6 flex items-center justify-center gap-2" aria-hidden="true">
       {[0, 1, 2, 3].map((index) => (
-        <MotionSpan
+        <span
           key={index}
-          className={clsx("block h-8 w-1.5 rounded-full", barClassName)}
-          animate={{
-            scaleY: [0.58, 1, 0.7, 0.92],
-            opacity: [0.4, 1, 0.55, 0.9],
-          }}
-          transition={{
-            duration: 1.05,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-            delay: index * 0.09,
-          }}
+          className={clsx("boot-intro__pulse-bar block h-8 w-1.5 rounded-full", barClassName)}
+          style={{ animationDelay: `${index * 0.09}s` }}
         />
       ))}
     </div>

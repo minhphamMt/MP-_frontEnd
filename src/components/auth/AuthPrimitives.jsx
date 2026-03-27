@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
+import { createPortal } from "react-dom";
 import { FiCheck, FiEye, FiEyeOff, FiX } from "react-icons/fi";
 
 const MotionDiv = motion.div;
@@ -199,7 +200,9 @@ export function AuthModal({
 }) {
   const themeClassName = modalThemeClasses[theme] ?? modalThemeClasses.listener;
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence>
       {open ? (
         <MotionDiv
@@ -207,6 +210,7 @@ export function AuthModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          onClick={onClose}
         >
           <MotionDiv
             className={clsx("auth-ui-modal-card auth-main-card w-full max-w-[460px] rounded-[28px] p-5 sm:p-6", className)}
@@ -216,6 +220,7 @@ export function AuthModal({
             transition={{ duration: 0.22, ease: "easeOut" }}
             role="dialog"
             aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5 flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
@@ -247,6 +252,7 @@ export function AuthModal({
           </MotionDiv>
         </MotionDiv>
       ) : null}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

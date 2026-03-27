@@ -5,12 +5,18 @@ import {
   FiCheckCircle,
   FiEye,
   FiEyeOff,
+  FiX,
   FiKey,
   FiMail,
-  FiX,
   FiUser,
 } from "react-icons/fi";
 import Toast from "../components/common/Toast";
+import {
+  AuthField,
+  AuthMessage,
+  AuthModal,
+  AuthPasswordField,
+} from "../components/auth/AuthPrimitives";
 import {
   getCurrentUser,
   updateUserPassword,
@@ -110,6 +116,7 @@ export default function Profile() {
   const passwordHintCardClassName = isArtistProfileTheme
     ? "rounded-2xl border border-sky-200/16 bg-sky-200/[0.06] p-4 text-xs text-white/64"
     : "rounded-2xl border border-emerald-400/16 bg-emerald-400/[0.06] p-4 text-xs text-white/66";
+  const profileModalTheme = isArtistProfileTheme ? "artist" : "listener";
 
   useEffect(() => {
     if (authUser) {
@@ -651,8 +658,96 @@ export default function Profile() {
         )}
       </div>
 
+      <AuthModal
+        open={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+        icon={<FiKey size={18} />}
+        title="Quên mật khẩu"
+        description={
+          isResetStep
+            ? "Nhập mã xác thực và mật khẩu mới để hoàn tất quá trình đặt lại."
+            : "Mã xác thực sẽ được gửi tới email tài khoản của bạn."
+        }
+        theme={profileModalTheme}
+        className="profile-forgot-modal"
+      >
+        <AuthField
+          label="Email"
+          as="input"
+          value={forgotEmail}
+          type="email"
+          autoComplete="email"
+          readOnly
+          aria-readonly="true"
+          inputClassName="cursor-not-allowed !bg-white/6 text-white/72"
+        />
+
+        {isResetStep ? (
+          <>
+            <AuthField
+              label="Mã xác thực 6 số"
+              as="input"
+              value={forgotCode}
+              onChange={(event) =>
+                setForgotCode(event.target.value.replace(/\D/g, "").slice(0, 6))
+              }
+              placeholder="123456"
+              inputMode="numeric"
+              inputClassName="text-center tracking-[0.35em] placeholder:text-white/34"
+            />
+
+            <AuthPasswordField
+              label="Mật khẩu mới"
+              value={forgotNewPassword}
+              onChange={(event) => setForgotNewPassword(event.target.value)}
+              placeholder="Tối thiểu 6 ký tự"
+              autoComplete="new-password"
+              showPassword={showForgotResetPassword}
+              toggleShowPassword={() => setShowForgotResetPassword((prev) => !prev)}
+              inputClassName="placeholder:text-white/34"
+            />
+          </>
+        ) : null}
+
+        {forgotMessage ? (
+          <AuthMessage tone="success" className="rounded-[18px]">
+            {forgotMessage}
+          </AuthMessage>
+        ) : null}
+
+        {!isResetStep ? (
+          <button
+            type="button"
+            onClick={handleForgotPasswordRequest}
+            disabled={loadingForgot}
+            className={widePrimaryButtonClassName}
+          >
+            {loadingForgot ? "Đang xử lý..." : "Gửi mã xác thực"}
+          </button>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={handleForgotPasswordReset}
+              disabled={loadingForgot}
+              className={widePrimaryButtonClassName}
+            >
+              {loadingForgot ? "Đang xử lý..." : "Xác nhận mật khẩu mới"}
+            </button>
+            <button
+              type="button"
+              onClick={handleForgotPasswordRequest}
+              disabled={loadingForgot}
+              className={secondaryButtonClassName}
+            >
+              Gửi lại mã
+            </button>
+          </div>
+        )}
+      </AuthModal>
+
       <AnimatePresence>
-        {forgotOpen && (
+        {false && forgotOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
