@@ -166,6 +166,7 @@ export default function Login() {
     if (mode !== "login") return;
 
     const currentSearchParams = new URLSearchParams(location.search);
+    const authRequiredMessage = location.state?.authRequiredMessage || "";
     const verifiedFlag = (currentSearchParams.get("verified") || "").toLowerCase();
     const successFlag = (currentSearchParams.get("success") || "").toLowerCase();
     const status = (currentSearchParams.get("status") || "").toLowerCase();
@@ -191,9 +192,21 @@ export default function Login() {
       return;
     }
 
+    if (authRequiredMessage) {
+      setLoginNotice(authRequiredMessage);
+      navigate(`${location.pathname}${location.search}`, {
+        replace: true,
+        state: null,
+      });
+      return;
+    }
+
     if (location.state?.emailVerified) {
       setLoginNotice("Xác nhận email thành công. Bạn có thể đăng nhập ngay.");
-      navigate(location.pathname, { replace: true, state: null });
+      navigate(`${location.pathname}${location.search}`, {
+        replace: true,
+        state: null,
+      });
     }
   }, [location.pathname, location.search, location.state, mode, navigate]);
 

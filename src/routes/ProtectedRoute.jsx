@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import useAuthStore from "../store/auth.store";
+import { getAuthRequiredMessage } from "../utils/authPrompt";
 import { getPreferredAuthPath } from "../utils/routeContext";
 
 function RouteLoadingState() {
@@ -40,7 +41,14 @@ export default function ProtectedRoute({ allowedRoles, allowGuests = false }) {
     return allowGuests ? (
       <Outlet />
     ) : (
-      <Navigate to={authPath} replace state={{ from: location }} />
+      <Navigate
+        to={authPath}
+        replace
+        state={{
+          from: location,
+          authRequiredMessage: getAuthRequiredMessage(),
+        }}
+      />
     );
   }
 

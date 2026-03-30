@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { FiMusic, FiRadio } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import AuthShell from "../components/auth/AuthShell";
 import {
   AuthCard,
@@ -69,6 +69,7 @@ const validateRegisterFields = ({ displayName, email, password, confirmPassword 
 
 export default function ArtistAuth() {
   const isCompactAuthMotion = useMediaQuery("(max-width: 767px), (hover: none) and (pointer: coarse)");
+  const location = useLocation();
   const navigate = useNavigate();
   const {
     loginArtist,
@@ -85,6 +86,7 @@ export default function ArtistAuth() {
 
   const [mode, setMode] = useState("login");
 
+  const [authNotice, setAuthNotice] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -115,6 +117,17 @@ export default function ArtistAuth() {
     const timeoutId = setTimeout(() => setErrorPopup(""), 3500);
     return () => clearTimeout(timeoutId);
   }, [errorPopup]);
+
+  useEffect(() => {
+    const authRequiredMessage = location.state?.authRequiredMessage || "";
+    if (!authRequiredMessage) return;
+
+    setAuthNotice(authRequiredMessage);
+    navigate(`${location.pathname}${location.search}`, {
+      replace: true,
+      state: null,
+    });
+  }, [location.pathname, location.search, location.state, navigate]);
 
   const showError = (message) => {
     setLoginError(message);
@@ -356,6 +369,7 @@ export default function ArtistAuth() {
         </button>
       </div>
 
+      {authNotice ? <AuthMessage tone="info">{authNotice}</AuthMessage> : null}
       {loginError ? <AuthMessage tone="error">{loginError}</AuthMessage> : null}
     </>
   );
@@ -421,6 +435,7 @@ export default function ArtistAuth() {
         error={registerFieldErrors.confirmPassword}
       />
 
+      {authNotice ? <AuthMessage tone="info">{authNotice}</AuthMessage> : null}
       {registerNotice ? <AuthMessage tone="success">{registerNotice}</AuthMessage> : null}
       {registerError ? <AuthMessage tone="error">{registerError}</AuthMessage> : null}
     </>
