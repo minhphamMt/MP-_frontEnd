@@ -15,6 +15,11 @@ import {
   updateMyArtistRequest,
 } from "../api/artist-request.api";
 import useAuthStore from "../store/auth.store";
+import { getAssetFileName } from "../utils/asset";
+import {
+  AVATAR_UPLOAD_FOLDER,
+  uploadFileToFirebase,
+} from "../utils/firebaseUpload";
 
 const statusMeta = {
   pending: {
@@ -50,6 +55,7 @@ export default function ArtistRequest() {
     proof_link: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const isAllowed = useMemo(
     () => authContext === "artist_request" || role === "ARTIST",
@@ -108,6 +114,33 @@ export default function ArtistRequest() {
 
   const handleChange = (key) => (event) => {
     setForm((prev) => ({ ...prev, [key]: event.target.value }));
+  };
+
+  const handleAvatarUpload = async (event) => {
+    const file = event.target.files?.[0] || null;
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMessage("Vui lòng chọn file ảnh hợp lệ cho avatar.");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+      setErrorMessage("");
+      const uploadedUrl = await uploadFileToFirebase(file, AVATAR_UPLOAD_FOLDER);
+      setForm((prev) => ({
+        ...prev,
+        avatar_url: uploadedUrl,
+      }));
+    } catch (error) {
+      console.error("Upload artist request avatar failed", error);
+      setErrorMessage("Không thể tải avatar lên. Vui lòng thử lại.");
+    } finally {
+      setUploadingAvatar(false);
+      event.target.value = "";
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -226,12 +259,28 @@ export default function ArtistRequest() {
           placeholder="Tên nghệ sĩ"
           required
         />
-        <AuthField
-          label="Ảnh đại diện"
-          value={form.avatar_url}
-          onChange={handleChange("avatar_url")}
-          placeholder="https://"
-        />
+        <div className="space-y-2">
+          <label className="block text-sm text-white/70">Ảnh đại diện</label>
+          <div className="auth-soft-card rounded-[18px] px-4 py-3">
+            <p className="text-sm text-white/88">
+              {form.avatar_url
+                ? getAssetFileName(form.avatar_url) || "Đã có avatar"
+                : "Chưa có file avatar"}
+            </p>
+            <p className="mt-1 text-[11px] text-white/45">
+              {uploadingAvatar
+                ? "Đang tải avatar lên..."
+                : "Chỉ hỗ trợ upload file, không nhập URL trực tiếp."}
+            </p>
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarUpload}
+            disabled={uploadingAvatar}
+            className="w-full rounded-[16px] border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white/78 file:mr-4 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white/82"
+          />
+        </div>
       </div>
 
       <AuthField

@@ -30,6 +30,7 @@ const formSwapTransition = {
 const rejectNonArtistLogin = (role) => role === "ADMIN" || !role;
 const hasArtistIntent = (user) =>
   user?.artist_register_intent === true || user?.artist_register_intent === 1;
+const canUseArtistAuth = (user) => user?.role === "ARTIST" || hasArtistIntent(user);
 
 const DISPLAY_NAME_REGEX = /^[\p{L}\p{N}\s._'-]+$/u;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -177,7 +178,7 @@ export default function ArtistAuth() {
         password: loginPassword,
       });
 
-      if (!hasArtistIntent(user)) {
+      if (!canUseArtistAuth(user)) {
         showError("Tài khoản này chưa đăng ký yêu cầu trở thành nghệ sĩ.");
         logout();
         return;
@@ -230,7 +231,7 @@ export default function ArtistAuth() {
         return navigate(`/verify-email?email=${encodeURIComponent(registerEmail)}&intent=artist`);
       }
 
-      if (!hasArtistIntent(result)) {
+      if (!canUseArtistAuth(result)) {
         setRegisterError("Tài khoản này chưa đăng ký yêu cầu trở thành nghệ sĩ.");
         logout();
         return;

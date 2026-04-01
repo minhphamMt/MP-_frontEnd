@@ -4,7 +4,10 @@ import { FiArrowLeft, FiSave, FiUser } from "react-icons/fi";
 import useAuthStore from "../../store/auth.store";
 import { getMyArtistProfile, updateArtist, uploadArtistAvatar } from "../../api/artist.api";
 import { ArtistProfileLoading } from "../../components/artist/ArtistLoadingState";
+import DateInputField from "../../components/common/DateInputField";
+import SourceFileCard from "../../components/common/SourceFileCard";
 import { resolveAssetUrl } from "../../utils/asset";
+import { normalizeDateInputValue } from "../../utils/date";
 import OptimizedImage from "../../components/common/OptimizedImage";
 
 const emptyForm = {
@@ -41,7 +44,7 @@ export default function ArtistProfile() {
         name: artist?.name || "",
         alias: artist?.alias || "",
         realname: artist?.realname || "",
-        birthday: artist?.birthday ? artist.birthday.split("T")[0] : "",
+        birthday: normalizeDateInputValue(artist?.birthday),
         national: artist?.national || "",
         avatar_url: artist?.avatar_url || artist?.cover_url || "",
         short_bio: artist?.short_bio || "",
@@ -228,11 +231,12 @@ export default function ArtistProfile() {
 
               <label className="artist-detail-label">
                 Ngày sinh
-                <input
-                  type="date"
+                <DateInputField
                   name="birthday"
                   value={formValues.birthday}
-                  onChange={handleChange}
+                  onChange={(value) =>
+                    setFormValues((prev) => ({ ...prev, birthday: value }))
+                  }
                   className="artist-input mt-2"
                 />
               </label>
@@ -253,16 +257,15 @@ export default function ArtistProfile() {
           <section className="artist-detail-panel">
             <p className="artist-detail-panel-title">Avatar và giới thiệu</p>
             <div className="artist-upload-cluster mt-5">
-              <label className="artist-detail-label is-full">
-                Avatar (URL)
-                <input
-                  name="avatar_url"
-                  value={formValues.avatar_url}
-                  onChange={handleChange}
-                  placeholder="https://..."
-                  className="artist-input mt-2"
-                />
-              </label>
+              <SourceFileCard
+                variant="artist"
+                type="avatar"
+                url={formValues.avatar_url}
+                emptyLabel="Chưa có avatar"
+                helperText="Tải avatar từ máy để cập nhật hồ sơ"
+                existingText="AVATAR • Đang dùng avatar hiện tại"
+                pendingText="AVATAR • Avatar mới sẽ được cập nhật sau khi tải"
+              />
 
               <div className="artist-file-dropzone">
                 <div className="artist-file-name">

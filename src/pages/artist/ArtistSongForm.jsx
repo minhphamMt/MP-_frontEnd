@@ -1,21 +1,50 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FiArrowLeft, FiMusic, FiSave } from "react-icons/fi";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import {
+  FiArrowLeft,
+  FiMusic,
+  FiSave,
+} from "react-icons/fi";
 import { getAlbums } from "../../api/album.api";
-import { createSong, getArtistSongs, getSongById, updateSong } from "../../api/song.api";
-import { formatDuration } from "../../utils/song";
+import {
+  createSong,
+  getArtistSongs,
+  getSongById,
+  updateSong,
+} from "../../api/song.api";
 import { getMyArtistProfile } from "../../api/artist.api";
-import { storage } from "../../utils/firebase";
-import { resolveAssetUrl } from "../../utils/asset";
+import DateInputField from "../../components/common/DateInputField";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import SourceFileCard from "../../components/common/SourceFileCard";
+import LyricSourceBadge from "../../components/song/LyricSourceBadge";
+import LyricSourceFileCard from "../../components/song/LyricSourceFileCard";
+import { resolveAssetUrl } from "../../utils/asset";
+import { formatDateDisplay, normalizeDateInputValue } from "../../utils/date";
+import {
+  COVER_UPLOAD_FOLDER,
+  MUSIC_UPLOAD_FOLDER,
+  uploadFileToFirebase,
+} from "../../utils/firebaseUpload";
+import {
+  getLyricSourceFileName,
+  getLyricSourceState,
+  getLyricsPath,
+  LYRIC_SOURCE_ACCEPT,
+  LYRIC_SOURCE_FOLDER,
+  prepareLyricSourceUploadFile,
+  validateLyricSourceFile,
+} from "../../utils/lyrics";
+import { formatDuration } from "../../utils/song";
 
 const emptyForm = {
   title: "",
   album_id: "",
+  release_date: "",
   duration: null,
   cover_url: "",
   audio_path: "",
+  lyrics_path: "",
+  has_lyrics_in_db: false,
 };
 
 export default function ArtistSongForm() {
@@ -30,10 +59,12 @@ export default function ArtistSongForm() {
   const [error, setError] = useState("");
   const [audioFile, setAudioFile] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
+  const [lyricFile, setLyricFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
   const extractDurationFromFile = useCallback(async (file) => {
     if (!file) return null;
+
     return new Promise((resolve, reject) => {
       const fileUrl = URL.createObjectURL(file);
       const audio = document.createElement("audio");
@@ -49,15 +80,6 @@ export default function ArtistSongForm() {
       };
       audio.src = fileUrl;
     });
-  }, []);
-
-  const uploadFileToFirebase = useCallback(async (file, folder) => {
-    if (!file) return null;
-    const safeName = file.name.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9.-]/g, "");
-    const fileName = `${Date.now()}-${crypto.randomUUID()}-${safeName}`;
-    const fileRef = ref(storage, `${folder}/${fileName}`);
-    await uploadBytes(fileRef, file, { contentType: file.type });
-    return getDownloadURL(fileRef);
   }, []);
 
   useEffect(() => {
@@ -89,9 +111,11 @@ export default function ArtistSongForm() {
 
   const loadSong = useCallback(async () => {
     if (!isEdit) return;
+
     try {
       setLoading(true);
       let song = null;
+
       try {
         const res = await getSongById(id);
         song = res?.data?.data ?? res?.data ?? null;
@@ -112,9 +136,24 @@ export default function ArtistSongForm() {
       setFormValues({
         title: song?.title || song?.name || "",
         album_id: song?.album_id ?? song?.album?.id ?? "",
+        release_date: normalizeDateInputValue(
+          song?.release_date || song?.releaseDate || ""
+        ),
         duration: song?.duration ?? null,
         cover_url: song?.cover_url ?? song?.cover ?? "",
-        audio_path: song?.audio_path || song?.audio_url || song?.audio || song?.source || "",
+        audio_path:
+          song?.audio_path ||
+          song?.audio_url ||
+          song?.audio ||
+          song?.source ||
+          "",
+        lyrics_path:
+          song?.lyrics_path ||
+          song?.lyricsPath ||
+          song?.lyrics_url ||
+          "",
+        has_lyrics_in_db:
+          Boolean(song?.has_lyrics_in_db ?? song?.hasLyricsInDb ?? false),
       });
     } catch (err) {
       console.error("Load song failed", err);
@@ -142,10 +181,30 @@ export default function ArtistSongForm() {
     try {
       const duration = await extractDurationFromFile(file);
       setFormValues((prev) => ({ ...prev, duration }));
+      setError("");
     } catch (err) {
       console.error("Extract duration failed", err);
       setError("Không thể đọc thời lượng từ file audio. Hãy thử file MP3 khác.");
     }
+  };
+
+  const handleLyricFileChange = (event) => {
+    const file = event.target.files?.[0] || null;
+    if (!file) {
+      setLyricFile(null);
+      return;
+    }
+
+    const validation = validateLyricSourceFile(file);
+    if (!validation.valid) {
+      setLyricFile(null);
+      setError(validation.error);
+      event.target.value = "";
+      return;
+    }
+
+    setLyricFile(file);
+    setError("");
   };
 
   const handleSubmit = async (event) => {
@@ -159,21 +218,29 @@ export default function ArtistSongForm() {
 
     try {
       setLoading(true);
-      setUploading(Boolean(audioFile || coverFile));
+      setUploading(Boolean(audioFile || coverFile || lyricFile));
 
       const uploadedAudioUrl = audioFile
-        ? await uploadFileToFirebase(audioFile, "uploads/music")
+        ? await uploadFileToFirebase(audioFile, MUSIC_UPLOAD_FOLDER)
         : null;
       const uploadedCoverUrl = coverFile
-        ? await uploadFileToFirebase(coverFile, "uploads/covers")
+        ? await uploadFileToFirebase(coverFile, COVER_UPLOAD_FOLDER)
+        : null;
+      const preparedLyricFile = lyricFile
+        ? await prepareLyricSourceUploadFile(lyricFile)
+        : null;
+      const uploadedLyricUrl = preparedLyricFile
+        ? await uploadFileToFirebase(preparedLyricFile, LYRIC_SOURCE_FOLDER)
         : null;
 
       const payload = {
         title: formValues.title.trim(),
         album_id: formValues.album_id || null,
+        release_date: formValues.release_date || null,
         duration: formValues.duration ? Number(formValues.duration) : null,
         cover_url: uploadedCoverUrl || formValues.cover_url || null,
         audio_path: uploadedAudioUrl || formValues.audio_path || null,
+        lyrics_path: uploadedLyricUrl || getLyricsPath(formValues) || null,
       };
 
       if (isEdit) {
@@ -201,11 +268,25 @@ export default function ArtistSongForm() {
 
   const selectedAlbum = useMemo(
     () => albums.find((album) => String(album.id) === String(formValues.album_id)),
-    [albums, formValues.album_id],
+    [albums, formValues.album_id]
+  );
+  const releaseDateDisplay = useMemo(
+    () => formatDateDisplay(formValues.release_date, "Chưa chọn ngày phát hành"),
+    [formValues.release_date]
   );
 
+  const lyricSourceState = useMemo(
+    () => getLyricSourceState(formValues),
+    [formValues]
+  );
+
+  const lyricSourceFileName = useMemo(() => {
+    if (lyricFile?.name) return lyricFile.name;
+    return getLyricSourceFileName(formValues) || "";
+  }, [formValues, lyricFile]);
+
   useEffect(() => {
-    if (!coverFile || !coverPreview) return;
+    if (!coverFile || !coverPreview) return undefined;
     return () => URL.revokeObjectURL(coverPreview);
   }, [coverFile, coverPreview]);
 
@@ -230,8 +311,11 @@ export default function ArtistSongForm() {
         </div>
       </section>
 
-      <form onSubmit={handleSubmit} className="artist-detail-grid is-two-column">
-        <div className="space-y-6">
+      <form
+        onSubmit={handleSubmit}
+        className="artist-detail-grid is-two-column artist-song-editor-grid"
+      >
+        <div className="artist-song-editor-fields space-y-6">
           <section className="artist-detail-panel">
             <p className="artist-detail-panel-title">Thông tin bài hát</p>
             <div className="mt-5 space-y-4">
@@ -264,6 +348,18 @@ export default function ArtistSongForm() {
                 </select>
               </label>
 
+              <label className="artist-detail-label is-full">
+                Ngày phát hành
+                <DateInputField
+                  name="release_date"
+                  value={formValues.release_date}
+                  onChange={(value) =>
+                    setFormValues((prev) => ({ ...prev, release_date: value }))
+                  }
+                  className="artist-input mt-2"
+                />
+              </label>
+
               <div className="artist-preview-meta-card">
                 <strong>Thời lượng bài hát</strong>
                 <span>
@@ -278,22 +374,22 @@ export default function ArtistSongForm() {
           <section className="artist-detail-panel">
             <p className="artist-detail-panel-title">Ảnh bìa</p>
             <div className="artist-upload-cluster mt-5">
-              <label className="artist-detail-label is-full">
-                Ảnh bìa (URL)
-                <input
-                  name="cover_url"
-                  value={formValues.cover_url}
-                  onChange={handleChange}
-                  placeholder="https://..."
-                  className="artist-input mt-2"
-                />
-              </label>
+              <SourceFileCard
+                variant="artist"
+                type="image"
+                file={coverFile}
+                url={formValues.cover_url}
+                emptyLabel="Chưa có ảnh bìa"
+                helperText="PNG/JPG • Chọn ảnh bìa để tải lên"
+                existingText="PNG/JPG • Đang dùng artwork hiện tại"
+                pendingText="PNG/JPG • Ảnh mới sẽ được tải lên khi lưu"
+              />
 
               <div className="artist-file-dropzone">
                 <div className="artist-file-name">
                   <strong>{coverFile ? "Ảnh mới đã chọn" : "Tải ảnh bìa từ máy"}</strong>
-                      <span>{coverFile?.name || "PNG/JPG"}</span>
-                    </div>
+                  <span>{coverFile?.name || "PNG/JPG"}</span>
+                </div>
                 <label className="artist-file-trigger" htmlFor="artist-song-cover-upload">
                   {coverFile ? "Đổi ảnh" : "Chọn ảnh"}
                 </label>
@@ -311,22 +407,22 @@ export default function ArtistSongForm() {
           <section className="artist-detail-panel">
             <p className="artist-detail-panel-title">Audio</p>
             <div className="artist-upload-cluster mt-5">
-              <label className="artist-detail-label is-full">
-                Audio URL
-                <input
-                  name="audio_path"
-                  value={formValues.audio_path}
-                  onChange={handleChange}
-                  placeholder="https://storage.googleapis.com/..."
-                  className="artist-input mt-2"
-                />
-              </label>
+              <SourceFileCard
+                variant="artist"
+                type="audio"
+                file={audioFile}
+                url={formValues.audio_path}
+                emptyLabel="Chưa có file audio"
+                helperText="MP3/WAV • Chọn file nhạc để tải lên Firebase"
+                existingText="AUDIO • Đang dùng file audio hiện tại"
+                pendingText="AUDIO • File mới sẽ được tải lên khi lưu"
+              />
 
               <div className="artist-file-dropzone">
                 <div className="artist-file-name">
                   <strong>{audioFile ? "Audio mới đã chọn" : "Tải file nhạc lên Firebase"}</strong>
-                      <span>{audioFile?.name || "MP3/WAV"}</span>
-                    </div>
+                  <span>{audioFile?.name || "MP3/WAV"}</span>
+                </div>
                 <label className="artist-file-trigger" htmlFor="artist-song-audio-upload">
                   {audioFile ? "Đổi file" : "Chọn file"}
                 </label>
@@ -340,9 +436,64 @@ export default function ArtistSongForm() {
               </div>
             </div>
           </section>
+
+          <section className="artist-detail-panel">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="artist-detail-panel-title">Nguồn lyric</p>
+                <p className="artist-detail-panel-note">
+                  Artist chỉ tải file source lên Firebase. Admin sẽ kiểm tra và import
+                  file <code>.lrc</code> vào DB khi cần.
+                </p>
+              </div>
+              <LyricSourceBadge item={formValues} variant="artist" />
+            </div>
+
+            <div className="artist-upload-cluster mt-5">
+              <div className="artist-file-dropzone">
+                <div className="artist-file-name">
+                  <strong>{lyricFile ? "Lyric source mới đã chọn" : "Tải file lyric source"}</strong>
+                  <span>{lyricSourceFileName || "TXT/LRC"}</span>
+                </div>
+                <label className="artist-file-trigger" htmlFor="artist-song-lyrics-upload">
+                  {lyricFile ? "Đổi file" : "Chọn file"}
+                </label>
+                <input
+                  id="artist-song-lyrics-upload"
+                  type="file"
+                  accept={LYRIC_SOURCE_ACCEPT}
+                  onChange={handleLyricFileChange}
+                  className="artist-file-input"
+                />
+              </div>
+
+              <div className="artist-preview-meta-grid">
+                <div className="artist-preview-meta-card">
+                  <strong>Định dạng hỗ trợ</strong>
+                  <span>Chấp nhận file .txt hoặc .lrc, lưu vào uploads/lyric/.</span>
+                </div>
+                <div className="artist-preview-meta-card">
+                  <strong>Trạng thái hiện tại</strong>
+                  <span>{lyricSourceState.label}</span>
+                </div>
+              </div>
+
+              <LyricSourceFileCard
+                item={formValues}
+                file={lyricFile}
+                variant="artist"
+                helperText={
+                  lyricFile
+                    ? "File sẽ được lưu lên Firebase khi nhấn lưu"
+                    : "Mở/tải lại dưới dạng UTF-8"
+                }
+                onError={setError}
+              />
+            </div>
+          </section>
         </div>
 
-        <div className="artist-preview-stack lg:sticky lg:top-4">
+        <div className="artist-preview-stack artist-song-editor-preview lg:sticky lg:top-4">
           <section className="artist-detail-panel">
             <p className="artist-detail-panel-title">Xem trước</p>
             <div className="artist-preview-stage is-cover mt-5">
@@ -357,14 +508,18 @@ export default function ArtistSongForm() {
               )}
               {coverPreview ? (
                 <div className="artist-preview-canvas">
-                  <OptimizedImage src={coverPreview} alt="Ảnh bìa bài hát" className="h-full w-full" />
+                  <OptimizedImage
+                    src={coverPreview}
+                    alt="Ảnh bìa bài hát"
+                    className="h-full w-full"
+                  />
                 </div>
               ) : (
                 <div className="artist-preview-empty">
                   <FiMusic className="text-4xl text-white/45" />
                   <div className="artist-preview-caption">
                     <strong>Chưa có ảnh bìa</strong>
-                    <span>Thêm ảnh bìa</span>
+                    <span>Thêm ảnh bìa để hoàn thiện bài hát</span>
                   </div>
                 </div>
               )}
@@ -374,9 +529,14 @@ export default function ArtistSongForm() {
               <div className="artist-preview-caption">
                 <strong>{formValues.title || "Tên bài hát"}</strong>
                 <span>
-                  {formValues.duration
-                    ? `Thời lượng: ${formatDuration(formValues.duration)}`
-                    : "Chưa có thời lượng"}
+                  {[
+                    formValues.duration
+                      ? `Thời lượng: ${formatDuration(formValues.duration)}`
+                      : "Chưa có thời lượng",
+                    formValues.release_date
+                      ? `Phát hành: ${releaseDateDisplay}`
+                      : "Chưa có ngày phát hành",
+                  ].join(" • ")}
                 </span>
               </div>
 
@@ -387,7 +547,29 @@ export default function ArtistSongForm() {
                 </div>
                 <div className="artist-preview-meta-card">
                   <strong>Audio</strong>
-                  <span>{audioFile ? "File audio mới từ máy" : formValues.audio_path ? "Đã có audio URL" : "Chưa có nguồn audio"}</span>
+                  <span>
+                    {audioFile
+                      ? "File audio mới từ máy"
+                      : formValues.audio_path
+                        ? "Đang dùng file audio hiện tại"
+                        : "Chưa có nguồn audio"}
+                  </span>
+                </div>
+                <div className="artist-preview-meta-card">
+                  <strong>Lyric source</strong>
+                  <span>
+                    {lyricFile?.name ||
+                      lyricSourceState.label ||
+                      "Chưa có lyric source"}
+                  </span>
+                </div>
+                <div className="artist-preview-meta-card">
+                  <strong>Ngày phát hành</strong>
+                  <span>{releaseDateDisplay}</span>
+                </div>
+                <div className="artist-preview-meta-card">
+                  <strong>Import lyric</strong>
+                  <span>Chỉ admin mới có thể validate và import .lrc vào DB.</span>
                 </div>
               </div>
             </div>

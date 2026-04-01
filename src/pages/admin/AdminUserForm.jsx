@@ -10,6 +10,7 @@ import {
 } from "../../api/admin.api";
 import Toast from "../../components/common/Toast";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import SourceFileCard from "../../components/common/SourceFileCard";
 import { resolveAssetUrl } from "../../utils/asset";
 
 const ROLE_OPTIONS = ["USER", "ARTIST", "ADMIN"];
@@ -229,21 +230,16 @@ export default function AdminUserForm() {
                     }}
                   />
                 </label>
-                <label className="admin-detail-label">
-                  Avatar URL (nếu không upload)
-                  <input
-                    value={formValues.avatar_url}
-                    onChange={(event) => {
-                      setAvatarFile(null);
-                      setFormValues((prev) => ({
-                        ...prev,
-                        avatar_url: event.target.value,
-                      }));
-                    }}
-                    placeholder="Avatar URL"
-                    className="admin-field"
-                  />
-                </label>
+                <SourceFileCard
+                  variant="admin"
+                  type="avatar"
+                  file={avatarFile}
+                  url={formValues.avatar_url}
+                  emptyLabel="Chưa có avatar"
+                  helperText="Avatar hiện tại của người dùng"
+                  existingText="AVATAR • Đang dùng avatar hiện tại"
+                  pendingText="AVATAR • Avatar mới sẽ được áp dụng sau khi lưu"
+                />
 
                 <div className="admin-detail-meta-grid">
                   <div className="admin-detail-meta-card">

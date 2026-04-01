@@ -181,9 +181,6 @@ export default function Profile() {
     setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
-  const maxAvatarLength = 480;
-
-
   const handleAvatarUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -230,13 +227,6 @@ export default function Profile() {
   const submitProfile = async (event) => {
     event.preventDefault();
     if (!hasProfileChanges) return;
-    if (profile.avatar_url && profile.avatar_url.length > maxAvatarLength) {
-      setToast({
-        title: "Link avatar quá dài",
-        message: "Vui lòng chọn ảnh nhỏ hơn hoặc dán URL ngắn hơn.",
-      });
-      return;
-    }
 
     setLoadingProfile(true);
     try {
@@ -499,21 +489,6 @@ export default function Profile() {
                 </p>
               </div>
             </div>
-
-            {/* <label className="space-y-2 text-sm text-white/70">
-              <span className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/50">
-                <FiCamera className="text-emerald-300" /> Avatar URL
-              </span>
-              <input
-                value={profile.avatar_url}
-                onChange={handleProfileChange("avatar_url")}
-                placeholder="https://..."
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400/60 focus:bg-white/10"
-              />
-              <p className="text-xs text-white/45">
-                Dán đường dẫn ảnh để cập nhật avatar của bạn.
-              </p>
-            </label> */}
 
             <label className="space-y-1.5 text-sm text-white/70">
               <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/50">

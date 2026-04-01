@@ -1,12 +1,10 @@
 import { FiCalendar, FiEdit2, FiEye, FiMusic, FiTrash2 } from "react-icons/fi";
 import { resolveAssetUrl } from "../../utils/asset";
+import { formatDateDisplay } from "../../utils/date";
 import OptimizedImage from "../common/OptimizedImage";
 
 const formatReleaseDate = (value) => {
-  if (!value) return "Chưa cập nhật";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("vi-VN");
+  return formatDateDisplay(value);
 };
 
 const statusLabelMap = {

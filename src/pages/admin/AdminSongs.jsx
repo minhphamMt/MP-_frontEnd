@@ -9,6 +9,7 @@ import {
 } from "../../api/admin.api";
 import AdminListLoadingState from "../../components/admin/AdminListLoadingState";
 import AdminListNotice from "../../components/admin/AdminListNotice";
+import LyricSourceBadge from "../../components/song/LyricSourceBadge";
 import { resolveAssetUrl } from "../../utils/asset";
 import { toPlayableSong } from "../../utils/song";
 import { promptAdminInput } from "../../utils/adminDialog";
@@ -25,6 +26,7 @@ import {
 } from "../../utils/adminSearch";
 import { getArtistLabel } from "../../utils/artist";
 import useDebouncedValue from "../../hooks/useDebouncedValue";
+import { getLyricsPath, hasLyricsInDb } from "../../utils/lyrics";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tất cả" },
@@ -71,6 +73,8 @@ export default function AdminSongs() {
   const pendingSongsCount = songs.filter((song) => song?.status === "pending").length;
   const approvedSongsCount = songs.filter((song) => song?.status === "approved").length;
   const missingAudioCount = songs.filter((song) => !getSongAudio(song)).length;
+  const lyricSourceCount = songs.filter((song) => getLyricsPath(song)).length;
+  const lyricsInDbCount = songs.filter((song) => hasLyricsInDb(song)).length;
 
   const loadSongs = async (searchTerm = "", statusValue = statusFilter) => {
     try {
@@ -341,6 +345,14 @@ export default function AdminSongs() {
           <p className="admin-stat-label">Thiếu mp3</p>
           <p className="admin-stat-value">{missingAudioCount}</p>
         </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Có lyric source</p>
+          <p className="admin-stat-value">{lyricSourceCount}</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Lyrics trong DB</p>
+          <p className="admin-stat-value">{lyricsInDbCount}</p>
+        </div>
       </div>
 
       <div className="admin-toolbar-panel">
@@ -471,6 +483,9 @@ export default function AdminSongs() {
                   <div>
                     <p className="font-semibold text-white">{song.title}</p>
                     <p className="text-xs text-white/50">{song.album_title || "Single"}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <LyricSourceBadge item={song} variant="admin" />
+                    </div>
                     {!getSongAudio(song) && (
                       <p className="text-[11px] font-semibold text-rose-300">
                         Thiếu file mp3/audio

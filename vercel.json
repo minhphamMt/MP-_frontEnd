@@ -4,6 +4,10 @@
       "handle": "filesystem"
     },
     {
+      "src": "^/__firebase-storage-proxy/(.*)$",
+      "dest": "https://firebasestorage.googleapis.com/$1"
+    },
+    {
       "src": "^/top-100/?$",
       "status": 308,
       "headers": {

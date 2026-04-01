@@ -2,18 +2,13 @@
 import { FiChevronLeft, FiTrash2 } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
 import { deleteAlbum, getAlbumById, updateAlbum } from "../../api/album.api";
+import DateInputField from "../../components/common/DateInputField";
 import { resolveAssetUrl } from "../../utils/asset";
-import { formatDateDisplay } from "../../utils/date";
+import { formatDateDisplay, normalizeDateInputValue } from "../../utils/date";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import SourceFileCard from "../../components/common/SourceFileCard";
 import { confirmAdminAction } from "../../utils/adminDialog";
 import { getArtistLabel } from "../../utils/artist";
-
-const formatDateInput = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
-};
 
 const getSongCover = (song) =>
   song?.cover_url || song?.cover || song?.thumbnail || song?.image;
@@ -53,7 +48,7 @@ export default function AdminAlbumForm() {
       setAlbum(detail);
       setFormValues({
         title: detail?.title || "",
-        release_date: formatDateInput(detail?.release_date),
+        release_date: normalizeDateInputValue(detail?.release_date),
         cover_url: detail?.cover_url || detail?.cover || "",
       });
       setErrorMessage("");
@@ -244,32 +239,27 @@ export default function AdminAlbumForm() {
                     </label>
                     <label className="admin-detail-label">
                       Ngày phát hành
-                      <input
-                        type="date"
+                      <DateInputField
                         value={formValues.release_date}
-                        onChange={(event) =>
+                        onChange={(value) =>
                           setFormValues((prev) => ({
                             ...prev,
-                            release_date: event.target.value,
+                            release_date: value,
                           }))
                         }
                         className="admin-field"
                       />
                     </label>
-                    <label className="admin-detail-label">
-                      Ảnh bìa (URL)
-                      <input
-                        value={formValues.cover_url}
-                        onChange={(event) =>
-                          setFormValues((prev) => ({
-                            ...prev,
-                            cover_url: event.target.value,
-                          }))
-                        }
-                        placeholder="https://..."
-                        className="admin-field"
-                      />
-                    </label>
+                    <SourceFileCard
+                      variant="admin"
+                      type="image"
+                      file={coverFile}
+                      url={formValues.cover_url}
+                      emptyLabel="Chưa có ảnh bìa"
+                      helperText="PNG/JPG • Chọn ảnh bìa để cập nhật"
+                      existingText="PNG/JPG • Đang dùng artwork hiện tại"
+                      pendingText="PNG/JPG • Ảnh mới sẽ được áp dụng khi lưu"
+                    />
                     <div>
                       <label className="admin-detail-label">Hoặc tải ảnh bìa (PNG/JPG)</label>
                       <input

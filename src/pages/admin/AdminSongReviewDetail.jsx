@@ -3,12 +3,21 @@ import { FiCheckCircle, FiChevronLeft, FiRefreshCw, FiSlash } from "react-icons/
 import { useNavigate, useParams } from "react-router-dom";
 import { approveSong, blockSong, listAdminSongs } from "../../api/admin.api";
 import { getSongById } from "../../api/song.api";
-import { resolveAssetUrl } from "../../utils/asset";
-import { toPlayableSong } from "../../utils/song";
-import { promptAdminInput } from "../../utils/adminDialog";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import Toast from "../../components/common/Toast";
+import LyricSourceBadge from "../../components/song/LyricSourceBadge";
+import LyricSourceFileCard from "../../components/song/LyricSourceFileCard";
+import { resolveAssetUrl } from "../../utils/asset";
 import { getArtistLabel } from "../../utils/artist";
+import { promptAdminInput } from "../../utils/adminDialog";
+import { formatDateDisplay } from "../../utils/date";
+import {
+  getLyricSourceFileName,
+  getLyricSourceState,
+  getLyricsPath,
+  hasLyricsInDb,
+} from "../../utils/lyrics";
+import { toPlayableSong } from "../../utils/song";
 
 const getSongCover = (song) =>
   song?.cover_url ||
@@ -128,6 +137,10 @@ export default function AdminSongReviewDetail() {
     return cover ? resolveAssetUrl(cover) : "";
   }, [song]);
 
+  const lyricSourceState = useMemo(() => getLyricSourceState(song), [song]);
+  const lyricSourceFileName = useMemo(() => getLyricSourceFileName(song), [song]);
+  const currentLyricsPath = useMemo(() => getLyricsPath(song), [song]);
+
   const handleApprove = async () => {
     if (!song?.id) return;
     if (!songAudioUrl) {
@@ -186,10 +199,7 @@ export default function AdminSongReviewDetail() {
         >
           <FiChevronLeft /> Quay lại danh sách duyệt
         </button>
-        <button
-          onClick={loadSongDetail}
-          className="admin-button"
-        >
+        <button onClick={loadSongDetail} className="admin-button">
           <FiRefreshCw /> Làm mới
         </button>
       </div>
@@ -213,9 +223,7 @@ export default function AdminSongReviewDetail() {
                 <h1 className="admin-list-title">{song.title || "Bài hát"}</h1>
               </div>
               <div className="admin-toolbar-actions">
-                <span className={getStatusChipClass(song.status)}>
-                  {getStatusLabel(song.status)}
-                </span>
+                <span className={getStatusChipClass(song.status)}>{getStatusLabel(song.status)}</span>
               </div>
             </div>
 
@@ -267,14 +275,24 @@ export default function AdminSongReviewDetail() {
                   <div className="admin-detail-meta-card">
                     <p className="admin-detail-meta-label">Ngày phát hành</p>
                     <p className="admin-detail-meta-value">
-                      {song.release_date
-                        ? new Date(song.release_date).toLocaleDateString("vi-VN")
-                        : "Chưa có"}
+                      {formatDateDisplay(song.release_date, "Chưa có")}
                     </p>
                   </div>
                   <div className="admin-detail-meta-card">
                     <p className="admin-detail-meta-label">ID</p>
                     <p className="admin-detail-meta-value">{song.id}</p>
+                  </div>
+                  <div className="admin-detail-meta-card">
+                    <p className="admin-detail-meta-label">Lyric source</p>
+                    <div className="mt-2">
+                      <LyricSourceBadge item={song} variant="admin" />
+                    </div>
+                  </div>
+                  <div className="admin-detail-meta-card">
+                    <p className="admin-detail-meta-label">Lyrics DB</p>
+                    <p className="admin-detail-meta-value">
+                      {hasLyricsInDb(song) ? "Đã import vào DB" : "Chưa import"}
+                    </p>
                   </div>
                 </div>
                 {song.reject_reason && (
@@ -298,6 +316,70 @@ export default function AdminSongReviewDetail() {
                   Chưa có file audio/mp3. Không nên duyệt bài hát này.
                 </div>
               )}
+            </section>
+
+            <section className="admin-detail-panel">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="admin-detail-panel-title">Nguồn lyric</p>
+                  <p className="admin-detail-panel-note">
+                    Trang này chỉ để xem thông tin. Upload source, validate và import chỉ làm ở
+                    màn chỉnh sửa.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <LyricSourceBadge item={song} variant="admin" />
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/admin/songs/${song.id}/edit`)}
+                    className="admin-button admin-button-ghost"
+                  >
+                    Mở màn chỉnh sửa
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-4 admin-detail-meta-grid">
+                <div className="admin-detail-meta-card">
+                  <p className="admin-detail-meta-label">File source</p>
+                  <p className="admin-detail-meta-value">
+                    {lyricSourceFileName ||
+                      (lyricSourceState.key === "db_only"
+                        ? "Đã có lyrics trong DB"
+                        : "Chưa có lyric source")}
+                  </p>
+                </div>
+                <div className="admin-detail-meta-card">
+                  <p className="admin-detail-meta-label">Loại source</p>
+                  <p className="admin-detail-meta-value">{lyricSourceState.label}</p>
+                </div>
+                <div className="admin-detail-meta-card">
+                  <p className="admin-detail-meta-label">Đã import DB</p>
+                  <p className="admin-detail-meta-value">{hasLyricsInDb(song) ? "Có" : "Chưa"}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-4">
+                <LyricSourceFileCard
+                  item={song}
+                  variant="admin"
+                  helperText={
+                    currentLyricsPath
+                      ? "Mở/tải lại dưới dạng UTF-8"
+                      : lyricSourceState.key === "db_only"
+                        ? "Bài hát đang dùng lyrics đã import trong DB"
+                        : "Chưa có file lyric source"
+                  }
+                  onError={(message) => setToast({ title: "Lỗi lyric source", message })}
+                />
+
+                {!currentLyricsPath && lyricSourceState.key !== "db_only" && (
+                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
+                    Bài hát này chưa có lyric source. Nếu cần cập nhật source hoặc import lyric,
+                    hãy mở màn chỉnh sửa.
+                  </div>
+                )}
+              </div>
             </section>
 
             <div className="admin-detail-actions">

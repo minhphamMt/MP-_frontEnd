@@ -137,6 +137,12 @@ export const listAdminSongs = (params = {}) =>
 export const updateAdminSong = (id, payload) =>
   api.put(`/admin/songs/${id}`, payload);
 
+export const validateAdminSongLyrics = (id, payload = {}) =>
+  api.post(`/admin/songs/${id}/lyrics/validate`, payload);
+
+export const importAdminSongLyrics = (id, payload = {}) =>
+  api.post(`/admin/songs/${id}/lyrics/import`, payload);
+
 export const listArtistRequests = (params = {}) =>
   api.get("/admin/artist-requests", { params });
 

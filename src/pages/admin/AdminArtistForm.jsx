@@ -1,13 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { FiCamera, FiChevronLeft } from "react-icons/fi";
+import { FiCamera, FiChevronLeft, FiImage } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   createArtist,
   getArtistById,
   updateArtist,
 } from "../../api/artist.api";
+import DateInputField from "../../components/common/DateInputField";
 import Toast from "../../components/common/Toast";
+import SourceFileCard from "../../components/common/SourceFileCard";
 import { resolveAssetUrl } from "../../utils/asset";
+import { normalizeDateInputValue } from "../../utils/date";
+import {
+  COVER_UPLOAD_FOLDER,
+  uploadFileToFirebase,
+} from "../../utils/firebaseUpload";
 import OptimizedImage from "../../components/common/OptimizedImage";
 
 const emptyArtistPayload = {
@@ -20,13 +27,6 @@ const emptyArtistPayload = {
   bio: "",
   avatar_url: "",
   cover_url: "",
-};
-
-const formatDateInput = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
 };
 
 const buildArtistPayload = (payload, avatarFile) => {
@@ -59,6 +59,7 @@ export default function AdminArtistForm() {
   const [saving, setSaving] = useState(false);
   const [formValues, setFormValues] = useState({ ...emptyArtistPayload });
   const [avatarFile, setAvatarFile] = useState(null);
+  const [coverFile, setCoverFile] = useState(null);
   const [artist, setArtist] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [toast, setToast] = useState({ title: "", message: "" });
@@ -80,7 +81,7 @@ export default function AdminArtistForm() {
           alias: payload.alias || "",
           realname: payload.realname || "",
           national: payload.national || "",
-          birthday: formatDateInput(payload.birthday),
+          birthday: normalizeDateInputValue(payload.birthday),
           short_bio: payload.short_bio || "",
           bio: payload.bio || "",
           avatar_url: payload.avatar_url || "",
@@ -128,7 +129,16 @@ export default function AdminArtistForm() {
     try {
       setSaving(true);
       setErrorMessage("");
-      const payload = buildArtistPayload(formValues, avatarFile);
+      const uploadedCoverUrl = coverFile
+        ? await uploadFileToFirebase(coverFile, COVER_UPLOAD_FOLDER)
+        : null;
+      const payload = buildArtistPayload(
+        {
+          ...formValues,
+          cover_url: uploadedCoverUrl || formValues.cover_url,
+        },
+        avatarFile
+      );
       if (isEdit) {
         await updateArtist(id, payload);
         setToast({ title: "Thành công", message: "Lưu thành công." });
@@ -215,6 +225,38 @@ export default function AdminArtistForm() {
                     }}
                   />
                 </label>
+                <SourceFileCard
+                  variant="admin"
+                  type="avatar"
+                  file={avatarFile}
+                  url={formValues.avatar_url}
+                  emptyLabel="Chưa có avatar"
+                  helperText="Ảnh đại diện hiện tại của nghệ sĩ"
+                  existingText="AVATAR • Đang dùng avatar hiện tại"
+                  pendingText="AVATAR • Avatar mới sẽ được áp dụng khi lưu"
+                />
+                <label className="admin-button admin-button-ghost cursor-pointer">
+                  <FiImage /> {isEdit ? "Tải cover mới" : "Chọn cover"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] || null;
+                      setCoverFile(file);
+                    }}
+                  />
+                </label>
+                <SourceFileCard
+                  variant="admin"
+                  type="image"
+                  file={coverFile}
+                  url={formValues.cover_url}
+                  emptyLabel="Chưa có cover"
+                  helperText="Ảnh cover sẽ được lưu thành URL file"
+                  existingText="COVER • Đang dùng cover hiện tại"
+                  pendingText="COVER • Cover mới sẽ được tải lên khi lưu"
+                />
 
                 <div className="admin-detail-meta-grid">
                   <div className="admin-detail-meta-card">
@@ -268,24 +310,19 @@ export default function AdminArtistForm() {
                   placeholder="Quốc gia"
                   className="admin-field"
                 />
-                <input
-                  type="date"
+                <DateInputField
                   value={formValues.birthday}
-                  onChange={handleChange("birthday")}
+                  onChange={(value) =>
+                    setFormValues((prev) => ({ ...prev, birthday: value }))
+                  }
                   className="admin-field"
                 />
-                <input
-                  value={formValues.avatar_url}
-                  onChange={handleChange("avatar_url")}
-                  placeholder="Avatar URL (nếu không upload)"
-                  className="admin-field sm:col-span-2"
-                />
-                <input
-                  value={formValues.cover_url}
-                  onChange={handleChange("cover_url")}
-                  placeholder="Cover URL"
-                  className="admin-field sm:col-span-2"
-                />
+                <div className="admin-detail-meta-card sm:col-span-2">
+                  <p className="admin-detail-meta-label">Media source</p>
+                  <p className="admin-detail-meta-value">
+                    Avatar vÃ  cover chá»‰ cáº­p nháº­t qua file upload, khÃ´ng cho nháº­p URL tay.
+                  </p>
+                </div>
                 <input
                   value={formValues.short_bio}
                   onChange={handleChange("short_bio")}

@@ -26,6 +26,7 @@ import { saveSearchHistory } from "../../api/search.api";
 import useAuthStore from "../../store/auth.store";
 import { createPortal } from "react-dom";
 import { resolveAssetUrl } from "../../utils/asset";
+import { formatDateDisplay } from "../../utils/date";
 import { getAlbumPath, getArtistPath, getSongPath } from "../../utils/entityPath";
 import OptimizedImage from "../common/OptimizedImage";
 import useDebouncedValue from "../../hooks/useDebouncedValue";
@@ -630,7 +631,7 @@ const handleResultNavigate = async (item) => {
                       <div className="flex-1 truncate">{item.keyword}</div>
                       {createdAt && (
                         <span className="hidden text-[11px] text-white/40 sm:inline">
-                          {new Date(createdAt).toLocaleDateString("vi-VN")}
+                          {formatDateDisplay(createdAt, "")}
                         </span>
                       )}
                     </button>

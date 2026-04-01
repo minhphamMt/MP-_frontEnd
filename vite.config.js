@@ -63,6 +63,24 @@ export default defineConfig(() => {
           })
         : null,
     ].filter(Boolean),
+    server: {
+      proxy: {
+        "/__firebase-storage-proxy": {
+          target: "https://firebasestorage.googleapis.com",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/__firebase-storage-proxy/, ""),
+        },
+      },
+    },
+    preview: {
+      proxy: {
+        "/__firebase-storage-proxy": {
+          target: "https://firebasestorage.googleapis.com",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/__firebase-storage-proxy/, ""),
+        },
+      },
+    },
     build: {
       rollupOptions: {
         output: {

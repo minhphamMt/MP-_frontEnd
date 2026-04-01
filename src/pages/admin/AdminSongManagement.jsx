@@ -11,10 +11,13 @@ import {
 import { getAlbums } from "../../api/album.api";
 import AdminListLoadingState from "../../components/admin/AdminListLoadingState";
 import AdminListNotice from "../../components/admin/AdminListNotice";
+import DateInputField from "../../components/common/DateInputField";
+import LyricSourceBadge from "../../components/song/LyricSourceBadge";
 import { resolveAssetUrl } from "../../utils/asset";
 import { deleteSong } from "../../api/song.api";
 import useAuthStore from "../../store/auth.store";
 import OptimizedImage from "../../components/common/OptimizedImage";
+import SourceFileCard from "../../components/common/SourceFileCard";
 import Toast from "../../components/common/Toast";
 import { confirmAdminAction } from "../../utils/adminDialog";
 import {
@@ -28,6 +31,7 @@ import {
 } from "../../utils/adminSearch";
 import { getArtistLabel } from "../../utils/artist";
 import useDebouncedValue from "../../hooks/useDebouncedValue";
+import { getLyricsPath, hasLyricsInDb } from "../../utils/lyrics";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tất cả" },
@@ -303,6 +307,8 @@ export default function AdminSongManagement() {
   const approvedSongsCount = songs.filter((song) => song?.status === "approved").length;
   const pendingSongsCount = songs.filter((song) => song?.status === "pending").length;
   const linkedAlbumCount = songs.filter((song) => song?.album_id || song?.album_title).length;
+  const lyricSourceCount = songs.filter((song) => getLyricsPath(song)).length;
+  const lyricsInDbCount = songs.filter((song) => hasLyricsInDb(song)).length;
   const artistOptions = useMemo(() => {
     const mapped = artists.map((artist) => ({
       id: `${artist.id}`,
@@ -420,6 +426,14 @@ export default function AdminSongManagement() {
           <p className="admin-stat-label">Có album</p>
           <p className="admin-stat-value">{linkedAlbumCount}</p>
         </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Có lyric source</p>
+          <p className="admin-stat-value">{lyricSourceCount}</p>
+        </div>
+        <div className="admin-stat-card">
+          <p className="admin-stat-label">Lyrics trong DB</p>
+          <p className="admin-stat-value">{lyricsInDbCount}</p>
+        </div>
       </div>
 
       <div className="admin-toolbar-panel">
@@ -488,6 +502,9 @@ export default function AdminSongManagement() {
                     <p className="admin-row-muted">
                       {song.album_title || "Single"}
                     </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <LyricSourceBadge item={song} variant="admin" />
+                    </div>
                   </div>
                 </div>
                 <span className="hidden lg:block">
@@ -547,16 +564,15 @@ export default function AdminSongManagement() {
                         Chưa có ảnh bài hát
                       </div>
                     )}
-                    <input
-                      value={editPayload.cover_url}
-                      onChange={(event) =>
-                        setEditPayload((prev) => ({
-                          ...prev,
-                          cover_url: event.target.value,
-                        }))
-                      }
-                      placeholder="Cover URL (nếu không upload)"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
+                    <SourceFileCard
+                      variant="admin"
+                      type="image"
+                      file={coverFile}
+                      url={editPayload.cover_url}
+                      emptyLabel="Chưa có ảnh bìa"
+                      helperText="PNG/JPG • Chọn ảnh bìa để cập nhật"
+                      existingText="PNG/JPG • Đang dùng artwork hiện tại"
+                      pendingText="PNG/JPG • Ảnh mới sẽ được áp dụng khi lưu"
                     />
                     <input
                       type="file"
@@ -655,13 +671,12 @@ export default function AdminSongManagement() {
               </label> */}
                   <label className="block text-xs text-white/70 sm:text-sm">
                     Ngày phát hành
-                    <input
-                      type="date"
+                    <DateInputField
                       value={editPayload.release_date}
-                      onChange={(event) =>
+                      onChange={(value) =>
                         setEditPayload((prev) => ({
                           ...prev,
-                          release_date: event.target.value,
+                          release_date: value,
                         }))
                       }
                       className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white focus:border-emerald-400/60 focus:outline-none sm:text-sm"

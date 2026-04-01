@@ -6,8 +6,10 @@ import { getAlbums } from "../../api/album.api";
 import { ArtistSongListLoading } from "../../components/artist/ArtistLoadingState";
 import { deleteSong, getArtistSongs } from "../../api/song.api";
 import { getMyArtistProfile } from "../../api/artist.api";
+import LyricSourceBadge from "../../components/song/LyricSourceBadge";
 import { resolveAssetUrl } from "../../utils/asset";
 import { confirmAdminAction } from "../../utils/adminDialog";
+import { getLyricsPath } from "../../utils/lyrics";
 
 const statusLabelMap = {
   approved: "Công khai",
@@ -128,6 +130,7 @@ export default function ArtistSongs() {
       total: normalizedSongs.length,
       approved: normalizedSongs.filter((song) => song.status === "approved").length,
       pending: normalizedSongs.filter((song) => song.status === "pending").length,
+      withLyricsSource: normalizedSongs.filter((song) => getLyricsPath(song)).length,
     };
   }, [normalizedSongs]);
 
@@ -181,6 +184,10 @@ export default function ArtistSongs() {
         <article className="artist-stat-card">
           <p className="artist-stat-label">Chờ duyệt</p>
           <p className="artist-stat-value">{stats.pending}</p>
+        </article>
+        <article className="artist-stat-card">
+          <p className="artist-stat-label">Có lyric source</p>
+          <p className="artist-stat-value">{stats.withLyricsSource}</p>
         </article>
       </section>
 
@@ -256,6 +263,9 @@ export default function ArtistSongs() {
                     <p className="font-semibold text-white">{song.title}</p>
                     <p className="text-xs text-white/55">ID #{song.id}</p>
                     <p className="text-xs text-white/55">{song.album_title || "Single"}</p>
+                    <div className="mt-2">
+                      <LyricSourceBadge item={song} variant="artist" />
+                    </div>
                     {song.status === "rejected" && song.reject_reason ? (
                       <p className="mt-1 text-xs text-rose-200/95">
                         Lý do từ chối: {song.reject_reason}

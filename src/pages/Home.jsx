@@ -37,6 +37,7 @@ import {
   buildOrganizationJsonLd,
   buildWebSiteJsonLd,
 } from "../utils/seo";
+import { formatDateDisplay } from "../utils/date";
 
 const HOME_HISTORY_LIMIT = 60;
 const CONTINUE_SONGS_LIMIT = 5;
@@ -72,16 +73,7 @@ const formatContinueMeta = (song) =>
     .join(" • ");
 
 const formatReleaseDate = (value) => {
-  if (!value) return "Mới phát hành";
-
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "Mới phát hành";
-
-  return parsed.toLocaleDateString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  return formatDateDisplay(value, "Mới phát hành");
 };
 
 const getArtistSongCount = (artist) =>

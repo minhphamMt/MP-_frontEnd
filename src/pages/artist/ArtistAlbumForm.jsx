@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiArrowLeft, FiSave } from "react-icons/fi";
 import { createAlbum, getAlbumById, updateAlbum } from "../../api/album.api";
+import DateInputField from "../../components/common/DateInputField";
+import SourceFileCard from "../../components/common/SourceFileCard";
 import { resolveAssetUrl } from "../../utils/asset";
+import { formatDateDisplay, normalizeDateInputValue } from "../../utils/date";
 import OptimizedImage from "../../components/common/OptimizedImage";
 
 const emptyForm = {
@@ -32,7 +35,7 @@ export default function ArtistAlbumForm() {
         const album = res?.data?.data || res?.data;
         setFormValues({
           title: album?.title || "",
-          release_date: album?.release_date ? album.release_date.split("T")[0] : "",
+          release_date: normalizeDateInputValue(album?.release_date),
           cover_url: album?.cover_url || "",
           zing_album_id: album?.zing_album_id || "",
         });
@@ -102,6 +105,10 @@ export default function ArtistAlbumForm() {
     }
     return formValues.cover_url ? resolveAssetUrl(formValues.cover_url) : null;
   }, [coverFile, formValues.cover_url]);
+  const releaseDateDisplay = useMemo(
+    () => formatDateDisplay(formValues.release_date, "Chưa có ngày phát hành"),
+    [formValues.release_date]
+  );
 
   useEffect(() => {
     if (!coverFile || !coverPreview) return;
@@ -148,11 +155,12 @@ export default function ArtistAlbumForm() {
 
               <label className="artist-detail-label is-full">
                 Ngày phát hành
-                <input
+                <DateInputField
                   name="release_date"
-                  type="date"
                   value={formValues.release_date}
-                  onChange={handleChange}
+                  onChange={(value) =>
+                    setFormValues((prev) => ({ ...prev, release_date: value }))
+                  }
                   className="artist-input mt-2"
                 />
               </label>
@@ -162,16 +170,16 @@ export default function ArtistAlbumForm() {
           <section className="artist-detail-panel">
             <p className="artist-detail-panel-title">Artwork</p>
             <div className="artist-upload-cluster mt-5">
-              <label className="artist-detail-label is-full">
-                Ảnh bìa (URL)
-                <input
-                  name="cover_url"
-                  value={formValues.cover_url}
-                  onChange={handleChange}
-                  placeholder="https://..."
-                  className="artist-input mt-2"
-                />
-              </label>
+              <SourceFileCard
+                variant="artist"
+                type="image"
+                file={coverFile}
+                url={formValues.cover_url}
+                emptyLabel="Chưa có artwork"
+                helperText="PNG/JPG • Chọn artwork để tải lên"
+                existingText="PNG/JPG • Đang dùng artwork hiện tại"
+                pendingText="PNG/JPG • Ảnh mới sẽ được áp dụng khi lưu"
+              />
 
               <div className="artist-file-dropzone">
                 <div className="artist-file-name">
@@ -241,7 +249,7 @@ export default function ArtistAlbumForm() {
                 <strong>{formValues.title || "Tên album"}</strong>
                 <span>
                   {formValues.release_date
-                    ? `Phát hành: ${formValues.release_date}`
+                    ? `Phát hành: ${releaseDateDisplay}`
                     : "Chưa có ngày phát hành"}
                 </span>
               </div>
@@ -249,7 +257,7 @@ export default function ArtistAlbumForm() {
               <div className="artist-preview-meta-grid">
                 <div className="artist-preview-meta-card">
                   <strong>Nguồn ảnh</strong>
-                  <span>{coverFile ? "File mới từ máy" : formValues.cover_url ? "URL hiện tại" : "Chưa có"}</span>
+                  <span>{coverFile ? "File mới từ máy" : formValues.cover_url ? "File hiện tại" : "Chưa có"}</span>
                 </div>
                 <div className="artist-preview-meta-card">
                   <strong>Mã ngoài</strong>

@@ -26,6 +26,7 @@ import ChartLoadingState from "../components/charts/ChartLoadingState";
 import OptimizedImage from "../components/common/OptimizedImage";
 import { resolveAssetUrl } from "../utils/asset";
 import ArtistNames from "../components/artist/ArtistNames";
+import { formatDateDisplay } from "../utils/date";
 import { buildCollectionPageJsonLd } from "../utils/seo";
 
 echarts.use([GridComponent, TooltipComponent, LegendComponent, ELineChart, SVGRenderer]);
@@ -72,9 +73,7 @@ const toArray = (payload) => {
 };
 
 const formatWeeklyDate = (rawDate) => {
-  const parsed = rawDate ? new Date(rawDate) : null;
-  if (!parsed || Number.isNaN(parsed.getTime())) return rawDate || "";
-  return parsed.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+  return formatDateDisplay(rawDate, rawDate || "", { includeYear: false });
 };
 
 const escapeHtml = (value = "") =>

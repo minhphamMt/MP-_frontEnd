@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   FiCamera,
   FiEdit2,
+  FiImage,
   FiPlus,
   FiRefreshCw,
   FiTrash2,
@@ -12,12 +13,18 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { deleteArtist, getArtistById, getArtists, updateArtist } from "../../api/artist.api";
 import AdminListLoadingState from "../../components/admin/AdminListLoadingState";
 import AdminListNotice from "../../components/admin/AdminListNotice";
+import DateInputField from "../../components/common/DateInputField";
+import SourceFileCard from "../../components/common/SourceFileCard";
 import Toast from "../../components/common/Toast";
 import { resolveAssetUrl } from "../../utils/asset";
-import { formatDateDisplay } from "../../utils/date";
+import { formatDateDisplay, normalizeDateInputValue } from "../../utils/date";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import { confirmAdminAction } from "../../utils/adminDialog";
 import { searchAdmin } from "../../api/admin.api";
+import {
+  COVER_UPLOAD_FOLDER,
+  uploadFileToFirebase,
+} from "../../utils/firebaseUpload";
 import {
   getAdminListFallbackMessage,
   isAdminListTimeoutError,
@@ -28,13 +35,6 @@ import {
   filterAdminSearchItemsByType,
 } from "../../utils/adminSearch";
 import useDebouncedValue from "../../hooks/useDebouncedValue";
-
-const formatDateInput = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
-};
 
 export default function AdminArtistList() {
   const navigate = useNavigate();
@@ -47,6 +47,7 @@ export default function AdminArtistList() {
   const [toast, setToast] = useState({ title: "", message: "" });
   const [editingArtist, setEditingArtist] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
+  const [coverFile, setCoverFile] = useState(null);
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 320);
   const artistsWithAvatarCount = artists.filter((artist) => artist?.avatar_url).length;
   const artistsWithAliasCount = artists.filter((artist) => artist?.alias || artist?.realname).length;
@@ -151,13 +152,14 @@ export default function AdminArtistList() {
         alias: payload.alias || "",
         realname: payload.realname || "",
         national: payload.national || "",
-        birthday: formatDateInput(payload.birthday),
+        birthday: normalizeDateInputValue(payload.birthday),
         short_bio: payload.short_bio || "",
         bio: payload.bio || "",
         avatar_url: payload.avatar_url || "",
         cover_url: payload.cover_url || "",
       });
       setAvatarFile(null);
+      setCoverFile(null);
     } catch (error) {
       console.error("Load artist detail failed", error);
       setToast({ title: "Lỗi", message: "Không thể tải nghệ sĩ." });
@@ -192,8 +194,14 @@ export default function AdminArtistList() {
     }
     try {
       setSaving(true);
+      const uploadedCoverUrl = coverFile
+        ? await uploadFileToFirebase(coverFile, COVER_UPLOAD_FOLDER)
+        : null;
       const normalized = Object.fromEntries(
-        Object.entries(editPayload).map(([key, value]) => [
+        Object.entries({
+          ...editPayload,
+          cover_url: uploadedCoverUrl || editPayload.cover_url,
+        }).map(([key, value]) => [
           key,
           value === "" ? undefined : value,
         ])
@@ -215,6 +223,7 @@ export default function AdminArtistList() {
       await loadArtists(keyword.trim());
       setEditingArtist(null);
       setAvatarFile(null);
+      setCoverFile(null);
       setToast({ title: "Thành công", message: "Đã cập nhật nghệ sĩ." });
     } catch (error) {
       console.error("Update artist failed", error);
@@ -403,17 +412,36 @@ export default function AdminArtistList() {
                         }
                       />
                     </label>
-                    <input
-                      value={editPayload.avatar_url}
-                      onChange={(event) => {
-                        setAvatarFile(null);
-                        setEditPayload((prev) => ({
-                          ...prev,
-                          avatar_url: event.target.value,
-                        }));
-                      }}
-                      placeholder="Avatar URL (nếu không upload)"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
+                    <SourceFileCard
+                      variant="admin"
+                      type="avatar"
+                      file={avatarFile}
+                      url={editPayload.avatar_url}
+                      emptyLabel="Chưa có avatar"
+                      helperText="Avatar hiện tại của nghệ sĩ"
+                      existingText="AVATAR • Đang dùng avatar hiện tại"
+                      pendingText="AVATAR • Avatar mới sẽ được áp dụng khi lưu"
+                    />
+                    <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 transition md:hover:bg-white/10">
+                      <FiImage /> Tải cover mới
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(event) =>
+                          setCoverFile(event.target.files?.[0] || null)
+                        }
+                      />
+                    </label>
+                    <SourceFileCard
+                      variant="admin"
+                      type="image"
+                      file={coverFile}
+                      url={editPayload.cover_url}
+                      emptyLabel="Chưa có cover"
+                      helperText="Cover sẽ được lưu thành file URL"
+                      existingText="COVER • Đang dùng cover hiện tại"
+                      pendingText="COVER • Cover mới sẽ được tải lên khi lưu"
                     />
                     <div className="space-y-2 text-xs text-white/70 sm:text-sm">
                       <p>
@@ -479,28 +507,19 @@ export default function AdminArtistList() {
                       placeholder="Quốc gia"
                       className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
-                    <input
-                      type="date"
+                    <DateInputField
                       value={editPayload.birthday}
-                      onChange={(event) =>
+                      onChange={(value) =>
                         setEditPayload((prev) => ({
                           ...prev,
-                          birthday: event.target.value,
+                          birthday: value,
                         }))
                       }
                       className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/80 focus:border-emerald-400/60 focus:outline-none sm:text-sm"
                     />
-                    <input
-                      value={editPayload.cover_url}
-                      onChange={(event) =>
-                        setEditPayload((prev) => ({
-                          ...prev,
-                          cover_url: event.target.value,
-                        }))
-                      }
-                      placeholder="Cover URL"
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white placeholder:text-white/40 focus:border-emerald-400/60 focus:outline-none sm:col-span-2 sm:text-sm"
-                    />
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/70 sm:col-span-2 sm:text-sm">
+                      Cover chỉ cập nhật qua upload file, không nhập URL trực tiếp.
+                    </div>
                     <input
                       value={editPayload.short_bio}
                       onChange={(event) =>

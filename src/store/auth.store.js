@@ -127,6 +127,9 @@ const hasStoredTokens = Boolean(storedToken || storedRefreshToken);
 const buildPreferredAuthPath = ({ role = null, authContext = "default" } = {}) =>
   getPreferredAuthPath({ role, authContext });
 
+const buildArtistAuthContext = (user) =>
+  user?.role === "ARTIST" ? "default" : "artist_request";
+
 const syncApiAuthRuntime = ({ accessToken = null, resetPending = false } = {}) => {
   import("../api/axios")
     .then(({ syncApiAuthRuntime: syncRuntime }) => {
@@ -448,15 +451,17 @@ const useAuthStore = create((set, get) => ({
 
       if (!isAuthRequestCurrent(get, requestVersion)) return null;
 
+      const authContext = buildArtistAuthContext(user);
+
       const nextState = {
         user,
         accessToken,
         role: user.role,
         refreshToken,
-        authContext: "artist_request",
+        authContext,
         preferredAuthPath: buildPreferredAuthPath({
           role: user.role,
-          authContext: "artist_request",
+          authContext,
         }),
         isAuthenticated: true,
         loading: false,
@@ -508,15 +513,17 @@ const useAuthStore = create((set, get) => ({
 
       if (!isAuthRequestCurrent(get, requestVersion)) return null;
 
+      const authContext = buildArtistAuthContext(user);
+
       const nextState = {
         user,
         accessToken,
         role: user.role,
         refreshToken,
-        authContext: "artist_request",
+        authContext,
         preferredAuthPath: buildPreferredAuthPath({
           role: user.role,
-          authContext: "artist_request",
+          authContext,
         }),
         isAuthenticated: true,
         loading: false,

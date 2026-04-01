@@ -1,6 +1,6 @@
 export const AUTH_REQUIRED_EVENT = "app:auth-required";
 
-const DEFAULT_MESSAGE = "Vui lòng đăng nhập để tận hưởng thêm nhiều tính năng.";
+const DEFAULT_MESSAGE = "";
 
 export const emitAuthRequired = (message = DEFAULT_MESSAGE) => {
   if (typeof window === "undefined") return;
