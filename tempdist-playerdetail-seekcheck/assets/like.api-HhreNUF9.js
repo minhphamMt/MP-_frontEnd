@@ -1,0 +1,1 @@
+import{b as s}from"./index-BI-MNtM_.js";const t=()=>s.get("/songs/liked"),a=e=>s.post(`/albums/${e}/like`),i=e=>s.delete(`/albums/${e}/like`),o=()=>s.get("/users/me/liked-albums");export{o as a,t as g,a as l,i as u};

@@ -1,0 +1,1 @@
+import{b as e}from"./index-BI-MNtM_.js";const a=t=>e.get("/charts/zing",{params:t}),g=t=>e.get("/charts/top5",{params:t}),o=t=>e.get("/charts/new-release",{params:t}),r=()=>e.get("/charts/top-50/genres"),n=t=>e.get("/charts/regions",{params:t}),c=()=>e.get("/charts/weekly/top5");export{c as a,a as b,g as c,n as d,r as e,o as g};

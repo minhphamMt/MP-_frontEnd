@@ -1,0 +1,1 @@
+import{b as t}from"./index-BI-MNtM_.js";const e=(s={})=>t.get("/playlists",{params:s}),o=s=>t.get(`/playlists/${s}`),i=s=>t.post("/playlists",s),y=(s,l)=>t.put(`/playlists/${s}`,l),p=s=>t.delete(`/playlists/${s}`),n=(s,l)=>t.post(`/playlists/${s}/songs`,l),c=(s,l)=>t.delete(`/playlists/${s}/songs/${l}`);export{e as a,n as b,i as c,p as d,o as g,c as r,y as u};

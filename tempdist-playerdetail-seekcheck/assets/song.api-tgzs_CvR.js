@@ -1,0 +1,1 @@
+import{b as t}from"./index-BI-MNtM_.js";const n=s=>t.get(`/songs/${s}`),a=(s,o={})=>t.get("/songs/art",{params:{...o,...s?{artist_id:s}:{}}}),e=s=>t.post("/songs",s),c=(s,o)=>t.put(`/songs/${s}`,o),r=s=>t.delete(`/songs/${s}`),p=(s,o={})=>t.get(`/songs/${s}/lyrics`,{params:o}),S=(s,o)=>t.post(`/songs/${s}/play`,{duration:o});export{a,p as b,e as c,r as d,n as g,S as r,c as u};

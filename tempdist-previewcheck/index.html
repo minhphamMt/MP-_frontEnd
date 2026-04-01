@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- Viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Title -->
+    <title>Khoaluan Music | Nghe nhạc trực tuyến</title>
+    <meta
+      name="description"
+      content="Nghe nhạc trực tuyến, khám phá bài hát, album, playlist và nghệ sĩ trên Khoaluan Music."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:site_name" content="Khoaluan Music" />
+    <meta property="og:locale" content="vi_VN" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Khoaluan Music | Nghe nhạc trực tuyến" />
+    <meta
+      property="og:description"
+      content="Nghe nhạc trực tuyến, khám phá bài hát, album, playlist và nghệ sĩ trên Khoaluan Music."
+    />
+    <meta property="og:image" content="/logo-brand.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Khoaluan Music | Nghe nhạc trực tuyến" />
+    <meta
+      name="twitter:description"
+      content="Nghe nhạc trực tuyến, khám phá bài hát, album, playlist và nghệ sĩ trên Khoaluan Music."
+    />
+    <meta name="twitter:image" content="/logo-brand.png" />
+
+    <!-- App Icons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-brand-96x96.png" />
+    <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-brand.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="application-name" content="Khoaluan Music" />
+
+    <meta name="theme-color" content="#050705" />
+    <style>
+      :root {
+        --boot-accent: 52, 211, 153;
+        --boot-glow: 29, 185, 84;
+        --boot-grid: 96, 207, 164;
+        --boot-grid-strong: 185, 248, 221;
+        --boot-bg-rgb: 18, 24, 20;
+        --boot-card: 23, 31, 27;
+        --boot-card-soft: 17, 24, 20;
+        --boot-border: 112, 158, 129;
+        --boot-backdrop-top: 19, 29, 42;
+        --boot-backdrop-mid: 13, 20, 30;
+        --boot-backdrop-bottom: 9, 14, 21;
+        --boot-backdrop-glow-alpha: 0.26;
+        --boot-backdrop-glow-stop: 42%;
+        --boot-atmosphere-grid-alpha: 0.09;
+        --boot-atmosphere-accent-alpha: 0.075;
+        --boot-atmosphere-opacity: 0.74;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      html[data-boot-theme="artist"] {
+        --boot-accent: 120, 194, 244;
+        --boot-glow: 92, 168, 224;
+        --boot-grid: 123, 189, 232;
+        --boot-grid-strong: 216, 236, 249;
+        --boot-bg-rgb: 16, 26, 41;
+        --boot-card: 24, 38, 58;
+        --boot-card-soft: 18, 31, 46;
+        --boot-border: 154, 194, 225;
+        --boot-backdrop-top: 22, 34, 50;
+        --boot-backdrop-mid: 15, 25, 40;
+        --boot-backdrop-bottom: 10, 17, 28;
+        --boot-backdrop-glow-alpha: 0.28;
+        --boot-backdrop-glow-stop: 40%;
+        --boot-atmosphere-grid-alpha: 0.09;
+        --boot-atmosphere-accent-alpha: 0.075;
+        --boot-atmosphere-opacity: 0.74;
+      }
+
+      #app-boot-intro {
+        position: fixed;
+        inset: 0;
+        z-index: 4000;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 18%),
+          linear-gradient(
+            180deg,
+            rgba(var(--boot-glow), var(--boot-backdrop-glow-alpha)),
+            transparent var(--boot-backdrop-glow-stop)
+          ),
+          linear-gradient(
+            90deg,
+            rgba(var(--boot-accent), 0.09),
+            transparent 14%,
+            transparent 86%,
+            rgba(var(--boot-accent), 0.09)
+          ),
+          linear-gradient(
+            180deg,
+            rgb(var(--boot-backdrop-top)),
+            rgb(var(--boot-backdrop-mid)) 50%,
+            rgb(var(--boot-backdrop-bottom)) 100%
+          );
+        color: #fff;
+        opacity: 1;
+        visibility: visible;
+        font-family: "Segoe UI", "Noto Sans", "Tahoma", Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
+        contain: layout paint style;
+        transform: translateZ(0); 
+        -webkit-transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        will-change: opacity, transform;
+        transition: opacity 220ms ease, visibility 0s linear 220ms;
+      }
+
+      #app-boot-intro,
+      #app-boot-intro * {
+        box-sizing: border-box;
+      }
+
+      #app-boot-intro.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      #app-boot-intro::before,
+      #app-boot-intro::after {
+        content: none;
+      }
+
+      .boot-intro__tunnel-layer {
+        position: absolute;
+        inset: 0;
+        opacity: 1;
+      }
+
+      .boot-intro__tunnel-svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .boot-tunnel-line {
+        fill: none;
+        stroke-linecap: square;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .boot-tunnel-eq-line {
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .boot-tunnel-eq-bar {
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .boot-tunnel-line--minor {
+        stroke: rgba(var(--boot-grid), 0.17);
+        stroke-width: 0.8;
+      }
+
+      .boot-tunnel-line--major {
+        stroke: rgba(var(--boot-grid), 0.36);
+        stroke-width: 1.18;
+      }
+
+      .boot-tunnel-eq-line {
+        stroke: rgba(var(--boot-grid), 0.3);
+        stroke-width: 1.2;
+        opacity: 0.88;
+      }
+
+      .boot-tunnel-eq-bar--minor {
+        fill: rgba(var(--boot-accent), 0.16);
+        stroke: rgba(var(--boot-grid), 0.28);
+        stroke-width: 0.8;
+      }
+
+      .boot-tunnel-eq-bar--major {
+        fill: rgba(var(--boot-accent), 0.28);
+        stroke: rgba(var(--boot-grid-strong), 0.44);
+        stroke-width: 1;
+      }
+
+      .boot-tunnel-portal {
+        fill: rgba(var(--boot-bg-rgb), 0.12);
+        stroke: rgba(var(--boot-grid-strong), 0.5);
+        stroke-width: 1.2;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .boot-intro__atmosphere {
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 56%;
+        background:
+          linear-gradient(
+            180deg,
+            rgba(var(--boot-grid-strong), var(--boot-atmosphere-grid-alpha)),
+            transparent 24%
+          ),
+          linear-gradient(
+            90deg,
+            transparent 0,
+            rgba(var(--boot-accent), var(--boot-atmosphere-accent-alpha)) 50%,
+            transparent 100%
+          );
+        opacity: var(--boot-atmosphere-opacity);
+      }
+
+      .boot-intro__noise {
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.42) 0.6px, transparent 0.6px);
+        background-size: 17px 17px;
+        mix-blend-mode: soft-light;
+        opacity: 0.08;
+      }
+
+      .boot-intro__vignette {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(0, 0, 0, 0.03), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.1)),
+          radial-gradient(circle at center, transparent 58%, rgba(0, 0, 0, 0.16) 100%);
+      }
+
+      .boot-intro__stage {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100svh;
+        min-height: 100dvh;
+        min-height: 100vh;
+        padding: 24px;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+      }
+
+      .boot-intro__card {
+        width: min(100%, 430px);
+        border-radius: 32px;
+        border: 1px solid rgba(var(--boot-border), 0.18);
+        background:
+          linear-gradient(180deg, rgba(var(--boot-accent), 0.04), transparent 24%),
+          linear-gradient(180deg, rgba(var(--boot-card), 0.968), rgba(var(--boot-card-soft), 0.992));
+        box-shadow:
+          0 26px 80px rgba(0, 0, 0, 0.36),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        padding: 28px 26px;
+        text-align: center;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+      }
+
+      .boot-intro__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(var(--boot-accent), 0.18);
+        background: rgba(var(--boot-accent), 0.1);
+      }
+
+      .boot-intro__logo-frame {
+        position: relative;
+        width: 108px;
+        height: 108px;
+        margin: 20px auto 0;
+        padding: 12px;
+        border-radius: 30px;
+        border: 1px solid rgba(var(--boot-border), 0.08);
+        background:
+          linear-gradient(180deg, rgba(var(--boot-accent), 0.04), rgba(var(--boot-card-soft), 0.88) 22%, rgba(5, 7, 10, 0.96));
+        box-shadow:
+          0 18px 40px rgba(0, 0, 0, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      }
+
+      .boot-intro__logo-frame::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 30px;
+        background: radial-gradient(circle at top, rgba(var(--boot-accent), 0.16), transparent 50%);
+      }
+
+      .boot-intro__logo {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        -o-object-fit: cover;
+           object-fit: cover;
+        border-radius: 22px;
+      }
+
+      .boot-intro__title {
+        margin: 20px 0 0;
+        font-size: clamp(32px, 4vw, 38px);
+        font-weight: 900;
+        letter-spacing: -0.06em;
+        line-height: 0.96;
+      }
+
+      .boot-intro__desc {
+        margin: 12px auto 0;
+        max-width: 300px;
+        font-size: 14px;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .boot-intro__bars {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 24px;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        will-change: transform;
+      }
+
+      .boot-intro__bars span {
+        display: block;
+        width: 6px;
+        height: 32px;
+        border-radius: 999px;
+        background: linear-gradient(to top, rgba(var(--boot-accent), 0.35), rgba(var(--boot-grid-strong), 0.92));
+        transform-origin: center bottom;
+        transform: translateZ(0) scaleY(0.58);
+        -webkit-transform: translateZ(0) scaleY(0.58);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        will-change: transform, opacity;
+        animation: bootIntroPulse 1.05s ease-in-out infinite;
+        -webkit-animation: bootIntroPulse 1.05s ease-in-out infinite;
+      }
+
+      .boot-intro__bars span:nth-child(2) { animation-delay: 0.09s; }
+      .boot-intro__bars span:nth-child(3) { animation-delay: 0.18s; }
+      .boot-intro__bars span:nth-child(4) { animation-delay: 0.27s; }
+
+      .boot-intro__helper {
+        margin-top: 20px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      .boot-intro__progress {
+        width: min(100%, 260px);
+        height: 4px;
+        margin: 24px auto 0;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .boot-intro__progress::before {
+        content: "";
+        display: block;
+        width: 100%;
+        height: 100%;
+        transform-origin: left center;
+        background: linear-gradient(to right, rgba(var(--boot-grid-strong), 0.85), rgba(var(--boot-accent), 0.95));
+        animation: bootIntroProgress 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        will-change: transform;
+      }
+
+      @keyframes bootIntroPulse {
+        0%, 100% { transform: scaleY(0.58); opacity: 0.4; }
+        35% { transform: scaleY(1); opacity: 1; }
+        65% { transform: scaleY(0.7); opacity: 0.56; }
+      }
+
+      @keyframes bootIntroProgress {
+        0% { transform: translateX(-18%) scaleX(0.16); }
+        70% { transform: translateX(0) scaleX(0.88); }
+        100% { transform: translateX(0) scaleX(0.98); }
+      }
+
+      @media (max-width: 767px) {
+        #app-boot-intro {
+          transition-duration: 260ms;
+        }
+
+        .boot-intro__card {
+          padding: 24px 20px;
+          border-radius: 28px;
+          backdrop-filter: blur(12px);
+        }
+
+        .boot-intro__logo-frame {
+          width: 94px;
+          height: 94px;
+          border-radius: 26px;
+        }
+
+        .boot-intro__tunnel-wall {
+          opacity: 0.22;
+        }
+
+        .boot-intro__tunnel-layer {
+          opacity: 0.86;
+        }
+
+        .boot-intro__noise {
+          opacity: 0.045;
+        }
+
+        .boot-intro__bars {
+          gap: 10px;
+        }
+
+        .boot-intro__bars span {
+          width: 7px;
+          height: 30px;
+          animation-duration: 0.96s;
+          -webkit-animation-duration: 0.96s;
+        }
+
+        .boot-intro__logo-frame::before {
+          border-radius: 26px;
+        }
+      }
+    </style>
+    <script>
+      (function () {
+        var path = window.location.pathname || "/";
+        var params = new URLSearchParams(window.location.search || "");
+        var normalizedPath =
+          path !== "/" ? path.replace(/\/+$/, "") || "/" : "/";
+        var segments = normalizedPath.split("/").filter(Boolean);
+        var artistWorkspaceSections = {
+          dashboard: true,
+          profile: true,
+          albums: true,
+          songs: true,
+          trash: true,
+        };
+        var isArtistWorkspace =
+          normalizedPath === "/artist" ||
+          (segments[0] === "artist" &&
+            artistWorkspaceSections[segments[1]] === true);
+        var role = null;
+        var authContext = "default";
+
+        if (normalizedPath === "/me") {
+          try {
+            var rawAuthState = window.localStorage.getItem("auth-state");
+            if (rawAuthState) {
+              var parsedAuthState = JSON.parse(rawAuthState) || {};
+              role =
+                (parsedAuthState.user && parsedAuthState.user.role) ||
+                parsedAuthState.role ||
+                null;
+              authContext = parsedAuthState.authContext || "default";
+            }
+          } catch (error) {}
+        }
+
+        var isArtistRoute =
+          normalizedPath === "/artist-auth" ||
+          normalizedPath === "/artist-request" ||
+          isArtistWorkspace ||
+          (normalizedPath === "/verify-email" &&
+            params.get("intent") === "artist") ||
+          (normalizedPath === "/me" &&
+            (role === "ARTIST" || authContext === "artist_request"));
+        document.documentElement.setAttribute("data-boot-theme", isArtistRoute ? "artist" : "listener");
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-BI-MNtM_.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/core-oxWEyW6u.js">
+    <link rel="modulepreload" crossorigin href="/assets/index-BI-MNtM_.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-B3RbiV3q.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-BZOpImf3.css">
+  <link rel="manifest" href="/manifest.webmanifest"></head>
+
+  <body>
+    <div id="app-boot-intro" aria-hidden="true">
+      <div class="boot-intro__tunnel-layer">
+        <svg class="boot-intro__tunnel-svg" id="boot-intro-tunnel-svg" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-hidden="true"></svg>
+      </div>
+      <div class="boot-intro__atmosphere"></div>
+      <div class="boot-intro__noise"></div>
+      <div class="boot-intro__vignette"></div>
+      <div class="boot-intro__stage">
+        <div class="boot-intro__card">
+          <div class="boot-intro__badge">Khoaluan Music</div>
+          <div class="boot-intro__logo-frame">
+            <img class="boot-intro__logo" src="/logo-brand.png" alt="Khoaluan Music" />
+          </div>
+          <h1 class="boot-intro__title">Khoaluan Music</h1>
+          <p class="boot-intro__desc">Đang mở không gian âm nhạc và chuẩn bị trải nghiệm cho bạn.</p>
+          <div class="boot-intro__bars" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p class="boot-intro__helper">Vui lòng chờ trong giây lát...</p>
+          <div class="boot-intro__progress"></div>
+        </div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var svg = document.getElementById("boot-intro-tunnel-svg");
+        if (!svg || svg.dataset.ready === "true") return;
+
+        var NS = "http://www.w3.org/2000/svg";
+        var width = 1600;
+        var height = 900;
+        var portalSize = 280;
+        var innerLeft = (width - portalSize) / 2;
+        var innerRight = innerLeft + portalSize;
+        var innerTop = (height - portalSize) / 2;
+        var innerBottom = innerTop + portalSize;
+
+        function lerp(a, b, t) {
+          return a + (b - a) * t;
+        }
+
+        function addLine(group, className, x1, y1, x2, y2) {
+          var line = document.createElementNS(NS, "line");
+          line.setAttribute("class", className);
+          line.setAttribute("x1", x1.toFixed(2));
+          line.setAttribute("y1", y1.toFixed(2));
+          line.setAttribute("x2", x2.toFixed(2));
+          line.setAttribute("y2", y2.toFixed(2));
+          group.appendChild(line);
+        }
+
+        function addRect(group, className, x, y, rectWidth, rectHeight) {
+          var rect = document.createElementNS(NS, "rect");
+          rect.setAttribute("class", className);
+          rect.setAttribute("x", x.toFixed(2));
+          rect.setAttribute("y", y.toFixed(2));
+          rect.setAttribute("width", rectWidth.toFixed(2));
+          rect.setAttribute("height", rectHeight.toFixed(2));
+          rect.setAttribute("rx", 2);
+          group.appendChild(rect);
+        }
+
+        function createGroup() {
+          return document.createElementNS(NS, "g");
+        }
+
+        var minorGroup = createGroup();
+        var majorGroup = createGroup();
+
+        for (var i = 0; i <= 40; i += 1) {
+          var t = i / 40;
+          var xOuter = lerp(0, width, t);
+          var xInner = lerp(innerLeft, innerRight, t);
+          addLine(i % 4 === 0 ? majorGroup : minorGroup, i % 4 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", xOuter, 0, xInner, innerTop);
+          addLine(i % 4 === 0 ? majorGroup : minorGroup, i % 4 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", xOuter, height, xInner, innerBottom);
+        }
+
+        for (var j = 0; j <= 18; j += 1) {
+          var h = j / 18;
+          addLine(j % 3 === 0 ? majorGroup : minorGroup, j % 3 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", lerp(0, innerLeft, h), lerp(0, innerTop, h), lerp(width, innerRight, h), lerp(0, innerTop, h));
+          addLine(j % 3 === 0 ? majorGroup : minorGroup, j % 3 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", lerp(0, innerLeft, h), lerp(height, innerBottom, h), lerp(width, innerRight, h), lerp(height, innerBottom, h));
+        }
+
+        for (var k = 0; k <= 30; k += 1) {
+          var v = k / 30;
+          addLine(k % 3 === 0 ? majorGroup : minorGroup, k % 3 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", 0, lerp(0, height, v), innerLeft, lerp(innerTop, innerBottom, v));
+          addLine(k % 3 === 0 ? majorGroup : minorGroup, k % 3 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", width, lerp(0, height, v), innerRight, lerp(innerTop, innerBottom, v));
+        }
+
+        for (var m = 0; m <= 14; m += 1) {
+          var s = m / 14;
+          var xLeft = lerp(0, innerLeft, s);
+          var xRight = lerp(width, innerRight, s);
+          addLine(m % 3 === 0 ? majorGroup : minorGroup, m % 3 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", xLeft, lerp(0, innerTop, s), xLeft, lerp(height, innerBottom, s));
+          addLine(m % 3 === 0 ? majorGroup : minorGroup, m % 3 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", xRight, lerp(0, innerTop, s), xRight, lerp(height, innerBottom, s));
+        }
+
+        for (var n = 0; n <= 10; n += 1) {
+          var p = n / 10;
+          addLine(n % 2 === 0 ? majorGroup : minorGroup, n % 2 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", lerp(innerLeft, innerRight, p), innerTop, lerp(innerLeft, innerRight, p), innerBottom);
+          addLine(n % 2 === 0 ? majorGroup : minorGroup, n % 2 === 0 ? "boot-tunnel-line boot-tunnel-line--major" : "boot-tunnel-line boot-tunnel-line--minor", innerLeft, lerp(innerTop, innerBottom, p), innerRight, lerp(innerTop, innerBottom, p));
+        }
+
+        svg.appendChild(minorGroup);
+        svg.appendChild(majorGroup);
+
+        var eqGroupMinor = createGroup();
+        var eqGroupMajor = createGroup();
+        var pattern = [0.22, 0.34, 0.48, 0.62, 0.78, 0.94, 0.82, 0.68, 0.54, 0.4, 0.28, 0.18];
+        var barCount = 24;
+        var startT = 0.08;
+        var endT = 0.94;
+        var seams = [
+          {
+            start: { x: 0, y: height },
+            end: { x: innerLeft, y: innerBottom },
+          },
+          {
+            start: { x: width, y: height },
+            end: { x: innerRight, y: innerBottom },
+          },
+        ];
+
+        seams.forEach(function (seam, seamIndex) {
+          var baseLine = document.createElementNS(NS, "line");
+          baseLine.setAttribute("class", "boot-tunnel-eq-line");
+          var lastX = seam.start.x;
+          var lastY = seam.start.y;
+
+          for (var eqIndex = 0; eqIndex < barCount; eqIndex += 1) {
+            var ratio = eqIndex / (barCount - 1);
+            var t = startT + ratio * (endT - startT);
+            var x = lerp(seam.start.x, seam.end.x, t);
+            var yBase = lerp(seam.start.y, seam.end.y, t);
+            var depthScale = 1.12 - t * 0.46;
+            var widthScale = 1.08 - t * 0.5;
+            var scale = pattern[(eqIndex + seamIndex * 2) % pattern.length];
+            var barHeight = 14 + scale * 88 * depthScale;
+            var barWidth = 5 + 5.5 * widthScale;
+            var isMajor = eqIndex % 4 === 0 || scale >= 0.78;
+            var group = isMajor ? eqGroupMajor : eqGroupMinor;
+            var className = isMajor
+              ? "boot-tunnel-eq-bar boot-tunnel-eq-bar--major"
+              : "boot-tunnel-eq-bar boot-tunnel-eq-bar--minor";
+
+            addRect(group, className, x - barWidth / 2, yBase - barHeight, barWidth, barHeight);
+            lastX = x;
+            lastY = yBase;
+          }
+
+          baseLine.setAttribute("x1", lerp(seam.start.x, seam.end.x, startT).toFixed(2));
+          baseLine.setAttribute("y1", lerp(seam.start.y, seam.end.y, startT).toFixed(2));
+          baseLine.setAttribute("x2", lastX.toFixed(2));
+          baseLine.setAttribute("y2", lastY.toFixed(2));
+          svg.appendChild(baseLine);
+        });
+
+        svg.appendChild(eqGroupMinor);
+        svg.appendChild(eqGroupMajor);
+
+        var rect = document.createElementNS(NS, "rect");
+        rect.setAttribute("class", "boot-tunnel-portal");
+        rect.setAttribute("x", innerLeft);
+        rect.setAttribute("y", innerTop);
+        rect.setAttribute("width", portalSize);
+        rect.setAttribute("height", portalSize);
+        rect.setAttribute("rx", 2);
+        svg.appendChild(rect);
+        svg.dataset.ready = "true";
+      })();
+    </script>
+    <div id="root"></div>
+  </body>
+</html>

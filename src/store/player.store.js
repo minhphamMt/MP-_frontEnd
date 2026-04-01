@@ -67,6 +67,10 @@ const UPCOMING_QUEUE_HYDRATION_LIMIT = 2;
 const PLAYBACK_RATE_DEFAULT = 1;
 const PLAYBACK_RATE_MIN = 0.75;
 const PLAYBACK_RATE_MAX = 1.5;
+const GUEST_PREVIEW_LIMIT_SECONDS = 30;
+const GUEST_PREVIEW_LIMIT_MESSAGE =
+  "Vui lòng đăng nhập để nghe trọn vẹn bài hát sau 30 giây preview.";
+let lastGuestPreviewNoticeSongId = "";
 
 const clampPlaybackRate = (value) =>
   Math.min(PLAYBACK_RATE_MAX, Math.max(PLAYBACK_RATE_MIN, Number(value) || PLAYBACK_RATE_DEFAULT));
@@ -253,6 +257,65 @@ const retryPendingPlayback = () => {
   }
 
   void attemptPlayback();
+};
+
+const getPreviewDurationCap = (song) => {
+  const rawDuration = Number(song?.duration || audio.duration || 0);
+  if (!Number.isFinite(rawDuration) || rawDuration <= 0) {
+    return GUEST_PREVIEW_LIMIT_SECONDS;
+  }
+
+  return Math.min(rawDuration, GUEST_PREVIEW_LIMIT_SECONDS);
+};
+
+const shouldBlockGuestPreview = (time = audio.currentTime || 0) => {
+  const { isAuthenticated } = useAuthStore.getState();
+  if (isAuthenticated) return false;
+
+  const { currentSong } = usePlayerStore.getState();
+  const songId = normalizeSongId(currentSong);
+  if (!songId) return false;
+
+  const totalDuration = Number(currentSong?.duration || audio.duration || 0);
+  if (
+    Number.isFinite(totalDuration) &&
+    totalDuration > 0 &&
+    totalDuration <= GUEST_PREVIEW_LIMIT_SECONDS + 0.25
+  ) {
+    return false;
+  }
+
+  return Number(time) >= GUEST_PREVIEW_LIMIT_SECONDS;
+};
+
+const blockGuestPreviewPlayback = ({ time = audio.currentTime || 0, forceNotice = false } = {}) => {
+  if (!shouldBlockGuestPreview(time)) return false;
+
+  const { currentSong } = usePlayerStore.getState();
+  const songId = normalizeSongId(currentSong);
+  if (!songId) return false;
+
+  shouldResumePlayback = false;
+  const previewCap = getPreviewDurationCap(currentSong);
+
+  try {
+    audio.currentTime = previewCap;
+  } catch {
+    // Ignore browsers that reject seeking while source metadata is unstable.
+  }
+
+  audio.pause();
+  usePlayerStore.setState({
+    isPlaying: false,
+    currentTime: previewCap,
+  });
+
+  if (forceNotice || lastGuestPreviewNoticeSongId !== songId) {
+    lastGuestPreviewNoticeSongId = songId;
+    emitAuthRequired(GUEST_PREVIEW_LIMIT_MESSAGE);
+  }
+
+  return true;
 };
 
 const hydrateQueueSong = async (song) => {
@@ -508,6 +571,7 @@ const usePlayerStore = create((set, get) => ({
     });
 
     const { playbackRate } = get();
+    lastGuestPreviewNoticeSongId = "";
     primeAudioSource(playable.audio_url, playbackRate, {
       autoplay: true,
     });
@@ -568,6 +632,7 @@ const usePlayerStore = create((set, get) => ({
   resume: () => {
     const { currentSong, playbackRate } = get();
     if (!currentSong?.audio_url) return;
+    if (blockGuestPreviewPlayback({ forceNotice: true })) return;
 
     const currentSource = audio.currentSrc || audio.src || "";
     if (currentSource !== currentSong.audio_url) {
@@ -588,11 +653,20 @@ const usePlayerStore = create((set, get) => ({
   },
 
   seek: (time) => {
-    audio.currentTime = time;
-    set({ currentTime: time });
+    const boundedTime =
+      Number.isFinite(audio.duration) && audio.duration > 0
+        ? Math.min(Math.max(Number(time) || 0, 0), audio.duration)
+        : Math.max(Number(time) || 0, 0);
+
+    if (blockGuestPreviewPlayback({ time: boundedTime, forceNotice: true })) {
+      return;
+    }
+
+    audio.currentTime = boundedTime;
+    set({ currentTime: boundedTime });
     persistPlaybackSnapshot({
       song: get().currentSong,
-      currentTime: time,
+      currentTime: boundedTime,
       force: true,
       isPlaying: get().isPlaying,
     });
@@ -1005,6 +1079,7 @@ const usePlayerStore = create((set, get) => ({
       sleepTimerId = null;
     }
     shouldResumePlayback = false;
+    lastGuestPreviewNoticeSongId = "";
     clearPersistedPlayback();
     audio.pause();
     audio.currentTime = 0;
@@ -1336,6 +1411,10 @@ audio.addEventListener("timeupdate", () => {
   const time = audio.currentTime || 0;
   const state = usePlayerStore.getState();
 
+  if (blockGuestPreviewPlayback({ time })) {
+    return;
+  }
+
   if (!state.hasRecordedPlay && time >= 30) {
     state.recordListeningProgress(time);
   }
@@ -1350,6 +1429,11 @@ audio.addEventListener("timeupdate", () => {
 
 audio.addEventListener("ended", () => {
   const state = usePlayerStore.getState();
+
+  if (blockGuestPreviewPlayback({ time: audio.currentTime || state.currentTime || 0, forceNotice: true })) {
+    return;
+  }
+
   usePlayerStore.setState({ currentTime: audio.duration || 0 });
   syncPlaybackState();
   if (state.repeatMode === "one") {

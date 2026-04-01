@@ -58,14 +58,36 @@ function PlayerProgressSection({
 
   useEffect(() => {
     if (!isSeeking) {
-      setSeekValue(displayedTime);
+      setSeekValue(Number(currentTime || 0));
     }
-  }, [displayedTime, isSeeking]);
+  }, [currentTime, isSeeking]);
 
-  const commitSeek = useCallback(() => {
+  const handleSeekStart = useCallback((event) => {
+    onInteractionStart?.(event);
+    setIsSeeking(true);
+
+    const nextValue = Number(event?.target?.value);
+    if (Number.isFinite(nextValue)) {
+      setSeekValue(nextValue);
+    }
+  }, [onInteractionStart]);
+
+  const handleSeekMove = useCallback((event) => {
+    onInteractionMove?.(event);
+  }, [onInteractionMove]);
+
+  const commitSeek = useCallback((event) => {
+    onInteractionEnd?.(event);
+    const rawValue = Number(event?.target?.value);
+    const nextValue = Number.isFinite(rawValue)
+      ? rawValue
+      : Number(seekValue) || 0;
+    const boundedValue = Math.max(0, Math.min(total, nextValue));
+
     setIsSeeking(false);
-    onSeek?.(Math.max(0, Math.min(total, Number(seekValue) || 0)));
-  }, [onSeek, seekValue, total]);
+    setSeekValue(boundedValue);
+    onSeek?.(boundedValue);
+  }, [onInteractionEnd, onSeek, seekValue, total]);
 
   return (
     <div className={outerClassName}>
@@ -76,24 +98,20 @@ function PlayerProgressSection({
           max={total || 0}
           step={0.1}
           value={Math.min(displayedTime, total || 0)}
-          onPointerDownCapture={onInteractionStart}
-          onPointerMoveCapture={onInteractionMove}
-          onPointerUpCapture={onInteractionEnd}
-          onPointerCancelCapture={onInteractionEnd}
-          onTouchStartCapture={onInteractionStart}
-          onTouchMoveCapture={onInteractionMove}
-          onTouchEndCapture={onInteractionEnd}
-          onTouchCancelCapture={onInteractionEnd}
-          onMouseDownCapture={onInteractionStart}
-          onMouseUpCapture={onInteractionEnd}
-          onPointerDown={() => setIsSeeking(true)}
-          onPointerUp={commitSeek}
-          onPointerCancel={commitSeek}
-          onMouseDown={() => setIsSeeking(true)}
-          onTouchStart={() => setIsSeeking(true)}
+          onPointerDownCapture={handleSeekStart}
+          onPointerMoveCapture={handleSeekMove}
+          onPointerUpCapture={commitSeek}
+          onPointerCancelCapture={commitSeek}
+          onTouchStartCapture={handleSeekStart}
+          onTouchMoveCapture={handleSeekMove}
+          onTouchEndCapture={commitSeek}
+          onTouchCancelCapture={commitSeek}
+          onMouseDownCapture={handleSeekStart}
+          onMouseUpCapture={commitSeek}
           onChange={(event) => setSeekValue(Number(event.target.value))}
-          onMouseUp={commitSeek}
-          onTouchEnd={commitSeek}
+          onKeyDown={() => setIsSeeking(true)}
+          onKeyUp={commitSeek}
+          onBlur={commitSeek}
           className="player-detail-range h-2.5 w-full cursor-pointer"
           style={{
             "--range-progress": `${
