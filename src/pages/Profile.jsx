@@ -24,7 +24,16 @@ import {
   uploadUserAvatar,
 } from "../api/user.api";
 import useAuthStore from "../store/auth.store";
+import {
+  extractApiErrorMessage,
+  extractApiFieldError,
+} from "../utils/apiError";
 import { resolveAssetUrl } from "../utils/asset";
+import {
+  getConfirmPasswordError,
+  getPasswordValidationError,
+  PASSWORD_REQUIREMENTS_TEXT,
+} from "../utils/passwordValidation";
 import OptimizedImage from "../components/common/OptimizedImage";
 
 const emptyProfile = {
@@ -46,6 +55,11 @@ export default function Profile() {
     newPassword: "",
     confirmPassword: "",
   });
+  const [passwordFieldErrors, setPasswordFieldErrors] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [showPasswords, setShowPasswords] = useState({
     oldPassword: false,
     newPassword: false,
@@ -55,6 +69,7 @@ export default function Profile() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotCode, setForgotCode] = useState("");
   const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotFieldErrors, setForgotFieldErrors] = useState({});
   const [forgotMessage, setForgotMessage] = useState("");
   const [isResetStep, setIsResetStep] = useState(false);
   const [showForgotResetPassword, setShowForgotResetPassword] = useState(false);
@@ -175,6 +190,11 @@ export default function Profile() {
 
   const handlePasswordChange = (field) => (event) => {
     setPasswords((prev) => ({ ...prev, [field]: event.target.value }));
+    setPasswordFieldErrors((prev) => ({
+      ...prev,
+      [field]: "",
+      ...(field === "newPassword" ? { confirmPassword: "" } : {}),
+    }));
   };
 
   const togglePasswordVisibility = (field) => {
@@ -255,18 +275,27 @@ export default function Profile() {
 
   const submitPassword = async (event) => {
     event.preventDefault();
-    if (!passwords.oldPassword || !passwords.newPassword) {
-      setToast({
-        title: "Thiếu thông tin",
-        message: "Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới.",
-      });
-      return;
-    }
+    const nextFieldErrors = {
+      oldPassword: passwords.oldPassword
+        ? ""
+        : "Vui lòng nhập mật khẩu hiện tại.",
+      newPassword: getPasswordValidationError(passwords.newPassword, {
+        requiredMessage: "Vui lòng nhập mật khẩu mới.",
+      }),
+      confirmPassword: getConfirmPasswordError(
+        passwords.newPassword,
+        passwords.confirmPassword
+      ),
+    };
 
-    if (passwords.newPassword !== passwords.confirmPassword) {
+    setPasswordFieldErrors(nextFieldErrors);
+
+    const firstPasswordError = Object.values(nextFieldErrors).find(Boolean);
+
+    if (firstPasswordError) {
       setToast({
-        title: "Mật khẩu chưa khớp",
-        message: "Vui lòng nhập lại mật khẩu mới giống nhau.",
+        title: "Thông tin chưa hợp lệ",
+        message: firstPasswordError,
       });
       return;
     }
@@ -282,14 +311,28 @@ export default function Profile() {
         updateUser(updated);
       }
       setPasswords({ oldPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordFieldErrors({
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
       setToast({
         title: "Đổi mật khẩu",
         message: res.data?.message || "Mật khẩu đã được cập nhật.",
       });
     } catch (error) {
+      const backendPasswordError = extractApiFieldError(error, ["newPassword"]);
+
+      if (backendPasswordError) {
+        setPasswordFieldErrors((prev) => ({
+          ...prev,
+          newPassword: backendPasswordError,
+        }));
+      }
+
       setToast({
         title: "Đổi mật khẩu thất bại",
-        message: error?.response?.data?.message || error?.message || "Có lỗi xảy ra",
+        message: extractApiErrorMessage(error),
       });
     } finally {
       setLoadingPassword(false);
@@ -300,6 +343,7 @@ export default function Profile() {
     setForgotEmail(profile.email || authUser?.email || "");
     setForgotCode("");
     setForgotNewPassword("");
+    setForgotFieldErrors({});
     setForgotMessage("");
     setIsResetStep(false);
     setShowForgotResetPassword(false);
@@ -316,6 +360,7 @@ export default function Profile() {
     }
 
     setLoadingForgot(true);
+    setForgotFieldErrors({});
     try {
       const message = await forgotPassword({ email: forgotEmail.trim() });
       setForgotMessage(message || "Nếu email hợp lệ, hệ thống đã gửi mã đặt lại mật khẩu.");
@@ -347,10 +392,15 @@ export default function Profile() {
       return;
     }
 
-    if (forgotNewPassword.length < 6) {
+    const nextPasswordError = getPasswordValidationError(forgotNewPassword, {
+      requiredMessage: "Vui lòng nhập mật khẩu mới.",
+    });
+
+    if (nextPasswordError) {
+      setForgotFieldErrors({ newPassword: nextPasswordError });
       setToast({
-        title: "Mật khẩu quá ngắn",
-        message: "Mật khẩu mới phải có ít nhất 6 ký tự.",
+        title: "Mật khẩu chưa hợp lệ",
+        message: nextPasswordError,
       });
       return;
     }
@@ -366,6 +416,7 @@ export default function Profile() {
       setForgotOpen(false);
       setForgotCode("");
       setForgotNewPassword("");
+      setForgotFieldErrors({});
       setIsResetStep(false);
       setPasswords({ oldPassword: "", newPassword: "", confirmPassword: "" });
       setToast({
@@ -373,9 +424,15 @@ export default function Profile() {
         message: message || "Mật khẩu đã được cập nhật thành công.",
       });
     } catch (error) {
+      const backendPasswordError = extractApiFieldError(error, ["new_password"]);
+
+      if (backendPasswordError) {
+        setForgotFieldErrors({ newPassword: backendPasswordError });
+      }
+
       setToast({
         title: "Đặt lại thất bại",
-        message: error?.response?.data?.message || error?.message || "Có lỗi xảy ra",
+        message: extractApiErrorMessage(error),
       });
     } finally {
       setLoadingForgot(false);
@@ -551,9 +608,9 @@ export default function Profile() {
 	                <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/50">
 	                  <FiKey className="text-white/70" /> Mật khẩu hiện tại
 	                </span>
-                <div className="relative">
-                  <input
-                    type={showPasswords.oldPassword ? "text" : "password"}
+	                <div className="relative">
+	                  <input
+	                    type={showPasswords.oldPassword ? "text" : "password"}
                     value={passwords.oldPassword}
                     onChange={handlePasswordChange("oldPassword")}
                     placeholder="••••••••"
@@ -565,10 +622,15 @@ export default function Profile() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition md:hover:bg-white/10 md:hover:text-white"
                     aria-label={showPasswords.oldPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                   >
-                    {showPasswords.oldPassword ? <FiEyeOff /> : <FiEye />}
-                  </button>
-                </div>
-              </label>
+	                    {showPasswords.oldPassword ? <FiEyeOff /> : <FiEye />}
+	                  </button>
+	                </div>
+                  {passwordFieldErrors.oldPassword ? (
+                    <p className="text-xs text-rose-300">
+                      {passwordFieldErrors.oldPassword}
+                    </p>
+                  ) : null}
+	              </label>
 
                 <div className="profile-password-grid grid gap-3 sm:grid-cols-2">
 	                <label className="space-y-1.5 text-sm text-white/70">
@@ -583,16 +645,21 @@ export default function Profile() {
 	                      placeholder="Tối thiểu 6 ký tự"
 		                      className={`${textInputClassName} pr-12`}
 	                    />
-	                    <button
-	                      type="button"
-	                      onClick={() => togglePasswordVisibility("newPassword")}
+		                    <button
+		                      type="button"
+		                      onClick={() => togglePasswordVisibility("newPassword")}
 	                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition md:hover:bg-white/10 md:hover:text-white"
 	                      aria-label={showPasswords.newPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
 	                    >
-	                      {showPasswords.newPassword ? <FiEyeOff /> : <FiEye />}
-	                    </button>
-	                  </div>
-	                </label>
+		                      {showPasswords.newPassword ? <FiEyeOff /> : <FiEye />}
+		                    </button>
+		                  </div>
+                        {passwordFieldErrors.newPassword ? (
+                          <p className="text-xs text-rose-300">
+                            {passwordFieldErrors.newPassword}
+                          </p>
+                        ) : null}
+		                </label>
 
 	                <label className="space-y-1.5 text-sm text-white/70">
 	                  <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/50">
@@ -606,21 +673,26 @@ export default function Profile() {
 	                      placeholder="Nhập lại mật khẩu"
 		                      className={`${textInputClassName} pr-12`}
 	                    />
-	                    <button
-	                      type="button"
-	                      onClick={() => togglePasswordVisibility("confirmPassword")}
+		                    <button
+		                      type="button"
+		                      onClick={() => togglePasswordVisibility("confirmPassword")}
 	                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition md:hover:bg-white/10 md:hover:text-white"
 	                      aria-label={showPasswords.confirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
 	                    >
-	                      {showPasswords.confirmPassword ? <FiEyeOff /> : <FiEye />}
-	                    </button>
-	                  </div>
-	                </label>
-                </div>
-
-	              <div className={passwordHintCardClassName}>
-	                Gợi ý: Hãy dùng mật khẩu mạnh kết hợp chữ hoa, chữ thường và ký tự đặc biệt.
-	              </div>
+		                      {showPasswords.confirmPassword ? <FiEyeOff /> : <FiEye />}
+		                    </button>
+		                  </div>
+                        {passwordFieldErrors.confirmPassword ? (
+                          <p className="text-xs text-rose-300">
+                            {passwordFieldErrors.confirmPassword}
+                          </p>
+                        ) : null}
+		                </label>
+	                </div>
+	
+		              <div className={passwordHintCardClassName}>
+		                {PASSWORD_REQUIREMENTS_TEXT}
+		              </div>
 	              <div className="flex items-center justify-between gap-3">
                   <span className="text-[11px] text-white/42">
                     Đổi mật khẩu sẽ áp dụng cho tài khoản hiện tại ngay lập tức.
@@ -683,16 +755,23 @@ export default function Profile() {
               inputClassName="text-center tracking-[0.35em] placeholder:text-white/34"
             />
 
-            <AuthPasswordField
-              label="Mật khẩu mới"
-              value={forgotNewPassword}
-              onChange={(event) => setForgotNewPassword(event.target.value)}
-              placeholder="Tối thiểu 6 ký tự"
-              autoComplete="new-password"
-              showPassword={showForgotResetPassword}
-              toggleShowPassword={() => setShowForgotResetPassword((prev) => !prev)}
-              inputClassName="placeholder:text-white/34"
-            />
+	            <AuthPasswordField
+	              label="Mật khẩu mới"
+	              value={forgotNewPassword}
+	              onChange={(event) => {
+	                setForgotNewPassword(event.target.value);
+	                setForgotFieldErrors((prev) => ({ ...prev, newPassword: "" }));
+	              }}
+	              placeholder="Tối thiểu 6 ký tự"
+	              autoComplete="new-password"
+	              showPassword={showForgotResetPassword}
+	              toggleShowPassword={() => setShowForgotResetPassword((prev) => !prev)}
+	              inputClassName="placeholder:text-white/34"
+	              error={forgotFieldErrors.newPassword}
+	              helper={
+	                forgotFieldErrors.newPassword ? "" : PASSWORD_REQUIREMENTS_TEXT
+	              }
+	            />
           </>
         ) : null}
 

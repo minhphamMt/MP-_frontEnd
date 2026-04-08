@@ -11,7 +11,12 @@ import {
 import Toast from "../../components/common/Toast";
 import OptimizedImage from "../../components/common/OptimizedImage";
 import SourceFileCard from "../../components/common/SourceFileCard";
+import { extractApiErrorMessage } from "../../utils/apiError";
 import { resolveAssetUrl } from "../../utils/asset";
+import {
+  getPasswordValidationError,
+  PASSWORD_REQUIREMENTS_TEXT,
+} from "../../utils/passwordValidation";
 
 const ROLE_OPTIONS = ["USER", "ARTIST", "ADMIN"];
 const emptyUserPayload = {
@@ -38,6 +43,7 @@ export default function AdminUserForm() {
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [formValues, setFormValues] = useState({ ...emptyUserPayload });
+  const [fieldErrors, setFieldErrors] = useState({});
   const [user, setUser] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -104,6 +110,7 @@ export default function AdminUserForm() {
       ...prev,
       [field]: type === "checkbox" ? checked : value,
     }));
+    setFieldErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const handleSubmit = async () => {
@@ -115,14 +122,20 @@ export default function AdminUserForm() {
       setErrorMessage("Vui lòng nhập email.");
       return;
     }
-    if (!isEdit && !formValues.password.trim()) {
-      setErrorMessage("Vui lòng nhập mật khẩu.");
-      return;
+    if (!isEdit) {
+      const passwordError = getPasswordValidationError(formValues.password);
+
+      if (passwordError) {
+        setFieldErrors((prev) => ({ ...prev, password: passwordError }));
+        setErrorMessage(passwordError);
+        return;
+      }
     }
 
     try {
       setSaving(true);
       setErrorMessage("");
+      setFieldErrors({});
 
       const payload = normalizePayload({
         display_name: formValues.display_name,
@@ -157,9 +170,12 @@ export default function AdminUserForm() {
     } catch (error) {
       console.error("Save user failed", error);
       setErrorMessage(
-        isEdit
-          ? "Không thể cập nhật người dùng."
-          : "Không thể tạo người dùng."
+        extractApiErrorMessage(
+          error,
+          isEdit
+            ? "Không thể cập nhật người dùng."
+            : "Không thể tạo người dùng."
+        )
       );
     } finally {
       setSaving(false);
@@ -284,13 +300,24 @@ export default function AdminUserForm() {
                   className="admin-field"
                 />
                 {!isEdit && (
-                  <input
-                    type="password"
-                    value={formValues.password}
-                    onChange={handleChange("password")}
-                    placeholder="Mật khẩu"
-                    className="admin-field"
-                  />
+                  <div className="space-y-1.5">
+                    <input
+                      type="password"
+                      value={formValues.password}
+                      onChange={handleChange("password")}
+                      placeholder="Mật khẩu"
+                      className="admin-field"
+                    />
+                    {fieldErrors.password ? (
+                      <p className="px-1 text-xs text-rose-300">
+                        {fieldErrors.password}
+                      </p>
+                    ) : (
+                      <p className="px-1 text-xs text-white/45">
+                        {PASSWORD_REQUIREMENTS_TEXT}
+                      </p>
+                    )}
+                  </div>
                 )}
                 <select
                   value={formValues.role}

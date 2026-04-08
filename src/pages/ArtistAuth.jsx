@@ -13,7 +13,16 @@ import {
 import useMediaQuery from "../hooks/useMediaQuery";
 import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
+import {
+  extractApiErrorMessage,
+  extractApiFieldError,
+} from "../utils/apiError";
 import { showBootIntro } from "../utils/bootIntro";
+import {
+  getConfirmPasswordError,
+  getPasswordValidationError,
+  PASSWORD_REQUIREMENTS_TEXT,
+} from "../utils/passwordValidation";
 
 const MotionDiv = motion.div;
 const cardLayoutTransition = {
@@ -53,16 +62,17 @@ const validateRegisterFields = ({ displayName, email, password, confirmPassword 
     errors.email = "Email không đúng định dạng.";
   }
 
-  if (!password) {
-    errors.password = "Vui lòng nhập mật khẩu.";
-  } else if (password.length < 6) {
-    errors.password = "Mật khẩu phải có ít nhất 6 ký tự.";
+  const passwordError = getPasswordValidationError(password);
+  if (passwordError) {
+    errors.password = passwordError;
   }
 
-  if (!confirmPassword) {
-    errors.confirmPassword = "Vui lòng nhập lại mật khẩu.";
-  } else if (password !== confirmPassword) {
-    errors.confirmPassword = "Mật khẩu nhập lại chưa khớp.";
+  const confirmPasswordError = getConfirmPasswordError(
+    password,
+    confirmPassword
+  );
+  if (confirmPasswordError) {
+    errors.confirmPassword = confirmPasswordError;
   }
 
   return errors;
@@ -105,6 +115,7 @@ export default function ArtistAuth() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotCode, setForgotCode] = useState("");
   const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotFieldErrors, setForgotFieldErrors] = useState({});
   const [forgotMessage, setForgotMessage] = useState("");
   const [isResetStep, setIsResetStep] = useState(false);
 
@@ -249,7 +260,16 @@ export default function ArtistAuth() {
       }
       return navigateWithIntro("/artist-request");
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || "Đăng ký thất bại, thử lại nhé.";
+      const backendPasswordError = extractApiFieldError(err, ["password"]);
+
+      if (backendPasswordError) {
+        setRegisterFieldErrors((prev) => ({
+          ...prev,
+          password: backendPasswordError,
+        }));
+      }
+
+      const msg = extractApiErrorMessage(err, "Đăng ký thất bại, thử lại nhé.");
       setRegisterError(msg);
     }
   };
@@ -261,6 +281,7 @@ export default function ArtistAuth() {
     }
 
     setLoginError("");
+    setForgotFieldErrors({});
     try {
       const message = await forgotPassword({ email: forgotEmail });
       setForgotMessage(message || "Nếu email hợp lệ, hệ thống đã gửi mã đặt lại mật khẩu.");
@@ -283,8 +304,14 @@ export default function ArtistAuth() {
       showError("Mã xác thực phải gồm đúng 6 chữ số.");
       return;
     }
-    if (forgotNewPassword.length < 6) {
-      showError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+
+    const nextPasswordError = getPasswordValidationError(forgotNewPassword, {
+      requiredMessage: "Vui lòng nhập mật khẩu mới.",
+    });
+
+    if (nextPasswordError) {
+      setForgotFieldErrors({ newPassword: nextPasswordError });
+      showError(nextPasswordError);
       return;
     }
 
@@ -303,11 +330,18 @@ export default function ArtistAuth() {
       setLoginEmail(forgotEmail);
       setForgotCode("");
       setForgotNewPassword("");
+      setForgotFieldErrors({});
     } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Không thể đặt lại mật khẩu, vui lòng thử lại.";
+      const backendPasswordError = extractApiFieldError(err, ["new_password"]);
+
+      if (backendPasswordError) {
+        setForgotFieldErrors({ newPassword: backendPasswordError });
+      }
+
+      const msg = extractApiErrorMessage(
+        err,
+        "Không thể đặt lại mật khẩu, vui lòng thử lại."
+      );
       showError(msg);
     }
   };
@@ -317,6 +351,7 @@ export default function ArtistAuth() {
     setForgotMessage("");
     setForgotCode("");
     setForgotNewPassword("");
+    setForgotFieldErrors({});
     setShowResetPassword(false);
     setIsResetStep(false);
     setForgotOpen(true);
@@ -411,7 +446,11 @@ export default function ArtistAuth() {
         value={registerPassword}
         onChange={(event) => {
           setRegisterPassword(event.target.value);
-          setRegisterFieldErrors((prev) => ({ ...prev, password: "" }));
+          setRegisterFieldErrors((prev) => ({
+            ...prev,
+            password: "",
+            confirmPassword: "",
+          }));
         }}
         autoComplete="new-password"
         showPassword={showRegisterPassword}
@@ -419,6 +458,7 @@ export default function ArtistAuth() {
         required={isRegisterMode}
         disabled={!isRegisterMode}
         error={registerFieldErrors.password}
+        helper={registerFieldErrors.password ? "" : PASSWORD_REQUIREMENTS_TEXT}
       />
 
       <AuthPasswordField
@@ -635,11 +675,18 @@ export default function ArtistAuth() {
             <AuthPasswordField
               label="Mật khẩu mới"
               value={forgotNewPassword}
-              onChange={(event) => setForgotNewPassword(event.target.value)}
+              onChange={(event) => {
+                setForgotNewPassword(event.target.value);
+                setForgotFieldErrors((prev) => ({ ...prev, newPassword: "" }));
+              }}
               autoComplete="new-password"
               showPassword={showResetPassword}
               toggleShowPassword={() => setShowResetPassword((prev) => !prev)}
               required
+              error={forgotFieldErrors.newPassword}
+              helper={
+                forgotFieldErrors.newPassword ? "" : PASSWORD_REQUIREMENTS_TEXT
+              }
             />
           </>
         ) : null}

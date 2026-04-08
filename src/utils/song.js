@@ -106,6 +106,15 @@ export const toPlayableSong = (rawInput = {}) => {
     cover_url: resolveAssetUrl(cover, baseUrl),
     album_id: source.album_id ?? source.albumId ?? source.album?.id,
     album_title: source.album_title ?? source.albumTitle ?? source.album?.title,
+    release_date:
+      source.release_date ??
+      source.releaseDate ??
+      source.album?.release_date ??
+      source.album?.releaseDate ??
+      raw.release_date ??
+      raw.releaseDate ??
+      raw.album?.release_date ??
+      raw.album?.releaseDate,
     audio_url: audioPath || "",
     rank: raw.rank ?? source.rank,
     period: raw.period ?? source.period,

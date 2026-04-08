@@ -594,10 +594,9 @@ export default function Home() {
     newAlbums?.[0]?.title ||
     "Khoaluan Selection";
   const featuredReleaseDateLabel = formatReleaseDate(
-    featuredSong?.release_date ||
-      featuredSong?.released_at ||
-      newAlbums?.[0]?.release_date ||
-      newAlbums?.[0]?.released_at
+    featuredSong
+      ? featuredSong.release_date
+      : newAlbums?.[0]?.release_date || newAlbums?.[0]?.releaseDate
   );
   const heroSummary = featuredSong
     ? `${featuredArtistLabel || "Khoaluan Music"} mở đầu hôm nay với một lựa chọn đáng nghe.`
