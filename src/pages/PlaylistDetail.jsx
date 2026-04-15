@@ -52,6 +52,13 @@ const getSongKey = (song) => {
   return id === undefined || id === null ? "" : String(id);
 };
 
+const pickRandomSongKey = (songs = []) => {
+  const songKeys = songs.map((song) => getSongKey(song)).filter(Boolean);
+  if (!songKeys.length) return "";
+
+  return songKeys[Math.floor(Math.random() * songKeys.length)];
+};
+
 const moveListItem = (list = [], fromIndex, toIndex) => {
   const nextList = [...list];
   if (
@@ -144,6 +151,10 @@ export default function PlaylistDetail() {
   const playlistSongs = useMemo(() => playlist?.songs || [], [playlist?.songs]);
   const playlistSongIds = useMemo(
     () => playlistSongs.map((song) => getSongKey(song)).filter(Boolean),
+    [playlistSongs]
+  );
+  const getRandomPlaylistSeedId = useCallback(
+    () => pickRandomSongKey(playlistSongs),
     [playlistSongs]
   );
 
@@ -257,9 +268,8 @@ export default function PlaylistDetail() {
   useEffect(() => {
     if (!playlist) return;
 
-    const seedId = normalizeSongId(currentSong) || getSongKey(playlistSongs?.[0]);
-    loadRecommendations(seedId, playlistSongIds);
-  }, [currentSong, loadRecommendations, playlist, playlistSongIds, playlistSongs]);
+    loadRecommendations(getRandomPlaylistSeedId(), playlistSongIds);
+  }, [getRandomPlaylistSeedId, loadRecommendations, playlist, playlistSongIds]);
 
   const handlePlaySong = async (song, queue = playlistSongs) => {
     const playable = (await fetchPlayableSong(song, getSongById)) || song;
@@ -752,12 +762,7 @@ export default function PlaylistDetail() {
           action={
             <button
               type="button"
-              onClick={() =>
-                loadRecommendations(
-                  normalizeSongId(currentSong) || getSongKey(playlistSongs?.[0]),
-                  playlistSongIds
-                )
-              }
+              onClick={() => loadRecommendations(getRandomPlaylistSeedId(), playlistSongIds)}
               className="user-btn-secondary px-4 py-2 text-sm font-semibold"
             >
               Làm mới gợi ý
@@ -770,12 +775,7 @@ export default function PlaylistDetail() {
             songs={recommendedSongs}
             loading={recommendationLoading}
             saving={saving}
-            onRefresh={() =>
-              loadRecommendations(
-                normalizeSongId(currentSong) || getSongKey(playlistSongs?.[0]),
-                playlistSongIds
-              )
-            }
+            onRefresh={() => loadRecommendations(getRandomPlaylistSeedId(), playlistSongIds)}
             onPlay={(song) => handlePlaySong(song, recommendedSongs)}
             onAdd={handleAddSuggestedSong}
           />
