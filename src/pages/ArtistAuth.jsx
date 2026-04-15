@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { FiMusic, FiRadio } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import AuthShell from "../components/auth/AuthShell";
@@ -43,6 +43,8 @@ const canUseArtistAuth = (user) => user?.role === "ARTIST" || hasArtistIntent(us
 
 const DISPLAY_NAME_REGEX = /^[\p{L}\p{N}\s._'-]+$/u;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DEMO_ARTIST_EMAIL = "sontung@gmail.com";
+const DEMO_ARTIST_PASSWORD = "123456";
 
 const validateRegisterFields = ({ displayName, email, password, confirmPassword }) => {
   const errors = {};
@@ -134,7 +136,9 @@ export default function ArtistAuth() {
     const authRequiredMessage = location.state?.authRequiredMessage || "";
     if (!authRequiredMessage) return;
 
-    setAuthNotice(authRequiredMessage);
+    startTransition(() => {
+      setAuthNotice(authRequiredMessage);
+    });
     navigate(`${location.pathname}${location.search}`, {
       replace: true,
       state: null,
@@ -179,35 +183,63 @@ export default function ArtistAuth() {
     navigate(to, { replace: true });
   };
 
+  const completeArtistAuthEntry = async ({ email, password }) => {
+    const user = await loginArtist({ email, password });
+
+    if (!canUseArtistAuth(user)) {
+      showError("Tài khoản này chưa đăng ký yêu cầu trở thành nghệ sĩ.");
+      logout();
+      return null;
+    }
+
+    if (rejectNonArtistLogin(user.role)) {
+      showError("Tài khoản này không thể đăng nhập vào cổng nghệ sĩ.");
+      logout();
+      return null;
+    }
+
+    if (user.role === "ARTIST") {
+      setAuthContext("default");
+      navigateWithIntro("/artist/dashboard");
+      return user;
+    }
+
+    navigateWithIntro("/artist-request");
+    return user;
+  };
+
   const handleLogin = async (event) => {
     event.preventDefault();
     setLoginError("");
 
     try {
-      const user = await loginArtist({
+      await completeArtistAuthEntry({
         email: loginEmail,
         password: loginPassword,
       });
-
-      if (!canUseArtistAuth(user)) {
-        showError("Tài khoản này chưa đăng ký yêu cầu trở thành nghệ sĩ.");
-        logout();
-        return;
-      }
-
-      if (rejectNonArtistLogin(user.role)) {
-        showError("Tài khoản này không thể đăng nhập vào cổng nghệ sĩ.");
-        logout();
-        return;
-      }
-
-      if (user.role === "ARTIST") {
-        setAuthContext("default");
-        return navigateWithIntro("/artist/dashboard");
-      }
-      return navigateWithIntro("/artist-request");
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || "Đăng nhập thất bại, thử lại nhé.";
+      showError(msg);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setLoginEmail(DEMO_ARTIST_EMAIL);
+    setLoginPassword(DEMO_ARTIST_PASSWORD);
+    setAuthNotice("");
+    setRegisterNotice("");
+    setLoginError("");
+
+    try {
+      await completeArtistAuthEntry({
+        email: DEMO_ARTIST_EMAIL,
+        password: DEMO_ARTIST_PASSWORD,
+      });
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Không thể vào bằng tài khoản demo nghệ sĩ, vui lòng thử lại.";
       showError(msg);
     }
   };
@@ -587,6 +619,16 @@ export default function ArtistAuth() {
                 {loading ? "Đang đăng ký..." : "Bắt đầu đăng ký"}
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={handleDemoLogin}
+              disabled={loading}
+              className="auth-ui-secondary"
+            >
+              Vào nhanh với tài khoản demo nghệ sĩ
+            </button>
+
 
             <div className="space-y-1 pt-1 text-center text-[12px] text-white/48">
               <p>

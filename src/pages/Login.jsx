@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FiMail, FiMusic } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -41,6 +41,8 @@ const formSwapTransition = {
 
 const DISPLAY_NAME_REGEX = /^[\p{L}\p{N}\s._'-]+$/u;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DEMO_USER_EMAIL = "minh@gmail.com";
+const DEMO_USER_PASSWORD = "1234567";
 
 const getModeFromSearch = (search = "") =>
   new URLSearchParams(search).get("mode")?.toLowerCase() === "register" ? "register" : "login";
@@ -194,7 +196,9 @@ export default function Login() {
       document.referrer.includes("/api/auth/verify-email/confirm");
 
     if (isVerifiedFromQuery || isVerifiedFromReferrer) {
-      setLoginNotice("Xác nhận email thành công. Bạn có thể đăng nhập ngay.");
+      startTransition(() => {
+        setLoginNotice("Xác nhận email thành công. Bạn có thể đăng nhập ngay.");
+      });
       localStorage.setItem("email_verification_completed_at", `${Date.now()}`);
 
       if (isVerifiedFromQuery) {
@@ -204,7 +208,9 @@ export default function Login() {
     }
 
     if (authRequiredMessage) {
-      setLoginNotice(authRequiredMessage);
+      startTransition(() => {
+        setLoginNotice(authRequiredMessage);
+      });
       navigate(`${location.pathname}${location.search}`, {
         replace: true,
         state: null,
@@ -213,7 +219,9 @@ export default function Login() {
     }
 
     if (location.state?.emailVerified) {
-      setLoginNotice("Xác nhận email thành công. Bạn có thể đăng nhập ngay.");
+      startTransition(() => {
+        setLoginNotice("Xác nhận email thành công. Bạn có thể đăng nhập ngay.");
+      });
       navigate(`${location.pathname}${location.search}`, {
         replace: true,
         state: null,
@@ -247,13 +255,17 @@ export default function Login() {
     navigate(to, { replace: true });
   };
 
+  const completeAuthenticatedEntry = (user) => {
+    if (user?.role === "ADMIN") return navigateWithIntro("/admin");
+    if (user?.role === "ARTIST") return navigateWithIntro("/artist/dashboard");
+    return navigateWithIntro("/");
+  };
+
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
       const user = await login({ email: loginEmail, password: loginPassword });
-      if (user.role === "ADMIN") return navigateWithIntro("/admin");
-      if (user.role === "ARTIST") return navigateWithIntro("/artist/dashboard");
-      return navigateWithIntro("/");
+      return completeAuthenticatedEntry(user);
     } catch (err) {
       showError(err?.response?.data?.message || err?.message || "Đăng nhập thất bại, thử lại nhé.");
     }
@@ -264,12 +276,31 @@ export default function Login() {
     try {
       const { idToken } = await signInWithGoogle();
       const user = await firebaseLogin({ idToken });
-      if (user.role === "ADMIN") return navigateWithIntro("/admin");
-      if (user.role === "ARTIST") return navigateWithIntro("/artist/dashboard");
-      return navigateWithIntro("/");
+      return completeAuthenticatedEntry(user);
     } catch (err) {
       await signOutFirebaseSession();
       showError(extractFirebaseErrorMessage(err));
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setLoginEmail(DEMO_USER_EMAIL);
+    setLoginPassword(DEMO_USER_PASSWORD);
+    setLoginNotice("");
+    setRegisterNotice("");
+
+    try {
+      const user = await login({
+        email: DEMO_USER_EMAIL,
+        password: DEMO_USER_PASSWORD,
+      });
+      return completeAuthenticatedEntry(user);
+    } catch (err) {
+      showError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Không thể vào bằng tài khoản demo, vui lòng thử lại."
+      );
     }
   };
 
@@ -694,6 +725,15 @@ export default function Login() {
             >
               <FcGoogle className="text-lg" />
               Tiếp tục với Google
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDemoLogin}
+              disabled={loading}
+              className="auth-ui-secondary"
+            >
+              Vào nhanh với tài khoản demo
             </button>
 
             <div className="space-y-1 pt-1 text-center text-[12px] text-white/48">
