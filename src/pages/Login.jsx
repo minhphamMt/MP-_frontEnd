@@ -585,7 +585,7 @@ export default function Login() {
           disabled={!isRegisterMode}
           error={registerFieldErrors.password}
           helper={
-            registerFieldErrors.password ? "" : PASSWORD_REQUIREMENTS_TEXT
+            registerFieldErrors.password ? "" : ""
           }
         />
 
