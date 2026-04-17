@@ -41,8 +41,8 @@ const formSwapTransition = {
 
 const DISPLAY_NAME_REGEX = /^[\p{L}\p{N}\s._'-]+$/u;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const DEMO_USER_EMAIL = "minh@gmail.com";
-const DEMO_USER_PASSWORD = "1234567";
+const DEMO_USER_EMAIL = "demo@gmail.com";
+const DEMO_USER_PASSWORD = "123456";
 
 const getModeFromSearch = (search = "") =>
   new URLSearchParams(search).get("mode")?.toLowerCase() === "register" ? "register" : "login";
