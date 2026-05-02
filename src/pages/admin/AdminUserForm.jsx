@@ -6,6 +6,7 @@ import {
   getUserById,
   normalizeUserDetailPayload,
   updateUser,
+  updateUserRole,
   uploadUserAvatarByAdmin,
 } from "../../api/admin.api";
 import Toast from "../../components/common/Toast";
@@ -46,6 +47,7 @@ export default function AdminUserForm() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [user, setUser] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
+  const [roleRejectReason, setRoleRejectReason] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [toast, setToast] = useState({ title: "", message: "" });
 
@@ -74,6 +76,7 @@ export default function AdminUserForm() {
           is_active: Boolean(profile.is_active),
           avatar_url: profile.avatar_url || profile.avatar || "",
         });
+        setRoleRejectReason("");
         setErrorMessage("");
       } catch (error) {
         console.error("Load user failed", error);
@@ -111,7 +114,15 @@ export default function AdminUserForm() {
       [field]: type === "checkbox" ? checked : value,
     }));
     setFieldErrors((prev) => ({ ...prev, [field]: "" }));
+    if (field === "role") {
+      setRoleRejectReason("");
+    }
   };
+
+  const currentRole = user?.role || "USER";
+  const isRoleChanged = isEdit && formValues.role !== currentRole;
+  const requiresRoleRejectReason =
+    isEdit && currentRole === "ARTIST" && formValues.role === "USER";
 
   const handleSubmit = async () => {
     if (!formValues.display_name.trim()) {
@@ -131,6 +142,12 @@ export default function AdminUserForm() {
         return;
       }
     }
+    if (requiresRoleRejectReason && !roleRejectReason.trim()) {
+      const message = "Vui lòng nhập lý do hạ quyền nghệ sĩ.";
+      setFieldErrors((prev) => ({ ...prev, roleRejectReason: message }));
+      setErrorMessage(message);
+      return;
+    }
 
     try {
       setSaving(true);
@@ -140,7 +157,7 @@ export default function AdminUserForm() {
       const payload = normalizePayload({
         display_name: formValues.display_name,
         email: formValues.email,
-        role: formValues.role,
+        role: isEdit ? undefined : formValues.role,
         is_active: formValues.is_active ? 1 : 0,
         avatar_url: avatarFile ? undefined : formValues.avatar_url,
         password: isEdit ? undefined : formValues.password,
@@ -148,12 +165,36 @@ export default function AdminUserForm() {
 
       if (isEdit) {
         await updateUser(id, payload);
+        if (isRoleChanged) {
+          await updateUserRole(id, {
+            role: formValues.role,
+            ...(requiresRoleRejectReason
+              ? { reject_reason: roleRejectReason.trim() }
+              : {}),
+          });
+        }
         if (avatarFile) {
           const formData = new FormData();
           formData.append("avatar", avatarFile);
           await uploadUserAvatarByAdmin(id, formData);
         }
         setToast({ title: "Thành công", message: "Lưu thành công." });
+        const refreshed = await getUserById(id);
+        const refreshedPayload = refreshed?.data?.data ?? refreshed?.data ?? null;
+        const refreshedProfile = normalizeUserDetailPayload(refreshedPayload).profile;
+        if (refreshedProfile) {
+          setUser(refreshedProfile);
+          setFormValues({
+            display_name: refreshedProfile.display_name || refreshedProfile.name || "",
+            email: refreshedProfile.email || "",
+            password: "",
+            role: refreshedProfile.role || "USER",
+            is_active: Boolean(refreshedProfile.is_active),
+            avatar_url: refreshedProfile.avatar_url || refreshedProfile.avatar || "",
+          });
+        }
+        setAvatarFile(null);
+        setRoleRejectReason("");
       } else {
         const res = await createUser(payload);
         const createdUser = res?.data?.data ?? res?.data ?? null;
@@ -330,6 +371,32 @@ export default function AdminUserForm() {
                     </option>
                   ))}
                 </select>
+                {requiresRoleRejectReason && (
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <textarea
+                      value={roleRejectReason}
+                      onChange={(event) => {
+                        setRoleRejectReason(event.target.value);
+                        setFieldErrors((prev) => ({
+                          ...prev,
+                          roleRejectReason: "",
+                        }));
+                      }}
+                      placeholder="Lý do hạ quyền nghệ sĩ"
+                      className="admin-field admin-detail-textarea"
+                      rows={3}
+                    />
+                    {fieldErrors.roleRejectReason ? (
+                      <p className="px-1 text-xs text-rose-300">
+                        {fieldErrors.roleRejectReason}
+                      </p>
+                    ) : (
+                      <p className="px-1 text-xs text-white/45">
+                        Lý do này sẽ được gửi kèm khi đổi role từ ARTIST về USER.
+                      </p>
+                    )}
+                  </div>
+                )}
                 <label className="admin-detail-label is-full flex items-center gap-3 rounded-2xl border border-white/10 bg-[#151617] px-4 py-3 text-white/72">
                   <input
                     type="checkbox"

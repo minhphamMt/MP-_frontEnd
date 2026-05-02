@@ -146,6 +146,9 @@ export const importAdminSongLyrics = (id, payload = {}) =>
 export const listArtistRequests = (params = {}) =>
   api.get("/admin/artist-requests", { params });
 
+export const updateArtistRequest = (id, payload) =>
+  api.patch(`/admin/artist-requests/${id}`, payload);
+
 export const reviewArtistRequest = (id, payload) =>
   api.patch(`/admin/artist-requests/${id}/review`, payload);
 

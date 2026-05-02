@@ -39,7 +39,8 @@ const formSwapTransition = {
 const rejectNonArtistLogin = (role) => role === "ADMIN" || !role;
 const hasArtistIntent = (user) =>
   user?.artist_register_intent === true || user?.artist_register_intent === 1;
-const canUseArtistAuth = (user) => user?.role === "ARTIST" || hasArtistIntent(user);
+const canUseArtistAuth = (user) =>
+  user?.role === "ARTIST" || user?.role === "USER" || hasArtistIntent(user);
 
 const DISPLAY_NAME_REGEX = /^[\p{L}\p{N}\s._'-]+$/u;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
