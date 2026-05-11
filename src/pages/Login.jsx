@@ -180,7 +180,6 @@ export default function Login() {
     if (mode !== "login") return;
 
     const currentSearchParams = new URLSearchParams(location.search);
-    const authRequiredMessage = location.state?.authRequiredMessage || "";
     const verifiedFlag = (currentSearchParams.get("verified") || "").toLowerCase();
     const successFlag = (currentSearchParams.get("success") || "").toLowerCase();
     const status = (currentSearchParams.get("status") || "").toLowerCase();
@@ -205,17 +204,6 @@ export default function Login() {
       if (isVerifiedFromQuery) {
         replaceAuthBrowserUrl({ mode: "login", clearVerificationFlags: true });
       }
-      return;
-    }
-
-    if (authRequiredMessage) {
-      startTransition(() => {
-        setLoginNotice(authRequiredMessage);
-      });
-      navigate(`${location.pathname}${location.search}`, {
-        replace: true,
-        state: null,
-      });
       return;
     }
 
