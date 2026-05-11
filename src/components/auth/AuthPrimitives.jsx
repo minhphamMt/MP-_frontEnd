@@ -45,6 +45,28 @@ export function AuthMessage({ tone = "error", className = "", children }) {
   return <div className={clsx("auth-ui-message", messageTones[tone] ?? messageTones.error, className)}>{children}</div>;
 }
 
+export function AuthFloatingAlert({ message }) {
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {message ? (
+        <MotionDiv
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -16 }}
+          className="auth-ui-floating-alert"
+          role="alert"
+          aria-live="assertive"
+        >
+          {message}
+        </MotionDiv>
+      ) : null}
+    </AnimatePresence>,
+    document.body
+  );
+}
+
 export function AuthTabs({ items, value, onChange, className = "" }) {
   return (
     <div className={clsx("auth-ui-tab-list", className)}>

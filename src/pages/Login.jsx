@@ -8,6 +8,7 @@ import {
   AuthCard,
   AuthDivider,
   AuthField,
+  AuthFloatingAlert,
   AuthMessage,
   AuthModal,
   AuthPasswordField,
@@ -769,18 +770,7 @@ export default function Login() {
         {formSection}
       </AuthShell>
 
-      <AnimatePresence>
-        {errorPopup ? (
-          <MotionDiv
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            className="auth-ui-floating-alert"
-          >
-            {errorPopup}
-          </MotionDiv>
-        ) : null}
-      </AnimatePresence>
+      <AuthFloatingAlert message={errorPopup} />
 
       <AuthModal
         open={awaitingVerification}

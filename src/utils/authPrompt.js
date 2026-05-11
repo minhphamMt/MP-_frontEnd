@@ -1,6 +1,7 @@
 export const AUTH_REQUIRED_EVENT = "app:auth-required";
 
-const DEFAULT_MESSAGE = "";
+const DEFAULT_MESSAGE =
+  "";
 
 export const emitAuthRequired = (message = DEFAULT_MESSAGE) => {
   if (typeof window === "undefined") return;

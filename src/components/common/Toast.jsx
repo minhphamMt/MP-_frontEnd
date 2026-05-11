@@ -20,7 +20,7 @@ export default function Toast({
   return createPortal(
     <div
       className="
-        fixed left-1/2 top-6 z-[70] max-w-sm -translate-x-1/2
+        fixed left-1/2 top-6 z-[2147483647] max-w-sm -translate-x-1/2
         rounded-xl border border-white/10
         bg-[#1a1a1a] px-4 py-3 text-sm text-white
         shadow-2xl shadow-emerald-500/20

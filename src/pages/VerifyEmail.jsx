@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { AuthFloatingAlert } from "../components/auth/AuthPrimitives";
 import usePageMetadata from "../hooks/usePageMetadata";
 import useAuthStore from "../store/auth.store";
 
@@ -86,8 +87,11 @@ export default function VerifyEmail() {
   };
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-[#0b0b12] px-4 py-8 text-white">
-      <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)] sm:p-8">
+    <>
+      <AuthFloatingAlert message={error} />
+
+      <div className="flex min-h-dvh items-center justify-center bg-[#0b0b12] px-4 py-8 text-white">
+        <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)] sm:p-8">
         <h1 className="text-2xl font-semibold">Xác nhận email</h1>
         <p className="mt-2 text-sm text-white/60">
           Hoàn tất xác thực ngay trên tab hiện tại. Không cần mở thêm tab mới.
@@ -124,12 +128,6 @@ export default function VerifyEmail() {
             </div>
           )}
 
-          {error && (
-            <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
-              {error}
-            </div>
-          )}
-
           <div className="grid gap-3 sm:grid-cols-2">
             <button
               type="button"
@@ -150,7 +148,8 @@ export default function VerifyEmail() {
             </button>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
